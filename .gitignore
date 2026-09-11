@@ -6,3 +6,8 @@ error.html
 lib/BuiltInModules.ml
 FAILURES.txt
 result
+# CocoIndex Code (ccc)
+/.cocoindex_code/
+.claude/.headroom_wrap_settings.lock
+.serena/.gitignore
+.serena/project.yml
