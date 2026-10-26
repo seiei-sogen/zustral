@@ -1,0 +1,574 @@
+= 設計文書: 10進バックエンドの実像を掴む（issue #1）
+:toc:
+:sectnums:
+
+== 入力と位置付け
+
+* 要件定義書: `req-issue1-backend-docs-survey-decimal-backends.adoc`（REQ-001〜010、NFR-001〜003、Gherkin 8件）
+* 事前調査レポート: `pre-investigation-report-issue1-backend-docs-survey-decimal-backends.json`
+* issue: https://github.com/seiei-sogen/zustral/issues/1
+
+この設計は、調査レポートとプローブ一式の形を決める。
+コンパイラ（`lib/`）と stdlib（`standard/`）は変えない。
+要件が設計に委ねた次の点を、この文書で決める。
+
+* レポートの置き場所と形式
+* プローブの言語とファイル構成、記録した出力の置き場所
+* 1コマンドの再実行が出力を照合し「未実行」を報告する方式
+* 決定性を確かめる演算と入力
+* Zustral の FFI プローブの組み立て方と、REQ-007 の手間の上限
+
+判断の多くは、設計前に実験で確かめた事実に基づく。
+実験の記録は次の節にある。
+
+[[experiments]]
+== 設計前の実験
+
+要件の未確定事項を、このマシンで観測して決めた。
+中間物は作業ツリーの外（セッションの scratchpad）に置いた。作業ツリーに書いたのは、実験5の調査 JSON の修正だけである。
+日付は 2026-10-26。
+
+=== 実験1: コンパイラのビルドと、外部ライブラリとの手動リンク
+
+[source,sh]
+----
+git archive HEAD | tar -x -C $S/exp
+nix develop path:$S/exp --command bash -c 'ocaml -version; dune --version'
+nix develop path:$S/exp --command bash -c \
+  'make clean >/dev/null; export DUNE_CACHE=disabled; time make >/dev/null 2>&1; ./austral --version'
+----
+
+結果: OCaml 4.14.1、dune 3.8.1。クリーンビルドは `real 0m2.360s`（user 7.349s）で、`austral 0.2.0` ができた。
+dev shell の初回取得はこの測定より前に済んでおり、その時間は測っていない。
+作業ツリーの flake でも `nix develop <worktree> --command bash -c 'ocaml -version'` が 0.32 秒で通り、`git status` は変わらなかった。
+
+次の Zustral プログラムを `--target-type=c` で C にし、mpdecimal と手でリンクした。
+
+[source,austral]
+----
+pragma Unsafe_Module;
+import Austral.Memory (Address);
+module body Test is
+    pragma Foreign_Import(External_Name => "mpd_version");
+    function Mpd_Version(): Address[Nat8] is
+    end;
+    pragma Foreign_Import(External_Name => "puts");
+    function Put_Address(s: Address[Nat8]): Int32 is
+    end;
+    function main(): ExitCode is
+        Put_Address(Mpd_Version());
+        return ExitSuccess();
+    end;
+end module body.
+----
+
+[source,sh]
+----
+austral compile Test.aum --entrypoint=Test:main --target-type=c --output=gen.c
+nix shell $NIXPKGS#gcc --command bash -c \
+  "gcc -fwrapv -Wno-builtin-declaration-mismatch gen.c -L$OUT/lib -Wl,-rpath,$OUT/lib -lmpdec -lm -o t && ./t"
+----
+
+結果: `4.0.1` を出力し、終了状態 0。
+リンクしたのは固定した nixpkgs の gcc 16.2.0 で、設計がプローブに使うものと同じである。
+`austral compile` は dev shell の外で実行しており、ビルドした `austral` は dev shell なしで動く。
+生成 C は、外部関数をラッパー関数の中の局所的な `extern au_nat8_t* mpd_version();` として宣言していた。
+
+=== 実験2: mpdecimal のヘッダと生成 C の衝突
+
+[source,sh]
+----
+gcc -fwrapv -Wno-builtin-declaration-mismatch -include mpdecimal.h -I$DEV/include \
+  gen.c -L$OUT/lib -lmpdec -lm -o t2
+----
+
+結果: 終了状態 1、`error:` が7件出た。
+
+* `conflicting types for 'mpd_version'; have 'au_nat8_t *(void)'`（ヘッダは `const char *mpd_version(void);`）
+* `conflicting types for 'puts'`
+* `stdout`、`stderr`、`stdin`、`fprintf`、`fflush` の衝突。mpdecimal.h が `stdio.h` を読み込み、生成 C のプレリュードが自前で書く `extern void* stdout;` などと食い違う。
+
+結論: ライブラリのヘッダは生成 C の翻訳単位に入れられない。シムを別の翻訳単位に置き、リンクだけで結ぶ。
+
+=== 実験3: libdfp と Intel DFP のソースからのビルド
+
+時間枠は、それぞれ取得からビルドまで15分とした。
+
+Intel DFP:
+
+[source,sh]
+----
+curl -sSL -o IntelRDFPMathLib20U5.tar.gz https://netlib.org/misc/intel/IntelRDFPMathLib20U5.tar.gz
+sha256sum IntelRDFPMathLib20U5.tar.gz
+nix shell $NIXPKGS#gcc $NIXPKGS#gnumake --command \
+  make -j8 CC=gcc CALL_BY_REF=0 GLOBAL_RND=0 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=0
+----
+
+結果: 版は v2.5（README の表記は Version 2.0 Update 5、2026-09-28）。sha256 は `85dafd70…01037`。
+`make` は `real 0m1.402s` で `libbid.a`（5.6MB）を作り、取得開始から27秒で終わった。
+`bid128_from_string` と `bid128_add` で 1.10 + 2.20 を計算するプログラムが `+330E-2 sizeof=16 flags=0` を出した。
+
+libdfp:
+
+[source,sh]
+----
+git clone --depth 1 https://github.com/libdfp/libdfp.git src   # e898f186…（2026-09-21）
+mkdir build && cd build
+nix shell $NIXPKGS#gcc $NIXPKGS#gnumake $NIXPKGS#binutils $NIXPKGS#gawk $NIXPKGS#python3 --command \
+  bash -c "../src/configure CFLAGS='-m64 -O2' && make -j8"
+----
+
+結果: configure と make は終了状態 0、`real 0m11.972s`。`libdfp-1.0.17.so` と `libdfp.a` ができ、取得開始から41秒で終わった。
+`strtod128` と `quantized128` を使うプログラムが、`-D__STDC_WANT_IEC_60559_DFP_EXT__` を付けたときに `3.30 quantized=1` を出した。
+
+結論: どちらも時間枠に十分収まるので、出典のみにはせず実測する。
+`run.sh` はこの手順を依存 `libdfp` と `intel-dfp` として持つ。
+ランナーはこの実験で通ったツールの組（gcc、gnumake、binutils、gawk、python3）をそのまま使う。どれが不要かは確かめていない。
+
+=== 実験4: nixpkgs の clang と `_Decimal128`
+
+[source,sh]
+----
+nix shell $NIXPKGS#clang $NIXPKGS#gcc --command bash -c \
+  'clang -O2 d128.c -o d128-clang; clang -std=c23 -O2 d128.c; gcc -O2 d128.c -o d128-gcc && ./d128-gcc'
+/usr/bin/gcc -O2 d128.c -o d128-sys && ./d128-sys
+----
+
+`d128.c` は `_Decimal128` の 1.10DL + 2.20DL を計算して `sizeof` と比較結果を出すだけのプログラムである。
+
+結果:
+
+* clang 21.1.8: `error: GNU decimal type extension not supported` と `invalid suffix 'DL' on floating constant`。`-std=c23` でも同じ。
+* nixpkgs の gcc 16.2.0: `sizeof=16 eq=1`
+* マシンの gcc 13.3.0: `sizeof=16 eq=1`
+
+結論: clang では `d128` と `libdfp` をコンパイルできない。REQ-008 の clang 比較は、この2系統で未実行になる。
+`mpd`、`intel`、`i128` は `_Decimal128` を使わないので、clang でも比べる。
+
+=== 実験5: 事前調査レポートの `meta.generated_at`
+
+プレースホルダ `2026-10-26T00:00:00+09:00` を、ファイルの最終更新時刻 `2026-10-26T14:25:57+09:00`（`stat -c '%y'` の値）に直した。
+
+== 方式の要約
+
+`docs/research/decimal-backend-survey/` に、日本語のレポート、C のプローブ、Zustral の FFI プローブ、記録した出力、1本の実行スクリプト `run.sh` を置く。
+`run.sh` は、プローブごとに依存を取得し、ビルドし、2回実行し、出力を記録と照合する。
+依存を取得できないプローブは「未実行」とし、成功に数えず、終了状態も失敗にしない。
+記録と食い違うプローブが1つでもあれば、名前と差分を表示して失敗の終了状態で終わる。
+
+コンパイラとライブラリは、固定した nixpkgs の rev から取る。
+再実行者のマシンで版が動かないようにするためである。
+
+採らなかった方式:
+
+* テストフレームワーク（`test-programs/runner.py` の拡張や bats など）。
+プローブは22件で、照合は「出力が記録と等しいか」だけである。
+表と1つのループで足りる。
+* `test-programs/` や CI への組み込み。要件の「安全面で対象外としたこと」に従う。
+* マシンの gcc 13.3.0（`/usr/bin/gcc`）を使うこと。
+nixpkgs の mpdecimal は nix の glibc 2.44 に対してビルドされている（実験2のエラーに出たヘッダのパス）。Ubuntu の glibc 2.39 と混ぜた場合の動作は確かめていない。
+nix の gcc と clang に揃えれば、ライブラリと同じ glibc で、別のマシンでも同じ版で再実行できる。
+レポートには、使った版を記録する。
++
+要件の例と NFR-003 にある gcc 13.3.0 は、要件を書いたときのマシンの gcc である。
+プローブの gcc は 16.2.0 になるので、レポートの主張は「nixpkgs の gcc 16.2.0 では」の形で書く。
+NFR-003 が求めるのは「このマシンで追加の手作業なしに再実行できる」ことで、このマシンの nix 2.34.6 で満たす。
+REQ-003 の例の「34桁」は、事前調査で gcc 13.3.0 の `__DEC128_MANT_DIG__=34` として観測済みである。
+gcc 16.2.0 での値はまだ観測していない。レポートが根拠にするのは、`d128` プローブが gcc 16.2.0 で出す値で、実装で確かめる。
+
+== ファイル構成と所有
+
+[cols="2,3",options="header"]
+|===
+|パス（`docs/research/decimal-backend-survey/` 配下） |責務
+|`README.md`
+|調査レポート本体（日本語）。GitHub でディレクトリを開くと表示される。
+|`run.sh`
+|1コマンドの再実行スクリプト（bash）。プローブ表、依存の取得、照合、集計を持つ。
+|`probes/mpd.c`
+|mpdecimal 系統のプローブ。
+|`probes/d128.c`
+|GCC の `_Decimal128`（libgcc の BID 実装）のプローブ。
+|`probes/libdfp.c`
+|libdfp のプローブ（丸めモードの切り替え、文字列変換）。
+|`probes/intel.c`
+|Intel DFP（libbid）のプローブ。
+|`probes/i128.c`
+|`__int128` 固定小数点のプローブ。
+|`probes/ffi/Probe.aum`, `probes/ffi/shim.c`
+|Zustral から `Foreign_Import` で各系統を呼ぶプローブと、そのシム。
+|`probes/ffi/UnitReturn.aum`
+|戻り値 `Unit` の `Foreign_Import` をコンパイラが拒むことを示すプローブ。
+|`expected/<probe>.txt`
+|記録した出力。リポジトリにコミットする照合の正本。
+|===
+
+ビルドの中間物、ダウンロードしたソース、実行時の出力は `mktemp -d` で作る一時ディレクトリに置き、終了時に消す。
+例外は Zustral コンパイラで、リポジトリの `make` がリポジトリ直下に `austral`、`_build/`、`lib/BuiltInModules.ml` を作る。
+3つとも `.gitignore` 済みで、作業ツリーの `git status` は変わらない。
+
+== データの形
+
+ランナーを設計する前に、扱うデータを3つの表として決める。
+`run.sh` は、この表を上から読む1つのループである。
+
+=== 依存表
+
+依存は名前で引き、1回の実行で1度だけ取得してメモする。
+取得の結果は「パスの集合」か「取得できなかった理由（1行）」のどちらかである。
+
+[cols="1,3,2",options="header"]
+|===
+|依存 |取得方法 |取得できない理由として表示するもの
+|`gcc`
+|`nix build --no-link --print-out-paths $NIXPKGS#gcc`（gcc 16.2.0）
+|`nix build` の最後のエラー行
+|`clang`
+|同じく `$NIXPKGS#clang`（clang 21.1.8）
+|同上
+|`clang-dfp`
+|`clang` を取得したうえで、`_Decimal128 x;` だけの翻訳単位を `clang -fsyntax-only` に通す
+|clang の最初の `error:` 行
+|`mpdecimal`
+|`$NIXPKGS#mpdecimal.dev` と `$NIXPKGS#mpdecimal.out`（4.0.1）
+|`nix build` の最後のエラー行
+|`libdfp`
+|`https://github.com/libdfp/libdfp/archive/<commit>.tar.gz` を取得し、sha256 を照合し、`nix shell` で取った gcc、gnumake、binutils、gawk、python3 の下で out-of-tree の `configure` と `make` を行う。実験3は同じ commit を `git clone` で取ったが、ランナーは sha256 で固定できる tarball を使う
+|失敗した段（取得、sha256、configure、make）とその最後の行。タイムアウトなら「上限 600 秒を超えた」
+|`intel-dfp`
+|`https://netlib.org/misc/intel/IntelRDFPMathLib20U5.tar.gz` を取得し、sha256 を照合し、`nix shell` で取った gcc と gnumake の下で、`LIBRARY/` の `make CC=gcc CALL_BY_REF=0 GLOBAL_RND=0 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=0`
+|同上
+|`zustral`
+|`timeout $ZUSTRAL_BUILD_TIMEOUT nix develop <リポジトリ直下> --command make -C <リポジトリ直下>`
+|タイムアウトなら「上限 N 秒を超えた」、それ以外は make の最後の行
+|===
+
+固定値:
+
+* `NIXPKGS=github:NixOS/nixpkgs/674a2028661e550a97400c1cc992b9cca9a668a1`（事前調査で使った registry の rev と同じ）
+* libdfp の commit は `e898f1868e3fb0b703e508857bae0df08d4268d5`（2026-09-21、版 1.0.17）。tarball の sha256 は実装時に記録する。
+* Intel DFP は `IntelRDFPMathLib20U5.tar.gz`、sha256 `85dafd70f0fe2a8da218ade4233fca9d3228b0b04cd6d8527f7499926be01037`。
+* 依存のビルド（`libdfp`、`intel-dfp`）には `timeout 600` を掛ける。
+* `ZUSTRAL_BUILD_TIMEOUT` の既定は 600 秒。これが REQ-007 の「手間の上限」である（<<ffi-cap>>）。
+
+=== プローブ表
+
+1行が1プローブである。
+`id` はレポートが根拠として引く名前で、`<系統>@<コンパイラ>-<最適化>` の形にする。
+
+[cols="2,2,2,3,2",options="header"]
+|===
+|id |系統 |依存 |ビルドと実行 |記録
+|`mpd@{gcc,clang}-{O0,O2}`
+|mpdecimal
+|`gcc` または `clang`、`mpdecimal`
+|`probes/mpd.c` を `-lmpdec` とリンク
+|`expected/mpd.txt`
+|`d128@{gcc,clang}-{O0,O2}`
+|GCC `_Decimal128`
+|`gcc` または `clang-dfp`
+|`probes/d128.c`
+|`expected/d128.txt`
+|`libdfp@{gcc,clang}-{O0,O2}`
+|libdfp
+|`gcc` または `clang-dfp`、`libdfp`
+|`probes/libdfp.c` を `-D__STDC_WANT_IEC_60559_DFP_EXT__ -I<src>/dfp -I<src>/include` でコンパイルし、`-L<build> -Wl,-rpath,<build> -ldfp` でリンクする（`<src>` と `<build>` は一時ディレクトリの中。install はしない）
+|`expected/libdfp.txt`
+|`intel@{gcc,clang}-{O0,O2}`
+|Intel DFP
+|`gcc` または `clang`、`intel-dfp`
+|`probes/intel.c` を `libbid.a` とリンク
+|`expected/intel.txt`
+|`i128@{gcc,clang}-{O0,O2}`
+|`__int128` 固定小数点
+|`gcc` または `clang`
+|`probes/i128.c`
+|`expected/i128.txt`
+|`ffi`
+|Zustral FFI
+|`zustral`、`gcc`、`mpdecimal`
+|<<ffi>> の手順
+|`expected/ffi.txt`
+|`ffi-unit-return`
+|Zustral FFI の制約
+|`zustral`
+|`austral compile probes/ffi/UnitReturn.aum ...` の出力そのもの
+|`expected/ffi-unit-return.txt`
+|===
+
+系統ごとの4つの変種は `gcc-O0`、`gcc-O2`、`clang-O0`、`clang-O2` の順に並び、同じ記録ファイルと照合する。
+これが REQ-008 の「最適化レベル間」「gcc と clang の間」の一致の検査になる。
+
+変種の出力が実際に食い違ったときの扱いもここで決める。
+その変種だけの記録 `expected/<id>.txt`（例: `expected/mpd@clang-O2.txt`）があれば、ランナーは系統の記録の代わりにそれと照合する。
+変種だけの記録は、食い違いを実測したときに `--record` が書く（次節）。
+変種だけの記録で一致したプローブは `一致*  <id>（変種別の記録）` と表示し、集計の一致に数える。
+こうして、食い違いは記録として残り、再実行のたびに見え、それでも再実行は成功で終われる（REQ-006）。
+レポートは、変種だけの記録があるすべての組み合わせについて、系統の記録と変種の記録の両方の出力を載せる（REQ-008）。
+各プローブは2回実行し、どちらの出力も記録と照合する。これが「同じ実行の繰り返し」の検査になる。
+
+C のプローブは、すべて `-fwrapv` を付けてビルドする。
+Zustral の生成コードが常に `-fwrapv` 付きでビルドされるため（`lib/Util.ml:202-203`、`test-programs/runner.py:400-408`）、同じ条件で観測する。
+
+=== プローブの出力と結果
+
+プローブの出力は `key=value` の行の列にする。
+レポートは `〔probe: mpd / div_1_3〕` の形で、記録ファイルと行のキーを根拠として引く（REQ-003、REQ-005）。
+ランナーは、プローブを `2>&1` で標準出力と標準エラーを1つの流れにして実行し、その後ろに `exit=<終了コード>` の1行を足したものを「実際の出力」とする。
+異常終了も、コンパイラが拒むことを示すプローブ（`ffi-unit-return`）も、同じ照合で扱える。
+`ffi-unit-return` にはビルドの段がなく、`austral compile` そのものを「実行」として2回行う。
+
+1プローブの結果は次の3つのどれかである。
+
+[cols="1,3,2",options="header"]
+|===
+|結果 |条件 |表示
+|一致
+|依存を取得でき、ビルドでき、2回の実行出力がどちらも記録と等しい
+|`一致    <id>`。変種だけの記録と一致したときは `一致*  <id>（変種別の記録）`
+|不一致
+|依存を取得できたのに、ビルドが失敗した。または実行出力のどちらかが記録と異なる。または記録ファイルがない
+|`不一致  <id>` と、`diff -u <記録> <実際>` またはビルドログの末尾
+|未実行
+|依存表のどれかを取得できなかった
+|`未実行  <id>: <依存名>: <理由>`
+|===
+
+`ffi` は、一致したときも実際の出力を結果行の下に表示する。
+Zustral プログラムの出力を再実行者が見られるようにするためである（REQ-007 の1つ目のシナリオ）。
+
+依存を取得できた後のビルド失敗を「不一致」にするのは、壊れたプローブが「未実行」に紛れて成功に見えるのを防ぐためである。
+clang が `_Decimal128` を扱えないことは、ビルド失敗ではなく依存 `clang-dfp` の取得失敗として扱う（REQ-008 の「clang を取得でき、その系統をコンパイルできる場合に限る」）。
+
+レポートは、記録を作ったときに未実行だったプローブを根拠にしない（REQ-006 の最後の文）。
+そのプローブで確かめるはずだった主張（例: clang での `d128` の決定性）は「出典のみ・未実測」とするか、未確認事項に置く。
+「そのプローブが未実行になったこと」と理由だけは、`run.sh` の未実行の行を根拠に書ける。再実行すれば同じ行が出るからである。
+
+最後に `一致 N / 不一致 M / 未実行 K` を表示する。
+終了状態は M が1以上なら 1、それ以外は 0 である。未実行だけでは失敗にしない（REQ-006）。
+
+== 公開インターフェース
+
+[source,sh]
+----
+docs/research/decimal-backend-survey/run.sh            # 照合
+docs/research/decimal-backend-survey/run.sh --record   # 記録の書き直し
+----
+
+前提（レポートに書く。REQ-005）:
+
+* x86_64 Linux、flakes を有効にした nix（このマシンは 2.34.6）
+* ホストの bash、coreutils、diffutils、curl、tar、gzip
+* 初回はネットワーク。nixpkgs、libdfp、Intel DFP を取得する
+
+`--record` は、まず `expected/` の既存の変種だけの記録を消す。
+次に、記録ファイルごとに、表の順で最初に実行できたプローブの1回目の出力を系統の記録として書く。
+`--record` でも各プローブは2回実行する。ここでの「実行できた」は、依存を取得でき、ビルドが通り、2回の出力が等しかったことをいう。
+ビルドが失敗したプローブと、2回の出力が食い違ったプローブは記録を書かず、不一致として表示する（後者は両方の出力を出す）。
+`--record` の終了状態は照合と同じ規則で、不一致が1つでもあれば 1 である。
+同じ記録ファイルを使う残りの変種の出力が系統の記録と異なれば、その変種だけの記録 `expected/<id>.txt` を書く。
+未実行のプローブしかない記録ファイルには触れない。
+保守者が記録を作り直すための手段で、プローブを変えたら記録も作り直す。
+
+`run.sh` はどのディレクトリから起動してもよい。
+自身の場所から `docs/research/decimal-backend-survey/` とリポジトリ直下を求める。
+
+== 処理の流れと状態
+
+プローブは表の順に1つずつ処理する。並行性はない。
+各プローブの状態は次のように進み、終端は3つの結果のどれかである。
+
+----
+未着手 --依存をすべて取得--> ビルド --成功--> 実行×2 --両方が記録と一致--> 一致
+   |                          |                  |--どちらかが異なる------> 不一致
+   |                          |                  `--記録ファイルがない----> 不一致
+   |                          `--失敗------------------------------------> 不一致
+   `--依存のどれかを取得できない-----------------------------------------> 未実行
+----
+
+依存の取得結果は1回の実行の中でメモし、同じ依存を2度取得しない。
+再試行はしない。ネットワーク障害は「未実行」として見える。
+時間の上限は、依存のビルドに掛ける `timeout` だけである。
+
+不変条件:
+
+* 「一致」に数えるのは、このマシンで実際にビルドして実行し、記録と照合したプローブだけである。
+* 不一致が1つでもあれば、終了状態は失敗である。
+* 未実行の数は終了状態を変えない。
+
+== 決定性の演算と入力
+
+REQ-008 のために、各系統のプローブは同じ演算の組を同じ入力で実行し、結果を正規の文字列で出す。
+演算は、10進演算の違いが出やすいところを選ぶ。
+
+[cols="1,2,3",options="header"]
+|===
+|キー |演算 |選んだ理由
+|`div_1_3`
+|1 / 3
+|精度の上限で丸める（`__int128` はスケールで切り捨てる）。
+|`div_2_3`
+|2 / 3
+|最後の桁の丸めの向きが出る。
+|`add_01_02`
+|0.1 + 0.2
+|10進表現で厳密になるか。
+|`quantize_1005_<mode>`
+|1.005 を小数2桁に丸める。提供される丸めモードごと
+|丸めモードの品揃えと、それぞれの結果。
+|`mul_wide`
+|12345678901234567890123456789012345 × 10
+|34桁を超える係数の扱い（丸めか、正確か）。
+|`overflow`
+|表現できる最大の値 × 10
+|上限を超えたときに何が起きるか（無限大、フラグ、ラップ、検出）。
+|`sum_001_x1000`
+|0.01 を1000回足す
+|累積で誤差が出るか。
+|===
+
+mpdecimal は `mpd_ieee_context(&ctx, MPD_DECIMAL128)` の文脈で同じ演算を行う。
+decimal128 と同じ精度で並べて比べるためである。
+任意精度の性質は、別のキー（精度と指数の上限、確保の回数）で示す。
+
+`__int128` 固定小数点は、プローブが小さな実装を持つ。スケールは 10^18 とする。
+丸めは C の整数除算（0への切り捨て）だけで、丸めモードは実装者が書くものだとレポートに書く。
+`overflow` は、`-fwrapv` での実際の結果と、`__builtin_mul_overflow` が検出するかの両方を出す。
+
+最適化レベルの比較は、プローブ本体のビルドに対するものである。
+mpdecimal と Intel DFP のライブラリ本体は、それぞれ nixpkgs と自前ビルドの既定の最適化で1度だけビルドする。
+レポートはこの範囲を明記する。
+
+== 観点ごとにプローブが出すもの
+
+REQ-002 の観点のうち、このマシンで観測できるものをプローブの出力にする。
+観測できないもの（ライセンス、公式のプラットフォーム対応など）は一次資料で示す。
+
+[cols="1,3,3",options="header"]
+|===
+|観点 |プローブで観測するもの |一次資料で示すもの
+|確保と解放
+|`sizeof` の値。mpdecimal は `mpd_mallocfunc` などの差し替えで、値の生成と演算ごとの確保回数を数える。
+|`mpd_del` などの解放 API、静的な値（`MPD_STATIC`）の扱い。
+|精度と丸め
+|精度と指数の上限、丸めモードごとの `quantize_1005_<mode>`、`overflow`。
+|丸めモードの一覧の定義（ヘッダ、仕様）。
+|C ABI
+|<<ffi>> の Zustral プログラムの出力。
+|`lib/CodeGen.ml:554-591`、`lib/Type.ml:22-29`、各ライブラリのヘッダのシグネチャ。
+|依存とライセンスとビルドと移植性
+|依存表のどの取得方法で入るか（nixpkgs のパッケージか、ソースからのビルドか）と、その取得が通ること。REQ-002 の「ビルドの重さ」はこの区別で示し、時間は書かない。
+|ライセンスファイル、公式のプラットフォーム対応。他のプラットフォームは「出典のみ・未実測」。
+|決定性
+|4変種と2回実行の照合結果。
+|プラットフォームをまたいだ一致は、出典があれば「出典のみ・未実測」。
+|===
+
+[[ffi]]
+== Zustral FFI プローブ
+
+=== 組み立て
+
+<<experiments>> の実験2で、mpdecimal のヘッダを生成 C と同じ翻訳単位に入れると型が衝突すると確かめた。
+そこで、ライブラリのヘッダは生成 C に入れず、別の翻訳単位のシムだけが読む。
+
+. `austral compile probes/ffi/Probe.aum --entrypoint=Probe:main --target-type=c --output=$T/ffi.c` で C を出す。
+. `gcc -fwrapv -Wno-builtin-declaration-mismatch $T/ffi.c probes/ffi/shim.c -I<mpdecimal.dev>/include -L<mpdecimal.out>/lib -Wl,-rpath,<mpdecimal.out>/lib -lmpdec -lm` でリンクする。`-fwrapv -Wno-builtin-declaration-mismatch` と `-lm` は `test-programs/runner.py:400-408` の前例に合わせ、mpdecimal の `-I`、`-L`、`-rpath` を足す。
+. できた実行ファイルを2回実行し、`expected/ffi.txt` と照合する。
+
+`Probe.aum` とシムは、ポインタの値やアドレスのように実行ごとに変わりうる値を出力しない。出すのは演算結果と、成否を表す固定の文字列だけである。
+
+`Probe.aum` が確かめること:
+
+* mpdecimal: ポインタを返す `mpd_qnew` を、シムなしで直接 `Address[Nat8]` として受け取れる。`void` を返す関数（`mpd_add` など）はシム経由で呼ぶ。
+* GCC `_Decimal128`: Zustral 側で確保した16バイトの領域へのポインタをシムに渡し、シムが値を読み書きする。値そのものは FFI を越えない。
+* `__int128`: 同じく、16バイトの領域へのポインタ越しに渡す。
+
+`UnitReturn.aum` は、`void` の C 関数を戻り値 `Unit` で束縛して呼び、コンパイラが拒むことを出力で示す。
+記録にマシン固有の絶対パスが入らないよう、`run.sh` はコンパイラを `docs/research/decimal-backend-survey/` で起動し、相対パスを渡す。
+128ビット整数の型がないこととレコードを値で渡せないことは、コンパイラのソースの引用で示す（REQ-007）。
+
+libdfp と Intel DFP の FFI 上の扱いは、ヘッダのシグネチャとこの2つのプローブの結果から述べる。
+libdfp は GCC の `_Decimal128` を値で受け渡しする。
+Intel DFP は `BID_UINT128` を値で渡すか、`CALL_BY_REF=1` のビルドでポインタで渡して `void` を返す。
+どちらも Zustral の型では値として表せず、シムが要る。この主張の根拠はヘッダの引用と上記のプローブである。
+
+[[ffi-cap]]
+=== 手間の上限（REQ-007）
+
+上限は「`nix develop` によるコンパイラのビルドが 600 秒以内に終わり、手作業がないこと」とする。
+`run.sh` は依存 `zustral` を `timeout 600` で取得する。
+超えるか失敗すれば `ffi` と `ffi-unit-return` は未実行になり、レポートの C ABI の節はその理由と、C だけのプローブとコンパイラのソースの引用を根拠にする（REQ-007 の2つ目のシナリオ）。
+
+このマシンの実測では、dev shell を取得済みの状態でクリーンビルドが 2.36 秒だった（実験1）。
+上限はその約250倍で、初回の dev shell の取得を含めても収まると見込む。初回取得の時間は測っていない。
+`ZUSTRAL_BUILD_TIMEOUT` 環境変数で上限を変えられる。上限を超えた場合の表示を確かめるためにも使う。
+
+== 要件との対応
+
+[cols="1,4",options="header"]
+|===
+|要件 |設計要素
+|REQ-001
+|系統ごとのプローブ（decimal128 は `d128`、`libdfp`、`intel` に分ける）とレポートの比較表。
+|REQ-002
+|「観点ごとにプローブが出すもの」の表。
+|REQ-003
+|`key=value` の出力と `〔probe: <記録ファイル名から .txt を除いたもの> / <key>〕` の引用。一次資料は URL と版を添える。
+|REQ-004
+|レポートの「出典のみ・未実測」の表記。他のプラットフォームの主張すべてに付ける。
+|REQ-005
+|`run.sh`（1コマンド）、前提の節、プローブ id と記録ファイルの対応。
+|REQ-006
+|結果の3値、依存表、終了状態の規則。
+|REQ-007
+|<<ffi>>、<<ffi-cap>>。
+|REQ-008
+|4変種と2回実行、依存 `clang-dfp`、「決定性の演算と入力」。
+|REQ-009
+|レポートの「下流の問いに効く事実」の節。0004・0005・0008 ごとに、効く事実を名指しで並べる。推奨は書かない。
+|REQ-010
+|リポジトリの変更ではない。PR を仕上げる最後の工程で `gh` を使い、issue #1 への解消コメント、クローズ、issue #9 本文の置き換えを行う。
+|NFR-001
+|レポートは日本語で書く。
+|NFR-002
+|変更は `docs/research/decimal-backend-survey/` と `docs/task-requirements/` だけ。
+|NFR-003
+|ホストの前提は nix と基本コマンドだけで、ツールチェーンは固定した nixpkgs から取る。
+|===
+
+[cols="2,3",options="header"]
+|===
+|シナリオ |設計上の確かめ方
+|このマシンで観測できる主張はプローブ出力を根拠に持つ
+|レポートの観測できる主張に `〔probe: …〕` が付き、記録ファイルにそのキーがある。
+|このマシンで観測できない主張は出典のみと明記される
+|AArch64 などの主張に「出典のみ・未実測」と URL と版が付く。
+|記録と食い違う出力は失敗として見える
+|記録を1行変えて `run.sh` を実行すると、`不一致 <id>` と差分が出て終了状態が 1 になる。
+|依存を取得できないプローブは未実行として表示される
+|`https_proxy` を到達できないアドレスにして実行すると、curl で取る `libdfp` と `intel-dfp` のプローブが未実行と理由付きで表示され、ほかが一致すれば終了状態は 0 になる。前提は、固定した nixpkgs と nix の依存が一度取得済みでキャッシュにあることである。flake の入力はクライアントが取得するので、キャッシュがなければ nix の依存も未実行になる。
+|コンパイラをビルドできれば Zustral プログラムで確かめる
+|`run.sh` の出力に `一致 ffi` と、その下に Zustral プログラムの実際の出力が表示される。
+|コンパイラをビルドできなければ理由を残して C だけで確かめる
+|`ZUSTRAL_BUILD_TIMEOUT=0.01` で実行すると `ffi` が未実行と理由付きで表示される。`timeout` は `nix develop` の起動ごと包み、その起動だけで約0.3秒かかる（実験1）ので、`austral` がビルド済みでも上限を超える。`0` は GNU timeout では無制限を意味するので使わない。レポートには、その場合に C だけの根拠に切り替える旨と、このマシンではビルドできた事実を書く。
+|結果が一致しない組み合わせは隠さず示される
+|変種だけの記録を作る前の再実行では、`不一致` の行が変種の id（`<系統>@<コンパイラ>-<最適化>`）と、記録と実際の出力の差分を示す。記録を作った後は、その変種が `一致*` と表示され、レポートが系統の記録と変種の記録の両方の出力を載せる。
+|clang でコンパイルできない系統は clang 比較を未実行と示す
+|`d128@clang-*` と `libdfp@clang-*` が、依存 `clang-dfp` の理由（clang のエラー行）付きで未実行と表示される。
+|===
+
+== Quint を使わない理由
+
+状態はプローブごとの直線的な3値の結果だけで、並行更新はない。
+正しさは「表を上から処理し、結果を数える」ループで決まる。
+Quint でモデル化しても、テスト（記録の改ざんと依存の遮断による実行）より多くは確かめられない。
+
+== 未確認事項と制約
+
+* libdfp の tarball の sha256 は実装時に記録する。GitHub のアーカイブは、同じ commit でも将来 sha256 が変わることがある。そのときは依存 `libdfp` が未実行になる。
+* netlib の Intel DFP は、同じファイル名のまま差し替わると sha256 の照合で未実行になる。
+* 4変種の出力が実際に一致するかは、実装で走らせるまで分からない。食い違った場合の記録と表示は「プローブ表」の節で決めてある。
+* 決定性の比較は、ライブラリ本体を1つの最適化レベルでビルドした範囲に限られる。
+* 要件の「データ移行、互換性、セキュリティ、運用への影響」は nixpkgs の版を固定しない前提で書かれているが、この設計は rev を固定する。版をレポートに記録する点は変わらない。要件の記述は重大な食い違いではないため直していない。
+* プローブは「記録との一致」しか確かめない。記録自体が正しいかは、レポートの主張を一次資料と突き合わせるレビューで確かめる。

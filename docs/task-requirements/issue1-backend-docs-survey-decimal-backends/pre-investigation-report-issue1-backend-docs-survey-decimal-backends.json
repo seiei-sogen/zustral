@@ -2,7 +2,7 @@
   "meta": {
     "schema_version": 2,
     "subject": "issue #1: Zustral の Decimal 候補バックエンド3系統の調査に向けた、リポジトリと実行環境の現状",
-    "generated_at": "2026-10-26T00:00:00+09:00",
+    "generated_at": "2026-10-26T14:25:57+09:00",
     "repo_root": "/home/agir_wsl/develop/ghq_repos/github.com/seiei-sogen/zustral-worktrees/feat/issue1-backend-docs-survey-decimal-backends",
     "git_ref": "feat/issue1-backend-docs-survey-decimal-backends @ bcf6cfd3efd3abd736060d3e322e9bf0fefde487",
     "investigations": [
