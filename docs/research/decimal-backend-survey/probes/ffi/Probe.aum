@@ -1,0 +1,82 @@
+pragma Unsafe_Module;
+
+import Austral.Memory (Address, Pointer, allocateBuffer, nullCheck);
+
+module body Probe is
+    pragma Foreign_Import(External_Name => "puts");
+    function Put_String(str: Span[Nat8, Static]): Int32 is
+    end;
+
+    pragma Foreign_Import(External_Name => "mpd_qnew");
+    function Mpd_Qnew(): Address[Nat8] is
+    end;
+
+    pragma Foreign_Import(External_Name => "shim_mpd_set");
+    function Mpd_Set(dec: Address[Nat8], text: Span[Nat8, Static]): Int32 is
+    end;
+
+    pragma Foreign_Import(External_Name => "shim_mpd_add");
+    function Mpd_Add(result: Address[Nat8], a: Address[Nat8], b: Address[Nat8]): Int32 is
+    end;
+
+    pragma Foreign_Import(External_Name => "shim_mpd_print");
+    function Mpd_Print(key: Span[Nat8, Static], dec: Address[Nat8]): Int32 is
+    end;
+
+    pragma Foreign_Import(External_Name => "shim_d128_set");
+    function D128_Set(slot: Address[Nat8], coefficient: Int64, exponent: Int32): Int32 is
+    end;
+
+    pragma Foreign_Import(External_Name => "shim_d128_add");
+    function D128_Add(result: Address[Nat8], a: Address[Nat8], b: Address[Nat8]): Int32 is
+    end;
+
+    pragma Foreign_Import(External_Name => "shim_d128_print");
+    function D128_Print(key: Span[Nat8, Static], slot: Address[Nat8]): Int32 is
+    end;
+
+    pragma Foreign_Import(External_Name => "shim_i128_set");
+    function I128_Set(slot: Address[Nat8], coefficient: Int64, exponent: Int32): Int32 is
+    end;
+
+    pragma Foreign_Import(External_Name => "shim_i128_add");
+    function I128_Add(result: Address[Nat8], a: Address[Nat8], b: Address[Nat8]): Int32 is
+    end;
+
+    pragma Foreign_Import(External_Name => "shim_i128_print");
+    function I128_Print(key: Span[Nat8, Static], slot: Address[Nat8]): Int32 is
+    end;
+
+    function main(): ExitCode is
+        let ma: Address[Nat8] := Mpd_Qnew();
+        let mb: Address[Nat8] := Mpd_Qnew();
+        let mr: Address[Nat8] := Mpd_Qnew();
+        case nullCheck(ma) of
+            when Some(value: Pointer[Nat8]) do
+                Put_String("mpd_qnew_direct=ok");
+            when None do
+                Put_String("mpd_qnew_direct=null");
+        end case;
+        Mpd_Set(ma, "0.1");
+        Mpd_Set(mb, "0.2");
+        Mpd_Add(mr, ma, mb);
+        Mpd_Print("mpd_add_01_02", mr);
+
+        let da: Address[Nat8] := allocateBuffer(16);
+        let db: Address[Nat8] := allocateBuffer(16);
+        let dr: Address[Nat8] := allocateBuffer(16);
+        D128_Set(da, 1, -1);
+        D128_Set(db, 2, -1);
+        D128_Add(dr, da, db);
+        D128_Print("d128_add_01_02", dr);
+
+        let ia: Address[Nat8] := allocateBuffer(16);
+        let ib: Address[Nat8] := allocateBuffer(16);
+        let ir: Address[Nat8] := allocateBuffer(16);
+        I128_Set(ia, 1, -1);
+        I128_Set(ib, 2, -1);
+        I128_Add(ir, ia, ib);
+        I128_Print("i128_add_01_02", ir);
+        return ExitSuccess();
+    end;
+end module body.

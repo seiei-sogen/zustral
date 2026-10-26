@@ -1,0 +1,13 @@
+Compiler call tree printed to calltree.html
+Error:
+  Title: Generic Error
+  Module:
+    UnitReturn
+  Location:
+    [no span available]
+  Description:
+    Not allowed
+  Code:
+    [no span available]
+
+exit=255

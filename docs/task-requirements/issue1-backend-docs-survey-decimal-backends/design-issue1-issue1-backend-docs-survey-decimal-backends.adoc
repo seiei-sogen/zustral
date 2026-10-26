@@ -174,7 +174,7 @@ nix の gcc と clang に揃えれば、ライブラリと同じ glibc で、別
 プローブの gcc は 16.2.0 になるので、レポートの主張は「nixpkgs の gcc 16.2.0 では」の形で書く。
 NFR-003 が求めるのは「このマシンで追加の手作業なしに再実行できる」ことで、このマシンの nix 2.34.6 で満たす。
 REQ-003 の例の「34桁」は、事前調査で gcc 13.3.0 の `__DEC128_MANT_DIG__=34` として観測済みである。
-gcc 16.2.0 での値はまだ観測していない。レポートが根拠にするのは、`d128` プローブが gcc 16.2.0 で出す値で、実装で確かめる。
+実装では `d128` プローブが gcc 16.2.0 で `DEC128_MANT_DIG=34` を出し、レポートはこの値を根拠にした。要件の例も gcc 16.2.0 に合わせて直した。
 
 == ファイル構成と所有
 
@@ -185,6 +185,8 @@ gcc 16.2.0 での値はまだ観測していない。レポートが根拠にす
 |調査レポート本体（日本語）。GitHub でディレクトリを開くと表示される。
 |`run.sh`
 |1コマンドの再実行スクリプト（bash）。プローブ表、依存の取得、照合、集計を持つ。
+|`probes/bid128.h`
+|BID 形式の16バイトを `<符号><係数>E<指数>` の文字列にする関数。glibc の `printf` には `_Decimal128` の書式がないので、`d128.c`、`libdfp.c`、`ffi/shim.c` が共有する。
 |`probes/mpd.c`
 |mpdecimal 系統のプローブ。
 |`probes/d128.c`
@@ -246,7 +248,7 @@ gcc 16.2.0 での値はまだ観測していない。レポートが根拠にす
 固定値:
 
 * `NIXPKGS=github:NixOS/nixpkgs/674a2028661e550a97400c1cc992b9cca9a668a1`（事前調査で使った registry の rev と同じ）
-* libdfp の commit は `e898f1868e3fb0b703e508857bae0df08d4268d5`（2026-09-21、版 1.0.17）。tarball の sha256 は実装時に記録する。
+* libdfp の commit は `e898f1868e3fb0b703e508857bae0df08d4268d5`（2026-09-21、版 1.0.17）。tarball の sha256 は `bfabeb4811d904b858fb414edf181da9b054791654576f48fbfd0bc4f5589163`（実装時に取得して固定した）。
 * Intel DFP は `IntelRDFPMathLib20U5.tar.gz`、sha256 `85dafd70f0fe2a8da218ade4233fca9d3228b0b04cd6d8527f7499926be01037`。
 * 依存のビルド（`libdfp`、`intel-dfp`）には `timeout 600` を掛ける。
 * `ZUSTRAL_BUILD_TIMEOUT` の既定は 600 秒。これが REQ-007 の「手間の上限」である（<<ffi-cap>>）。
@@ -272,7 +274,7 @@ gcc 16.2.0 での値はまだ観測していない。レポートが根拠にす
 |`libdfp@{gcc,clang}-{O0,O2}`
 |libdfp
 |`gcc` または `clang-dfp`、`libdfp`
-|`probes/libdfp.c` を `-D__STDC_WANT_IEC_60559_DFP_EXT__ -I<src>/dfp -I<src>/include` でコンパイルし、`-L<build> -Wl,-rpath,<build> -ldfp` でリンクする（`<src>` と `<build>` は一時ディレクトリの中。install はしない）
+|`probes/libdfp.c` を `-D__STDC_WANT_DEC_FP__ -D__STDC_WANT_IEC_60559_DFP_EXT__ -I<src>/dfp -I<src>/include` でコンパイルし（libdfp の `dfp/fenv.h` と `dfp/math.h` は `__STDC_WANT_DEC_FP__` がないと宣言を出さない）、`-L<build> -Wl,-rpath,<build> -ldfp` でリンクする（`<src>` と `<build>` は一時ディレクトリの中。install はしない）
 |`expected/libdfp.txt`
 |`intel@{gcc,clang}-{O0,O2}`
 |Intel DFP
@@ -300,6 +302,7 @@ gcc 16.2.0 での値はまだ観測していない。レポートが根拠にす
 これが REQ-008 の「最適化レベル間」「gcc と clang の間」の一致の検査になる。
 
 変種の出力が実際に食い違ったときの扱いもここで決める。
+変種を持つのは `<系統>@<変種>` の形の id だけで、`ffi` と `ffi-unit-return` には変種だけの記録を作らない。
 その変種だけの記録 `expected/<id>.txt`（例: `expected/mpd@clang-O2.txt`）があれば、ランナーは系統の記録の代わりにそれと照合する。
 変種だけの記録は、食い違いを実測したときに `--record` が書く（次節）。
 変種だけの記録で一致したプローブは `一致*  <id>（変種別の記録）` と表示し、集計の一致に数える。
@@ -358,8 +361,8 @@ docs/research/decimal-backend-survey/run.sh --record   # 記録の書き直し
 前提（レポートに書く。REQ-005）:
 
 * x86_64 Linux、flakes を有効にした nix（このマシンは 2.34.6）
-* ホストの bash、coreutils、diffutils、curl、tar、gzip
-* 初回はネットワーク。nixpkgs、libdfp、Intel DFP を取得する
+* ホストの bash、coreutils、diffutils、grep、sed、curl、tar、gzip
+* ネットワーク。nixpkgs は nix のストアに残るので取得は初回だけだが、libdfp と Intel DFP の tarball は一時ディレクトリに置くので実行のたびに取得する（レビューで、当初の「初回だけ」の記述を実際の動作に合わせて直した）
 
 `--record` は、まず `expected/` の既存の変種だけの記録を消す。
 次に、記録ファイルごとに、表の順で最初に実行できたプローブの1回目の出力を系統の記録として書く。
@@ -472,7 +475,7 @@ REQ-002 の観点のうち、このマシンで観測できるものをプロー
 <<experiments>> の実験2で、mpdecimal のヘッダを生成 C と同じ翻訳単位に入れると型が衝突すると確かめた。
 そこで、ライブラリのヘッダは生成 C に入れず、別の翻訳単位のシムだけが読む。
 
-. `austral compile probes/ffi/Probe.aum --entrypoint=Probe:main --target-type=c --output=$T/ffi.c` で C を出す。
+. `Probe.aum` を一時ディレクトリ `$T` へ複写し、そこで `austral compile Probe.aum --entrypoint=Probe:main --target-type=c --output=ffi.c` を実行して C を出す。
 . `gcc -fwrapv -Wno-builtin-declaration-mismatch $T/ffi.c probes/ffi/shim.c -I<mpdecimal.dev>/include -L<mpdecimal.out>/lib -Wl,-rpath,<mpdecimal.out>/lib -lmpdec -lm` でリンクする。`-fwrapv -Wno-builtin-declaration-mismatch` と `-lm` は `test-programs/runner.py:400-408` の前例に合わせ、mpdecimal の `-I`、`-L`、`-rpath` を足す。
 . できた実行ファイルを2回実行し、`expected/ffi.txt` と照合する。
 
@@ -485,7 +488,8 @@ REQ-002 の観点のうち、このマシンで観測できるものをプロー
 * `__int128`: 同じく、16バイトの領域へのポインタ越しに渡す。
 
 `UnitReturn.aum` は、`void` の C 関数を戻り値 `Unit` で束縛して呼び、コンパイラが拒むことを出力で示す。
-記録にマシン固有の絶対パスが入らないよう、`run.sh` はコンパイラを `docs/research/decimal-backend-survey/` で起動し、相対パスを渡す。
+記録にマシン固有の絶対パスが入らないよう、`run.sh` は `.aum` を一時ディレクトリへ複写し、そこでコンパイラを起動して相対パスを渡す。
+コンパイラは起動したディレクトリに `calltree.html` を書くので、`docs/research/decimal-backend-survey/` で起動すると作業ツリーに `.gitignore` 済みのファイルが残る。実装中にこれを観測し、一時ディレクトリで起動する形に改めた。
 128ビット整数の型がないこととレコードを値で渡せないことは、コンパイラのソースの引用で示す（REQ-007）。
 
 libdfp と Intel DFP の FFI 上の扱いは、ヘッダのシグネチャとこの2つのプローブの結果から述べる。
@@ -566,9 +570,10 @@ Quint でモデル化しても、テスト（記録の改ざんと依存の遮�
 
 == 未確認事項と制約
 
-* libdfp の tarball の sha256 は実装時に記録する。GitHub のアーカイブは、同じ commit でも将来 sha256 が変わることがある。そのときは依存 `libdfp` が未実行になる。
+* GitHub のアーカイブは、同じ commit でも将来 sha256 が変わることがある。そのときは依存 `libdfp` が未実行になる。
+* GCC の `_Decimal128` と libdfp の10進の例外フラグは、glibc の `fetestexcept` では見えなかった（実装で観測）。`d128` は libgcc 内部の `__dfp_test_except` も出す。libdfp には同じ働きの公開関数が見つからず、`fetestexcept` の結果だけを出す。
 * netlib の Intel DFP は、同じファイル名のまま差し替わると sha256 の照合で未実行になる。
-* 4変種の出力が実際に一致するかは、実装で走らせるまで分からない。食い違った場合の記録と表示は「プローブ表」の節で決めてある。
+* 実装で走らせた結果、実行できた変種はすべて系統の記録と一致し、変種だけの記録は1つもできなかった。食い違った場合の記録と表示は「プローブ表」の節のとおりで、障害を起こして確かめた（実装計画の「検証結果」）。
 * 決定性の比較は、ライブラリ本体を1つの最適化レベルでビルドした範囲に限られる。
-* 要件の「データ移行、互換性、セキュリティ、運用への影響」は nixpkgs の版を固定しない前提で書かれているが、この設計は rev を固定する。版をレポートに記録する点は変わらない。要件の記述は重大な食い違いではないため直していない。
+* 要件の「データ移行、互換性、セキュリティ、運用への影響」は、当初 nixpkgs の版を固定しない前提で書かれていた。実装の段階で、この設計に合わせて rev を固定する記述に直した。
 * プローブは「記録との一致」しか確かめない。記録自体が正しいかは、レポートの主張を一次資料と突き合わせるレビューで確かめる。

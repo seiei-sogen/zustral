@@ -1,0 +1,12 @@
+pragma Unsafe_Module;
+
+module body UnitReturn is
+    pragma Foreign_Import(External_Name => "srand");
+    function Seed(seed: Nat32): Unit is
+    end;
+
+    function main(): ExitCode is
+        Seed(1);
+        return ExitSuccess();
+    end;
+end module body.

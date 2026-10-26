@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>超やさしい解説: 10進バックエンド調査の実装計画（issue #1）</title>
+<style>
+:root { --fg:#1f2328; --muted:#57606a; --bg:#fffdf7; --card:#ffffff; --line:#e1d9c6; --blue:#0b5cad; --green:#116329; --red:#a40e26; --gray:#57606a; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--fg); font: 17px/1.85 system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+main { max-width: 900px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 1.6rem; line-height: 1.4; }
+h2 { font-size: 1.3rem; margin-top: 2.4rem; padding: .3rem .7rem; background: #e8f1fb; border-radius: 8px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 18px; margin: 1rem 0; }
+.big { font-size: 1.15rem; font-weight: 700; }
+code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .9em; background: #f3eee2; padding: 0 .25em; border-radius: 4px; overflow-wrap: anywhere; }
+pre code { background: transparent; padding: 0; }
+table { border-collapse: collapse; width: 100%; display: block; overflow-x: auto; }
+th, td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
+th { background: #f3eee2; white-space: nowrap; }
+svg { width: 100%; height: auto; display: block; }
+figure { margin: 1rem 0; } figcaption { color: var(--muted); font-size: .9rem; }
+</style>
+<style id="create-html-code-style">
+pre.shiki {
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 1rem;
+  border-radius: .75rem;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: .9rem;
+  line-height: 1.7;
+  tab-size: 2;
+}
+pre.shiki > code {
+  display: block;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  white-space: pre;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+pre.shiki:focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; }
+</style></head>
+<body>
+<main>
+<h1>超やさしい解説: 10進バックエンド調査の実装計画（issue #1）</h1>
+
+<div class="card">
+<p class="big">ひとことで言うと</p>
+<p>「お金の計算に使う10進数の部品」の候補を3つ並べて、違いを<strong>証拠つき</strong>で書いたレポートを作る計画です。証拠は、誰でも<strong>コマンド1回</strong>でやり直せる小さなプログラムの出力です。</p>
+<p>どれを使うかは、この計画では決めません。決めるのは後のチケット（0004・0005・0008）です。</p>
+</div>
+
+<h2>1. 何を比べるの？</h2>
+<p>10進数を計算機で扱う方法の候補は3つです。</p>
+<table>
+<tr><th>候補</th><th>たとえると</th></tr>
+<tr><td>mpdecimal</td><td>いくらでも桁を増やせる電卓。ただし使うたびにメモリを借りて、返す必要がある。Python の <code>decimal</code> の中身。</td></tr>
+<tr><td>decimal128（GCC の <code>_Decimal128</code>、libdfp、Intel DFP）</td><td>34桁までの決まった大きさ（16バイト）の電卓。国際規格（IEEE 754-2008）どおりに動く。同じ規格の実装が3つある。</td></tr>
+<tr><td><code>__int128</code> 固定小数点</td><td>とても大きな整数に「小数点は右から18桁目」と決めて使う自作の電卓。丸め方は自分で書く。</td></tr>
+</table>
+<p>見る点は5つです。メモリの借り方と返し方、桁数と丸め方、Zustral から呼べるか、入手しやすさとライセンス、何度やっても同じ答えか。</p>
+
+<h2>2. 証拠はどうやって作るの？</h2>
+<p>候補ごとに小さな C のプログラム（<strong>プローブ</strong>＝「探り針」）を書き、計算結果を <code>key=value</code> の行で出させます。その出力を <code>expected/</code> に<strong>記録</strong>しておきます。</p>
+<p>再実行の係が <code>run.sh</code> です。プローブを作り直して2回動かし、記録と同じかを比べます。結果は3種類だけです。</p>
+<figure>
+<svg viewBox="0 0 860 330" role="img" aria-labelledby="flowTitle">
+<title id="flowTitle">run.sh が1つのプローブを処理する流れ。部品を取れなければ未実行、ビルドに失敗するか記録と違えば不一致、2回とも記録と同じなら一致</title>
+<defs><marker id="ar" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#57606a" /></marker></defs>
+<rect x="10" y="20" width="170" height="60" rx="10" fill="#e8f1fb" stroke="#0b5cad" />
+<text x="95" y="47" text-anchor="middle" font-size="16" fill="#1f2328">① 部品を取る</text>
+<text x="95" y="68" text-anchor="middle" font-size="12" fill="#57606a">コンパイラ・ライブラリ</text>
+<rect x="240" y="20" width="170" height="60" rx="10" fill="#e8f1fb" stroke="#0b5cad" />
+<text x="325" y="47" text-anchor="middle" font-size="16" fill="#1f2328">② ビルドする</text>
+<text x="325" y="68" text-anchor="middle" font-size="12" fill="#57606a">gcc / clang、-O0 / -O2</text>
+<rect x="470" y="20" width="170" height="60" rx="10" fill="#e8f1fb" stroke="#0b5cad" />
+<text x="555" y="47" text-anchor="middle" font-size="16" fill="#1f2328">③ 2回動かす</text>
+<text x="555" y="68" text-anchor="middle" font-size="12" fill="#57606a">出力を記録と比べる</text>
+<rect x="690" y="20" width="160" height="60" rx="10" fill="#dafbe1" stroke="#116329" />
+<text x="770" y="56" text-anchor="middle" font-size="18" font-weight="bold" fill="#116329">一致</text>
+<line x1="180" y1="50" x2="236" y2="50" stroke="#57606a" stroke-width="2" marker-end="url(#ar)" />
+<line x1="410" y1="50" x2="466" y2="50" stroke="#57606a" stroke-width="2" marker-end="url(#ar)" />
+<line x1="640" y1="50" x2="686" y2="50" stroke="#57606a" stroke-width="2" marker-end="url(#ar)" />
+<text x="663" y="40" text-anchor="middle" font-size="11" fill="#57606a">2回とも同じ</text>
+<rect x="10" y="230" width="190" height="80" rx="10" fill="#eaeef2" stroke="#57606a" />
+<text x="105" y="262" text-anchor="middle" font-size="18" font-weight="bold" fill="#1f2328">未実行</text>
+<text x="105" y="286" text-anchor="middle" font-size="12" fill="#1f2328">理由を表示。成功に数えない</text>
+<rect x="400" y="230" width="300" height="80" rx="10" fill="#ffebe9" stroke="#a40e26" />
+<text x="550" y="262" text-anchor="middle" font-size="18" font-weight="bold" fill="#a40e26">不一致</text>
+<text x="550" y="286" text-anchor="middle" font-size="12" fill="#1f2328">名前と差分を表示。最後は失敗（終了状態 1）</text>
+<line x1="95" y1="80" x2="95" y2="226" stroke="#57606a" stroke-width="2" marker-end="url(#ar)" />
+<text x="105" y="160" font-size="12" fill="#1f2328">取れない</text>
+<line x1="325" y1="80" x2="470" y2="226" stroke="#57606a" stroke-width="2" marker-end="url(#ar)" />
+<text x="330" y="160" font-size="12" fill="#1f2328">ビルド失敗</text>
+<line x1="555" y1="80" x2="555" y2="226" stroke="#57606a" stroke-width="2" marker-end="url(#ar)" />
+<text x="565" y="160" font-size="12" fill="#1f2328">記録と違う／記録がない</text>
+</svg>
+<figcaption>図1. 1つのプローブの行き先は「一致」「不一致」「未実行」のどれか1つ。</figcaption>
+</figure>
+<div class="card">
+<p><strong>なぜ「未実行」を失敗にしないの？</strong> clang は <code>_Decimal128</code> を扱えないので、その組み合わせはいつも動かせません。これを失敗にすると、いつも失敗になって本当の食い違いが見えなくなります。だから「未実行」は理由つきで見せるだけにし、成功にも数えません。</p>
+<p><strong>なぜ「ビルド失敗」は不一致なの？</strong> 部品はそろったのに作れないのは、プローブが壊れているからです。「未実行」に混ぜると、壊れたものが成功に見えてしまいます。</p>
+</div>
+<p>照合も記録の作り直しも、コマンド1つです。</p>
+<pre tabindex="0" style="background-color:#1E1E1E;color:#D4D4D4" class="shiki"><code class="language-bash"><span class="line"><span style="color:#DCDCAA">docs/research/decimal-backend-survey/run.sh</span><span style="color:#6A9955">          # 照合する</span></span>
+<span class="line"><span style="color:#DCDCAA">docs/research/decimal-backend-survey/run.sh</span><span style="color:#569CD6"> --record</span><span style="color:#6A9955"> # 記録を作り直す</span></span></code></pre>
+<p>このマシンでの結果は <code>一致 18 / 不一致 0 / 未実行 4</code> です。未実行の4つは、clang で <code>_Decimal128</code> を使う組み合わせです。</p>
+
+<h2>3. 作る順番（タスク）</h2>
+<figure>
+<svg viewBox="0 0 860 250" role="img" aria-labelledby="taskTitle">
+<title id="taskTitle">タスクの順番。T1 が土台で、T2 から T5 は T1 の上に並び、T6 のレポート、T7 の最終確認、commit の後の T8 と続く</title>
+<defs><marker id="ar2" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#57606a" /></marker></defs>
+<rect x="10" y="95" width="130" height="60" rx="10" fill="#e8f1fb" stroke="#0b5cad" />
+<text x="75" y="122" text-anchor="middle" font-size="15" fill="#1f2328">T1 土台</text>
+<text x="75" y="142" text-anchor="middle" font-size="11" fill="#57606a">run.sh と __int128</text>
+<g font-size="13" fill="#1f2328" text-anchor="middle">
+<rect x="200" y="10" width="170" height="44" rx="8" fill="#fff" stroke="#0b5cad" /><text x="285" y="37">T2 GCC _Decimal128</text>
+<rect x="200" y="70" width="170" height="44" rx="8" fill="#fff" stroke="#0b5cad" /><text x="285" y="97">T3 mpdecimal</text>
+<rect x="200" y="130" width="170" height="44" rx="8" fill="#fff" stroke="#0b5cad" /><text x="285" y="157">T4 libdfp と Intel DFP</text>
+<rect x="200" y="190" width="170" height="44" rx="8" fill="#fff" stroke="#0b5cad" /><text x="285" y="217">T5 Zustral から呼ぶ</text>
+</g>
+<rect x="430" y="95" width="120" height="60" rx="10" fill="#e8f1fb" stroke="#0b5cad" />
+<text x="490" y="130" text-anchor="middle" font-size="15" fill="#1f2328">T6 レポート</text>
+<rect x="590" y="95" width="120" height="60" rx="10" fill="#e8f1fb" stroke="#0b5cad" />
+<text x="650" y="130" text-anchor="middle" font-size="15" fill="#1f2328">T7 最終確認</text>
+<rect x="740" y="95" width="110" height="60" rx="10" fill="#fff8e5" stroke="#7d4e00" />
+<text x="795" y="122" text-anchor="middle" font-size="15" fill="#1f2328">T8 解消</text>
+<text x="795" y="142" text-anchor="middle" font-size="11" fill="#57606a">commit の後</text>
+<g stroke="#57606a" stroke-width="2" marker-end="url(#ar2)">
+<line x1="140" y1="125" x2="196" y2="32" /><line x1="140" y1="125" x2="196" y2="92" /><line x1="140" y1="125" x2="196" y2="152" /><line x1="140" y1="125" x2="196" y2="212" />
+<line x1="370" y1="32" x2="426" y2="120" /><line x1="370" y1="92" x2="426" y2="122" /><line x1="370" y1="152" x2="426" y2="128" /><line x1="370" y1="212" x2="426" y2="130" />
+<line x1="550" y1="125" x2="586" y2="125" /><line x1="710" y1="125" x2="736" y2="125" />
+</g>
+</svg>
+<figcaption>図2. 土台（T1）を先に端から端まで通し、候補を1つずつ足していく。</figcaption>
+</figure>
+<table>
+<tr><th>タスク</th><th>やること（やさしく）</th></tr>
+<tr><td>T1</td><td><code>run.sh</code> と一番かんたんな候補（<code>__int128</code>）を作り、「一致・不一致・未実行」が正しく出るところまで通す。</td></tr>
+<tr><td>T2</td><td>GCC の <code>_Decimal128</code> のプローブ。clang では作れないので「未実行」と理由が出ることも確かめる。</td></tr>
+<tr><td>T3</td><td>mpdecimal のプローブ。メモリを何回借りるかも数える。</td></tr>
+<tr><td>T4</td><td>libdfp と Intel DFP をソースから組み立ててプローブを動かす。ネットワークを止めると「未実行」になることも確かめる。</td></tr>
+<tr><td>T5</td><td>Zustral のプログラムから <code>Foreign_Import</code> で各候補を呼ぶ。Zustral には128ビットの型がないので、16バイトの箱へのポインタで渡す。</td></tr>
+<tr><td>T6</td><td>日本語のレポート <code>README.md</code> を書く。事実の文には必ず証拠（プローブの行か、資料の URL と版）を付ける。</td></tr>
+<tr><td>T7</td><td>1回の実行で全部が通り、作業ツリーが汚れないことを確かめる。</td></tr>
+<tr><td>T8</td><td>commit の後に、きれいな作業ツリーでもう一度実行する。通ったら issue #1 に答えを書いて閉じ、地図 issue #9 に1行足す。</td></tr>
+</table>
+
+<h2>4. 正しさはどう確かめるの？</h2>
+<p>専用のテスト道具は足しません。<strong>わざと壊して</strong>、<code>run.sh</code> の表示が変わるかを見ます。終わったら必ず元に戻します。</p>
+<table>
+<tr><th>壊し方</th><th>見えるはずのもの</th></tr>
+<tr><td>記録の1行を書き換える（改ざん）</td><td>その候補が「不一致」になり、差分が出て、失敗で終わる。</td></tr>
+<tr><td>ダウンロードを止める（curl 遮断）</td><td>libdfp と Intel DFP が「未実行」になり、理由が出る。失敗にはならない。</td></tr>
+<tr><td>コンパイラのビルド時間の上限を 0.01 秒にする</td><td>Zustral のプローブが「未実行」になる。</td></tr>
+<tr><td>2回の実行で出力が変わるようにして <code>--record</code> する</td><td>「不一致」になり、両方の出力が出る。記録は書き換わらない。</td></tr>
+</table>
+<p>もう1つ大事なことがあります。<code>--record</code> は「今の出力」をそのまま正解として保存します。プローブが間違っていても正解になってしまうので、記録を作る前に、算数や規格から分かる値（たとえば 1/3 は3が34個）と手で照らしました。</p>
+
+<h2>5. やらないこと</h2>
+<ul>
+<li>どの候補を使うかを決めること（0004・0005・0008 の仕事）。</li>
+<li>コンパイラ（<code>lib/</code>）や標準ライブラリ（<code>standard/</code>）に10進数を実装すること。</li>
+<li>速さを測ること、別の種類のマシンで測ること。</li>
+</ul>
+</main>
+</body>
+</html>

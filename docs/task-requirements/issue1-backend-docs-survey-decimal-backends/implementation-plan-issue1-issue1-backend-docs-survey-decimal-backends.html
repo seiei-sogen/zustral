@@ -1,0 +1,1890 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data: https: http:; style-src 'unsafe-inline'; font-src 'self' data:;">
+  <meta name="generator" content="asciidoc-to-colorful-html">
+  <title>実装計画: 10進バックエンドの実像を掴む（issue #1）</title>
+  <style>
+/*
+ * Standalone Asciidoctor theme.
+ * The palette and document treatments are adapted from
+ * document-base/supplemental-ui/css/custom.css.
+ */
+
+:root {
+  color-scheme: light;
+  --color-ink: #23354a;
+  --color-muted: #607286;
+  --color-primary: #176b87;
+  --color-primary-dark: #123f5d;
+  --color-primary-soft: #e9f5f7;
+  --color-secondary: #6d52a3;
+  --color-secondary-soft: #f1edfa;
+  --color-accent: #d98716;
+  --color-positive: #2f805d;
+  --color-danger: #b64c55;
+  --color-border: #c9d9e3;
+  --color-code-bg: #f3f6f8;
+  --color-surface: #ffffff;
+  --shadow-page: 0 1.4rem 4rem rgb(25 64 88 / 15%);
+  --shadow-soft: 0 0.25rem 1rem rgb(31 75 98 / 9%);
+  --radius-large: 1rem;
+  --radius-medium: 0.55rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 20rem;
+  scroll-behavior: smooth;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--color-ink);
+  background:
+    radial-gradient(circle at 12% 8%, rgb(64 176 174 / 18%), transparent 28rem),
+    radial-gradient(circle at 88% 12%, rgb(126 93 184 / 13%), transparent 25rem),
+    linear-gradient(145deg, #eef7f8 0%, #f8f7fc 52%, #fff8ed 100%);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP",
+    "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+::selection {
+  color: #142b3c;
+  background: #bde8ed;
+}
+
+.page-frame {
+  width: min(74rem, calc(100% - 2rem));
+  margin: 2.5rem auto;
+}
+
+.doc {
+  position: relative;
+  min-width: 0;
+  padding: clamp(1.4rem, 4vw, 4rem);
+  overflow-wrap: anywhere;
+  border: 1px solid rgb(195 216 226 / 85%);
+  border-radius: var(--radius-large);
+  background: #fff;
+  box-shadow: var(--shadow-page);
+}
+
+.doc::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0.38rem;
+  border-radius: var(--radius-large) var(--radius-large) 0 0;
+  background: linear-gradient(90deg, var(--color-primary), #43a6a1 48%, var(--color-secondary));
+  content: "";
+}
+
+.doc h1,
+.doc h2,
+.doc h3,
+.doc h4,
+.doc h5,
+.doc h6 {
+  color: var(--color-primary-dark);
+  font-weight: 750;
+  line-height: 1.4;
+  letter-spacing: 0.015em;
+  scroll-margin-top: 1.5rem;
+}
+
+.doc h1,
+.doc #header > h1 {
+  margin: 0 0 2.3rem;
+  font-size: clamp(2rem, 5vw, 3rem);
+  letter-spacing: 0.025em;
+}
+
+.doc h1::after,
+.doc #header > h1::after {
+  display: block;
+  width: 5.4rem;
+  height: 0.32rem;
+  margin-top: 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-primary), #43a6a1, var(--color-secondary));
+  content: "";
+}
+
+.doc h2 {
+  margin: 2.8rem 0 1.2rem;
+  padding: 0.68rem 1rem 0.68rem 1.1rem;
+  border-left: 0.34rem solid var(--color-primary);
+  border-radius: 0 var(--radius-medium) var(--radius-medium) 0;
+  background: linear-gradient(90deg, var(--color-primary-soft), #f8fbfc 72%, transparent);
+  font-size: clamp(1.45rem, 3vw, 1.9rem);
+}
+
+.doc h3 {
+  margin: 2.25rem 0 0.9rem;
+  padding-bottom: 0.38rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: clamp(1.22rem, 2.3vw, 1.5rem);
+}
+
+.doc h4 {
+  margin: 1.8rem 0 0.7rem;
+  color: #285d72;
+  font-size: 1.14rem;
+}
+
+.doc h5,
+.doc h6 {
+  margin: 1.5rem 0 0.55rem;
+  font-size: 1rem;
+}
+
+.doc p,
+.doc li,
+.doc dd {
+  line-height: 1.82;
+}
+
+.doc p {
+  margin: 0.8rem 0 1rem;
+}
+
+.doc a {
+  color: #086f91;
+  text-decoration-color: #76adbd;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+.doc a:hover {
+  color: #084f70;
+  text-decoration-color: currentcolor;
+}
+
+.doc ul,
+.doc ol {
+  padding-left: 1.55rem;
+}
+
+.doc li + li {
+  margin-top: 0.28rem;
+}
+
+.doc li::marker {
+  color: var(--color-primary);
+  font-weight: 750;
+}
+
+.doc dl dt {
+  margin-top: 1rem;
+  color: var(--color-primary-dark);
+  font-weight: 750;
+}
+
+.doc hr {
+  height: 1px;
+  margin: 2.4rem 0;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--color-border), transparent);
+}
+
+.doc #toc,
+.doc .toc {
+  margin: 1.6rem 0 2.2rem;
+  padding: 1rem 1.2rem;
+  border: 1px solid #cddde5;
+  border-radius: var(--radius-medium);
+  background: linear-gradient(135deg, #f1f9fa, #f7f4fc);
+  box-shadow: var(--shadow-soft);
+}
+
+.doc #toctitle {
+  margin-bottom: 0.45rem;
+  color: var(--color-primary-dark);
+  font-weight: 800;
+}
+
+.doc #toc ul {
+  margin: 0.3rem 0;
+}
+
+.doc table.tableblock {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 1.6rem 0 1.9rem;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  border-collapse: collapse;
+  background: #fff;
+  box-shadow: var(--shadow-soft);
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.doc table.tableblock thead {
+  color: #fff;
+  background: linear-gradient(90deg, var(--color-primary-dark), var(--color-primary));
+}
+
+.doc table.tableblock th,
+.doc table.tableblock td {
+  padding: 0.72rem 0.85rem;
+  border: 1px solid #d7e2e8;
+  text-align: left;
+  vertical-align: top;
+}
+
+.doc table.tableblock th {
+  font-weight: 750;
+}
+
+.doc table.tableblock tbody tr:nth-child(even) {
+  background: #f5f9fa;
+}
+
+.doc table.tableblock tbody tr:hover {
+  background: #edf6f7;
+}
+
+.doc :not(pre) > code,
+.doc kbd {
+  padding: 0.12em 0.4em;
+  border: 1px solid #d6e0e6;
+  border-radius: 0.3rem;
+  color: #87421f;
+  background: var(--color-code-bg);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+}
+
+.doc kbd {
+  color: #36495a;
+  background: linear-gradient(#fff, #edf1f4);
+  box-shadow: 0 0.12rem 0 #c3ced5;
+}
+
+.doc pre {
+  max-width: 100%;
+  margin: 0;
+  overflow: auto;
+  border: 1px solid #cbd8df;
+  border-left: 0.26rem solid var(--color-primary);
+  border-radius: var(--radius-medium);
+  color: #213446;
+  background: #f4f7f9;
+  box-shadow: var(--shadow-soft);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9rem;
+  line-height: 1.62;
+  tab-size: 4;
+}
+
+.doc pre code {
+  display: block;
+  padding: 1rem 1.1rem;
+  color: inherit;
+  background: transparent;
+}
+
+.doc .listingblock,
+.doc .literalblock {
+  margin: 1.35rem 0 1.65rem;
+}
+
+.doc .quoteblock blockquote {
+  margin: 1.4rem 0;
+  padding: 1rem 1.25rem;
+  border-left: 0.32rem solid #5b9da5;
+  border-radius: 0 var(--radius-medium) var(--radius-medium) 0;
+  color: #40566a;
+  background: #f2f8f8;
+}
+
+.doc .quoteblock .attribution {
+  margin-top: -0.9rem;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.doc .sidebarblock,
+.doc .exampleblock > .content {
+  margin: 1.5rem 0;
+  padding: 1rem 1.2rem;
+  border: 1px solid #d8d0e8;
+  border-radius: var(--radius-medium);
+  background: linear-gradient(135deg, #faf8ff, var(--color-secondary-soft));
+  box-shadow: var(--shadow-soft);
+}
+
+.doc .admonitionblock {
+  margin: 1.5rem 0;
+  overflow: hidden;
+  border: 1px solid #c8dce2;
+  border-left: 0.32rem solid var(--color-primary);
+  border-radius: var(--radius-medium);
+  background: #f5fafb;
+  box-shadow: var(--shadow-soft);
+}
+
+.doc .admonitionblock > table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+}
+
+.doc .admonitionblock td.icon {
+  width: 7.5rem;
+  padding: 0.95rem 0.75rem;
+  color: var(--color-primary-dark);
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.doc .admonitionblock td.content {
+  padding: 0.95rem 1rem;
+  border-left: 1px solid rgb(188 211 221 / 85%);
+  background: transparent;
+}
+
+.doc .admonitionblock.tip {
+  border-left-color: var(--color-positive);
+  background: #f0faf5;
+}
+
+.doc .admonitionblock.warning,
+.doc .admonitionblock.caution {
+  border-left-color: var(--color-accent);
+  background: #fff9ed;
+}
+
+.doc .admonitionblock.important {
+  border-left-color: var(--color-danger);
+  background: #fff5f5;
+}
+
+.doc .imageblock {
+  margin: 1.75rem 0 2rem;
+  text-align: center;
+}
+
+.doc img,
+.doc svg,
+.doc video {
+  max-width: 100%;
+  height: auto;
+}
+
+.doc .imageblock img {
+  border: 1px solid #d5e0e5;
+  border-radius: var(--radius-medium);
+  background: #fff;
+  box-shadow: 0 0.4rem 1.2rem rgb(31 75 98 / 12%);
+}
+
+.doc .title,
+.doc .imageblock > .title,
+.doc .listingblock > .title,
+.doc .tableblock > .title {
+  margin: 0.45rem 0;
+  color: var(--color-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.doc mark {
+  padding: 0.08em 0.2em;
+  border-radius: 0.2rem;
+  color: inherit;
+  background: #ffeca8;
+}
+
+.doc details {
+  margin: 1rem 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: #fbfdfd;
+}
+
+.doc summary {
+  color: var(--color-primary-dark);
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.doc #footnotes {
+  margin-top: 3rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-muted);
+  font-size: 0.92rem;
+}
+
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 0.18rem solid #fff;
+  outline-offset: 0.12rem;
+  box-shadow: 0 0 0 0.34rem #0b5e7a;
+}
+
+@media screen and (max-width: 768px) {
+  .page-frame {
+    width: min(100% - 1rem, 74rem);
+    margin: 0.5rem auto;
+  }
+
+  .doc {
+    padding: 1.35rem 1rem 2rem;
+    border-radius: 0.75rem;
+    font-size: 0.98rem;
+  }
+
+  .doc h1,
+  .doc #header > h1 {
+    margin-bottom: 1.8rem;
+    font-size: 1.85rem;
+  }
+
+  .doc h2 {
+    margin-top: 2.2rem;
+    padding: 0.58rem 0.72rem;
+    font-size: 1.38rem;
+  }
+
+  .doc h3 {
+    font-size: 1.2rem;
+  }
+
+  .doc table.tableblock th,
+  .doc table.tableblock td {
+    min-width: 7rem;
+    padding: 0.58rem 0.65rem;
+  }
+
+  .doc .admonitionblock > table,
+  .doc .admonitionblock > table > tbody,
+  .doc .admonitionblock > table > tbody > tr,
+  .doc .admonitionblock td {
+    display: block;
+    width: 100%;
+  }
+
+  .doc .admonitionblock td.icon {
+    padding-bottom: 0.25rem;
+    text-align: left;
+  }
+
+  .doc .admonitionblock td.content {
+    border-top: 1px solid rgb(188 211 221 / 85%);
+    border-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+@media print {
+  @page {
+    margin: 15mm;
+  }
+
+  body {
+    color: #111;
+    background: #fff;
+    font-size: 10.5pt;
+  }
+
+  .page-frame {
+    width: auto;
+    margin: 0;
+  }
+
+  .doc {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .doc::before {
+    display: none;
+  }
+
+  .doc h1,
+  .doc h2,
+  .doc h3,
+  .doc h4,
+  .doc h5,
+  .doc h6 {
+    color: #111;
+    break-after: avoid;
+  }
+
+  .doc h2 {
+    border-left-color: #555;
+    background: none;
+  }
+
+  .doc table.tableblock,
+  .doc pre,
+  .doc .admonitionblock,
+  .doc .imageblock img,
+  .doc #toc,
+  .doc .sidebarblock,
+  .doc .exampleblock > .content {
+    box-shadow: none;
+  }
+
+  .doc table.tableblock thead {
+    color: #111;
+    background: #eee;
+  }
+
+  .doc pre,
+  .doc table,
+  .doc .admonitionblock,
+  .doc .imageblock {
+    break-inside: avoid;
+  }
+
+  .doc a {
+    color: inherit;
+    text-decoration: underline;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="page-frame">
+    <article class="doc">
+<h1>実装計画: 10進バックエンドの実像を掴む（issue #1）</h1>
+<div id="toc" class="toc">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_入力">1. 入力</a></li>
+<li><a href="#_要件サマリと対象外">2. 要件サマリと対象外</a></li>
+<li><a href="#_技術方針と既存パターン">3. 技術方針と既存パターン</a></li>
+<li><a href="#_変更対象一覧">4. 変更対象一覧</a></li>
+<li><a href="#_テストの方針">5. テストの方針</a></li>
+<li><a href="#_実装タスク">6. 実装タスク</a>
+<ul class="sectlevel2">
+<li><a href="#_t1_ランナーと_int128_系統を端から端まで通す">6.1. T1: ランナーと <code>__int128</code> 系統を端から端まで通す</a></li>
+<li><a href="#_t2_gcc_decimal128_系統と_clang_の未実行">6.2. T2: GCC <code>_Decimal128</code> 系統と clang の未実行</a></li>
+<li><a href="#_t3_mpdecimal_系統">6.3. T3: mpdecimal 系統</a></li>
+<li><a href="#_t4_intel_dfp_と_libdfp_の系統">6.4. T4: Intel DFP と libdfp の系統</a></li>
+<li><a href="#_t5_zustral_ffi_プローブ">6.5. T5: Zustral FFI プローブ</a></li>
+<li><a href="#_t6_調査レポート">6.6. T6: 調査レポート</a></li>
+<li><a href="#_t7_範囲と再実行性の最終確認">6.7. T7: 範囲と再実行性の最終確認</a></li>
+<li><a href="#_t8_commit_後の確認と_issue_1_の解消pr_を仕上げる工程で実施">6.8. T8: commit 後の確認と issue #1 の解消（PR を仕上げる工程で実施）</a></li>
+</ul>
+</li>
+<li><a href="#_要件から計画への対応">7. 要件から計画への対応</a></li>
+<li><a href="#_移行互換性ロールバック運用">8. 移行、互換性、ロールバック、運用</a></li>
+<li><a href="#_リスクと軽減策">9. リスクと軽減策</a></li>
+<li><a href="#_完了条件">10. 完了条件</a></li>
+<li><a href="#_検証結果">11. 検証結果</a>
+<ul class="sectlevel2">
+<li><a href="#_テストの要否">11.1. テストの要否</a></li>
+<li><a href="#_既知の値との照合">11.2. 既知の値との照合</a></li>
+<li><a href="#_タスクごとの_done_when">11.3. タスクごとの <code>Done when</code></a></li>
+<li><a href="#_ears_規則と_gherkin_シナリオの実証">11.4. EARS 規則と Gherkin シナリオの実証</a></li>
+<li><a href="#_差分レビュー後の再確認">11.5. 差分レビュー後の再確認</a></li>
+<li><a href="#_計画からの逸脱">11.6. 計画からの逸脱</a></li>
+</ul>
+</li>
+<li><a href="#_判断から学べること">12. 判断から学べること</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_入力">1. 入力</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>要件定義書: <code>req-issue1-backend-docs-survey-decimal-backends.adoc</code></p>
+</li>
+<li>
+<p>設計文書: <code>design-issue1-issue1-backend-docs-survey-decimal-backends.adoc</code></p>
+</li>
+<li>
+<p>事前調査レポート: <code>pre-investigation-report-issue1-backend-docs-survey-decimal-backends.json</code></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_要件サマリと対象外">2. 要件サマリと対象外</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>mpdecimal、IEEE 754-2008 decimal128（GCC <code>_Decimal128</code>、libdfp、Intel DFP）、<code>__int128</code> 固定小数点の3系統を、5観点で比べる日本語のレポートを書く（REQ-001、REQ-002、REQ-009）。
+レポートの観測できる主張は、1コマンドで再実行できるプローブの出力に裏付ける（REQ-003〜REQ-008）。
+最後に issue #1 を解消する（REQ-010）。</p>
+</div>
+<div class="paragraph">
+<p>対象外は要件定義書のとおりで、計画もそれを変えない。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>バックエンドの選定。レポートに推奨を書かない。</p>
+</li>
+<li>
+<p><code>lib/</code>、<code>standard/</code>、<code>docs/wayfinder/</code> の変更。</p>
+</li>
+<li>
+<p>issue #2〜#8 の編集。</p>
+</li>
+<li>
+<p>演算速度の計測、他のプラットフォームでの実測、<code>test-programs/</code> や CI への組み込み、3系統以外の候補。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_技術方針と既存パターン">3. 技術方針と既存パターン</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>設計文書の方式をそのまま実装する。計画の段階で新しい破綻条件は見つからず、方式の比較はやり直さない。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>docs/research/decimal-backend-survey/run.sh</code> は bash で、設計文書の依存表とプローブ表を上から処理する1つのループにする。フレームワークは使わない。</p>
+</li>
+<li>
+<p>C のプローブは系統ごとに1ファイルで、<code>key=value</code> の行を出す。</p>
+</li>
+<li>
+<p>Zustral の FFI プローブは、<code>examples/ffi/FFI.aum</code> の書き方と、<code>test-programs/runner.py:400-408</code> の gcc の呼び方に合わせる。</p>
+</li>
+<li>
+<p>ツールチェーンとライブラリは <code>NIXPKGS=github:NixOS/nixpkgs/674a2028661e550a97400c1cc992b9cca9a668a1</code> から取る。libdfp のビルドは、設計文書の実験3で通ったツールの組をそのまま使う。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_変更対象一覧">4. 変更対象一覧</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>すべて新規ファイルである。既存のファイルは変更しない。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 40%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">パス</th>
+<th class="tableblock halign-left valign-top">内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docs/research/decimal-backend-survey/run.sh</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">再実行スクリプト</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docs/research/decimal-backend-survey/probes/{i128,d128,mpd,intel,libdfp}.c</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">系統ごとの C プローブ</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docs/research/decimal-backend-survey/probes/bid128.h</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">BID 形式の16バイトを <code>&lt;符号&gt;&lt;係数&gt;E&lt;指数&gt;</code> で出す関数（<code>d128.c</code>、<code>libdfp.c</code>、<code>ffi/shim.c</code> が共有。実装で追加）</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docs/research/decimal-backend-survey/probes/ffi/{Probe.aum,UnitReturn.aum,shim.c}</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Zustral FFI プローブ</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docs/research/decimal-backend-survey/expected/*.txt</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">記録した出力（<code>run.sh --record</code> で作る）</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docs/research/decimal-backend-survey/README.md</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">調査レポート</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><code>docs/task-requirements/issue1-backend-docs-survey-decimal-backends/</code> の計画と設計文書は、実装結果に合わせて更新する。</p>
+</div>
+<div class="paragraph">
+<p>実装（T1〜T7）の間、新しいファイルは commit しない。commit は PR を仕上げる工程でまとめて行う。
+だから下の手順は、未追跡のファイルがある作業ツリーでも成り立つ形にしてある。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_テストの方針">5. テストの方針</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>シームは <code>run.sh</code> の外から見える振る舞い、つまり標準出力の結果行と集計行、そして終了状態である。
+レポートの主張の正しさは、記録をあらかじめ知っている値と照らすこと（各タスクの「既知の値」）と、一次資料と照らすレビュー（T6）で確かめる。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>検出できる問題: 記録と食い違う出力の見逃し、未実行を成功に数える誤り、終了状態の誤り、依存の取得失敗の扱いの誤り、clang が扱えない系統の誤った表示、変種だけの記録の扱いの誤り。</p>
+</li>
+<li>
+<p>検出できない問題: プローブが観測すべきことを観測していないこと。これはレポートのレビュー（T6）で補う。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>テストのためのスクリプトやフレームワークは足さない。
+<code>run.sh</code> の照合そのものが、プローブに対する回帰の検査である。
+ランナーの分岐は、下の「障害を起こして確かめる手順」で観測する。
+どれも作業ツリーを元に戻して終わる。
+実装中の成果物は未追跡なので、<code>git status</code> だけでは中身の変化が見えない。
+手順の前後で <code>git status --short --untracked-files=all</code> と <code>find docs/research/decimal-backend-survey -type f -exec sha256sum {} + | sort</code> の出力が同じことを確かめる。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 42.8571%;">
+<col style="width: 42.8572%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">名前</th>
+<th class="tableblock halign-left valign-top">手順</th>
+<th class="tableblock halign-left valign-top">期待する観測</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">改ざん</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>expected/i128.txt</code> を <code>$TMPDIR</code> へ複写し、1行を書き換えて <code>run.sh</code> を実行し、複写から戻す</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>不一致  i128@gcc-O0</code> から <code>i128@clang-O2</code> までの4行と、書き換えた行を含む <code>diff -u</code> が出る。集計行が <code>一致 N / 不一致 4 / 未実行 K</code> で、終了状態が 1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">変種の記録</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>expected/i128.txt</code> を <code>expected/i128@clang-O2.txt</code> に複写して <code>run.sh</code> を実行し、複写を消す。続けて、その複写の1行を書き換えたものを置いて実行し、消す</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1回目は <code>一致*  i128@clang-O2（変種別の記録）</code> が出て集計の一致に数えられ、終了状態が 0。2回目は <code>不一致  i128@clang-O2</code> だけが出て、ほかの i128 の3変種は一致のまま</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">変種の食い違いの記録</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/i128.c</code> を <code>$TMPDIR</code> へ複写し、<code><em>OPTIMIZE</em></code> が定義されたとき（<code>-O2</code>）だけ1行多く出すよう一時的に書き換える。<code>run.sh --record</code> を実行し、<code>i128.c</code> を書き換えたまま <code>run.sh</code> を実行する。そのあと <code>i128.c</code> を複写から戻し、できた <code>expected/i128@*-O2.txt</code> を消し、<code>run.sh --record</code> で記録を作り直す</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--record</code> の後に <code>expected/i128@gcc-O2.txt</code> と <code>expected/i128@clang-O2.txt</code> ができる。続く <code>run.sh</code> で2つが <code>一致*</code> になり、<code>-O0</code> の2変種は <code>一致</code> のまま、終了状態が 0</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">繰り返しの食い違い</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/i128.c</code> を <code>$TMPDIR</code> へ複写し、プロセス ID を1行出すよう一時的に書き換えて <code>run.sh --record</code> を実行し、複写から戻す</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">i128 の4変種が不一致になり、1回目と2回目の両方の出力が表示され、<code>expected/i128.txt</code> は書き換わらない。終了状態が 1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2回目だけの食い違い</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/i128.c</code> を <code>$TMPDIR</code> へ複写し、目印のファイルがなければ作り、あれば消して <code>second_run=1</code> を1行足して出すよう一時的に書き換える。つまり2回目の実行だけが記録と異なる。<code>run.sh</code>（照合）を実行し、複写から戻す</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">i128 の4変種が不一致になり、差分の見出しが <code>2回目の出力</code> だけである。終了状態が 1。2回目の照合を飛ばすランナーなら一致になってしまうので、この手順がそれを見分ける</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">curl 遮断</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">nix の依存を一度取得した後で、<code>https_proxy=http://127.0.0.1:9 run.sh</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intel@<strong></code> の4行と <code>libdfp@gcc-</strong></code> の2行が、<code>未実行</code> と取得段の理由付きで出る（<code>libdfp@clang-*</code> は従来どおり <code>clang-dfp</code> の理由で未実行）。集計行の未実行が6件増え、一致が6件減る。ほかが一致なら終了状態が 0。nix の依存まで未実行になった場合（キャッシュの仮説が外れた場合）は、代わりに <code>run.sh</code> を <code>$TMPDIR</code> へ複写し、libdfp と Intel DFP の URL を <code><a href="https://127.0.0.1:9/" class="bare">https://127.0.0.1:9/</a></code> で始まる到達できない先に書き換えて実行し、複写から戻す。期待する観測は同じ</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ビルド上限</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ZUSTRAL_BUILD_TIMEOUT=0.01 run.sh</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>未実行  ffi: zustral: 上限 0.01 秒を超えた</code> の形の行が <code>ffi</code> と <code>ffi-unit-return</code> に出て、集計行の未実行が2件増える。ほかが一致なら終了状態が 0</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>表と各タスクの「期待する観測」では結果行の空白を詰めて書く。実際の書式は設計文書の結果表に従う。</p>
+</div>
+<div class="paragraph">
+<p>T2〜T5 でも T1 と同じく、プローブを書いたら記録がない状態で <code>不一致</code>（記録ファイルがない）が出ることを先に確かめる。
+各プローブは、記録を作る前に、知っている値と手で照らす。
+<code>--record</code> は今の出力をそのまま記録するので、ここを飛ばすと記録が同語反復になるからである。
+各タスクの「既知の値」は、仕様や算術から独立に決まる値である。
+照合した結果は「検証結果」に記録する。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_実装タスク">6. 実装タスク</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>進捗:</p>
+</div>
+<div class="ulist checklist">
+<ul class="checklist">
+<li>
+<p>&#10003; T1: ランナーと <code>__int128</code> 系統</p>
+</li>
+<li>
+<p>&#10003; T2: GCC <code>_Decimal128</code> 系統と clang の未実行</p>
+</li>
+<li>
+<p>&#10003; T3: mpdecimal 系統</p>
+</li>
+<li>
+<p>&#10003; T4: Intel DFP と libdfp の系統</p>
+</li>
+<li>
+<p>&#10003; T5: Zustral FFI プローブ</p>
+</li>
+<li>
+<p>&#10003; T6: 調査レポート</p>
+</li>
+<li>
+<p>&#10003; T7: 範囲と再実行性の最終確認</p>
+</li>
+<li>
+<p>&#10063; T8: commit 後の確認と issue #1 の解消。未実施。commit 後の PR を仕上げる工程（Phase 9）で行うと決めてあり、実装の工程では commit しないため</p>
+</li>
+</ul>
+</div>
+<div class="sect2">
+<h3 id="_t1_ランナーと_int128_系統を端から端まで通す">6.1. T1: ランナーと <code>__int128</code> 系統を端から端まで通す</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Satisfies: REQ-005、REQ-006（不一致の規則）、REQ-008（4変種と2回実行、変種だけの記録）。T2〜T5 の土台。</p>
+</li>
+<li>
+<p>Design: 「データの形」「公開インターフェース」「処理の流れと状態」「決定性の演算と入力」</p>
+</li>
+<li>
+<p>Depends on: なし</p>
+</li>
+<li>
+<p>対象: <code>run.sh</code>、<code>probes/i128.c</code>、<code>expected/i128.txt</code></p>
+</li>
+<li>
+<p>変更前後: 前はプローブも再実行手段もない。後は <code>run.sh</code> が依存 <code>gcc</code> と <code>clang</code> を取得し、<code>i128@{gcc,clang}-{O0,O2}</code> をビルドして2回ずつ実行し、記録と照合し、集計と終了状態を出す。<code>--record</code> が系統の記録と、食い違った変種だけの記録を書き、照合と同じ集計行と終了状態を出す。照合は変種だけの記録があればそれを優先する。1つのプローブで複数の依存を取得できないときは、プローブ表に書いた依存の順で最初に取得できなかったものの理由を出す。</p>
+</li>
+<li>
+<p><code>i128.c</code> は、スケール 10^18 の固定小数点で設計文書の演算の組を計算し、<code>sizeof</code>、桁の上限、<code>-fwrapv</code> での <code>overflow</code> と <code>__builtin_mul_overflow</code> の検出結果を出す。</p>
+</li>
+<li>
+<p>既知の値: <code>sizeof=16</code>、<code>div_1_3=0.333333333333333333</code>、<code>div_2_3=0.666666666666666666</code>（0への切り捨て）、<code>add_01_02=0.300000000000000000</code>、<code>sum_001_x1000=10.000000000000000000</code>、<code><em>int128</code> の最大値 <code>170141183460469231731687303715884105727</code>。<code>overflow</code>（内部の整数の最大値 ×10）は <code>-fwrapv</code> で (2^127−1)×10 mod 2^128 を符号付きに読んだ値、つまり内部の整数 <code>-10</code>（<code>-0.000000000000000010</code>）になり、<code></em>builtin_mul_overflow</code> は検出する。<code>mul_wide</code> は、35桁の入力をスケール 10^18 の内部の整数へ変換する段階で約38桁を超えるので、<code>__builtin_mul_overflow</code> が検出する。プローブは値を出さず <code>mul_wide=overflow_detected</code> を出す。</p>
+</li>
+<li>
+<p>テスト: 記録がない状態で4行の <code>不一致</code> を確かめる。既知の値と照らしてから <code>--record</code> を実行し、4行の <code>一致</code> を確かめる。続けて「改ざん」「変種の記録」「変種の食い違いの記録」「繰り返しの食い違い」を実行する。</p>
+</li>
+<li>
+<p>Done when:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>「記録と食い違う出力は失敗として見える」を「改ざん」で確認できる。</p>
+</li>
+<li>
+<p>「結果が一致しない組み合わせは隠さず示される」の表示側を、「改ざん」の変種 id 付きの差分と、「変種の食い違いの記録」の <code>一致*</code> の表示で確認できる。</p>
+</li>
+<li>
+<p>作業ツリーを戻した後の <code>run.sh</code> が <code>一致 4 / 不一致 0 / 未実行 0</code> で終了状態 0 になる。これは4変種がそれぞれ2回とも同じ記録に一致したことを示す（REQ-008 の最適化レベル間、gcc と clang の間、繰り返し）。</p>
+</li>
+<li>
+<p>「繰り返しの食い違い」で、1回目と2回目の食い違いが不一致として表示される（REQ-008 の繰り返し）。</p>
+</li>
+<li>
+<p>「2回目だけの食い違い」で、2回目の出力だけが記録と異なる場合も不一致になる（照合が2回分とも行われていること）。</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_t2_gcc_decimal128_系統と_clang_の未実行">6.2. T2: GCC <code>_Decimal128</code> 系統と clang の未実行</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Satisfies: REQ-001（GCC 分）、REQ-002、REQ-008</p>
+</li>
+<li>
+<p>Design: 依存表の <code>clang-dfp</code>、「決定性の演算と入力」</p>
+</li>
+<li>
+<p>Depends on: T1</p>
+</li>
+<li>
+<p>対象: <code>probes/d128.c</code>、<code>expected/d128.txt</code>、<code>run.sh</code> の依存 <code>clang-dfp</code></p>
+</li>
+<li>
+<p>変更前後: 前は d128 の行がない。後は <code>d128@gcc-<strong></code> が一致し、<code>d128@clang-</strong></code> が依存 <code>clang-dfp</code> で未実行になる。</p>
+</li>
+<li>
+<p><code>d128.c</code> は <code>float.h</code> の <code>DEC128_MANT_DIG</code>、<code>DEC128_MIN_EXP</code>、<code>DEC128_MAX_EXP</code> と、演算の組の結果を出す。<code>overflow</code> の後に、glibc の <code>fetestexcept(FE_OVERFLOW)</code> の結果 <code>overflow_fe_overflow</code> と、libgcc 内部の <code><em>_dfp_test_except(FE_OVERFLOW)</code> の結果 <code>overflow_libgcc_dfp_test_except</code> も出す（実装で追加。下の「既知の値との照合」を参照）。
+libdfp なしの GCC には丸めモードを切り替える API と quantize の関数がないと見込んでおり、<code>d128.c</code> は <code>quantize_1005</em>&lt;mode&gt;</code> を出さない。この見込みは T2 で gcc 16.2.0 のヘッダと libgcc の公開シンボルを見て確かめ、レポートでは丸めモードの扱いを一次資料で示す。見込みに反して API が見つかれば、<code>d128.c</code> もその API で切り替えられるモードごとに <code>quantize_1005_&lt;mode&gt;</code> を出す。
+glibc の <code>printf</code> には <code>_Decimal128</code> の書式がないので、プローブが BID の16バイトを符号、指数、係数に分けて <code>&lt;符号&gt;&lt;係数&gt;E&lt;指数&gt;</code> の形で出す。無限大と NaN は BID の組み合わせビットで見分けて <code>inf</code> と <code>nan</code> と出す。</p>
+</li>
+<li>
+<p>既知の値: IEEE 754-2008 の decimal128 の定義から、精度 p=34 と emax=6144。C の <code>float.h</code> は指数を emax+1 で定義するので、<code>DEC128_MANT_DIG=34</code>、<code>DEC128_MAX_EXP=6145</code>、<code>DEC128_MIN_EXP=-6142</code>。出力の形で書くと、<code>div_1_3=+3333333333333333333333333333333333E-34</code>（3が34個）、<code>div_2_3=+6666666666666666666666666666666667E-34</code>（6が33個と7）、<code>add_01_02=+3E-1</code>、<code>sum_001_x1000=+1000E-2</code>。<code>mul_wide</code> は、35桁の入力が読み込みで34桁に丸められ（最後の5は丁度半分で、偶数の4に丸まる）、<code>mul_wide=+1234567890123456789012345678901234E+2</code>。<code>overflow=+inf</code>。</p>
+</li>
+<li>
+<p>テスト: 既知の値と照らしてから <code>--record</code> を実行し、<code>d128@gcc-O0</code> と <code>d128@gcc-O2</code> の一致と、<code>d128@clang-*</code> の未実行を確かめる。</p>
+</li>
+<li>
+<p>Done when: 「clang でコンパイルできない系統は clang 比較を未実行と示す」を、<code>未実行  d128@clang-O0: clang-dfp: error: GNU decimal type extension not supported</code> の形の2行で確認でき、集計の一致にそれらが数えられていない。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_t3_mpdecimal_系統">6.3. T3: mpdecimal 系統</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Satisfies: REQ-001、REQ-002（確保と解放を含む）、REQ-008</p>
+</li>
+<li>
+<p>Design: 依存表の <code>mpdecimal</code>、「観点ごとにプローブが出すもの」</p>
+</li>
+<li>
+<p>Depends on: T1</p>
+</li>
+<li>
+<p>対象: <code>probes/mpd.c</code>、<code>expected/mpd.txt</code></p>
+</li>
+<li>
+<p>変更前後: 前は mpd の行がない。後は <code>mpd@{gcc,clang}-{O0,O2}</code> の4行が一致する。</p>
+</li>
+<li>
+<p><code>mpd.c</code> は <code>MPD_MAX_PREC</code>、<code>MPD_MAX_EMAX</code>、<code>MPD_MIN_EMIN</code>、丸めモードの一覧、<code>mpd_ieee_context(&amp;ctx, MPD_DECIMAL128)</code> での演算の組、<code>overflow</code> の結果と状態フラグを出す。<code>mpd_mallocfunc</code> などを数える関数に差し替え、値の生成と演算ごとの確保回数を出す。</p>
+</li>
+<li>
+<p>既知の値: 演算の組は T2 と同じ値（decimal128 と同じ精度34桁）で、<code>overflow</code> は無限大と <code>MPD_Overflow</code> のフラグ。出力の形は <code>mpd_to_sci</code> の科学的表記で、具体的には <code>div_1_3=0.3333333333333333333333333333333333</code>（3が34個）、<code>div_2_3=0.6666666666666666666666666666666667</code>、<code>add_01_02=0.3</code>、<code>mul_wide=1.234567890123456789012345678901234E+35</code>、<code>overflow=Infinity</code>、<code>overflow_status=Inexact Overflow Rounded</code>、<code>sum_001_x1000=10.00</code>、<code>ctx128_prec=34</code>、<code>ctx128_emax=6144</code>、<code>ctx128_emin=-6143</code>、<code>ctx128_round=ROUND_HALF_EVEN</code>。量子化は <code>quantize_1005_ROUND_UP=1.01</code> の形で、キーの末尾は <code>mpd_round_string</code> の名前である。確保回数は、mpdecimal の公式ドキュメントの記憶管理の節と <code>mpd_qnew</code> の説明から決まる値と照らす。ドキュメントから回数が決まらなければ、記録の値は観測値として扱い、レポートでは「値の生成にヒープ確保が要る（1回以上）」の主張だけに使う。<code>MPD_MAX_PREC</code> などは、プローブが読むヘッダではなく mpdecimal の公式ドキュメント（libmpdec の Context の節）に書かれた 64ビット環境の値と照らす。<code>quantize_1005_&lt;mode&gt;</code> は丸めの定義から、<code>MPD_ROUND_UP</code>、<code>CEILING</code>、<code>HALF_UP</code>、<code>05UP</code> で 1.01、<code>DOWN</code>、<code>FLOOR</code>、<code>HALF_DOWN</code>、<code>HALF_EVEN</code>、<code>TRUNC</code> で 1.00（<code>05UP</code> は0方向に丸めた最後の桁が0なので0から遠い側へ丸める）。</p>
+</li>
+<li>
+<p>テスト: 既知の値と照らしてから <code>--record</code> を実行し、4変種の一致を確かめる。</p>
+</li>
+<li>
+<p>Done when: <code>run.sh</code> が <code>mpd@{gcc,clang}-{O0,O2}</code> の4行を <code>一致</code> で出す。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_t4_intel_dfp_と_libdfp_の系統">6.4. T4: Intel DFP と libdfp の系統</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Satisfies: REQ-001（libdfp と Intel DFP の区別）、REQ-002、REQ-006（未実行の規則）、REQ-008</p>
+</li>
+<li>
+<p>Design: 依存表の <code>libdfp</code> と <code>intel-dfp</code>、プローブ表の libdfp のビルド条件</p>
+</li>
+<li>
+<p>Depends on: T1、T2（<code>clang-dfp</code>）</p>
+</li>
+<li>
+<p>対象: <code>probes/intel.c</code>、<code>probes/libdfp.c</code>、<code>expected/intel.txt</code>、<code>expected/libdfp.txt</code>、<code>run.sh</code> の依存2つ</p>
+</li>
+<li>
+<p>変更前後: 前は intel と libdfp の行がない。後は <code>intel@<strong></code> の4行と <code>libdfp@gcc-</strong></code> の2行が一致し、<code>libdfp@clang-*</code> の2行が未実行になる。</p>
+</li>
+<li>
+<p>libdfp の tarball の sha256 をここで計算し、<code>run.sh</code> に固定する。</p>
+</li>
+<li>
+<p><code>intel.c</code> は5つの丸めモード（<code>BID_ROUNDING_TO_NEAREST</code> など）での <code>quantize_1005_&lt;mode&gt;</code> と、演算の組、<code>overflow</code> のフラグを出す。</p>
+</li>
+<li>
+<p><code>libdfp.c</code> は <code>strtod128</code> で入力を読む。出力は <code>strfromd128</code> ではなく <code>probes/bid128.h</code> で BID の16バイトを分解して出す（実装で変更。GCC <code><em>Decimal128</code> と Intel DFP と行ごとに比べられる形にするため）。丸めモードは <code>fe_dec_setround</code> で切り替えて、切り替えの戻り値 <code>fe_dec_setround</em>&lt;mode&gt;</code> と <code>quantize_1005_&lt;mode&gt;</code> を出す。<code>fe_dec_setround</code> が使えない場合は、丸めモードの一覧をヘッダの引用で示し、プローブは既定のモードの結果だけを <code>quantize_1005_default</code> のキーで出す計画だった。実装では <code>fe_dec_setround</code> がリンクでき、5モードとも 0 を返したので、<code>quantize_1005_default</code> は使っていない。</p>
+</li>
+<li>
+<p>既知の値: 演算の組は T2 と同じ値で、<code>overflow</code> は無限大とオーバーフローのフラグ。<code>quantize_1005_&lt;mode&gt;</code> は IEEE 754-2008 の丸めの定義から、最近接偶数で 1.00、最近接の0から遠い側で 1.01、正の無限大方向で 1.01、負の無限大方向と0方向で 1.00。</p>
+<div class="ulist">
+<ul>
+<li>
+<p>libdfp の出力の形は T2 と同じ <code>&lt;符号&gt;&lt;係数&gt;E&lt;指数&gt;</code> で、具体的には <code>div_1_3=+3333333333333333333333333333333333E-34</code>、<code>add_01_02=+3E-1</code>、<code>quantize_1005_TONEAREST=+100E-2</code>、<code>quantize_1005_UPWARD=+101E-2</code>、<code>quantize_1005_TONEARESTFROMZERO=+101E-2</code>、<code>fe_dec_setround_TONEAREST=0</code>、<code>mul_wide=+1234567890123456789012345678901234E+2</code>、<code>overflow=+inf</code>、<code>sum_001_x1000=+1000E-2</code>。キーの末尾のモード名は <code>FE_DEC_</code> を除いたもの（<code>TONEAREST</code>、<code>TOWARDZERO</code>、<code>UPWARD</code>、<code>DOWNWARD</code>、<code>TONEARESTFROMZERO</code>）である。</p>
+</li>
+<li>
+<p>Intel DFP の出力の形は <code>bid128_to_string</code> の <code>+100E-2</code> の形で、無限大は <code>+Inf</code>、フラグは <code>overflow_flags=overflow,inexact</code> のように名前をカンマでつなぐ。キーの末尾のモード名は <code>BID_ROUNDING_</code> を除いたもの（<code>TO_NEAREST</code>、<code>DOWN</code>、<code>UP</code>、<code>TO_ZERO</code>、<code>TIES_AWAY</code>）である。</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>テスト: 既知の値と照らしてから <code>--record</code> を実行する。gcc の変種と <code>intel@clang-<strong></code> の一致、<code>libdfp@clang-</strong></code> の未実行を確かめる。続けて「curl 遮断」を実行する。</p>
+</li>
+<li>
+<p>Done when:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>「依存を取得できないプローブは未実行として表示される」を「curl 遮断」で確認できる。未実行の行に理由があり、集計の一致にそれらが数えられず、ほかが一致すれば終了状態が 0 である。</p>
+</li>
+<li>
+<p>「clang でコンパイルできない系統は clang 比較を未実行と示す」を、<code>libdfp@clang-O0</code> と <code>libdfp@clang-O2</code> の未実行の行でも確認できる。</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_t5_zustral_ffi_プローブ">6.5. T5: Zustral FFI プローブ</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Satisfies: REQ-007</p>
+</li>
+<li>
+<p>Design: 「Zustral FFI プローブ」「手間の上限（REQ-007）」</p>
+</li>
+<li>
+<p>Depends on: T1、T2（既知の値）、T3（<code>mpdecimal</code>）</p>
+</li>
+<li>
+<p>対象: <code>probes/ffi/Probe.aum</code>、<code>probes/ffi/shim.c</code>、<code>probes/ffi/UnitReturn.aum</code>、<code>expected/ffi.txt</code>、<code>expected/ffi-unit-return.txt</code>、<code>run.sh</code> の依存 <code>zustral</code></p>
+</li>
+<li>
+<p>変更前後: 前は ffi の行がない。後は <code>ffi</code> と <code>ffi-unit-return</code> が一致し、<code>ffi</code> は一致したときも実際の出力を結果行の下に表示する。</p>
+</li>
+<li>
+<p><code>Probe.aum</code> は、<code>mpd_qnew</code> を直接 <code>Address[Nat8]</code> で受け、<code>void</code> を返す mpdecimal の関数と、16バイトの領域越しの <code>_Decimal128</code> と <code>__int128</code> の演算を、シム経由で呼ぶ。ポインタの値は出力しない。出すキーは <code>mpd_qnew_direct</code>（直接束縛した <code>mpd_qnew</code> が NULL でなかったかを <code>ok</code> か <code>null</code> で出す）、<code>mpd_add_01_02</code>、<code>d128_add_01_02</code>、<code>i128_add_01_02</code> の4つで、値の形は各系統のプローブと同じにする。</p>
+</li>
+<li>
+<p><code>UnitReturn.aum</code> は、<code>void</code> の C 関数を戻り値 <code>Unit</code> で束縛して呼ぶ。コンパイラの出力と <code>exit=</code> 行がそのまま記録になる。</p>
+</li>
+<li>
+<p>既知の値: <code>ffi</code> の演算結果は T1〜T3 と同じ値。<code>ffi-unit-return</code> は <code>lib/CodeGen.ml:587-591</code>（戻り値の型の変換）と <code>lib/CodeGen.ml:556-557</code>（<code>Unit</code> を拒む分岐）から、<code>Not allowed</code> を含むエラーと 0 でない終了状態。</p>
+</li>
+<li>
+<p>テスト: 既知の値と照らしてから <code>--record</code> を実行し、2つの一致を確かめる。続けて「ビルド上限」を実行する。</p>
+</li>
+<li>
+<p>Done when:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>「コンパイラをビルドできれば Zustral プログラムで確かめる」を、<code>一致  ffi</code> の行とその下に表示された Zustral プログラムの出力で確認できる。出力に mpdecimal、GCC <code>_Decimal128</code>、<code>__int128</code> の3つの演算結果がそろい、T1〜T3 の既知の値と合う。</p>
+</li>
+<li>
+<p>「コンパイラをビルドできなければ理由を残して C だけで確かめる」の表示側を「ビルド上限」で確認できる。</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_t6_調査レポート">6.6. T6: 調査レポート</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Satisfies: REQ-001、REQ-002、REQ-003、REQ-004、REQ-005（コマンドと前提の記述）、REQ-007（ソースの引用と、ビルドできなかった場合の扱い）、REQ-008（一致しない組み合わせの記述）、REQ-009、NFR-001</p>
+</li>
+<li>
+<p>Design: 「観点ごとにプローブが出すもの」「プローブの出力と結果」「要件との対応」</p>
+</li>
+<li>
+<p>Depends on: T1〜T5</p>
+</li>
+<li>
+<p>対象: <code>README.md</code></p>
+</li>
+<li>
+<p>変更前後: 前はレポートがない。後は日本語のレポートが、3系統×5観点の事実を根拠付きで示す。</p>
+</li>
+<li>
+<p>構成: 読み方と根拠の表記、再実行の方法と前提、3系統×5観点の比較表（decimal128 は3実装に分ける）、観点ごとの節、下流の問い（0004・0005・0008）に効く事実、未確認事項、使った版の一覧。</p>
+</li>
+<li>
+<p>根拠の表記は、プローブなら <code>〔probe: &lt;記録&gt; / &lt;key&gt;〕</code>、一次資料なら URL と版。<code>&lt;記録&gt;</code> は記録ファイルの名前から <code>.txt</code> を除いたもの（系統の記録なら <code>mpd</code>、変種だけの記録なら <code>mpd@clang-O2</code>）で、<code>expected/&lt;記録&gt;.txt</code> の <code>&lt;key&gt;=</code> 行を指す。このマシンで観測できない主張には「出典のみ・未実測」を付ける。</p>
+</li>
+<li>
+<p>ビルドの重さは、nixpkgs のパッケージで入るか、ソースからのビルドが要るかで示し、時間は書かない。</p>
+</li>
+<li>
+<p>変種だけの記録 <code>expected/&lt;id&gt;.txt</code> があれば、その組み合わせについて系統の記録と変種の記録の両方の出力を載せる。なければ、全変種が一致したことと照合したプローブの id を書く。</p>
+</li>
+<li>
+<p>記録を作ったときに未実行だったプローブ（<code>d128@clang-<strong></code>、<code>libdfp@clang-</strong></code>）で確かめるはずだった主張は「出典のみ・未実測」か未確認事項に置き、未実行になった事実と理由だけを <code>run.sh</code> の行を根拠に書く。</p>
+</li>
+<li>
+<p>gcc の主張は「nixpkgs の gcc 16.2.0 では」の形で書く。</p>
+</li>
+<li>
+<p>C ABI の節には、コンパイラをビルドできなかった場合に C だけのプローブとソースの引用に切り替える規則と、このマシンではビルドできた事実を書く。</p>
+</li>
+<li>
+<p>テスト: 次の検査を実行し、結果を「検証結果」に記録する。</p>
+<div class="ulist">
+<ul>
+<li>
+<p>README の <code>〔probe: &lt;記録&gt; / &lt;key&gt;〕</code> をすべて抜き出し、<code>expected/&lt;記録&gt;.txt</code> にその <code>&lt;key&gt;=</code> 行があることを確かめる1行のシェル（grep と while の組み合わせ）。</p>
+</li>
+<li>
+<p>事実を述べる文を1文ずつ読み、プローブの引用か URL と版のどちらかがあることを確かめる。「出典のみ・未実測」を付けた文には URL と版があることも確かめる。</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Done when:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>「このマシンで観測できる主張はプローブ出力を根拠に持つ」を、抽出の検査で引用がすべて記録にあることと、1文ずつの確認で根拠のない事実の文がないことで確認できる（REQ-003）。シナリオの例にあたる「<code>_Decimal128</code> の有効桁数は34桁」の主張には、<code>d128</code> の記録の <code>DEC128_MANT_DIG</code> のキーが根拠として付いている。</p>
+</li>
+<li>
+<p>根拠を示せない内容が、事実の文ではなく未確認事項の節にある（REQ-004 の後半）。</p>
+</li>
+<li>
+<p>記録を作ったときに未実行だったプローブに依存する主張が「出典のみ・未実測」か未確認事項にある（REQ-006 の最後の文）。</p>
+</li>
+<li>
+<p>C ABI の節が、Zustral の FFI が受け付ける型を <code>lib/CodeGen.ml:554-591</code> と <code>lib/Type.ml:22-29</code> の引用で示し、各系統について値で渡せるか、ポインタ越しなら渡せるか、シムが要るかを書いている（REQ-007）。</p>
+</li>
+<li>
+<p>観点ごとの節が、REQ-002 の項目（ヒープ確保の要否、固定サイズか、明示的な解放の要否、有効桁数と指数の範囲、丸めモードの一覧、上限を超えたときの挙動、依存、ライセンス名、入手手段、公式に支えるプラットフォーム、決定性）を系統ごとにすべて埋めている。</p>
+</li>
+<li>
+<p>「このマシンで観測できない主張は出典のみと明記される」を、AArch64 などの主張に表記と URL と版があることで確認できる。</p>
+</li>
+<li>
+<p>「結果が一致しない組み合わせは隠さず示される」を、決定性の節の記述で確認できる。</p>
+</li>
+<li>
+<p>「コンパイラをビルドできなければ理由を残して C だけで確かめる」のレポート側を、C ABI の節の記述で確認できる。</p>
+</li>
+<li>
+<p>比較表に空欄がなく、decimal128 の各セルが GCC、libdfp、Intel DFP のどれについてかを区別している（REQ-001、REQ-002）。</p>
+</li>
+<li>
+<p>再実行の節に、コマンドと前提（nix、x86_64 Linux、ホストのコマンド、ネットワーク）がある（REQ-005）。</p>
+</li>
+<li>
+<p>下流の節が 0004・0005・0008 のそれぞれに効く事実を名指しし、「推奨」「採用すべき」などの選定を表す表現がない（REQ-009）。</p>
+</li>
+<li>
+<p>本文が日本語である（NFR-001）。</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_t7_範囲と再実行性の最終確認">6.7. T7: 範囲と再実行性の最終確認</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Satisfies: NFR-002、NFR-003、REQ-005</p>
+</li>
+<li>
+<p>Design: 「ファイル構成と所有」「公開インターフェース」</p>
+</li>
+<li>
+<p>Depends on: T6</p>
+</li>
+<li>
+<p>変更前後: 振る舞いは変えない。確認だけを行う。</p>
+</li>
+<li>
+<p>テスト: <code>git status --short --untracked-files=all</code> を記録してから <code>docs/research/decimal-backend-survey/run.sh</code> を1回実行し、もう一度 <code>git status --short --untracked-files=all</code> を見る。変更と未追跡のパスを <code>git status --porcelain --untracked-files=all</code> と <code>git diff --name-only master&#8230;&#8203;HEAD</code> で列挙する。</p>
+</li>
+<li>
+<p>Done when:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>1つのコマンド <code>docs/research/decimal-backend-survey/run.sh</code> が22件すべてのプローブの結果行を出し、<code>不一致 0</code> で終了状態 0 になり、未実行は <code>d128@clang-<strong></code> と <code>libdfp@clang-</strong></code> の4件だけである（REQ-005）。</p>
+</li>
+<li>
+<p>実行の前後で <code>git status --short --untracked-files=all</code> の出力が同じである（NFR-003 の「追加の手作業なし」と、実行が作業ツリーを汚さないこと）。</p>
+</li>
+<li>
+<p>実行の前後で <code>find docs/research/decimal-backend-survey -type f -exec sha256sum {} + | sort</code> の出力が同じである。成果物は未追跡なので、<code>git status</code> だけでは中身の書き換えが見えないためである。</p>
+</li>
+<li>
+<p>列挙したパスがすべて <code>docs/research/decimal-backend-survey/</code> か <code>docs/task-requirements/</code> の下にあり、<code>lib/</code>、<code>standard/</code>、<code>docs/wayfinder/</code> がない（NFR-002 の commit 前の確認）。</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_t8_commit_後の確認と_issue_1_の解消pr_を仕上げる工程で実施">6.8. T8: commit 後の確認と issue #1 の解消（PR を仕上げる工程で実施）</h3>
+<div class="paragraph">
+<p>T7 までは commit しない。T8 は、PR を仕上げる工程で対象の変更を commit した後に行う。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Satisfies: NFR-002、NFR-003（クリーンな作業ツリーでの再実行）、REQ-010</p>
+</li>
+<li>
+<p>Design: 「ファイル構成と所有」「要件との対応」の REQ-010</p>
+</li>
+<li>
+<p>Depends on: T7、commit、PR 本文の更新</p>
+</li>
+<li>
+<p>変更前後: 前は issue #1 が開いていて、issue #9 の「ここまでの決定」が「（まだない）」。後は issue #1 が解消コメント付きで閉じ、issue #9 に1行が入る。</p>
+</li>
+<li>
+<p>手順1: <code>git diff --stat master&#8230;&#8203;HEAD</code> に <code>lib/</code>、<code>standard/</code>、<code>docs/wayfinder/</code> が現れないことを確かめる（NFR-002）。</p>
+</li>
+<li>
+<p>手順2: <code>git worktree add $TMPDIR/clean-run &lt;commit&gt;</code> で作った新しい作業ツリーで <code>docs/research/decimal-backend-survey/run.sh</code> を1回実行する（NFR-003 の「クリーンな作業ツリー」。commit し忘れたファイルと、ビルド済みの <code>austral</code> への依存を見つける）。確かめたら <code>git worktree remove</code> で消す。</p>
+</li>
+<li>
+<p>手順3: <code>gh issue comment 1</code> で答えの要点とレポート・PR へのリンクを投稿し、<code>gh issue close 1</code> で閉じる。issue #9 は、<code>gh issue view 9 --json body -q .body</code> で本文を <code>$TMPDIR</code> のファイルへ取り出し、「ここまでの決定」の「（まだない）」の1行だけを規定の1行に置き換えたファイルを作り、<code>gh issue edit 9 --body-file</code> で戻す。<code>gh</code> には <code>GH_TOKEN=$(gh auth token -u seiei-sogen)</code> を付ける。</p>
+</li>
+<li>
+<p>Done when: 手順1で対象外のパスがない。手順2の <code>run.sh</code> が <code>不一致 0</code> で終了状態 0 になる。<code>gh issue view 1 --json state,comments</code> が <code>CLOSED</code> を示し、解消コメントが答えの要点、レポートへのリンク、PR へのリンクの3つを含む。<code>gh issue view 9 --json body</code> の「ここまでの決定」で、「（まだない）」が規定の1行に置き換わっている。編集前の本文と編集後の本文の <code>diff</code> が、その1行の置き換えだけである。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_要件から計画への対応">7. 要件から計画への対応</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">要件・シナリオ</th>
+<th class="tableblock halign-left valign-top">担当タスク</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-001、REQ-002</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T1〜T5（プローブ）、T6（レポート）</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-003、REQ-004</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T6</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-005</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T1、T6、T7</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-006</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T1（不一致）、T4（未実行）</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-007</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T5、T6</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-008</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T1〜T4、T6</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-009</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T6</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-010</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T8</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NFR-001</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T6</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NFR-002、NFR-003</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T7（commit 前）、T8（commit 後）</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">このマシンで観測できる主張はプローブ出力を根拠に持つ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T6</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">このマシンで観測できない主張は出典のみと明記される</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T6</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">記録と食い違う出力は失敗として見える</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">依存を取得できないプローブは未実行として表示される</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T4</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コンパイラをビルドできれば Zustral プログラムで確かめる</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T5</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コンパイラをビルドできなければ理由を残して C だけで確かめる</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T5（表示）、T6（レポートの記述）</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">結果が一致しない組み合わせは隠さず示される</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T1（表示）、T6（レポートの記述）</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">clang でコンパイルできない系統は clang 比較を未実行と示す</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T2、T4</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_移行互換性ロールバック運用">8. 移行、互換性、ロールバック、運用</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>移行と互換性: なし。既存のファイルを変えない。</p>
+</li>
+<li>
+<p>ロールバック: 追加したディレクトリを消せば元に戻る。</p>
+</li>
+<li>
+<p>運用: 記録は <code>run.sh --record</code> で作り直す。nixpkgs の rev、libdfp の commit、Intel DFP の sha256 を変えたら、記録を作り直し、レポートの版の一覧も直す。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_リスクと軽減策">9. リスクと軽減策</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 40%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">リスク</th>
+<th class="tableblock halign-left valign-top">軽減策</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4変種の出力が食い違い、記録が1つにまとまらない</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">設計文書「プローブ表」のとおり、<code>--record</code> が変種だけの記録を書き、<code>run.sh</code> は <code>一致*</code> と表示する。レポートには両方の出力を載せる（REQ-008）。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GitHub のアーカイブや netlib の tarball の sha256 が将来変わる</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">照合に失敗すれば未実行になり、終了状態は失敗にならない。レポートに固定した版と sha256 を書く。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ffi-unit-return</code> などの記録に、リポジトリの絶対パスが入る</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">設計どおり相対パスで起動する。それでも絶対パスが出た場合は、先に設計文書の「プローブの出力と結果」へ「実際の出力のリポジトリ直下のパスを <code>&lt;root&gt;</code> に置き換えてから照合する」規則を足し、それから <code>run.sh</code> に実装する。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">レポートの主張が記録と食い違う</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T6 の抽出検査で、引用したキーが記録にあることを確かめる。</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_完了条件">10. 完了条件</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>T1〜T7 の <code>Done when</code> をすべて満たし、結果を下の「検証結果」に記録している。</p>
+</li>
+<li>
+<p>8つの Gherkin シナリオすべてに、確認した手順と観測した結果がある。</p>
+</li>
+<li>
+<p>各プローブの記録を既知の値と照らした結果がある。</p>
+</li>
+<li>
+<p>T8（commit 後の確認と issue #1 の解消）は PR を仕上げる工程で実施し、その結果を記録する。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_検証結果">11. 検証結果</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>実施日は 2026-10-26。ツールチェーンは nixpkgs rev <code>674a2028</code> の gcc 16.2.0 と clang 21.1.8。
+障害を起こす手順は、セッションの scratchpad にある使い捨てのスクリプトで実行し、作業ツリーには残していない。</p>
+</div>
+<div class="sect2">
+<h3 id="_テストの要否">11.1. テストの要否</h3>
+<div class="paragraph">
+<p>テストのシームは「テストの方針」のとおり <code>run.sh</code> の結果行、集計行、終了状態である。
+新しいテストファイルは書いていない。<code>run.sh</code> の照合そのものがプローブの回帰の検査で、ランナーの分岐は障害を起こす手順で確かめた。
+ランナーの分岐（一致、不一致、未実行、変種だけの記録、繰り返しの食い違い）が壊れると、下の手順のどれかが落ちる。
+プローブが観測すべきことを観測しているかは、この手順では検出できない。既知の値との照合（次節）と、レポートの根拠の検査（T6）で補った。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_既知の値との照合">11.2. 既知の値との照合</h3>
+<div class="paragraph">
+<p>各プローブの最初の出力を、<code>--record</code> の前に各タスクの「既知の値」と照らした。食い違いは1件で、原因を調べてから記録した。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 60%;">
+<col style="width: 20%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">記録</th>
+<th class="tableblock halign-left valign-top">照らした値</th>
+<th class="tableblock halign-left valign-top">結果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>i128</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>sizeof=16</code>、<code>div_1_3=0.333333333333333333</code>、<code>div_2_3=0.666666666666666666</code>、<code>add_01_02=0.300000000000000000</code>、<code>sum_001_x1000=10.000000000000000000</code>、<code>int128_max=170141183460469231731687303715884105727</code>、<code>overflow_wrapped=-0.000000000000000010</code>、<code>overflow_builtin_detected=1</code>、<code>mul_wide=overflow_detected</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">すべて一致</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>d128</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>DEC128_MANT_DIG=34</code>、<code>DEC128_MAX_EXP=6145</code>、<code>DEC128_MIN_EXP=-6142</code>、<code>div_1_3</code>、<code>div_2_3</code>、<code>add_01_02=+3E-1</code>、<code>sum_001_x1000=+1000E-2</code>、<code>mul_wide=+1234567890123456789012345678901234E+2</code>、<code>overflow=+inf</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">すべて一致</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>d128</code> のオーバーフローのフラグ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">IEEE 754-2008 では、オーバーフローはフラグを立てる</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fetestexcept(FE_OVERFLOW)</code> が 0 を返して食い違った。gcc 16.2.0 の <code>libgcc.a</code> を <code>readelf -s</code> で見ると、BID のフラグは libgcc の TLS 変数 <code><em>bid_IDEC_glbflags</code> にあり、glibc の浮動小数点環境とは別である。libgcc 内部の <code></em>dfp_test_except(FE_OVERFLOW)</code> を足すと 1 を返し、正本どおりフラグが立っていた。食い違いはプローブの読み方の問題で、両方の値を記録した</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>mpd</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T3 の具体値、<code>quantize_1005_*</code> の9モード（<code>ROUND_UP</code>、<code>CEILING</code>、<code>HALF_UP</code>、<code>05UP</code> で 1.01、ほかは 1.00）、<code>MPD_MAX_PREC=999999999999999999</code> など（libmpdec の Context の文書の 64ビットの値）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">すべて一致</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>mpd</code> の確保回数</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mpdecimal 4.0.1 の <code>libmpdec/mpalloc.c</code> の <code>mpd_qnew_size</code> は、構造体と係数をそれぞれ <code>mpd_alloc</code> で確保する</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>alloc_qnew=2</code> で一致。<code>alloc_qdiv_1_3=0</code> と <code>alloc_qdiv_1_3_static_result=0</code> は、ソースから回数が一意に決まらないので観測値として扱い、レポートでは「確保が0回だった」とだけ書いた</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T4 の値と、5モードの量子化（<code>UP</code> と <code>TIES_AWAY</code> で <code>+101E-2</code>、ほかは <code>+100E-2</code>）、<code>overflow=+Inf</code>、<code>overflow_flags=overflow,inexact</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">すべて一致</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>libdfp</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T4 の値と、5モードの量子化（<code>UPWARD</code> と <code>TONEARESTFROMZERO</code> で <code>+101E-2</code>、ほかは <code>+100E-2</code>）、<code>overflow=+inf</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">一致。<code>overflow_fe_overflow=0</code> は <code>d128</code> と同じ理由で、libdfp は libbid のフラグを読む関数を共有ライブラリから公開していない（<code>nm -D</code> で <code>except</code> を含むシンボルが0件）。レポートでは未確認事項に置いた</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ffi</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>mpd_qnew_direct=ok</code>、<code>mpd_add_01_02=0.3</code>、<code>d128_add_01_02=+3E-1</code>、<code>i128_add_01_02=0.300000000000000000</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">すべて一致</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ffi-unit-return</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>lib/CodeGen.ml:556-557</code> と <code>587-591</code> から、<code>Not allowed</code> を含むエラーと 0 でない終了状態</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Description: Not allowed</code> と <code>exit=255</code> で一致</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>T2 の見込み（GCC 単体には丸めモードを切り替える公開 API がない）は、gcc 16.2.0 の <code>include</code> ディレクトリに <code>fe_dec_setround</code>、<code>quantized128</code>、<code><em>dfp_set_round</code> の宣言がなく（<code>grep</code> の該当0件）、<code>libgcc.a</code> には内部関数 <code></em>dfp_set_round</code> だけがあることで確かめた。<code>d128.c</code> は <code>quantize_1005_&lt;mode&gt;</code> を出さない。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_タスクごとの_done_when">11.3. タスクごとの <code>Done when</code></h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 66.6666%;">
+<col style="width: 16.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">タスク</th>
+<th class="tableblock halign-left valign-top">観測した結果</th>
+<th class="tableblock halign-left valign-top">判定</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">記録がない状態で <code>不一致  i128@gcc-O0: 記録ファイル expected/i128.txt がない</code> など4行、<code>一致 0 / 不一致 4 / 未実行 0</code>、終了状態 1。「改ざん」で4変種が <code>不一致</code> と <code>div_1_3</code> の行の差分（1回目、2回目とも）を出し、終了状態 1。「変種の記録」の1回目は <code>一致*  i128@clang-O2（変種別の記録）</code> で終了状態 0、2回目は <code>不一致  i128@clang-O2</code> だけで終了状態 1。「変種の食い違いの記録」は <code>--record</code> 後に <code>expected/i128@gcc-O2.txt</code> と <code>expected/i128@clang-O2.txt</code> ができ、続く照合で2つが <code>一致*</code>、<code>-O0</code> の2つが <code>一致</code>、終了状態 0。「繰り返しの食い違い」で4変種が <code>2回の実行の出力が異なる</code> と両方の出力を出し、終了状態 1、<code>expected/i128.txt</code> は変わらない。「2回目だけの食い違い」で4変種が <code>2回目の出力</code> の差分だけを出し、終了状態 1。戻した後は i128 の4変種が <code>一致</code> で終了状態 0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>d128@gcc-O0</code> と <code>d128@gcc-O2</code> が <code>一致</code>。<code>未実行  d128@clang-O0: clang-dfp: error: GNU decimal type extension not supported</code> と <code>-O2</code> の同じ行が出て、集計の一致に数えられていない</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>mpd@gcc-O0</code>、<code>mpd@gcc-O2</code>、<code>mpd@clang-O0</code>、<code>mpd@clang-O2</code> が <code>一致</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intel@<strong></code> の4行と <code>libdfp@gcc-</strong></code> の2行が <code>一致</code>、<code>libdfp@clang-O0</code> と <code>-O2</code> が <code>clang-dfp</code> の理由で <code>未実行</code>。「curl 遮断」では nix の依存はキャッシュから取れ、<code>未実行  intel@gcc-O0: intel-dfp: 取得: curl: (7) Failed to connect to netlib.org:443 over proxy 127.0.0.1 &#8230;&#8203;</code> の形の4行と、<code>libdfp@gcc-*</code> の2行（<code>github.com:443</code>）が出た。集計は <code>一致 12 / 不一致 0 / 未実行 10</code> で、通常の <code>一致 18 / 未実行 4</code> から一致が6件減り未実行が6件増えた。終了状態 0。キャッシュの仮説は当たり、<code>run.sh</code> の URL を書き換える代替手順は使っていない</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>一致    ffi</code> の下に <code>mpd_qnew_direct=ok</code>、<code>mpd_add_01_02=0.3</code>、<code>d128_add_01_02=+3E-1</code>、<code>i128_add_01_02=0.300000000000000000</code>、<code>exit=0</code> が表示された。<code>ffi-unit-return</code> も <code>一致</code>。「ビルド上限」（<code>ZUSTRAL_BUILD_TIMEOUT=0.01</code>）で <code>未実行  ffi: zustral: 上限 0.01 秒を超えた</code> と <code>ffi-unit-return</code> の同じ行が出て、<code>一致 16 / 不一致 0 / 未実行 6</code>、終了状態 0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">README の <code>〔probe: &lt;記録&gt; / &lt;key&gt;〕</code> を重複を除いて70件抜き出し、70件とも <code>expected/&lt;記録&gt;.txt</code> に <code>&lt;key&gt;=</code> の行があった（<code>grep -o</code> と <code>while read</code> の1行）。<code>〔run: …〕</code> の14件はすべて <code>run.sh</code> の出力に同じ結果行があった。<code>〔src: …〕</code> の22件はすべて「一次資料」の表に行があり、URL または場所と版を持つ。抜き出しで外れたのは「読み方」の節の書式の説明（<code>&lt;記録&gt;</code>、<code>&lt;行&gt;</code>、<code>&lt;ID&gt;</code>）だけである。事実の文を1文ずつ読み、根拠のない文は未確認事項へ移した（例: 演算ライブラリの内部のヒープ使用、libdfp の例外フラグの公開 API、ヘッダの衝突）。「推奨」「採用すべき」などの選定の表現は、下流の節の「どれを選ぶべきかは書かない」の1か所だけで、選定ではない</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docs/research/decimal-backend-survey/run.sh</code> が22件すべての結果行を出し、最後の行は <code>一致 18 / 不一致 0 / 未実行 4</code>、終了状態 0。未実行は <code>d128@clang-O0</code>、<code>d128@clang-O2</code>、<code>libdfp@clang-O0</code>、<code>libdfp@clang-O2</code> の4件だけ。実行の前後で <code>git status --short --untracked-files=all</code> の出力と、<code>docs/research/decimal-backend-survey</code> の sha256 の一覧が同じだった。文書を更新し終えた後の <code>git status --porcelain --untracked-files=all</code> の列挙は、<code>docs/research/decimal-backend-survey/</code> の未追跡の18ファイルと、<code>docs/task-requirements/issue1-backend-docs-survey-decimal-backends/</code> の変更した3文書（要件定義書、設計文書、実装計画）だけで、<code>git diff --name-only master&#8230;&#8203;HEAD</code> は <code>docs/task-requirements/issue1-backend-docs-survey-decimal-backends/</code> の4ファイルだけである。<code>lib/</code>、<code>standard/</code>、<code>docs/wayfinder/</code> はない</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">未実施。commit 後の Phase 9 で行う</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">未実施</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_ears_規則と_gherkin_シナリオの実証">11.4. EARS 規則と Gherkin シナリオの実証</h3>
+<div class="paragraph">
+<p>使ったツールは、すべて <code>run.sh</code> の実行と、その出力・README の読み取りである。証拠は上の表に書いた結果行で、生の出力はセッションの scratchpad（作業ツリーの外）に置いた。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 50%;">
+<col style="width: 16.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">規則・シナリオ</th>
+<th class="tableblock halign-left valign-top">確かめ方と結果</th>
+<th class="tableblock halign-left valign-top">判定</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-001</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">README の比較表と観点ごとの節が3系統×5観点を埋め、decimal128 を GCC、libdfp、Intel DFP の列と節に分けている</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-002</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">観点ごとの節に、ヒープ確保の要否、固定サイズか、解放の要否、有効桁数と指数の範囲、丸めモードの一覧、上限を超えたときの挙動、依存、ライセンス、入手手段、公式のプラットフォーム、決定性が系統ごとにある</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-003</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T6 の抽出検査（引用の全件が記録または一次資料の表にある）と1文ずつの確認</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-004</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">他のプラットフォームの主張6か所に「出典のみ・未実測」と一次資料の ID（URL と版）がある。根拠のない内容は「未確認事項」の9項目にある（差分レビューで2項目を足した）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-005</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1コマンド <code>run.sh</code> が全プローブを実行した（T7）。README の「再実行の方法」にコマンドと前提がある</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-006</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">不一致は T1、未実行は T4 と T5 の障害の手順で確かめた。README は未実行のプローブに依存する主張（clang での決定性）を未確認事項に置いた</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-007</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T5 の Zustral プログラムの出力と、README の C ABI の節（<code>lib/Type.ml:22-29</code>、<code>lib/CodeGen.ml:554-591</code> の引用と、ビルドできなかった場合の規則）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-008</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T1〜T5 の4変種と2回実行の一致、README の決定性の表</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-009</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">README の「下流の問いに効く事実」が 0004、0005、0008 ごとに事実を挙げ、選定を書いていない</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-010</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T8 で行う</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">未実施（Phase 9）</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NFR-001</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">README は日本語</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NFR-002</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T7 の列挙（commit 前）。commit 後の確認は T8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass（commit 前）</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NFR-003</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T7 で、追加の手作業なしに1回の実行で終わり、作業ツリーが変わらなかった。クリーンな作業ツリーでの再実行は T8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass（commit 前）</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">このマシンで観測できる主張はプローブ出力を根拠に持つ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">README の比較表の有効桁数の行と GCC の節に「34桁 〔probe: d128 / DEC128_MANT_DIG〕」があり、<code>expected/d128.txt</code> に <code>DEC128_MANT_DIG=34</code> がある</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">このマシンで観測できない主張は出典のみと明記される</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GCC の節の「AArch64 … BID が既定 … 出典のみ・未実測 〔src: gcc-configure〕」。表の gcc-configure 行に URL と「開発版の文書、2026-10-25 更新」がある</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">記録と食い違う出力は失敗として見える</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T1 の「改ざん」</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">依存を取得できないプローブは未実行として表示される</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T4 の「curl 遮断」</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コンパイラをビルドできれば Zustral プログラムで確かめる</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T5 の <code>一致    ffi</code> とその下の出力</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コンパイラをビルドできなければ理由を残して C だけで確かめる</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">表示側は T5 の「ビルド上限」、レポート側は README の「コンパイラをビルドできなかった場合」の節</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">結果が一致しない組み合わせは隠さず示される</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">表示側は T1 の「改ざん」（変種 id と差分）と「変種の食い違いの記録」（<code>一致*</code>）。レポート側は、実測では食い違いがなかったので、README の決定性の節が「変種だけの記録は1つもない」と照合した id を書いている</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">clang でコンパイルできない系統は clang 比較を未実行と示す</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T2 と T4 の <code>未実行  d128@clang-<strong></code> と <code>未実行  libdfp@clang-</strong></code> の4行</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>集計: pass 21、fail 0、未実施 1（REQ-010。T8 で Phase 9 に行う）。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_差分レビュー後の再確認">11.5. 差分レビュー後の再確認</h3>
+<div class="paragraph">
+<p>差分レビュー（Phase 6）で、README のうち根拠より多くを述べていた文や、実際の動作と食い違う文を、次の6点で直した。<code>run.sh</code>、プローブ、記録は変えていない。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 50%;">
+<col style="width: 16.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">直した箇所</th>
+<th class="tableblock halign-left valign-top">内容</th>
+<th class="tableblock halign-left valign-top">関わる規則</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">確保と解放の節、0005 の節</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mpdecimal の「演算は確保しない」「静的な値なら演算の確保は0回にできる」を、観測した 1/3 の除算1つの結果に絞った。<code>mpd_qnew</code> の値でも確保は0回だったので、静的な値が0回の理由であるかのような書き方もやめた</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-003、REQ-009</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GCC の <code>_Decimal128</code> の節、0008 の節</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">「35桁の入力は最近接偶数に丸められる」を、丸めの向きを述べない形に改めた。落ちる桁が5で残る桁が4なので、最近接偶数と切り捨てが同じ結果になる。<code>d128</code> の入力はコンパイル時に変換されるリテラルであることも書き、0008 の節に libdfp と Intel DFP の <code>mul_wide</code> を根拠に足した</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-003</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0005 の節</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">「<code>void</code> を返す C 関数は Zustral から直接呼べない」を、<code>ffi-unit-return</code> が示す「戻り値 <code>Unit</code> で束縛するとコンパイルが失敗する」に絞った。<code>lib/CodeGen.ml</code> は <code>Foreign_Import</code> ごとに自前の C の宣言を出すので、戻り値の型を偽った束縛はありうるが、試していない（未確認事項に足した）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-003、REQ-007</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GCC の <code>_Decimal128</code> の節、未確認事項</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">本文が再実行できない手作業の確認（ヘッダの <code>grep</code>）を根拠にしていた1文を消した。未確認事項には「公開 API がないこと」ではなく、手作業の確認そのものを置いた。公開 API がないことの根拠は GCC のマニュアル（gcc-dfp）である</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-003、REQ-004</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">再実行の方法</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">「初回のネットワーク接続」を直した。<code>run.sh</code> は libdfp と Intel DFP の tarball を一時ディレクトリへ毎回取得する（T4 の「curl 遮断」で、nix のキャッシュがあっても2つが未実行になったことがこれを示す）。前提のホストのコマンドに <code>grep</code> と <code>sed</code> を足した。設計文書の前提も同じく直した</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-005</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">比較表</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>__int128</code> の「整数部21桁」を「170141183460469231731 まで（21桁）」にした。21桁の整数部すべてを表せるわけではない</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-002、REQ-003</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>再確認の結果:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>README の引用を抜き出し直した。重複を除いた <code>〔probe: …〕</code> 71件はすべて <code>expected/</code> の記録にキーがあり、<code>〔src: …〕</code> 22件はすべて一次資料の表に行がある。<code>〔run: …〕</code> 14件はすべて次の実行の結果行にある（「読み方」の書式の説明を除く）。REQ-003 と「このマシンで観測できる主張はプローブ出力を根拠に持つ」は pass のまま。</p>
+</li>
+<li>
+<p>修正後に、<code>/tmp</code> から <code>run.sh</code> を絶対パスで1回実行した。最後の行は <code>一致 18 / 不一致 0 / 未実行 4</code>、終了状態 0 で、未実行は <code>d128@clang-<strong></code> と <code>libdfp@clang-</strong></code> の4件だけだった。実行の前後で <code>git status --porcelain --ignored --untracked-files=all | sha256sum</code> は同じ値（<code>03bd0082…6eb3608</code>）だった。REQ-005、REQ-006、REQ-007、REQ-008、NFR-003 は pass のまま。</p>
+</li>
+<li>
+<p>0004、0005、0008 の節は事実だけを挙げ、選定の表現は「どれを選ぶべきかは書かない」の1か所だけである。REQ-009 は pass のまま。</p>
+</li>
+<li>
+<p>共通処理の変更はない。差分は <code>docs/research/decimal-backend-survey/</code> の新規ファイルと <code>docs/task-requirements/</code> の文書だけで、既存のコードも、ほかから使われる処理も変えていない。<code>probes/bid128.h</code> は今回の3つのプローブ（<code>d128.c</code>、<code>libdfp.c</code>、<code>ffi/shim.c</code>）だけが使い、3つとも上の実行で一致した。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_計画からの逸脱">11.6. 計画からの逸脱</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><code>probes/bid128.h</code> を足した。<code>d128.c</code>、<code>libdfp.c</code>、<code>ffi/shim.c</code> が同じ BID の出力を使うためである。</p>
+</li>
+<li>
+<p><code>libdfp.c</code> の出力を <code>strfromd128</code> から BID の分解に変えた。3つの decimal128 実装を同じ形で並べるためである。</p>
+</li>
+<li>
+<p>libdfp のプローブのコンパイルに <code>-D<em>STDC_WANT_DEC_FP</em></code> を足した。libdfp のヘッダは、これがないと <code>fe_dec_setround</code> と <code>quantized128</code> を宣言しない。</p>
+</li>
+<li>
+<p><code>d128.c</code> に <code>overflow_fe_overflow</code> と <code>overflow_libgcc_dfp_test_except</code> を足した（「既知の値との照合」）。</p>
+</li>
+<li>
+<p>Zustral コンパイラを一時ディレクトリで起動するように変えた。最初は設計どおり <code>docs/research/decimal-backend-survey/</code> で起動し、コンパイラがそこに <code>calltree.html</code> と <code>error.html</code> を書いた（<code>.gitignore</code> 済みで <code>git status</code> には出ない）。2つを手で消してから改め、<code>git status --ignored</code> でそのディレクトリに無視されたファイルが残っていないことを確かめた。</p>
+</li>
+<li>
+<p>変種だけの記録は <code>&lt;系統&gt;@&lt;変種&gt;</code> の id に限った。最初の実装は <code>ffi</code> にも <code>expected/ffi.txt</code> を変種の記録として扱い、<code>一致*</code> と誤表示した。</p>
+</li>
+<li>
+<p>要件定義書の2か所（Gherkin の例の gcc 13.3.0、セキュリティの「版を固定しない」）を、設計の rev 固定と gcc 16.2.0 に合わせて直した。設計文書も実装に合わせて直した。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_判断から学べること">12. 判断から学べること</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>計画で増えた判断だけを置く。要件側の学びは要件定義書を参照する。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>ランナーの分岐は、テスト用のフレームワークを足さずに、実際の失敗条件を外から起こして確かめる。</p>
+<div class="ulist">
+<ul>
+<li>
+<p>兆候: 検査対象が「外部の取得に失敗したとき」「記録と食い違ったとき」のような環境由来の分岐で、関数単位に切り出すとモックが要る。</p>
+</li>
+<li>
+<p>使える条件: 失敗条件を環境変数やファイルの書き換えで安全に起こせ、元に戻せるとき。</p>
+</li>
+<li>
+<p>使わないほうがよい条件: 失敗を起こすのに破壊的な操作や外部サービスの状態変更が要るとき。</p>
+</li>
+<li>
+<p>関連: 「テストの方針」の表、設計文書の「要件との対応」。</p>
+</li>
+<li>
+<p>検索語: fault injection、black-box testing of shell scripts。</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>出力を記録して照合する検査では、記録を作る前に、知っている値と手で照らす。</p>
+<div class="ulist">
+<ul>
+<li>
+<p>兆候: <code>--record</code> のように、今の出力をそのまま正本にする仕組みがある。</p>
+</li>
+<li>
+<p>使える条件: 仕様や算術から独立に決まる値が少なくとも一部にあるとき。</p>
+</li>
+<li>
+<p>使わないほうがよい条件: 出力が環境の観測そのもので、独立に決まる値がないとき（コンパイラのエラー文など）。その場合は出典と照らす。</p>
+</li>
+<li>
+<p>関連: 「テストの方針」の既知の値、tdd-matt-p の同語反復のアンチパターン。</p>
+</li>
+<li>
+<p>検索語: golden file testing、snapshot testing pitfalls、test oracle。</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>nix の依存がキャッシュ済みなら、クライアント側の <code>https_proxy</code> で curl の取得だけを止められる。</p>
+<div class="ulist">
+<ul>
+<li>
+<p>兆候: nix の依存と curl の依存が混在し、片方だけを取得失敗にしたい。</p>
+</li>
+<li>
+<p>使える条件: 固定した nixpkgs の flake 入力とストアのパスが取得済みのとき。</p>
+</li>
+<li>
+<p>使わないほうがよい条件: 初回の実行。flake の入力はクライアントが取得するので、nix の依存も止まる。</p>
+</li>
+<li>
+<p>関連: 「テストの方針」の「curl 遮断」。この仮説は T4 で確かめる。</p>
+</li>
+<li>
+<p>検索語: nix-daemon proxy environment、impure env vars。</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+
+    </article>
+  </div>
+</body>
+</html>

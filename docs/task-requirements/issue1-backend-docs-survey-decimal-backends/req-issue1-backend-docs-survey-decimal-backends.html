@@ -1,0 +1,1341 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data: https: http:; style-src 'unsafe-inline'; font-src 'self' data:;">
+  <meta name="generator" content="asciidoc-to-colorful-html">
+  <title>要件定義書: 10進バックエンドの実像を掴む（issue #1）</title>
+  <style>
+/*
+ * Standalone Asciidoctor theme.
+ * The palette and document treatments are adapted from
+ * document-base/supplemental-ui/css/custom.css.
+ */
+
+:root {
+  color-scheme: light;
+  --color-ink: #23354a;
+  --color-muted: #607286;
+  --color-primary: #176b87;
+  --color-primary-dark: #123f5d;
+  --color-primary-soft: #e9f5f7;
+  --color-secondary: #6d52a3;
+  --color-secondary-soft: #f1edfa;
+  --color-accent: #d98716;
+  --color-positive: #2f805d;
+  --color-danger: #b64c55;
+  --color-border: #c9d9e3;
+  --color-code-bg: #f3f6f8;
+  --color-surface: #ffffff;
+  --shadow-page: 0 1.4rem 4rem rgb(25 64 88 / 15%);
+  --shadow-soft: 0 0.25rem 1rem rgb(31 75 98 / 9%);
+  --radius-large: 1rem;
+  --radius-medium: 0.55rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 20rem;
+  scroll-behavior: smooth;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--color-ink);
+  background:
+    radial-gradient(circle at 12% 8%, rgb(64 176 174 / 18%), transparent 28rem),
+    radial-gradient(circle at 88% 12%, rgb(126 93 184 / 13%), transparent 25rem),
+    linear-gradient(145deg, #eef7f8 0%, #f8f7fc 52%, #fff8ed 100%);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP",
+    "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+::selection {
+  color: #142b3c;
+  background: #bde8ed;
+}
+
+.page-frame {
+  width: min(74rem, calc(100% - 2rem));
+  margin: 2.5rem auto;
+}
+
+.doc {
+  position: relative;
+  min-width: 0;
+  padding: clamp(1.4rem, 4vw, 4rem);
+  overflow-wrap: anywhere;
+  border: 1px solid rgb(195 216 226 / 85%);
+  border-radius: var(--radius-large);
+  background: #fff;
+  box-shadow: var(--shadow-page);
+}
+
+.doc::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0.38rem;
+  border-radius: var(--radius-large) var(--radius-large) 0 0;
+  background: linear-gradient(90deg, var(--color-primary), #43a6a1 48%, var(--color-secondary));
+  content: "";
+}
+
+.doc h1,
+.doc h2,
+.doc h3,
+.doc h4,
+.doc h5,
+.doc h6 {
+  color: var(--color-primary-dark);
+  font-weight: 750;
+  line-height: 1.4;
+  letter-spacing: 0.015em;
+  scroll-margin-top: 1.5rem;
+}
+
+.doc h1,
+.doc #header > h1 {
+  margin: 0 0 2.3rem;
+  font-size: clamp(2rem, 5vw, 3rem);
+  letter-spacing: 0.025em;
+}
+
+.doc h1::after,
+.doc #header > h1::after {
+  display: block;
+  width: 5.4rem;
+  height: 0.32rem;
+  margin-top: 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-primary), #43a6a1, var(--color-secondary));
+  content: "";
+}
+
+.doc h2 {
+  margin: 2.8rem 0 1.2rem;
+  padding: 0.68rem 1rem 0.68rem 1.1rem;
+  border-left: 0.34rem solid var(--color-primary);
+  border-radius: 0 var(--radius-medium) var(--radius-medium) 0;
+  background: linear-gradient(90deg, var(--color-primary-soft), #f8fbfc 72%, transparent);
+  font-size: clamp(1.45rem, 3vw, 1.9rem);
+}
+
+.doc h3 {
+  margin: 2.25rem 0 0.9rem;
+  padding-bottom: 0.38rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: clamp(1.22rem, 2.3vw, 1.5rem);
+}
+
+.doc h4 {
+  margin: 1.8rem 0 0.7rem;
+  color: #285d72;
+  font-size: 1.14rem;
+}
+
+.doc h5,
+.doc h6 {
+  margin: 1.5rem 0 0.55rem;
+  font-size: 1rem;
+}
+
+.doc p,
+.doc li,
+.doc dd {
+  line-height: 1.82;
+}
+
+.doc p {
+  margin: 0.8rem 0 1rem;
+}
+
+.doc a {
+  color: #086f91;
+  text-decoration-color: #76adbd;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+.doc a:hover {
+  color: #084f70;
+  text-decoration-color: currentcolor;
+}
+
+.doc ul,
+.doc ol {
+  padding-left: 1.55rem;
+}
+
+.doc li + li {
+  margin-top: 0.28rem;
+}
+
+.doc li::marker {
+  color: var(--color-primary);
+  font-weight: 750;
+}
+
+.doc dl dt {
+  margin-top: 1rem;
+  color: var(--color-primary-dark);
+  font-weight: 750;
+}
+
+.doc hr {
+  height: 1px;
+  margin: 2.4rem 0;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--color-border), transparent);
+}
+
+.doc #toc,
+.doc .toc {
+  margin: 1.6rem 0 2.2rem;
+  padding: 1rem 1.2rem;
+  border: 1px solid #cddde5;
+  border-radius: var(--radius-medium);
+  background: linear-gradient(135deg, #f1f9fa, #f7f4fc);
+  box-shadow: var(--shadow-soft);
+}
+
+.doc #toctitle {
+  margin-bottom: 0.45rem;
+  color: var(--color-primary-dark);
+  font-weight: 800;
+}
+
+.doc #toc ul {
+  margin: 0.3rem 0;
+}
+
+.doc table.tableblock {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 1.6rem 0 1.9rem;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  border-collapse: collapse;
+  background: #fff;
+  box-shadow: var(--shadow-soft);
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.doc table.tableblock thead {
+  color: #fff;
+  background: linear-gradient(90deg, var(--color-primary-dark), var(--color-primary));
+}
+
+.doc table.tableblock th,
+.doc table.tableblock td {
+  padding: 0.72rem 0.85rem;
+  border: 1px solid #d7e2e8;
+  text-align: left;
+  vertical-align: top;
+}
+
+.doc table.tableblock th {
+  font-weight: 750;
+}
+
+.doc table.tableblock tbody tr:nth-child(even) {
+  background: #f5f9fa;
+}
+
+.doc table.tableblock tbody tr:hover {
+  background: #edf6f7;
+}
+
+.doc :not(pre) > code,
+.doc kbd {
+  padding: 0.12em 0.4em;
+  border: 1px solid #d6e0e6;
+  border-radius: 0.3rem;
+  color: #87421f;
+  background: var(--color-code-bg);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+}
+
+.doc kbd {
+  color: #36495a;
+  background: linear-gradient(#fff, #edf1f4);
+  box-shadow: 0 0.12rem 0 #c3ced5;
+}
+
+.doc pre {
+  max-width: 100%;
+  margin: 0;
+  overflow: auto;
+  border: 1px solid #cbd8df;
+  border-left: 0.26rem solid var(--color-primary);
+  border-radius: var(--radius-medium);
+  color: #213446;
+  background: #f4f7f9;
+  box-shadow: var(--shadow-soft);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9rem;
+  line-height: 1.62;
+  tab-size: 4;
+}
+
+.doc pre code {
+  display: block;
+  padding: 1rem 1.1rem;
+  color: inherit;
+  background: transparent;
+}
+
+.doc .listingblock,
+.doc .literalblock {
+  margin: 1.35rem 0 1.65rem;
+}
+
+.doc .quoteblock blockquote {
+  margin: 1.4rem 0;
+  padding: 1rem 1.25rem;
+  border-left: 0.32rem solid #5b9da5;
+  border-radius: 0 var(--radius-medium) var(--radius-medium) 0;
+  color: #40566a;
+  background: #f2f8f8;
+}
+
+.doc .quoteblock .attribution {
+  margin-top: -0.9rem;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.doc .sidebarblock,
+.doc .exampleblock > .content {
+  margin: 1.5rem 0;
+  padding: 1rem 1.2rem;
+  border: 1px solid #d8d0e8;
+  border-radius: var(--radius-medium);
+  background: linear-gradient(135deg, #faf8ff, var(--color-secondary-soft));
+  box-shadow: var(--shadow-soft);
+}
+
+.doc .admonitionblock {
+  margin: 1.5rem 0;
+  overflow: hidden;
+  border: 1px solid #c8dce2;
+  border-left: 0.32rem solid var(--color-primary);
+  border-radius: var(--radius-medium);
+  background: #f5fafb;
+  box-shadow: var(--shadow-soft);
+}
+
+.doc .admonitionblock > table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+}
+
+.doc .admonitionblock td.icon {
+  width: 7.5rem;
+  padding: 0.95rem 0.75rem;
+  color: var(--color-primary-dark);
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.doc .admonitionblock td.content {
+  padding: 0.95rem 1rem;
+  border-left: 1px solid rgb(188 211 221 / 85%);
+  background: transparent;
+}
+
+.doc .admonitionblock.tip {
+  border-left-color: var(--color-positive);
+  background: #f0faf5;
+}
+
+.doc .admonitionblock.warning,
+.doc .admonitionblock.caution {
+  border-left-color: var(--color-accent);
+  background: #fff9ed;
+}
+
+.doc .admonitionblock.important {
+  border-left-color: var(--color-danger);
+  background: #fff5f5;
+}
+
+.doc .imageblock {
+  margin: 1.75rem 0 2rem;
+  text-align: center;
+}
+
+.doc img,
+.doc svg,
+.doc video {
+  max-width: 100%;
+  height: auto;
+}
+
+.doc .imageblock img {
+  border: 1px solid #d5e0e5;
+  border-radius: var(--radius-medium);
+  background: #fff;
+  box-shadow: 0 0.4rem 1.2rem rgb(31 75 98 / 12%);
+}
+
+.doc .title,
+.doc .imageblock > .title,
+.doc .listingblock > .title,
+.doc .tableblock > .title {
+  margin: 0.45rem 0;
+  color: var(--color-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.doc mark {
+  padding: 0.08em 0.2em;
+  border-radius: 0.2rem;
+  color: inherit;
+  background: #ffeca8;
+}
+
+.doc details {
+  margin: 1rem 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: #fbfdfd;
+}
+
+.doc summary {
+  color: var(--color-primary-dark);
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.doc #footnotes {
+  margin-top: 3rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-muted);
+  font-size: 0.92rem;
+}
+
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 0.18rem solid #fff;
+  outline-offset: 0.12rem;
+  box-shadow: 0 0 0 0.34rem #0b5e7a;
+}
+
+@media screen and (max-width: 768px) {
+  .page-frame {
+    width: min(100% - 1rem, 74rem);
+    margin: 0.5rem auto;
+  }
+
+  .doc {
+    padding: 1.35rem 1rem 2rem;
+    border-radius: 0.75rem;
+    font-size: 0.98rem;
+  }
+
+  .doc h1,
+  .doc #header > h1 {
+    margin-bottom: 1.8rem;
+    font-size: 1.85rem;
+  }
+
+  .doc h2 {
+    margin-top: 2.2rem;
+    padding: 0.58rem 0.72rem;
+    font-size: 1.38rem;
+  }
+
+  .doc h3 {
+    font-size: 1.2rem;
+  }
+
+  .doc table.tableblock th,
+  .doc table.tableblock td {
+    min-width: 7rem;
+    padding: 0.58rem 0.65rem;
+  }
+
+  .doc .admonitionblock > table,
+  .doc .admonitionblock > table > tbody,
+  .doc .admonitionblock > table > tbody > tr,
+  .doc .admonitionblock td {
+    display: block;
+    width: 100%;
+  }
+
+  .doc .admonitionblock td.icon {
+    padding-bottom: 0.25rem;
+    text-align: left;
+  }
+
+  .doc .admonitionblock td.content {
+    border-top: 1px solid rgb(188 211 221 / 85%);
+    border-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+@media print {
+  @page {
+    margin: 15mm;
+  }
+
+  body {
+    color: #111;
+    background: #fff;
+    font-size: 10.5pt;
+  }
+
+  .page-frame {
+    width: auto;
+    margin: 0;
+  }
+
+  .doc {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .doc::before {
+    display: none;
+  }
+
+  .doc h1,
+  .doc h2,
+  .doc h3,
+  .doc h4,
+  .doc h5,
+  .doc h6 {
+    color: #111;
+    break-after: avoid;
+  }
+
+  .doc h2 {
+    border-left-color: #555;
+    background: none;
+  }
+
+  .doc table.tableblock,
+  .doc pre,
+  .doc .admonitionblock,
+  .doc .imageblock img,
+  .doc #toc,
+  .doc .sidebarblock,
+  .doc .exampleblock > .content {
+    box-shadow: none;
+  }
+
+  .doc table.tableblock thead {
+    color: #111;
+    background: #eee;
+  }
+
+  .doc pre,
+  .doc table,
+  .doc .admonitionblock,
+  .doc .imageblock {
+    break-inside: avoid;
+  }
+
+  .doc a {
+    color: inherit;
+    text-decoration: underline;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="page-frame">
+    <article class="doc">
+<h1>要件定義書: 10進バックエンドの実像を掴む（issue #1）</h1>
+<div id="toc" class="toc">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_出典">1. 出典</a></li>
+<li><a href="#_背景と目的">2. 背景と目的</a></li>
+<li><a href="#_対象範囲と対象外">3. 対象範囲と対象外</a>
+<ul class="sectlevel2">
+<li><a href="#_対象">3.1. 対象</a></li>
+<li><a href="#_対象外">3.2. 対象外</a></li>
+</ul>
+</li>
+<li><a href="#_要件">4. 要件</a>
+<ul class="sectlevel2">
+<li><a href="#_内容の網羅">4.1. 内容の網羅</a></li>
+<li><a href="#_根拠の付け方">4.2. 根拠の付け方</a></li>
+<li><a href="#_プローブの再実行">4.3. プローブの再実行</a></li>
+<li><a href="#_c_abi_と_zustral_からの呼び出し">4.4. C ABI と Zustral からの呼び出し</a></li>
+<li><a href="#_決定性">4.5. 決定性</a></li>
+<li><a href="#_下流のチケットへの接続">4.6. 下流のチケットへの接続</a></li>
+<li><a href="#_チケットの解消">4.7. チケットの解消</a></li>
+</ul>
+</li>
+<li><a href="#_非機能要件と確認方法">5. 非機能要件と確認方法</a></li>
+<li><a href="#_前提と制約">6. 前提と制約</a></li>
+<li><a href="#_正常系境界条件失敗時の結果">7. 正常系、境界条件、失敗時の結果</a></li>
+<li><a href="#_採用した意思決定">8. 採用した意思決定</a></li>
+<li><a href="#_データ移行互換性セキュリティ運用への影響">9. データ移行、互換性、セキュリティ、運用への影響</a></li>
+<li><a href="#_未確定事項">10. 未確定事項</a></li>
+<li><a href="#_安全面でgrillingで対象外としたこと">11. 安全面でgrillingで対象外としたこと</a></li>
+<li><a href="#_判断から学べること">12. 判断から学べること</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_出典">1. 出典</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>issue: #1「0001: 10進バックエンドの実像を掴む」</p>
+</li>
+<li>
+<p>URL: <a href="https://github.com/seiei-sogen/zustral/issues/1" class="bare">https://github.com/seiei-sogen/zustral/issues/1</a></p>
+</li>
+<li>
+<p>ラベル: <code>wayfinder:research</code></p>
+</li>
+<li>
+<p>親の地図: issue #9「Zustral の Decimal 言語機能の設計仕様」（https://github.com/seiei-sogen/zustral/issues/9 、ラベル <code>wayfinder:map</code>）。#1 は #9 の sub-issue である。</p>
+</li>
+<li>
+<p>事前調査レポート: <code>pre-investigation-report-issue1-backend-docs-survey-decimal-backends.json</code>（この文書と同じディレクトリ）</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_背景と目的">2. 背景と目的</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Zustral（Austral のフォーク）に10進数（Decimal）を持ち込む言語仕様を固める途中にある。
+Decimal が乗れる実行時表現の候補が、実際のところ何がどう違うのかが分かっていない。
+この違いが、下流のチケットの判断を縛る。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>0004「スケールは型に入るか、値に入るか」（0001 と 0003 にブロックされる）</p>
+</li>
+<li>
+<p>0005「Decimal は線形リソースか、値型か」（0001 にブロックされる）</p>
+</li>
+<li>
+<p>0008「桁あふれを例外なしでどう扱うか」（0004 と 0005 の後に続く）</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>チケット番号 000N は issue #N に対応する。</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">目的</dt>
+<dd>
+<p>0004・0005・0008 を詰める人が、3系統の候補の違いを、このマシンで再実行できる証拠か一次資料に裏付けられた事実として読めるようになること。</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>利用者は2種類いる。</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">レポートの読者</dt>
+<dd>
+<p>下流チケットで壁打ちする人。事実と根拠を読み、選定の材料にする。</p>
+</dd>
+<dt class="hdlist1">プローブの再実行者</dt>
+<dd>
+<p>レポートの主張を疑う人。1つのコマンドでプローブを再実行し、出力とレポートを照らし合わせる。</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_対象範囲と対象外">3. 対象範囲と対象外</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_対象">3.1. 対象</h3>
+<div class="paragraph">
+<p>3系統（issue が「最低でも」と挙げたもの）:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>mpdecimal（Python の <code>decimal</code> が使っている任意精度10進ライブラリ）</p>
+</li>
+<li>
+<p>IEEE 754-2008 decimal128（GCC の <code>_Decimal128</code> / libdfp / Intel DFP ライブラリ）</p>
+</li>
+<li>
+<p>自前の固定小数点（<code>__int128</code> にスケールを添える）</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>5観点（issue の「知りたいこと」）:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>確保と解放のモデル</p>
+</li>
+<li>
+<p>精度と桁数の上限、丸めモードの品揃え</p>
+</li>
+<li>
+<p>C ABI からの呼び出しやすさ</p>
+</li>
+<li>
+<p>依存とライセンス、ビルドの重さ、プラットフォーム移植性</p>
+</li>
+<li>
+<p>演算結果の決定性</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>成果物:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>調査レポート（日本語の文書）</p>
+</li>
+<li>
+<p>レポートの事実を裏付けるプローブと、それを1コマンドで再実行する手段</p>
+</li>
+<li>
+<p>issue #1 の解消と、地図 issue #9 への記録</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_対象外">3.2. 対象外</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>バックエンドの選定そのもの。0004・0005・0008 の仕事である。</p>
+</li>
+<li>
+<p>コンパイラ（<code>lib/</code>）と stdlib（<code>standard/</code>）への decimal 実装。</p>
+</li>
+<li>
+<p>issue #2〜#8 の編集。</p>
+</li>
+<li>
+<p>リポジトリ内の <code>docs/wayfinder/</code> の変更。トラッカーは GitHub Issues に移っており、<code>docs/wayfinder/</code> の扱いは別の PR が受け持つ。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_要件">4. 要件</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>レポートの置き場所、プローブの言語とファイル構成、記録した出力の置き場所、決定性を確かめる演算と入力の選び方、Zustral の FFI プローブの組み立て方は設計で決める。
+既定の置き場所の候補は <code>docs/research/decimal-backend-survey/</code> である。</p>
+</div>
+<div class="sect2">
+<h3 id="_内容の網羅">4.1. 内容の網羅</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">REQ-001</dt>
+<dd>
+<p>レポートは、3系統それぞれについて、5観点すべての事実を示さなければならない。
+decimal128 系統では、各主張が GCC の <code>_Decimal128</code>、libdfp、Intel DFP のどれについてのものかを区別しなければならない。</p>
+</dd>
+<dt class="hdlist1">REQ-002</dt>
+<dd>
+<p>レポートは、観点ごとに少なくとも次を示さなければならない。</p>
+<div class="openblock">
+<div class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>確保と解放: 1つの値を作るのにヒープ確保が要るか。値のサイズが固定か。使い終わった値に明示的な解放が要るか。</p>
+</li>
+<li>
+<p>精度と丸め: 有効桁数と、指数またはスケールの範囲。提供される丸めモードの一覧。結果が上限を超えたときに何が起きるか。</p>
+</li>
+<li>
+<p>C ABI: 下記 REQ-007 の内容。</p>
+</li>
+<li>
+<p>依存とライセンスとビルドと移植性: 依存するライブラリ、ライセンス名、このマシンでの入手手段とビルドの重さ（パッケージで入るか、ソースからのビルドが要るか）、公式に支えるプラットフォーム。</p>
+</li>
+<li>
+<p>決定性: 下記 REQ-008 の内容。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_根拠の付け方">4.2. 根拠の付け方</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">REQ-003</dt>
+<dd>
+<p>レポートは、事実を述べる文ごとに、次の少なくとも一方を根拠として示さなければならない。
+(a) このマシンで再実行できるプローブの出力。
+(b) 一次資料（公式ドキュメント、ソースコード、仕様、ライセンスファイル）の URL と版。</p>
+</dd>
+<dt class="hdlist1">REQ-004</dt>
+<dd>
+<p>If 主張がこのマシンで観測できない（他プラットフォームでの挙動など）なら、then レポートはその主張に「出典のみ・未実測」と明記しなければならない。
+根拠を示せない内容は事実として書かず、未確認事項として分けなければならない。</p>
+</dd>
+</dl>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-gherkin" data-lang="gherkin">@REQ-003
+Scenario: このマシンで観測できる主張はプローブ出力を根拠に持つ
+  Given レポートに「nixpkgs（rev 674a2028）の gcc 16.2.0 の _Decimal128 は有効桁数34桁」という主張がある
+  When 読者がその主張の根拠を見る
+  Then 根拠として、その値を出力するプローブとその出力が示されている
+
+@REQ-004
+Scenario: このマシンで観測できない主張は出典のみと明記される
+  Given このマシンは x86_64 であり、レポートに AArch64 での _Decimal128 の挙動についての主張がある
+  When 読者がその主張を見る
+  Then その主張には「出典のみ・未実測」の表記と一次資料の URL と版が付いている</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_プローブの再実行">4.3. プローブの再実行</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">REQ-005</dt>
+<dd>
+<p>プローブは、再実行者が1つのコマンドで全部を再実行できなければならない。
+レポートは、そのコマンドと、再実行に必要な前提（nix、C コンパイラなど）を示さなければならない。
+プローブ出力を根拠にする主張は、どのプローブの出力に基づくかを特定できなければならない。</p>
+</dd>
+<dt class="hdlist1">REQ-006</dt>
+<dd>
+<p>When 再実行したプローブの出力が、記録した出力と一致しないとき、再実行コマンドは一致しなかったプローブを表示し、失敗の終了状態で終わらなければならない。
+If プローブの依存（ライブラリやコンパイラ）をこのマシンで取得できないなら、then 再実行コマンドはそのプローブを未実行として理由とともに表示し、成功の件数に含めてはならない。
+未実行だけでは失敗の終了状態にしない。取得できない依存が恒常的にあっても、記録との食い違いを終了状態で検出できるようにするためである。
+レポートは、未実行になったプローブに依存する主張を「出典のみ・未実測」として扱わなければならない。</p>
+</dd>
+</dl>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-gherkin" data-lang="gherkin">@REQ-006
+Scenario: 記録と食い違う出力は失敗として見える
+  Given あるプローブの出力が、記録した出力と異なる
+  When 再実行者が再実行コマンドを実行する
+  Then 一致しなかったプローブの名前が表示される
+  And コマンドは失敗の終了状態で終わる
+
+@REQ-006
+Scenario: 依存を取得できないプローブは未実行として表示される
+  Given あるプローブが依存するライブラリを、このマシンで取得できない
+  When 再実行者が再実行コマンドを実行する
+  Then そのプローブは未実行として、取得できなかった理由とともに表示される
+  And そのプローブは成功の件数に含まれない
+  And ほかのプローブがすべて記録と一致すれば、コマンドは成功の終了状態で終わる</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_c_abi_と_zustral_からの呼び出し">4.4. C ABI と Zustral からの呼び出し</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">REQ-007</dt>
+<dd>
+<p>レポートは、各系統の10進値を Zustral の <code>Foreign_Import</code> で扱えるかを示さなければならない。
+示す内容は、値のまま渡せるか、ポインタ越しなら渡せるか、C の薄い包み（シム）が要るか、である。
+Zustral 側の制約（FFI が受け付ける型）は、コンパイラのソースを根拠に示さなければならない。</p>
+<div class="paragraph">
+<p>Where Zustral コンパイラをこのマシンでビルドできる場合、レポートは、各系統を <code>Foreign_Import</code> で呼ぶ Zustral プログラムを実行した結果を根拠にしなければならない。
+If コンパイラのビルドが失敗する、または設計で決めた手間の上限を超えるなら、then レポートはその理由を記録し、C だけのプローブとコンパイラのソースの引用を根拠にしなければならない。</p>
+</div>
+</dd>
+</dl>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-gherkin" data-lang="gherkin">@REQ-007
+Scenario: コンパイラをビルドできれば Zustral プログラムで確かめる
+  Given Zustral コンパイラをこのマシンでビルドできる
+  When 再実行者が再実行コマンドを実行する
+  Then 各系統を Foreign_Import で呼ぶ Zustral プログラムの出力が表示される
+
+@REQ-007
+Scenario: コンパイラをビルドできなければ理由を残して C だけで確かめる
+  Given Zustral コンパイラのビルドがこのマシンで現実的でない
+  When 読者がレポートの C ABI の節を読む
+  Then ビルドできなかった理由が書かれている
+  And 根拠は C だけのプローブとコンパイラのソースの引用である</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_決定性">4.5. 決定性</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">REQ-008</dt>
+<dd>
+<p>レポートは、各系統について同じ入力の演算結果が、このマシンで次のあいだで一致するかを示さなければならない。</p>
+<div class="openblock">
+<div class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>少なくとも2つの最適化レベル</p>
+</li>
+<li>
+<p>gcc と clang。clang を取得でき、その系統をコンパイルできる場合に限る</p>
+</li>
+<li>
+<p>同じ実行を繰り返したとき</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>If ある組み合わせで結果が一致しないなら、then レポートはその組み合わせと各出力をそのまま示さなければならない。
+プラットフォームをまたいだ一致は、出典がある場合だけ「出典のみ・未実測」として示し、実測したと書いてはならない。</p>
+</div>
+</dd>
+</dl>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-gherkin" data-lang="gherkin">@REQ-008
+Scenario: 結果が一致しない組み合わせは隠さず示される
+  Given ある系統の同じ入力の演算が、最適化レベルによって異なる結果を出す
+  When 読者がレポートの決定性の節を読む
+  Then 異なる結果を出した最適化レベルと、それぞれの出力が示されている
+
+@REQ-008
+Scenario: clang でコンパイルできない系統は clang 比較を未実行と示す
+  Given ある系統のプローブを、このマシンで取得した clang ではコンパイルできない
+  When 再実行者が再実行コマンドを実行する
+  Then その系統の clang 比較は未実行として理由とともに表示される</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_下流のチケットへの接続">4.6. 下流のチケットへの接続</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">REQ-009</dt>
+<dd>
+<p>レポートは、0004・0005・0008 の問いそれぞれについて、どの事実が効くかを名指ししなければならない。
+レポートは、特定のバックエンドを採用・推奨してはならない。</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_チケットの解消">4.7. チケットの解消</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">REQ-010</dt>
+<dd>
+<p>When レポートとプローブがそろったとき、GitHub 上で次の状態にならなければならない。</p>
+<div class="openblock">
+<div class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>issue #1 に解消コメントがあり、答えの要点と、レポートと PR へのリンクを持つ。</p>
+</li>
+<li>
+<p>issue #1 がクローズされている。</p>
+</li>
+<li>
+<p>地図 issue #9 の本文の「ここまでの決定」で、「（まだない）」が <code>- [0001: 10進バックエンドの実像を掴む](<a href="https://github.com/seiei-sogen/zustral/issues/1" class="bare">https://github.com/seiei-sogen/zustral/issues/1</a>): &lt;答えの要点を1行で&gt;</code> に置き換わっている。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_非機能要件と確認方法">5. 非機能要件と確認方法</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 42.8571%;">
+<col style="width: 42.8572%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ID</th>
+<th class="tableblock halign-left valign-top">要件</th>
+<th class="tableblock halign-left valign-top">確認方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NFR-001</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">レポートは日本語で書く。このリポジトリの設計文書と地図 issue #9 に合わせる。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">レポートを読む。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NFR-002</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">リポジトリの変更は、レポート、プローブ、<code>docs/task-requirements/</code> 配下に限る。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>git diff --stat master&#8230;&#8203;HEAD</code> に <code>lib/</code>、<code>standard/</code>、<code>docs/wayfinder/</code> が現れないこと。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NFR-003</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">プローブはこのマシン（x86_64、Ubuntu 24.04.1、gcc 13.3.0、nix 2.34.6）で、追加の手作業なしに再実行できる。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">クリーンな作業ツリーで再実行コマンドを1回実行し、終了状態と出力を見る。</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_前提と制約">6. 前提と制約</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>判断に効いた事実だけを置く。ほかの調査結果は事前調査レポートを参照する。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Zustral の FFI は128ビット整数を持たない。整数の幅は 8/16/32/64/ByteSize/Index だけである（<code>lib/Type.ml:22-29</code>）。</p>
+</li>
+<li>
+<p>Zustral の FFI はレコードの値渡し、<code>Unit</code> の戻り値、参照を受け付けない（<code>lib/CodeGen.ml:554-591</code>）。</p>
+</li>
+<li>
+<p>コンパイラの CLI には、追加の C ファイルやリンクするライブラリを渡すフラグがない。外部ライブラリとのリンクは <code>--target-type=c</code> の出力を自分で C コンパイラに渡す（<code>lib/CliParser.ml:55</code>、<code>lib/Util.ml:202-203</code>）。</p>
+</li>
+<li>
+<p><code>Foreign_Import</code> の既存例が <code>examples/ffi/FFI.aum:1-14</code> にある。</p>
+</li>
+<li>
+<p>このマシンの gcc 13.3.0 は <code><em>DECIMAL_BID_FORMAT</em>=1</code>、<code><em>DEC128_MANT_DIG</em>=34</code>、<code><em>SIZEOF_INT128</em>=16</code> を定義する（<code>echo | gcc -dM -E -</code> の出力）。</p>
+</li>
+<li>
+<p>clang は PATH にない。nixpkgs（rev <code>674a2028661e</code>）から clang 21.1.8 を取れる。</p>
+</li>
+<li>
+<p>nixpkgs には mpdecimal 4.0.1（BSD-2-Clause）がある。libdfp、Intel DFP、decNumber の名前のパッケージは見つからなかった。</p>
+</li>
+<li>
+<p>wayfinder のトラッカーは GitHub Issues である。地図 issue #9 の「トラッカーの約束（GitHub Issues）」では、確保は issue へのアサインで行い、解消は解消コメントの投稿、issue のクローズ、地図の「ここまでの決定」への1行で行う。issue #1 は seiei-sogen にアサイン済みで、確保は済んでいる。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_正常系境界条件失敗時の結果">7. 正常系、境界条件、失敗時の結果</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1">正常系</dt>
+<dd>
+<p>再実行コマンドが全プローブを実行し、出力がレポートの記録と一致して、成功の終了状態で終わる。</p>
+</dd>
+<dt class="hdlist1">境界条件</dt>
+<dd>
+<p>依存を取得できないプローブ（REQ-006）、clang でコンパイルできない系統（REQ-008）、コンパイラをビルドできない場合（REQ-007）。どれも未実行や理由として見え、成功に数えない。</p>
+</dd>
+<dt class="hdlist1">失敗時の結果</dt>
+<dd>
+<p>出力が記録と食い違えば、再実行コマンドがそのプローブを名指しして失敗する（REQ-006）。</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_採用した意思決定">8. 採用した意思決定</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>すべて自動壁打ちの推奨案である。根拠の多くは親チャットの方針（run contract）と事前調査レポートにある。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 30%;">
+<col style="width: 30%;">
+<col style="width: 20%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">決定</th>
+<th class="tableblock halign-left valign-top">根拠</th>
+<th class="tableblock halign-left valign-top">退けた代替案</th>
+<th class="tableblock halign-left valign-top">不確実性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">成果物はレポートと、再実行できるプローブの組にする（REQ-005）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">レポートの主張を、読者が信用ではなく再実行で確かめられる。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">一次資料の引用だけのレポート。このマシンで観測できる事実まで「信じて」になる。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">プローブの保守負担。decimal 実装後に使い続けるかは未定。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">事実の文ごとに根拠を付け、観測できない主張は「出典のみ・未実測」とする（REQ-003、REQ-004）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">下流の判断は金融バッチの決定性に関わり、推測が事実に紛れると誤った選定につながる。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">節ごとにまとめて参考文献を付ける。どの文がどの根拠かを追えない。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">なし。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">再実行は記録した出力と照合し、食い違えば失敗にする（REQ-006）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">再実行者が目視で比べずに済む。依存が取れない場合を成功に数えると、確かめていない主張が確かめたように見える。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">出力を表示するだけにする。食い違いを読者が見落とす。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">別のマシンでは出力が変わりうる。照合の対象はこのマシンでの記録である。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">C ABI は可能なら実際の Zustral プログラムで確かめ、無理なら理由を残して C だけで確かめる（REQ-007）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Zustral は C バックエンド経由でコードを生成する。FFI で値を表せないこと自体が 0005 に効く事実になる。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">最初から C だけで確かめる。Zustral 側の制約を実物で示せない。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コンパイラのビルド時間と、ライブラリのヘッダと生成 C の型宣言の衝突は未確認。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">決定性はこのマシンの範囲（最適化レベル、gcc と clang、繰り返し）だけを実測する（REQ-008）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">このマシンで観測できない一致を主張しない。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">プラットフォーム間の一致を出典から事実として書く。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">clang が <code>_Decimal128</code> を扱えるかは未確認。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">レポートは選定せず、下流の問いに効く事実を名指しする（REQ-009）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">選定は 0004・0005・0008 の壁打ちが担う。レポートが推奨すると、下流の壁打ちが追認になる。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">レポートに推奨案を書く。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">なし。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">decimal128 系統の libdfp と Intel DFP は、このマシンで取得できる場合だけ実測する（REQ-001、REQ-006）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">nixpkgs に見つからず、ソースビルドの手間が読めない。取得できなければ出典のみとして扱う規則で足りる。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3つの実装すべてを必ず実測する。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ソースビルドが現実的かは設計で確かめる。</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_データ移行互換性セキュリティ運用への影響">9. データ移行、互換性、セキュリティ、運用への影響</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>データ移行と互換性: なし。コンパイラと stdlib を変えない。</p>
+</li>
+<li>
+<p>セキュリティ: プローブは外部入力を受け取らない。nix で取得するパッケージは nixpkgs の rev <code>674a2028661e550a97400c1cc992b9cca9a668a1</code> に固定し、再実行で版が変わらないようにする。版はレポートに記録する（REQ-003 の「版」）。</p>
+</li>
+<li>
+<p>運用: issue #1 は REQ-010 の解消でクローズする。PR 本文の <code>Closes #1</code> は、マージ時に #1 が開いていた場合の閉じ忘れを防ぐ。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_未確定事項">10. 未確定事項</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>どれも、結果ごとの扱いを REQ-006・REQ-007・REQ-008 が決めているため、このまま設計と実装に進める。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Zustral コンパイラが、このマシンの nix dev shell で現実的な時間にビルドできるか。確認方法: <code>flake.nix</code> の dev shell で <code>make</code> を実行する。結果は REQ-007 の分岐を決める。</p>
+</li>
+<li>
+<p>mpdecimal のヘッダと、Zustral が生成する <code>au_*</code> 型の <code>extern</code> 宣言を同じ翻訳単位に置いたときに型が衝突するか。確認方法: 小さな Zustral プログラムを <code>--target-type=c</code> で出し、mpdecimal とリンクする。結果は FFI プローブの組み立て方を決める。</p>
+</li>
+<li>
+<p>libdfp と Intel DFP を、このマシンでソースからビルドできるか。確認方法: 各プロジェクトの公式リポジトリのビルド手順を試す。できなければその主張は出典のみになる。</p>
+</li>
+<li>
+<p>nixpkgs の clang 21.1.8 が、このマシンで <code>_Decimal128</code> をコンパイルできるか。確認方法: <code>nix shell nixpkgs#clang</code> で小さなプログラムをコンパイルする。できなければ REQ-008 の clang 比較は未実行になる。</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_安全面でgrillingで対象外としたこと">11. 安全面でgrillingで対象外としたこと</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 22.2222%;">
+<col style="width: 11.1111%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">論点</th>
+<th class="tableblock halign-left valign-top">区分</th>
+<th class="tableblock halign-left valign-top">見送った理由</th>
+<th class="tableblock halign-left valign-top">後から足す条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">演算速度の計測</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">対象外</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">issue の5観点に実行速度は含まれない。数値を出すとベンチマークの条件管理が要り、事実の調査から外れる。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0005 などの壁打ちで、速度が選定を分ける論点になったとき。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">他プラットフォーム（AArch64、macOS、Windows）での実測</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">対象外</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">このマシンで観測できない。出典のみとして扱えば下流の判断材料は欠けない。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">別のマシンや CI で同じプローブを走らせられるようになったとき。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">プローブを <code>test-programs/</code> や CI に組み込むこと</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">対象外</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">decimal はまだ言語に実装されておらず、回帰を守る対象がない。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">decimal 実装が始まり、バックエンドの挙動を回帰テストで守る必要が出たとき。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3系統以外の候補（decNumber 単体、64ビット整数の固定小数点など）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">対象外</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">issue は3系統を最低限として挙げ、ほかの候補を名指ししていない。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">下流の壁打ちで、3系統のどれも条件を満たさないと分かったとき。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">libdfp と Intel DFP をソースからビルドしてまで実測するか</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">未確定</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">nixpkgs になく、手間が読めない。REQ-006 の規則で、実測できなくても主張の扱いは決まる。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">設計で、ビルドが現実的な手間で済むと確かめたとき。</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_判断から学べること">12. 判断から学べること</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>実装前の判断として記す。効果は実証していない。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>調査と選定を分けたチケットでは、調査レポートに推奨を書かない。</p>
+<div class="ulist">
+<ul>
+<li>
+<p>兆候: research チケットの後ろに、それにブロックされる grilling チケットが並んでいる。</p>
+</li>
+<li>
+<p>使える条件: 下流に選定を担う場が別にあるとき。</p>
+</li>
+<li>
+<p>使わないほうがよい条件: 調査と決定が同じ人・同じ場で完結し、推奨がないと次に進めないとき。</p>
+</li>
+<li>
+<p>関連: REQ-009、採用した意思決定の表。</p>
+</li>
+<li>
+<p>検索語: wayfinder research ticket、separation of fact-finding and decision。</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>観測できる主張と出典だけの主張を、文の単位で分ける。</p>
+<div class="ulist">
+<ul>
+<li>
+<p>兆候: 「プラットフォームをまたいで同じ答えになるか」のように、手元で確かめられない性質を問われている。</p>
+</li>
+<li>
+<p>使える条件: 読者が主張を再実行で確かめる手段を持つとき。</p>
+</li>
+<li>
+<p>使わないほうがよい条件: すべての主張が出典に基づく文献調査で、再実行する対象がないとき。</p>
+</li>
+<li>
+<p>関連: REQ-003、REQ-004、REQ-006。</p>
+</li>
+<li>
+<p>検索語: reproducible research、evidence labeling。</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>C ライブラリの呼びやすさは、ライブラリ側より先に言語の FFI の型対応表で決まることがある。</p>
+<div class="ulist">
+<ul>
+<li>
+<p>兆候: 比べたい値型が128ビットや構造体の値で、言語の FFI がその幅や値渡しを持たない。</p>
+</li>
+<li>
+<p>使える条件: C バックエンドや FFI を持つ言語から C ライブラリを評価するとき。</p>
+</li>
+<li>
+<p>使わないほうがよい条件: 言語の FFI が対象の型を直接表せるとき。</p>
+</li>
+<li>
+<p>関連: REQ-007、<code>lib/CodeGen.ml:554-591</code>、<code>lib/Type.ml:22-29</code>。</p>
+</li>
+<li>
+<p>検索語: FFI type mapping、C ABI 128-bit by value、shim function。</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+
+    </article>
+  </div>
+</body>
+</html>

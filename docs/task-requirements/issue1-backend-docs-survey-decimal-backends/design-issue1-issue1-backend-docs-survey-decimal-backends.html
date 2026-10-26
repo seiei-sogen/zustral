@@ -1,0 +1,1620 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data: https: http:; style-src 'unsafe-inline'; font-src 'self' data:;">
+  <meta name="generator" content="asciidoc-to-colorful-html">
+  <title>設計文書: 10進バックエンドの実像を掴む（issue #1）</title>
+  <style>
+/*
+ * Standalone Asciidoctor theme.
+ * The palette and document treatments are adapted from
+ * document-base/supplemental-ui/css/custom.css.
+ */
+
+:root {
+  color-scheme: light;
+  --color-ink: #23354a;
+  --color-muted: #607286;
+  --color-primary: #176b87;
+  --color-primary-dark: #123f5d;
+  --color-primary-soft: #e9f5f7;
+  --color-secondary: #6d52a3;
+  --color-secondary-soft: #f1edfa;
+  --color-accent: #d98716;
+  --color-positive: #2f805d;
+  --color-danger: #b64c55;
+  --color-border: #c9d9e3;
+  --color-code-bg: #f3f6f8;
+  --color-surface: #ffffff;
+  --shadow-page: 0 1.4rem 4rem rgb(25 64 88 / 15%);
+  --shadow-soft: 0 0.25rem 1rem rgb(31 75 98 / 9%);
+  --radius-large: 1rem;
+  --radius-medium: 0.55rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 20rem;
+  scroll-behavior: smooth;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--color-ink);
+  background:
+    radial-gradient(circle at 12% 8%, rgb(64 176 174 / 18%), transparent 28rem),
+    radial-gradient(circle at 88% 12%, rgb(126 93 184 / 13%), transparent 25rem),
+    linear-gradient(145deg, #eef7f8 0%, #f8f7fc 52%, #fff8ed 100%);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP",
+    "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+::selection {
+  color: #142b3c;
+  background: #bde8ed;
+}
+
+.page-frame {
+  width: min(74rem, calc(100% - 2rem));
+  margin: 2.5rem auto;
+}
+
+.doc {
+  position: relative;
+  min-width: 0;
+  padding: clamp(1.4rem, 4vw, 4rem);
+  overflow-wrap: anywhere;
+  border: 1px solid rgb(195 216 226 / 85%);
+  border-radius: var(--radius-large);
+  background: #fff;
+  box-shadow: var(--shadow-page);
+}
+
+.doc::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0.38rem;
+  border-radius: var(--radius-large) var(--radius-large) 0 0;
+  background: linear-gradient(90deg, var(--color-primary), #43a6a1 48%, var(--color-secondary));
+  content: "";
+}
+
+.doc h1,
+.doc h2,
+.doc h3,
+.doc h4,
+.doc h5,
+.doc h6 {
+  color: var(--color-primary-dark);
+  font-weight: 750;
+  line-height: 1.4;
+  letter-spacing: 0.015em;
+  scroll-margin-top: 1.5rem;
+}
+
+.doc h1,
+.doc #header > h1 {
+  margin: 0 0 2.3rem;
+  font-size: clamp(2rem, 5vw, 3rem);
+  letter-spacing: 0.025em;
+}
+
+.doc h1::after,
+.doc #header > h1::after {
+  display: block;
+  width: 5.4rem;
+  height: 0.32rem;
+  margin-top: 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-primary), #43a6a1, var(--color-secondary));
+  content: "";
+}
+
+.doc h2 {
+  margin: 2.8rem 0 1.2rem;
+  padding: 0.68rem 1rem 0.68rem 1.1rem;
+  border-left: 0.34rem solid var(--color-primary);
+  border-radius: 0 var(--radius-medium) var(--radius-medium) 0;
+  background: linear-gradient(90deg, var(--color-primary-soft), #f8fbfc 72%, transparent);
+  font-size: clamp(1.45rem, 3vw, 1.9rem);
+}
+
+.doc h3 {
+  margin: 2.25rem 0 0.9rem;
+  padding-bottom: 0.38rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: clamp(1.22rem, 2.3vw, 1.5rem);
+}
+
+.doc h4 {
+  margin: 1.8rem 0 0.7rem;
+  color: #285d72;
+  font-size: 1.14rem;
+}
+
+.doc h5,
+.doc h6 {
+  margin: 1.5rem 0 0.55rem;
+  font-size: 1rem;
+}
+
+.doc p,
+.doc li,
+.doc dd {
+  line-height: 1.82;
+}
+
+.doc p {
+  margin: 0.8rem 0 1rem;
+}
+
+.doc a {
+  color: #086f91;
+  text-decoration-color: #76adbd;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+.doc a:hover {
+  color: #084f70;
+  text-decoration-color: currentcolor;
+}
+
+.doc ul,
+.doc ol {
+  padding-left: 1.55rem;
+}
+
+.doc li + li {
+  margin-top: 0.28rem;
+}
+
+.doc li::marker {
+  color: var(--color-primary);
+  font-weight: 750;
+}
+
+.doc dl dt {
+  margin-top: 1rem;
+  color: var(--color-primary-dark);
+  font-weight: 750;
+}
+
+.doc hr {
+  height: 1px;
+  margin: 2.4rem 0;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--color-border), transparent);
+}
+
+.doc #toc,
+.doc .toc {
+  margin: 1.6rem 0 2.2rem;
+  padding: 1rem 1.2rem;
+  border: 1px solid #cddde5;
+  border-radius: var(--radius-medium);
+  background: linear-gradient(135deg, #f1f9fa, #f7f4fc);
+  box-shadow: var(--shadow-soft);
+}
+
+.doc #toctitle {
+  margin-bottom: 0.45rem;
+  color: var(--color-primary-dark);
+  font-weight: 800;
+}
+
+.doc #toc ul {
+  margin: 0.3rem 0;
+}
+
+.doc table.tableblock {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 1.6rem 0 1.9rem;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  border-collapse: collapse;
+  background: #fff;
+  box-shadow: var(--shadow-soft);
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.doc table.tableblock thead {
+  color: #fff;
+  background: linear-gradient(90deg, var(--color-primary-dark), var(--color-primary));
+}
+
+.doc table.tableblock th,
+.doc table.tableblock td {
+  padding: 0.72rem 0.85rem;
+  border: 1px solid #d7e2e8;
+  text-align: left;
+  vertical-align: top;
+}
+
+.doc table.tableblock th {
+  font-weight: 750;
+}
+
+.doc table.tableblock tbody tr:nth-child(even) {
+  background: #f5f9fa;
+}
+
+.doc table.tableblock tbody tr:hover {
+  background: #edf6f7;
+}
+
+.doc :not(pre) > code,
+.doc kbd {
+  padding: 0.12em 0.4em;
+  border: 1px solid #d6e0e6;
+  border-radius: 0.3rem;
+  color: #87421f;
+  background: var(--color-code-bg);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+}
+
+.doc kbd {
+  color: #36495a;
+  background: linear-gradient(#fff, #edf1f4);
+  box-shadow: 0 0.12rem 0 #c3ced5;
+}
+
+.doc pre {
+  max-width: 100%;
+  margin: 0;
+  overflow: auto;
+  border: 1px solid #cbd8df;
+  border-left: 0.26rem solid var(--color-primary);
+  border-radius: var(--radius-medium);
+  color: #213446;
+  background: #f4f7f9;
+  box-shadow: var(--shadow-soft);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9rem;
+  line-height: 1.62;
+  tab-size: 4;
+}
+
+.doc pre code {
+  display: block;
+  padding: 1rem 1.1rem;
+  color: inherit;
+  background: transparent;
+}
+
+.doc .listingblock,
+.doc .literalblock {
+  margin: 1.35rem 0 1.65rem;
+}
+
+.doc .quoteblock blockquote {
+  margin: 1.4rem 0;
+  padding: 1rem 1.25rem;
+  border-left: 0.32rem solid #5b9da5;
+  border-radius: 0 var(--radius-medium) var(--radius-medium) 0;
+  color: #40566a;
+  background: #f2f8f8;
+}
+
+.doc .quoteblock .attribution {
+  margin-top: -0.9rem;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.doc .sidebarblock,
+.doc .exampleblock > .content {
+  margin: 1.5rem 0;
+  padding: 1rem 1.2rem;
+  border: 1px solid #d8d0e8;
+  border-radius: var(--radius-medium);
+  background: linear-gradient(135deg, #faf8ff, var(--color-secondary-soft));
+  box-shadow: var(--shadow-soft);
+}
+
+.doc .admonitionblock {
+  margin: 1.5rem 0;
+  overflow: hidden;
+  border: 1px solid #c8dce2;
+  border-left: 0.32rem solid var(--color-primary);
+  border-radius: var(--radius-medium);
+  background: #f5fafb;
+  box-shadow: var(--shadow-soft);
+}
+
+.doc .admonitionblock > table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+}
+
+.doc .admonitionblock td.icon {
+  width: 7.5rem;
+  padding: 0.95rem 0.75rem;
+  color: var(--color-primary-dark);
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.doc .admonitionblock td.content {
+  padding: 0.95rem 1rem;
+  border-left: 1px solid rgb(188 211 221 / 85%);
+  background: transparent;
+}
+
+.doc .admonitionblock.tip {
+  border-left-color: var(--color-positive);
+  background: #f0faf5;
+}
+
+.doc .admonitionblock.warning,
+.doc .admonitionblock.caution {
+  border-left-color: var(--color-accent);
+  background: #fff9ed;
+}
+
+.doc .admonitionblock.important {
+  border-left-color: var(--color-danger);
+  background: #fff5f5;
+}
+
+.doc .imageblock {
+  margin: 1.75rem 0 2rem;
+  text-align: center;
+}
+
+.doc img,
+.doc svg,
+.doc video {
+  max-width: 100%;
+  height: auto;
+}
+
+.doc .imageblock img {
+  border: 1px solid #d5e0e5;
+  border-radius: var(--radius-medium);
+  background: #fff;
+  box-shadow: 0 0.4rem 1.2rem rgb(31 75 98 / 12%);
+}
+
+.doc .title,
+.doc .imageblock > .title,
+.doc .listingblock > .title,
+.doc .tableblock > .title {
+  margin: 0.45rem 0;
+  color: var(--color-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.doc mark {
+  padding: 0.08em 0.2em;
+  border-radius: 0.2rem;
+  color: inherit;
+  background: #ffeca8;
+}
+
+.doc details {
+  margin: 1rem 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: #fbfdfd;
+}
+
+.doc summary {
+  color: var(--color-primary-dark);
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.doc #footnotes {
+  margin-top: 3rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-muted);
+  font-size: 0.92rem;
+}
+
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 0.18rem solid #fff;
+  outline-offset: 0.12rem;
+  box-shadow: 0 0 0 0.34rem #0b5e7a;
+}
+
+@media screen and (max-width: 768px) {
+  .page-frame {
+    width: min(100% - 1rem, 74rem);
+    margin: 0.5rem auto;
+  }
+
+  .doc {
+    padding: 1.35rem 1rem 2rem;
+    border-radius: 0.75rem;
+    font-size: 0.98rem;
+  }
+
+  .doc h1,
+  .doc #header > h1 {
+    margin-bottom: 1.8rem;
+    font-size: 1.85rem;
+  }
+
+  .doc h2 {
+    margin-top: 2.2rem;
+    padding: 0.58rem 0.72rem;
+    font-size: 1.38rem;
+  }
+
+  .doc h3 {
+    font-size: 1.2rem;
+  }
+
+  .doc table.tableblock th,
+  .doc table.tableblock td {
+    min-width: 7rem;
+    padding: 0.58rem 0.65rem;
+  }
+
+  .doc .admonitionblock > table,
+  .doc .admonitionblock > table > tbody,
+  .doc .admonitionblock > table > tbody > tr,
+  .doc .admonitionblock td {
+    display: block;
+    width: 100%;
+  }
+
+  .doc .admonitionblock td.icon {
+    padding-bottom: 0.25rem;
+    text-align: left;
+  }
+
+  .doc .admonitionblock td.content {
+    border-top: 1px solid rgb(188 211 221 / 85%);
+    border-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+@media print {
+  @page {
+    margin: 15mm;
+  }
+
+  body {
+    color: #111;
+    background: #fff;
+    font-size: 10.5pt;
+  }
+
+  .page-frame {
+    width: auto;
+    margin: 0;
+  }
+
+  .doc {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .doc::before {
+    display: none;
+  }
+
+  .doc h1,
+  .doc h2,
+  .doc h3,
+  .doc h4,
+  .doc h5,
+  .doc h6 {
+    color: #111;
+    break-after: avoid;
+  }
+
+  .doc h2 {
+    border-left-color: #555;
+    background: none;
+  }
+
+  .doc table.tableblock,
+  .doc pre,
+  .doc .admonitionblock,
+  .doc .imageblock img,
+  .doc #toc,
+  .doc .sidebarblock,
+  .doc .exampleblock > .content {
+    box-shadow: none;
+  }
+
+  .doc table.tableblock thead {
+    color: #111;
+    background: #eee;
+  }
+
+  .doc pre,
+  .doc table,
+  .doc .admonitionblock,
+  .doc .imageblock {
+    break-inside: avoid;
+  }
+
+  .doc a {
+    color: inherit;
+    text-decoration: underline;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="page-frame">
+    <article class="doc">
+<h1>設計文書: 10進バックエンドの実像を掴む（issue #1）</h1>
+<div id="toc" class="toc">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_入力と位置付け">1. 入力と位置付け</a></li>
+<li><a href="#experiments">2. 設計前の実験</a>
+<ul class="sectlevel2">
+<li><a href="#_実験1_コンパイラのビルドと外部ライブラリとの手動リンク">2.1. 実験1: コンパイラのビルドと、外部ライブラリとの手動リンク</a></li>
+<li><a href="#_実験2_mpdecimal_のヘッダと生成_c_の衝突">2.2. 実験2: mpdecimal のヘッダと生成 C の衝突</a></li>
+<li><a href="#_実験3_libdfp_と_intel_dfp_のソースからのビルド">2.3. 実験3: libdfp と Intel DFP のソースからのビルド</a></li>
+<li><a href="#_実験4_nixpkgs_の_clang_と_decimal128">2.4. 実験4: nixpkgs の clang と <code>_Decimal128</code></a></li>
+<li><a href="#_実験5_事前調査レポートの_meta_generated_at">2.5. 実験5: 事前調査レポートの <code>meta.generated_at</code></a></li>
+</ul>
+</li>
+<li><a href="#_方式の要約">3. 方式の要約</a></li>
+<li><a href="#_ファイル構成と所有">4. ファイル構成と所有</a></li>
+<li><a href="#_データの形">5. データの形</a>
+<ul class="sectlevel2">
+<li><a href="#_依存表">5.1. 依存表</a></li>
+<li><a href="#_プローブ表">5.2. プローブ表</a></li>
+<li><a href="#_プローブの出力と結果">5.3. プローブの出力と結果</a></li>
+</ul>
+</li>
+<li><a href="#_公開インターフェース">6. 公開インターフェース</a></li>
+<li><a href="#_処理の流れと状態">7. 処理の流れと状態</a></li>
+<li><a href="#_決定性の演算と入力">8. 決定性の演算と入力</a></li>
+<li><a href="#_観点ごとにプローブが出すもの">9. 観点ごとにプローブが出すもの</a></li>
+<li><a href="#ffi">10. Zustral FFI プローブ</a>
+<ul class="sectlevel2">
+<li><a href="#_組み立て">10.1. 組み立て</a></li>
+<li><a href="#ffi-cap">10.2. 手間の上限（REQ-007）</a></li>
+</ul>
+</li>
+<li><a href="#_要件との対応">11. 要件との対応</a></li>
+<li><a href="#_quint_を使わない理由">12. Quint を使わない理由</a></li>
+<li><a href="#_未確認事項と制約">13. 未確認事項と制約</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_入力と位置付け">1. 入力と位置付け</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>要件定義書: <code>req-issue1-backend-docs-survey-decimal-backends.adoc</code>（REQ-001〜010、NFR-001〜003、Gherkin 8件）</p>
+</li>
+<li>
+<p>事前調査レポート: <code>pre-investigation-report-issue1-backend-docs-survey-decimal-backends.json</code></p>
+</li>
+<li>
+<p>issue: <a href="https://github.com/seiei-sogen/zustral/issues/1" class="bare">https://github.com/seiei-sogen/zustral/issues/1</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>この設計は、調査レポートとプローブ一式の形を決める。
+コンパイラ（<code>lib/</code>）と stdlib（<code>standard/</code>）は変えない。
+要件が設計に委ねた次の点を、この文書で決める。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>レポートの置き場所と形式</p>
+</li>
+<li>
+<p>プローブの言語とファイル構成、記録した出力の置き場所</p>
+</li>
+<li>
+<p>1コマンドの再実行が出力を照合し「未実行」を報告する方式</p>
+</li>
+<li>
+<p>決定性を確かめる演算と入力</p>
+</li>
+<li>
+<p>Zustral の FFI プローブの組み立て方と、REQ-007 の手間の上限</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>判断の多くは、設計前に実験で確かめた事実に基づく。
+実験の記録は次の節にある。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="experiments">2. 設計前の実験</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>要件の未確定事項を、このマシンで観測して決めた。
+中間物は作業ツリーの外（セッションの scratchpad）に置いた。作業ツリーに書いたのは、実験5の調査 JSON の修正だけである。
+日付は 2026-10-26。</p>
+</div>
+<div class="sect2">
+<h3 id="_実験1_コンパイラのビルドと外部ライブラリとの手動リンク">2.1. 実験1: コンパイラのビルドと、外部ライブラリとの手動リンク</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">git archive HEAD | tar -x -C $S/exp
+nix develop path:$S/exp --command bash -c 'ocaml -version; dune --version'
+nix develop path:$S/exp --command bash -c \
+  'make clean &gt;/dev/null; export DUNE_CACHE=disabled; time make &gt;/dev/null 2&gt;&amp;1; ./austral --version'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>結果: OCaml 4.14.1、dune 3.8.1。クリーンビルドは <code>real 0m2.360s</code>（user 7.349s）で、<code>austral 0.2.0</code> ができた。
+dev shell の初回取得はこの測定より前に済んでおり、その時間は測っていない。
+作業ツリーの flake でも <code>nix develop &lt;worktree&gt; --command bash -c 'ocaml -version'</code> が 0.32 秒で通り、<code>git status</code> は変わらなかった。</p>
+</div>
+<div class="paragraph">
+<p>次の Zustral プログラムを <code>--target-type=c</code> で C にし、mpdecimal と手でリンクした。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-austral" data-lang="austral">pragma Unsafe_Module;
+import Austral.Memory (Address);
+module body Test is
+    pragma Foreign_Import(External_Name =&gt; "mpd_version");
+    function Mpd_Version(): Address[Nat8] is
+    end;
+    pragma Foreign_Import(External_Name =&gt; "puts");
+    function Put_Address(s: Address[Nat8]): Int32 is
+    end;
+    function main(): ExitCode is
+        Put_Address(Mpd_Version());
+        return ExitSuccess();
+    end;
+end module body.</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">austral compile Test.aum --entrypoint=Test:main --target-type=c --output=gen.c
+nix shell $NIXPKGS#gcc --command bash -c \
+  "gcc -fwrapv -Wno-builtin-declaration-mismatch gen.c -L$OUT/lib -Wl,-rpath,$OUT/lib -lmpdec -lm -o t &amp;&amp; ./t"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>結果: <code>4.0.1</code> を出力し、終了状態 0。
+リンクしたのは固定した nixpkgs の gcc 16.2.0 で、設計がプローブに使うものと同じである。
+<code>austral compile</code> は dev shell の外で実行しており、ビルドした <code>austral</code> は dev shell なしで動く。
+生成 C は、外部関数をラッパー関数の中の局所的な <code>extern au_nat8_t* mpd_version();</code> として宣言していた。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_実験2_mpdecimal_のヘッダと生成_c_の衝突">2.2. 実験2: mpdecimal のヘッダと生成 C の衝突</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">gcc -fwrapv -Wno-builtin-declaration-mismatch -include mpdecimal.h -I$DEV/include \
+  gen.c -L$OUT/lib -lmpdec -lm -o t2</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>結果: 終了状態 1、<code>error:</code> が7件出た。</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>conflicting types for 'mpd_version'; have 'au_nat8_t *(void)'</code>（ヘッダは <code>const char *mpd_version(void);</code>）</p>
+</li>
+<li>
+<p><code>conflicting types for 'puts'</code></p>
+</li>
+<li>
+<p><code>stdout</code>、<code>stderr</code>、<code>stdin</code>、<code>fprintf</code>、<code>fflush</code> の衝突。mpdecimal.h が <code>stdio.h</code> を読み込み、生成 C のプレリュードが自前で書く <code>extern void* stdout;</code> などと食い違う。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>結論: ライブラリのヘッダは生成 C の翻訳単位に入れられない。シムを別の翻訳単位に置き、リンクだけで結ぶ。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_実験3_libdfp_と_intel_dfp_のソースからのビルド">2.3. 実験3: libdfp と Intel DFP のソースからのビルド</h3>
+<div class="paragraph">
+<p>時間枠は、それぞれ取得からビルドまで15分とした。</p>
+</div>
+<div class="paragraph">
+<p>Intel DFP:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">curl -sSL -o IntelRDFPMathLib20U5.tar.gz https://netlib.org/misc/intel/IntelRDFPMathLib20U5.tar.gz
+sha256sum IntelRDFPMathLib20U5.tar.gz
+nix shell $NIXPKGS#gcc $NIXPKGS#gnumake --command \
+  make -j8 CC=gcc CALL_BY_REF=0 GLOBAL_RND=0 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=0</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>結果: 版は v2.5（README の表記は Version 2.0 Update 5、2026-09-28）。sha256 は <code>85dafd70…01037</code>。
+<code>make</code> は <code>real 0m1.402s</code> で <code>libbid.a</code>（5.6MB）を作り、取得開始から27秒で終わった。
+<code>bid128_from_string</code> と <code>bid128_add</code> で 1.10 + 2.20 を計算するプログラムが <code>+330E-2 sizeof=16 flags=0</code> を出した。</p>
+</div>
+<div class="paragraph">
+<p>libdfp:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">git clone --depth 1 https://github.com/libdfp/libdfp.git src   # e898f186…（2026-09-21）
+mkdir build &amp;&amp; cd build
+nix shell $NIXPKGS#gcc $NIXPKGS#gnumake $NIXPKGS#binutils $NIXPKGS#gawk $NIXPKGS#python3 --command \
+  bash -c "../src/configure CFLAGS='-m64 -O2' &amp;&amp; make -j8"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>結果: configure と make は終了状態 0、<code>real 0m11.972s</code>。<code>libdfp-1.0.17.so</code> と <code>libdfp.a</code> ができ、取得開始から41秒で終わった。
+<code>strtod128</code> と <code>quantized128</code> を使うプログラムが、<code>-D<em>STDC_WANT_IEC_60559_DFP_EXT</em></code> を付けたときに <code>3.30 quantized=1</code> を出した。</p>
+</div>
+<div class="paragraph">
+<p>結論: どちらも時間枠に十分収まるので、出典のみにはせず実測する。
+<code>run.sh</code> はこの手順を依存 <code>libdfp</code> と <code>intel-dfp</code> として持つ。
+ランナーはこの実験で通ったツールの組（gcc、gnumake、binutils、gawk、python3）をそのまま使う。どれが不要かは確かめていない。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_実験4_nixpkgs_の_clang_と_decimal128">2.4. 実験4: nixpkgs の clang と <code>_Decimal128</code></h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">nix shell $NIXPKGS#clang $NIXPKGS#gcc --command bash -c \
+  'clang -O2 d128.c -o d128-clang; clang -std=c23 -O2 d128.c; gcc -O2 d128.c -o d128-gcc &amp;&amp; ./d128-gcc'
+/usr/bin/gcc -O2 d128.c -o d128-sys &amp;&amp; ./d128-sys</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>d128.c</code> は <code>_Decimal128</code> の 1.10DL + 2.20DL を計算して <code>sizeof</code> と比較結果を出すだけのプログラムである。</p>
+</div>
+<div class="paragraph">
+<p>結果:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>clang 21.1.8: <code>error: GNU decimal type extension not supported</code> と <code>invalid suffix 'DL' on floating constant</code>。<code>-std=c23</code> でも同じ。</p>
+</li>
+<li>
+<p>nixpkgs の gcc 16.2.0: <code>sizeof=16 eq=1</code></p>
+</li>
+<li>
+<p>マシンの gcc 13.3.0: <code>sizeof=16 eq=1</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>結論: clang では <code>d128</code> と <code>libdfp</code> をコンパイルできない。REQ-008 の clang 比較は、この2系統で未実行になる。
+<code>mpd</code>、<code>intel</code>、<code>i128</code> は <code>_Decimal128</code> を使わないので、clang でも比べる。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_実験5_事前調査レポートの_meta_generated_at">2.5. 実験5: 事前調査レポートの <code>meta.generated_at</code></h3>
+<div class="paragraph">
+<p>プレースホルダ <code>2026-10-26T00:00:00+09:00</code> を、ファイルの最終更新時刻 <code>2026-10-26T14:25:57+09:00</code>（<code>stat -c '%y'</code> の値）に直した。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_方式の要約">3. 方式の要約</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>docs/research/decimal-backend-survey/</code> に、日本語のレポート、C のプローブ、Zustral の FFI プローブ、記録した出力、1本の実行スクリプト <code>run.sh</code> を置く。
+<code>run.sh</code> は、プローブごとに依存を取得し、ビルドし、2回実行し、出力を記録と照合する。
+依存を取得できないプローブは「未実行」とし、成功に数えず、終了状態も失敗にしない。
+記録と食い違うプローブが1つでもあれば、名前と差分を表示して失敗の終了状態で終わる。</p>
+</div>
+<div class="paragraph">
+<p>コンパイラとライブラリは、固定した nixpkgs の rev から取る。
+再実行者のマシンで版が動かないようにするためである。</p>
+</div>
+<div class="paragraph">
+<p>採らなかった方式:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>テストフレームワーク（<code>test-programs/runner.py</code> の拡張や bats など）。
+プローブは22件で、照合は「出力が記録と等しいか」だけである。
+表と1つのループで足りる。</p>
+</li>
+<li>
+<p><code>test-programs/</code> や CI への組み込み。要件の「安全面で対象外としたこと」に従う。</p>
+</li>
+<li>
+<p>マシンの gcc 13.3.0（<code>/usr/bin/gcc</code>）を使うこと。
+nixpkgs の mpdecimal は nix の glibc 2.44 に対してビルドされている（実験2のエラーに出たヘッダのパス）。Ubuntu の glibc 2.39 と混ぜた場合の動作は確かめていない。
+nix の gcc と clang に揃えれば、ライブラリと同じ glibc で、別のマシンでも同じ版で再実行できる。
+レポートには、使った版を記録する。</p>
+<div class="paragraph">
+<p>要件の例と NFR-003 にある gcc 13.3.0 は、要件を書いたときのマシンの gcc である。
+プローブの gcc は 16.2.0 になるので、レポートの主張は「nixpkgs の gcc 16.2.0 では」の形で書く。
+NFR-003 が求めるのは「このマシンで追加の手作業なしに再実行できる」ことで、このマシンの nix 2.34.6 で満たす。
+REQ-003 の例の「34桁」は、事前調査で gcc 13.3.0 の <code><em>DEC128_MANT_DIG</em>=34</code> として観測済みである。
+実装では <code>d128</code> プローブが gcc 16.2.0 で <code>DEC128_MANT_DIG=34</code> を出し、レポートはこの値を根拠にした。要件の例も gcc 16.2.0 に合わせて直した。</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ファイル構成と所有">4. ファイル構成と所有</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 40%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">パス（<code>docs/research/decimal-backend-survey/</code> 配下）</th>
+<th class="tableblock halign-left valign-top">責務</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>README.md</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">調査レポート本体（日本語）。GitHub でディレクトリを開くと表示される。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>run.sh</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1コマンドの再実行スクリプト（bash）。プローブ表、依存の取得、照合、集計を持つ。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/bid128.h</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">BID 形式の16バイトを <code>&lt;符号&gt;&lt;係数&gt;E&lt;指数&gt;</code> の文字列にする関数。glibc の <code>printf</code> には <code>_Decimal128</code> の書式がないので、<code>d128.c</code>、<code>libdfp.c</code>、<code>ffi/shim.c</code> が共有する。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/mpd.c</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mpdecimal 系統のプローブ。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/d128.c</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GCC の <code>_Decimal128</code>（libgcc の BID 実装）のプローブ。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/libdfp.c</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">libdfp のプローブ（丸めモードの切り替え、文字列変換）。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/intel.c</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Intel DFP（libbid）のプローブ。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/i128.c</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>__int128</code> 固定小数点のプローブ。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/ffi/Probe.aum</code>, <code>probes/ffi/shim.c</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Zustral から <code>Foreign_Import</code> で各系統を呼ぶプローブと、そのシム。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/ffi/UnitReturn.aum</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">戻り値 <code>Unit</code> の <code>Foreign_Import</code> をコンパイラが拒むことを示すプローブ。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>expected/&lt;probe&gt;.txt</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">記録した出力。リポジトリにコミットする照合の正本。</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>ビルドの中間物、ダウンロードしたソース、実行時の出力は <code>mktemp -d</code> で作る一時ディレクトリに置き、終了時に消す。
+例外は Zustral コンパイラで、リポジトリの <code>make</code> がリポジトリ直下に <code>austral</code>、<code>_build/</code>、<code>lib/BuiltInModules.ml</code> を作る。
+3つとも <code>.gitignore</code> 済みで、作業ツリーの <code>git status</code> は変わらない。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_データの形">5. データの形</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ランナーを設計する前に、扱うデータを3つの表として決める。
+<code>run.sh</code> は、この表を上から読む1つのループである。</p>
+</div>
+<div class="sect2">
+<h3 id="_依存表">5.1. 依存表</h3>
+<div class="paragraph">
+<p>依存は名前で引き、1回の実行で1度だけ取得してメモする。
+取得の結果は「パスの集合」か「取得できなかった理由（1行）」のどちらかである。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 50%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">依存</th>
+<th class="tableblock halign-left valign-top">取得方法</th>
+<th class="tableblock halign-left valign-top">取得できない理由として表示するもの</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gcc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nix build --no-link --print-out-paths $NIXPKGS#gcc</code>（gcc 16.2.0）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nix build</code> の最後のエラー行</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>clang</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">同じく <code>$NIXPKGS#clang</code>（clang 21.1.8）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">同上</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>clang-dfp</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>clang</code> を取得したうえで、<code>_Decimal128 x;</code> だけの翻訳単位を <code>clang -fsyntax-only</code> に通す</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">clang の最初の <code>error:</code> 行</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>mpdecimal</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>$NIXPKGS#mpdecimal.dev</code> と <code>$NIXPKGS#mpdecimal.out</code>（4.0.1）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nix build</code> の最後のエラー行</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>libdfp</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="https://github.com/libdfp/libdfp/archive/&lt;commit&gt;.tar.gz" class="bare">https://github.com/libdfp/libdfp/archive/&lt;commit&gt;.tar.gz</a></code> を取得し、sha256 を照合し、<code>nix shell</code> で取った gcc、gnumake、binutils、gawk、python3 の下で out-of-tree の <code>configure</code> と <code>make</code> を行う。実験3は同じ commit を <code>git clone</code> で取ったが、ランナーは sha256 で固定できる tarball を使う</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">失敗した段（取得、sha256、configure、make）とその最後の行。タイムアウトなら「上限 600 秒を超えた」</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intel-dfp</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="https://netlib.org/misc/intel/IntelRDFPMathLib20U5.tar.gz" class="bare">https://netlib.org/misc/intel/IntelRDFPMathLib20U5.tar.gz</a></code> を取得し、sha256 を照合し、<code>nix shell</code> で取った gcc と gnumake の下で、<code>LIBRARY/</code> の <code>make CC=gcc CALL_BY_REF=0 GLOBAL_RND=0 GLOBAL_FLAGS=0 UNCHANGED_BINARY_FLAGS=0</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">同上</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>zustral</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>timeout $ZUSTRAL_BUILD_TIMEOUT nix develop &lt;リポジトリ直下&gt; --command make -C &lt;リポジトリ直下&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">タイムアウトなら「上限 N 秒を超えた」、それ以外は make の最後の行</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>固定値:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>NIXPKGS=github:NixOS/nixpkgs/674a2028661e550a97400c1cc992b9cca9a668a1</code>（事前調査で使った registry の rev と同じ）</p>
+</li>
+<li>
+<p>libdfp の commit は <code>e898f1868e3fb0b703e508857bae0df08d4268d5</code>（2026-09-21、版 1.0.17）。tarball の sha256 は <code>bfabeb4811d904b858fb414edf181da9b054791654576f48fbfd0bc4f5589163</code>（実装時に取得して固定した）。</p>
+</li>
+<li>
+<p>Intel DFP は <code>IntelRDFPMathLib20U5.tar.gz</code>、sha256 <code>85dafd70f0fe2a8da218ade4233fca9d3228b0b04cd6d8527f7499926be01037</code>。</p>
+</li>
+<li>
+<p>依存のビルド（<code>libdfp</code>、<code>intel-dfp</code>）には <code>timeout 600</code> を掛ける。</p>
+</li>
+<li>
+<p><code>ZUSTRAL_BUILD_TIMEOUT</code> の既定は 600 秒。これが REQ-007 の「手間の上限」である（<a href="#ffi-cap">手間の上限（REQ-007）</a>）。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_プローブ表">5.2. プローブ表</h3>
+<div class="paragraph">
+<p>1行が1プローブである。
+<code>id</code> はレポートが根拠として引く名前で、<code>&lt;系統&gt;@&lt;コンパイラ&gt;-&lt;最適化&gt;</code> の形にする。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 18.1818%;">
+<col style="width: 18.1818%;">
+<col style="width: 18.1818%;">
+<col style="width: 27.2727%;">
+<col style="width: 18.1819%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">id</th>
+<th class="tableblock halign-left valign-top">系統</th>
+<th class="tableblock halign-left valign-top">依存</th>
+<th class="tableblock halign-left valign-top">ビルドと実行</th>
+<th class="tableblock halign-left valign-top">記録</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>mpd@{gcc,clang}-{O0,O2}</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mpdecimal</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gcc</code> または <code>clang</code>、<code>mpdecimal</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/mpd.c</code> を <code>-lmpdec</code> とリンク</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>expected/mpd.txt</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>d128@{gcc,clang}-{O0,O2}</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GCC <code>_Decimal128</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gcc</code> または <code>clang-dfp</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/d128.c</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>expected/d128.txt</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>libdfp@{gcc,clang}-{O0,O2}</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">libdfp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gcc</code> または <code>clang-dfp</code>、<code>libdfp</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/libdfp.c</code> を <code>-D<em>STDC_WANT_DEC_FP</em> -D<em>STDC_WANT_IEC_60559_DFP_EXT</em> -I&lt;src&gt;/dfp -I&lt;src&gt;/include</code> でコンパイルし（libdfp の <code>dfp/fenv.h</code> と <code>dfp/math.h</code> は <code><em>STDC_WANT_DEC_FP</em></code> がないと宣言を出さない）、<code>-L&lt;build&gt; -Wl,-rpath,&lt;build&gt; -ldfp</code> でリンクする（<code>&lt;src&gt;</code> と <code>&lt;build&gt;</code> は一時ディレクトリの中。install はしない）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>expected/libdfp.txt</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intel@{gcc,clang}-{O0,O2}</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Intel DFP</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gcc</code> または <code>clang</code>、<code>intel-dfp</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/intel.c</code> を <code>libbid.a</code> とリンク</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>expected/intel.txt</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>i128@{gcc,clang}-{O0,O2}</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>__int128</code> 固定小数点</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gcc</code> または <code>clang</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/i128.c</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>expected/i128.txt</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ffi</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Zustral FFI</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>zustral</code>、<code>gcc</code>、<code>mpdecimal</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#ffi">Zustral FFI プローブ</a> の手順</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>expected/ffi.txt</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ffi-unit-return</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Zustral FFI の制約</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>zustral</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>austral compile probes/ffi/UnitReturn.aum &#8230;&#8203;</code> の出力そのもの</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>expected/ffi-unit-return.txt</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>系統ごとの4つの変種は <code>gcc-O0</code>、<code>gcc-O2</code>、<code>clang-O0</code>、<code>clang-O2</code> の順に並び、同じ記録ファイルと照合する。
+これが REQ-008 の「最適化レベル間」「gcc と clang の間」の一致の検査になる。</p>
+</div>
+<div class="paragraph">
+<p>変種の出力が実際に食い違ったときの扱いもここで決める。
+変種を持つのは <code>&lt;系統&gt;@&lt;変種&gt;</code> の形の id だけで、<code>ffi</code> と <code>ffi-unit-return</code> には変種だけの記録を作らない。
+その変種だけの記録 <code>expected/&lt;id&gt;.txt</code>（例: <code>expected/mpd@clang-O2.txt</code>）があれば、ランナーは系統の記録の代わりにそれと照合する。
+変種だけの記録は、食い違いを実測したときに <code>--record</code> が書く（次節）。
+変種だけの記録で一致したプローブは <code>一致*  &lt;id&gt;（変種別の記録）</code> と表示し、集計の一致に数える。
+こうして、食い違いは記録として残り、再実行のたびに見え、それでも再実行は成功で終われる（REQ-006）。
+レポートは、変種だけの記録があるすべての組み合わせについて、系統の記録と変種の記録の両方の出力を載せる（REQ-008）。
+各プローブは2回実行し、どちらの出力も記録と照合する。これが「同じ実行の繰り返し」の検査になる。</p>
+</div>
+<div class="paragraph">
+<p>C のプローブは、すべて <code>-fwrapv</code> を付けてビルドする。
+Zustral の生成コードが常に <code>-fwrapv</code> 付きでビルドされるため（<code>lib/Util.ml:202-203</code>、<code>test-programs/runner.py:400-408</code>）、同じ条件で観測する。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_プローブの出力と結果">5.3. プローブの出力と結果</h3>
+<div class="paragraph">
+<p>プローブの出力は <code>key=value</code> の行の列にする。
+レポートは <code>〔probe: mpd / div_1_3〕</code> の形で、記録ファイルと行のキーを根拠として引く（REQ-003、REQ-005）。
+ランナーは、プローブを <code>2&gt;&amp;1</code> で標準出力と標準エラーを1つの流れにして実行し、その後ろに <code>exit=&lt;終了コード&gt;</code> の1行を足したものを「実際の出力」とする。
+異常終了も、コンパイラが拒むことを示すプローブ（<code>ffi-unit-return</code>）も、同じ照合で扱える。
+<code>ffi-unit-return</code> にはビルドの段がなく、<code>austral compile</code> そのものを「実行」として2回行う。</p>
+</div>
+<div class="paragraph">
+<p>1プローブの結果は次の3つのどれかである。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 50%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">結果</th>
+<th class="tableblock halign-left valign-top">条件</th>
+<th class="tableblock halign-left valign-top">表示</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">一致</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">依存を取得でき、ビルドでき、2回の実行出力がどちらも記録と等しい</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>一致    &lt;id&gt;</code>。変種だけの記録と一致したときは <code>一致*  &lt;id&gt;（変種別の記録）</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">不一致</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">依存を取得できたのに、ビルドが失敗した。または実行出力のどちらかが記録と異なる。または記録ファイルがない</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>不一致  &lt;id&gt;</code> と、<code>diff -u &lt;記録&gt; &lt;実際&gt;</code> またはビルドログの末尾</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">未実行</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">依存表のどれかを取得できなかった</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>未実行  &lt;id&gt;: &lt;依存名&gt;: &lt;理由&gt;</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><code>ffi</code> は、一致したときも実際の出力を結果行の下に表示する。
+Zustral プログラムの出力を再実行者が見られるようにするためである（REQ-007 の1つ目のシナリオ）。</p>
+</div>
+<div class="paragraph">
+<p>依存を取得できた後のビルド失敗を「不一致」にするのは、壊れたプローブが「未実行」に紛れて成功に見えるのを防ぐためである。
+clang が <code>_Decimal128</code> を扱えないことは、ビルド失敗ではなく依存 <code>clang-dfp</code> の取得失敗として扱う（REQ-008 の「clang を取得でき、その系統をコンパイルできる場合に限る」）。</p>
+</div>
+<div class="paragraph">
+<p>レポートは、記録を作ったときに未実行だったプローブを根拠にしない（REQ-006 の最後の文）。
+そのプローブで確かめるはずだった主張（例: clang での <code>d128</code> の決定性）は「出典のみ・未実測」とするか、未確認事項に置く。
+「そのプローブが未実行になったこと」と理由だけは、<code>run.sh</code> の未実行の行を根拠に書ける。再実行すれば同じ行が出るからである。</p>
+</div>
+<div class="paragraph">
+<p>最後に <code>一致 N / 不一致 M / 未実行 K</code> を表示する。
+終了状態は M が1以上なら 1、それ以外は 0 である。未実行だけでは失敗にしない（REQ-006）。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_公開インターフェース">6. 公開インターフェース</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-sh" data-lang="sh">docs/research/decimal-backend-survey/run.sh            # 照合
+docs/research/decimal-backend-survey/run.sh --record   # 記録の書き直し</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>前提（レポートに書く。REQ-005）:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>x86_64 Linux、flakes を有効にした nix（このマシンは 2.34.6）</p>
+</li>
+<li>
+<p>ホストの bash、coreutils、diffutils、grep、sed、curl、tar、gzip</p>
+</li>
+<li>
+<p>ネットワーク。nixpkgs は nix のストアに残るので取得は初回だけだが、libdfp と Intel DFP の tarball は一時ディレクトリに置くので実行のたびに取得する（レビューで、当初の「初回だけ」の記述を実際の動作に合わせて直した）</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><code>--record</code> は、まず <code>expected/</code> の既存の変種だけの記録を消す。
+次に、記録ファイルごとに、表の順で最初に実行できたプローブの1回目の出力を系統の記録として書く。
+<code>--record</code> でも各プローブは2回実行する。ここでの「実行できた」は、依存を取得でき、ビルドが通り、2回の出力が等しかったことをいう。
+ビルドが失敗したプローブと、2回の出力が食い違ったプローブは記録を書かず、不一致として表示する（後者は両方の出力を出す）。
+<code>--record</code> の終了状態は照合と同じ規則で、不一致が1つでもあれば 1 である。
+同じ記録ファイルを使う残りの変種の出力が系統の記録と異なれば、その変種だけの記録 <code>expected/&lt;id&gt;.txt</code> を書く。
+未実行のプローブしかない記録ファイルには触れない。
+保守者が記録を作り直すための手段で、プローブを変えたら記録も作り直す。</p>
+</div>
+<div class="paragraph">
+<p><code>run.sh</code> はどのディレクトリから起動してもよい。
+自身の場所から <code>docs/research/decimal-backend-survey/</code> とリポジトリ直下を求める。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_処理の流れと状態">7. 処理の流れと状態</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>プローブは表の順に1つずつ処理する。並行性はない。
+各プローブの状態は次のように進み、終端は3つの結果のどれかである。</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>未着手 --依存をすべて取得--&gt; ビルド --成功--&gt; 実行×2 --両方が記録と一致--&gt; 一致
+   |                          |                  |--どちらかが異なる------&gt; 不一致
+   |                          |                  `--記録ファイルがない----&gt; 不一致
+   |                          `--失敗------------------------------------&gt; 不一致
+   `--依存のどれかを取得できない-----------------------------------------&gt; 未実行</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>依存の取得結果は1回の実行の中でメモし、同じ依存を2度取得しない。
+再試行はしない。ネットワーク障害は「未実行」として見える。
+時間の上限は、依存のビルドに掛ける <code>timeout</code> だけである。</p>
+</div>
+<div class="paragraph">
+<p>不変条件:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>「一致」に数えるのは、このマシンで実際にビルドして実行し、記録と照合したプローブだけである。</p>
+</li>
+<li>
+<p>不一致が1つでもあれば、終了状態は失敗である。</p>
+</li>
+<li>
+<p>未実行の数は終了状態を変えない。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_決定性の演算と入力">8. 決定性の演算と入力</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>REQ-008 のために、各系統のプローブは同じ演算の組を同じ入力で実行し、結果を正規の文字列で出す。
+演算は、10進演算の違いが出やすいところを選ぶ。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 33.3333%;">
+<col style="width: 50.0001%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">キー</th>
+<th class="tableblock halign-left valign-top">演算</th>
+<th class="tableblock halign-left valign-top">選んだ理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>div_1_3</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1 / 3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">精度の上限で丸める（<code>__int128</code> はスケールで切り捨てる）。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>div_2_3</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2 / 3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">最後の桁の丸めの向きが出る。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>add_01_02</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.1 + 0.2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10進表現で厳密になるか。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>quantize_1005_&lt;mode&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.005 を小数2桁に丸める。提供される丸めモードごと</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">丸めモードの品揃えと、それぞれの結果。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>mul_wide</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">12345678901234567890123456789012345 × 10</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">34桁を超える係数の扱い（丸めか、正確か）。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>overflow</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">表現できる最大の値 × 10</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">上限を超えたときに何が起きるか（無限大、フラグ、ラップ、検出）。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>sum_001_x1000</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.01 を1000回足す</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">累積で誤差が出るか。</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>mpdecimal は <code>mpd_ieee_context(&amp;ctx, MPD_DECIMAL128)</code> の文脈で同じ演算を行う。
+decimal128 と同じ精度で並べて比べるためである。
+任意精度の性質は、別のキー（精度と指数の上限、確保の回数）で示す。</p>
+</div>
+<div class="paragraph">
+<p><code><em>int128</code> 固定小数点は、プローブが小さな実装を持つ。スケールは 10^18 とする。
+丸めは C の整数除算（0への切り捨て）だけで、丸めモードは実装者が書くものだとレポートに書く。
+<code>overflow</code> は、<code>-fwrapv</code> での実際の結果と、<code></em>builtin_mul_overflow</code> が検出するかの両方を出す。</p>
+</div>
+<div class="paragraph">
+<p>最適化レベルの比較は、プローブ本体のビルドに対するものである。
+mpdecimal と Intel DFP のライブラリ本体は、それぞれ nixpkgs と自前ビルドの既定の最適化で1度だけビルドする。
+レポートはこの範囲を明記する。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_観点ごとにプローブが出すもの">9. 観点ごとにプローブが出すもの</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>REQ-002 の観点のうち、このマシンで観測できるものをプローブの出力にする。
+観測できないもの（ライセンス、公式のプラットフォーム対応など）は一次資料で示す。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 42.8571%;">
+<col style="width: 42.8572%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">観点</th>
+<th class="tableblock halign-left valign-top">プローブで観測するもの</th>
+<th class="tableblock halign-left valign-top">一次資料で示すもの</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">確保と解放</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>sizeof</code> の値。mpdecimal は <code>mpd_mallocfunc</code> などの差し替えで、値の生成と演算ごとの確保回数を数える。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>mpd_del</code> などの解放 API、静的な値（<code>MPD_STATIC</code>）の扱い。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">精度と丸め</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">精度と指数の上限、丸めモードごとの <code>quantize_1005_&lt;mode&gt;</code>、<code>overflow</code>。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">丸めモードの一覧の定義（ヘッダ、仕様）。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">C ABI</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#ffi">Zustral FFI プローブ</a> の Zustral プログラムの出力。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>lib/CodeGen.ml:554-591</code>、<code>lib/Type.ml:22-29</code>、各ライブラリのヘッダのシグネチャ。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">依存とライセンスとビルドと移植性</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">依存表のどの取得方法で入るか（nixpkgs のパッケージか、ソースからのビルドか）と、その取得が通ること。REQ-002 の「ビルドの重さ」はこの区別で示し、時間は書かない。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ライセンスファイル、公式のプラットフォーム対応。他のプラットフォームは「出典のみ・未実測」。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">決定性</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4変種と2回実行の照合結果。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">プラットフォームをまたいだ一致は、出典があれば「出典のみ・未実測」。</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="ffi">10. Zustral FFI プローブ</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_組み立て">10.1. 組み立て</h3>
+<div class="paragraph">
+<p><a href="#experiments">設計前の実験</a> の実験2で、mpdecimal のヘッダを生成 C と同じ翻訳単位に入れると型が衝突すると確かめた。
+そこで、ライブラリのヘッダは生成 C に入れず、別の翻訳単位のシムだけが読む。</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>Probe.aum</code> を一時ディレクトリ <code>$T</code> へ複写し、そこで <code>austral compile Probe.aum --entrypoint=Probe:main --target-type=c --output=ffi.c</code> を実行して C を出す。</p>
+</li>
+<li>
+<p><code>gcc -fwrapv -Wno-builtin-declaration-mismatch $T/ffi.c probes/ffi/shim.c -I&lt;mpdecimal.dev&gt;/include -L&lt;mpdecimal.out&gt;/lib -Wl,-rpath,&lt;mpdecimal.out&gt;/lib -lmpdec -lm</code> でリンクする。<code>-fwrapv -Wno-builtin-declaration-mismatch</code> と <code>-lm</code> は <code>test-programs/runner.py:400-408</code> の前例に合わせ、mpdecimal の <code>-I</code>、<code>-L</code>、<code>-rpath</code> を足す。</p>
+</li>
+<li>
+<p>できた実行ファイルを2回実行し、<code>expected/ffi.txt</code> と照合する。</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><code>Probe.aum</code> とシムは、ポインタの値やアドレスのように実行ごとに変わりうる値を出力しない。出すのは演算結果と、成否を表す固定の文字列だけである。</p>
+</div>
+<div class="paragraph">
+<p><code>Probe.aum</code> が確かめること:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>mpdecimal: ポインタを返す <code>mpd_qnew</code> を、シムなしで直接 <code>Address[Nat8]</code> として受け取れる。<code>void</code> を返す関数（<code>mpd_add</code> など）はシム経由で呼ぶ。</p>
+</li>
+<li>
+<p>GCC <code>_Decimal128</code>: Zustral 側で確保した16バイトの領域へのポインタをシムに渡し、シムが値を読み書きする。値そのものは FFI を越えない。</p>
+</li>
+<li>
+<p><code>__int128</code>: 同じく、16バイトの領域へのポインタ越しに渡す。</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><code>UnitReturn.aum</code> は、<code>void</code> の C 関数を戻り値 <code>Unit</code> で束縛して呼び、コンパイラが拒むことを出力で示す。
+記録にマシン固有の絶対パスが入らないよう、<code>run.sh</code> は <code>.aum</code> を一時ディレクトリへ複写し、そこでコンパイラを起動して相対パスを渡す。
+コンパイラは起動したディレクトリに <code>calltree.html</code> を書くので、<code>docs/research/decimal-backend-survey/</code> で起動すると作業ツリーに <code>.gitignore</code> 済みのファイルが残る。実装中にこれを観測し、一時ディレクトリで起動する形に改めた。
+128ビット整数の型がないこととレコードを値で渡せないことは、コンパイラのソースの引用で示す（REQ-007）。</p>
+</div>
+<div class="paragraph">
+<p>libdfp と Intel DFP の FFI 上の扱いは、ヘッダのシグネチャとこの2つのプローブの結果から述べる。
+libdfp は GCC の <code>_Decimal128</code> を値で受け渡しする。
+Intel DFP は <code>BID_UINT128</code> を値で渡すか、<code>CALL_BY_REF=1</code> のビルドでポインタで渡して <code>void</code> を返す。
+どちらも Zustral の型では値として表せず、シムが要る。この主張の根拠はヘッダの引用と上記のプローブである。</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="ffi-cap">10.2. 手間の上限（REQ-007）</h3>
+<div class="paragraph">
+<p>上限は「<code>nix develop</code> によるコンパイラのビルドが 600 秒以内に終わり、手作業がないこと」とする。
+<code>run.sh</code> は依存 <code>zustral</code> を <code>timeout 600</code> で取得する。
+超えるか失敗すれば <code>ffi</code> と <code>ffi-unit-return</code> は未実行になり、レポートの C ABI の節はその理由と、C だけのプローブとコンパイラのソースの引用を根拠にする（REQ-007 の2つ目のシナリオ）。</p>
+</div>
+<div class="paragraph">
+<p>このマシンの実測では、dev shell を取得済みの状態でクリーンビルドが 2.36 秒だった（実験1）。
+上限はその約250倍で、初回の dev shell の取得を含めても収まると見込む。初回取得の時間は測っていない。
+<code>ZUSTRAL_BUILD_TIMEOUT</code> 環境変数で上限を変えられる。上限を超えた場合の表示を確かめるためにも使う。</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_要件との対応">11. 要件との対応</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 80%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">要件</th>
+<th class="tableblock halign-left valign-top">設計要素</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-001</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">系統ごとのプローブ（decimal128 は <code>d128</code>、<code>libdfp</code>、<code>intel</code> に分ける）とレポートの比較表。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-002</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">「観点ごとにプローブが出すもの」の表。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-003</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>key=value</code> の出力と <code>〔probe: &lt;記録ファイル名から .txt を除いたもの&gt; / &lt;key&gt;〕</code> の引用。一次資料は URL と版を添える。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-004</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">レポートの「出典のみ・未実測」の表記。他のプラットフォームの主張すべてに付ける。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-005</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>run.sh</code>（1コマンド）、前提の節、プローブ id と記録ファイルの対応。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-006</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">結果の3値、依存表、終了状態の規則。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-007</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#ffi">Zustral FFI プローブ</a>、<a href="#ffi-cap">手間の上限（REQ-007）</a>。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-008</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4変種と2回実行、依存 <code>clang-dfp</code>、「決定性の演算と入力」。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-009</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">レポートの「下流の問いに効く事実」の節。0004・0005・0008 ごとに、効く事実を名指しで並べる。推奨は書かない。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-010</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">リポジトリの変更ではない。PR を仕上げる最後の工程で <code>gh</code> を使い、issue #1 への解消コメント、クローズ、issue #9 本文の置き換えを行う。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NFR-001</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">レポートは日本語で書く。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NFR-002</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">変更は <code>docs/research/decimal-backend-survey/</code> と <code>docs/task-requirements/</code> だけ。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">NFR-003</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ホストの前提は nix と基本コマンドだけで、ツールチェーンは固定した nixpkgs から取る。</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 40%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">シナリオ</th>
+<th class="tableblock halign-left valign-top">設計上の確かめ方</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">このマシンで観測できる主張はプローブ出力を根拠に持つ</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">レポートの観測できる主張に <code>〔probe: …〕</code> が付き、記録ファイルにそのキーがある。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">このマシンで観測できない主張は出典のみと明記される</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">AArch64 などの主張に「出典のみ・未実測」と URL と版が付く。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">記録と食い違う出力は失敗として見える</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">記録を1行変えて <code>run.sh</code> を実行すると、<code>不一致 &lt;id&gt;</code> と差分が出て終了状態が 1 になる。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">依存を取得できないプローブは未実行として表示される</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>https_proxy</code> を到達できないアドレスにして実行すると、curl で取る <code>libdfp</code> と <code>intel-dfp</code> のプローブが未実行と理由付きで表示され、ほかが一致すれば終了状態は 0 になる。前提は、固定した nixpkgs と nix の依存が一度取得済みでキャッシュにあることである。flake の入力はクライアントが取得するので、キャッシュがなければ nix の依存も未実行になる。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コンパイラをビルドできれば Zustral プログラムで確かめる</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>run.sh</code> の出力に <code>一致 ffi</code> と、その下に Zustral プログラムの実際の出力が表示される。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コンパイラをビルドできなければ理由を残して C だけで確かめる</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ZUSTRAL_BUILD_TIMEOUT=0.01</code> で実行すると <code>ffi</code> が未実行と理由付きで表示される。<code>timeout</code> は <code>nix develop</code> の起動ごと包み、その起動だけで約0.3秒かかる（実験1）ので、<code>austral</code> がビルド済みでも上限を超える。<code>0</code> は GNU timeout では無制限を意味するので使わない。レポートには、その場合に C だけの根拠に切り替える旨と、このマシンではビルドできた事実を書く。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">結果が一致しない組み合わせは隠さず示される</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">変種だけの記録を作る前の再実行では、<code>不一致</code> の行が変種の id（<code>&lt;系統&gt;@&lt;コンパイラ&gt;-&lt;最適化&gt;</code>）と、記録と実際の出力の差分を示す。記録を作った後は、その変種が <code>一致*</code> と表示され、レポートが系統の記録と変種の記録の両方の出力を載せる。</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">clang でコンパイルできない系統は clang 比較を未実行と示す</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>d128@clang-<strong></code> と <code>libdfp@clang-</strong></code> が、依存 <code>clang-dfp</code> の理由（clang のエラー行）付きで未実行と表示される。</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_quint_を使わない理由">12. Quint を使わない理由</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>状態はプローブごとの直線的な3値の結果だけで、並行更新はない。
+正しさは「表を上から処理し、結果を数える」ループで決まる。
+Quint でモデル化しても、テスト（記録の改ざんと依存の遮断による実行）より多くは確かめられない。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_未確認事項と制約">13. 未確認事項と制約</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>GitHub のアーカイブは、同じ commit でも将来 sha256 が変わることがある。そのときは依存 <code>libdfp</code> が未実行になる。</p>
+</li>
+<li>
+<p>GCC の <code>_Decimal128</code> と libdfp の10進の例外フラグは、glibc の <code>fetestexcept</code> では見えなかった（実装で観測）。<code>d128</code> は libgcc 内部の <code>__dfp_test_except</code> も出す。libdfp には同じ働きの公開関数が見つからず、<code>fetestexcept</code> の結果だけを出す。</p>
+</li>
+<li>
+<p>netlib の Intel DFP は、同じファイル名のまま差し替わると sha256 の照合で未実行になる。</p>
+</li>
+<li>
+<p>実装で走らせた結果、実行できた変種はすべて系統の記録と一致し、変種だけの記録は1つもできなかった。食い違った場合の記録と表示は「プローブ表」の節のとおりで、障害を起こして確かめた（実装計画の「検証結果」）。</p>
+</li>
+<li>
+<p>決定性の比較は、ライブラリ本体を1つの最適化レベルでビルドした範囲に限られる。</p>
+</li>
+<li>
+<p>要件の「データ移行、互換性、セキュリティ、運用への影響」は、当初 nixpkgs の版を固定しない前提で書かれていた。実装の段階で、この設計に合わせて rev を固定する記述に直した。</p>
+</li>
+<li>
+<p>プローブは「記録との一致」しか確かめない。記録自体が正しいかは、レポートの主張を一次資料と突き合わせるレビューで確かめる。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+    </article>
+  </div>
+</body>
+</html>

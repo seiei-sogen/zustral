@@ -39,6 +39,7 @@ mpdecimal、IEEE 754-2008 decimal128（GCC `_Decimal128`、libdfp、Intel DFP）
 |パス |内容
 |`docs/research/decimal-backend-survey/run.sh` |再実行スクリプト
 |`docs/research/decimal-backend-survey/probes/{i128,d128,mpd,intel,libdfp}.c` |系統ごとの C プローブ
+|`docs/research/decimal-backend-survey/probes/bid128.h` |BID 形式の16バイトを `<符号><係数>E<指数>` で出す関数（`d128.c`、`libdfp.c`、`ffi/shim.c` が共有。実装で追加）
 |`docs/research/decimal-backend-survey/probes/ffi/{Probe.aum,UnitReturn.aum,shim.c}` |Zustral FFI プローブ
 |`docs/research/decimal-backend-survey/expected/*.txt` |記録した出力（`run.sh --record` で作る）
 |`docs/research/decimal-backend-survey/README.md` |調査レポート
@@ -79,6 +80,9 @@ mpdecimal、IEEE 754-2008 decimal128（GCC `_Decimal128`、libdfp、Intel DFP）
 |繰り返しの食い違い
 |`probes/i128.c` を `$TMPDIR` へ複写し、プロセス ID を1行出すよう一時的に書き換えて `run.sh --record` を実行し、複写から戻す
 |i128 の4変種が不一致になり、1回目と2回目の両方の出力が表示され、`expected/i128.txt` は書き換わらない。終了状態が 1
+|2回目だけの食い違い
+|`probes/i128.c` を `$TMPDIR` へ複写し、目印のファイルがなければ作り、あれば消して `second_run=1` を1行足して出すよう一時的に書き換える。つまり2回目の実行だけが記録と異なる。`run.sh`（照合）を実行し、複写から戻す
+|i128 の4変種が不一致になり、差分の見出しが `2回目の出力` だけである。終了状態が 1。2回目の照合を飛ばすランナーなら一致になってしまうので、この手順がそれを見分ける
 |curl 遮断
 |nix の依存を一度取得した後で、`https_proxy=http://127.0.0.1:9 run.sh`
 |`intel@*` の4行と `libdfp@gcc-*` の2行が、`未実行` と取得段の理由付きで出る（`libdfp@clang-*` は従来どおり `clang-dfp` の理由で未実行）。集計行の未実行が6件増え、一致が6件減る。ほかが一致なら終了状態が 0。nix の依存まで未実行になった場合（キャッシュの仮説が外れた場合）は、代わりに `run.sh` を `$TMPDIR` へ複写し、libdfp と Intel DFP の URL を `https://127.0.0.1:9/` で始まる到達できない先に書き換えて実行し、複写から戻す。期待する観測は同じ
@@ -97,6 +101,17 @@ T2〜T5 でも T1 と同じく、プローブを書いたら記録がない状�
 
 == 実装タスク
 
+進捗:
+
+* [x] T1: ランナーと `__int128` 系統
+* [x] T2: GCC `_Decimal128` 系統と clang の未実行
+* [x] T3: mpdecimal 系統
+* [x] T4: Intel DFP と libdfp の系統
+* [x] T5: Zustral FFI プローブ
+* [x] T6: 調査レポート
+* [x] T7: 範囲と再実行性の最終確認
+* [ ] T8: commit 後の確認と issue #1 の解消。未実施。commit 後の PR を仕上げる工程（Phase 9）で行うと決めてあり、実装の工程では commit しないため
+
 === T1: ランナーと `__int128` 系統を端から端まで通す
 
 * Satisfies: REQ-005、REQ-006（不一致の規則）、REQ-008（4変種と2回実行、変種だけの記録）。T2〜T5 の土台。
@@ -112,6 +127,7 @@ T2〜T5 でも T1 と同じく、プローブを書いたら記録がない状�
 ** 「結果が一致しない組み合わせは隠さず示される」の表示側を、「改ざん」の変種 id 付きの差分と、「変種の食い違いの記録」の `一致*` の表示で確認できる。
 ** 作業ツリーを戻した後の `run.sh` が `一致 4 / 不一致 0 / 未実行 0` で終了状態 0 になる。これは4変種がそれぞれ2回とも同じ記録に一致したことを示す（REQ-008 の最適化レベル間、gcc と clang の間、繰り返し）。
 ** 「繰り返しの食い違い」で、1回目と2回目の食い違いが不一致として表示される（REQ-008 の繰り返し）。
+** 「2回目だけの食い違い」で、2回目の出力だけが記録と異なる場合も不一致になる（照合が2回分とも行われていること）。
 
 === T2: GCC `_Decimal128` 系統と clang の未実行
 
@@ -120,7 +136,7 @@ T2〜T5 でも T1 と同じく、プローブを書いたら記録がない状�
 * Depends on: T1
 * 対象: `probes/d128.c`、`expected/d128.txt`、`run.sh` の依存 `clang-dfp`
 * 変更前後: 前は d128 の行がない。後は `d128@gcc-*` が一致し、`d128@clang-*` が依存 `clang-dfp` で未実行になる。
-* `d128.c` は `float.h` の `DEC128_MANT_DIG`、`DEC128_MIN_EXP`、`DEC128_MAX_EXP` と、演算の組の結果を出す。
+* `d128.c` は `float.h` の `DEC128_MANT_DIG`、`DEC128_MIN_EXP`、`DEC128_MAX_EXP` と、演算の組の結果を出す。`overflow` の後に、glibc の `fetestexcept(FE_OVERFLOW)` の結果 `overflow_fe_overflow` と、libgcc 内部の `__dfp_test_except(FE_OVERFLOW)` の結果 `overflow_libgcc_dfp_test_except` も出す（実装で追加。下の「既知の値との照合」を参照）。
 libdfp なしの GCC には丸めモードを切り替える API と quantize の関数がないと見込んでおり、`d128.c` は `quantize_1005_<mode>` を出さない。この見込みは T2 で gcc 16.2.0 のヘッダと libgcc の公開シンボルを見て確かめ、レポートでは丸めモードの扱いを一次資料で示す。見込みに反して API が見つかれば、`d128.c` もその API で切り替えられるモードごとに `quantize_1005_<mode>` を出す。
 glibc の `printf` には `_Decimal128` の書式がないので、プローブが BID の16バイトを符号、指数、係数に分けて `<符号><係数>E<指数>` の形で出す。無限大と NaN は BID の組み合わせビットで見分けて `inf` と `nan` と出す。
 * 既知の値: IEEE 754-2008 の decimal128 の定義から、精度 p=34 と emax=6144。C の `float.h` は指数を emax+1 で定義するので、`DEC128_MANT_DIG=34`、`DEC128_MAX_EXP=6145`、`DEC128_MIN_EXP=-6142`。出力の形で書くと、`div_1_3=+3333333333333333333333333333333333E-34`（3が34個）、`div_2_3=+6666666666666666666666666666666667E-34`（6が33個と7）、`add_01_02=+3E-1`、`sum_001_x1000=+1000E-2`。`mul_wide` は、35桁の入力が読み込みで34桁に丸められ（最後の5は丁度半分で、偶数の4に丸まる）、`mul_wide=+1234567890123456789012345678901234E+2`。`overflow=+inf`。
@@ -135,7 +151,7 @@ glibc の `printf` には `_Decimal128` の書式がないので、プローブ�
 * 対象: `probes/mpd.c`、`expected/mpd.txt`
 * 変更前後: 前は mpd の行がない。後は `mpd@{gcc,clang}-{O0,O2}` の4行が一致する。
 * `mpd.c` は `MPD_MAX_PREC`、`MPD_MAX_EMAX`、`MPD_MIN_EMIN`、丸めモードの一覧、`mpd_ieee_context(&ctx, MPD_DECIMAL128)` での演算の組、`overflow` の結果と状態フラグを出す。`mpd_mallocfunc` などを数える関数に差し替え、値の生成と演算ごとの確保回数を出す。
-* 既知の値: 演算の組は T2 と同じ値（decimal128 と同じ精度34桁。出力の形は mpdecimal の `mpd_to_sci` に従う）で、`overflow` は無限大と `MPD_Overflow` のフラグ。確保回数は、mpdecimal の公式ドキュメントの記憶管理の節と `mpd_qnew` の説明から決まる値と照らす。ドキュメントから回数が決まらなければ、記録の値は観測値として扱い、レポートでは「値の生成にヒープ確保が要る（1回以上）」の主張だけに使う。`MPD_MAX_PREC` などは、プローブが読むヘッダではなく mpdecimal の公式ドキュメント（libmpdec の Context の節）に書かれた 64ビット環境の値と照らす。`quantize_1005_<mode>` は丸めの定義から、`MPD_ROUND_UP`、`CEILING`、`HALF_UP`、`05UP` で 1.01、`DOWN`、`FLOOR`、`HALF_DOWN`、`HALF_EVEN`、`TRUNC` で 1.00（`05UP` は0方向に丸めた最後の桁が0なので0から遠い側へ丸める）。
+* 既知の値: 演算の組は T2 と同じ値（decimal128 と同じ精度34桁）で、`overflow` は無限大と `MPD_Overflow` のフラグ。出力の形は `mpd_to_sci` の科学的表記で、具体的には `div_1_3=0.3333333333333333333333333333333333`（3が34個）、`div_2_3=0.6666666666666666666666666666666667`、`add_01_02=0.3`、`mul_wide=1.234567890123456789012345678901234E+35`、`overflow=Infinity`、`overflow_status=Inexact Overflow Rounded`、`sum_001_x1000=10.00`、`ctx128_prec=34`、`ctx128_emax=6144`、`ctx128_emin=-6143`、`ctx128_round=ROUND_HALF_EVEN`。量子化は `quantize_1005_ROUND_UP=1.01` の形で、キーの末尾は `mpd_round_string` の名前である。確保回数は、mpdecimal の公式ドキュメントの記憶管理の節と `mpd_qnew` の説明から決まる値と照らす。ドキュメントから回数が決まらなければ、記録の値は観測値として扱い、レポートでは「値の生成にヒープ確保が要る（1回以上）」の主張だけに使う。`MPD_MAX_PREC` などは、プローブが読むヘッダではなく mpdecimal の公式ドキュメント（libmpdec の Context の節）に書かれた 64ビット環境の値と照らす。`quantize_1005_<mode>` は丸めの定義から、`MPD_ROUND_UP`、`CEILING`、`HALF_UP`、`05UP` で 1.01、`DOWN`、`FLOOR`、`HALF_DOWN`、`HALF_EVEN`、`TRUNC` で 1.00（`05UP` は0方向に丸めた最後の桁が0なので0から遠い側へ丸める）。
 * テスト: 既知の値と照らしてから `--record` を実行し、4変種の一致を確かめる。
 * Done when: `run.sh` が `mpd@{gcc,clang}-{O0,O2}` の4行を `一致` で出す。
 
@@ -148,8 +164,10 @@ glibc の `printf` には `_Decimal128` の書式がないので、プローブ�
 * 変更前後: 前は intel と libdfp の行がない。後は `intel@*` の4行と `libdfp@gcc-*` の2行が一致し、`libdfp@clang-*` の2行が未実行になる。
 * libdfp の tarball の sha256 をここで計算し、`run.sh` に固定する。
 * `intel.c` は5つの丸めモード（`BID_ROUNDING_TO_NEAREST` など）での `quantize_1005_<mode>` と、演算の組、`overflow` のフラグを出す。
-* `libdfp.c` は `strtod128` と `strfromd128` で入出力する（どちらも実験3で動いた）。丸めモードは `fe_dec_setround` で切り替えて `quantize_1005_<mode>` を出す。`fe_dec_setround` は実験で使っておらず未確認である。リンクできなければ、丸めモードの一覧はヘッダの引用で示し、プローブは既定のモードの結果だけを出す。
+* `libdfp.c` は `strtod128` で入力を読む。出力は `strfromd128` ではなく `probes/bid128.h` で BID の16バイトを分解して出す（実装で変更。GCC `_Decimal128` と Intel DFP と行ごとに比べられる形にするため）。丸めモードは `fe_dec_setround` で切り替えて、切り替えの戻り値 `fe_dec_setround_<mode>` と `quantize_1005_<mode>` を出す。`fe_dec_setround` が使えない場合は、丸めモードの一覧をヘッダの引用で示し、プローブは既定のモードの結果だけを `quantize_1005_default` のキーで出す計画だった。実装では `fe_dec_setround` がリンクでき、5モードとも 0 を返したので、`quantize_1005_default` は使っていない。
 * 既知の値: 演算の組は T2 と同じ値で、`overflow` は無限大とオーバーフローのフラグ。`quantize_1005_<mode>` は IEEE 754-2008 の丸めの定義から、最近接偶数で 1.00、最近接の0から遠い側で 1.01、正の無限大方向で 1.01、負の無限大方向と0方向で 1.00。
+** libdfp の出力の形は T2 と同じ `<符号><係数>E<指数>` で、具体的には `div_1_3=+3333333333333333333333333333333333E-34`、`add_01_02=+3E-1`、`quantize_1005_TONEAREST=+100E-2`、`quantize_1005_UPWARD=+101E-2`、`quantize_1005_TONEARESTFROMZERO=+101E-2`、`fe_dec_setround_TONEAREST=0`、`mul_wide=+1234567890123456789012345678901234E+2`、`overflow=+inf`、`sum_001_x1000=+1000E-2`。キーの末尾のモード名は `FE_DEC_` を除いたもの（`TONEAREST`、`TOWARDZERO`、`UPWARD`、`DOWNWARD`、`TONEARESTFROMZERO`）である。
+** Intel DFP の出力の形は `bid128_to_string` の `+100E-2` の形で、無限大は `+Inf`、フラグは `overflow_flags=overflow,inexact` のように名前をカンマでつなぐ。キーの末尾のモード名は `BID_ROUNDING_` を除いたもの（`TO_NEAREST`、`DOWN`、`UP`、`TO_ZERO`、`TIES_AWAY`）である。
 * テスト: 既知の値と照らしてから `--record` を実行する。gcc の変種と `intel@clang-*` の一致、`libdfp@clang-*` の未実行を確かめる。続けて「curl 遮断」を実行する。
 * Done when:
 ** 「依存を取得できないプローブは未実行として表示される」を「curl 遮断」で確認できる。未実行の行に理由があり、集計の一致にそれらが数えられず、ほかが一致すれば終了状態が 0 である。
@@ -197,7 +215,7 @@ glibc の `printf` には `_Decimal128` の書式がないので、プローブ�
 ** 「結果が一致しない組み合わせは隠さず示される」を、決定性の節の記述で確認できる。
 ** 「コンパイラをビルドできなければ理由を残して C だけで確かめる」のレポート側を、C ABI の節の記述で確認できる。
 ** 比較表に空欄がなく、decimal128 の各セルが GCC、libdfp、Intel DFP のどれについてかを区別している（REQ-001、REQ-002）。
-** 再実行の節に、コマンドと前提（nix、x86_64 Linux、ホストのコマンド、初回のネットワーク）がある（REQ-005）。
+** 再実行の節に、コマンドと前提（nix、x86_64 Linux、ホストのコマンド、ネットワーク）がある（REQ-005）。
 ** 下流の節が 0004・0005・0008 のそれぞれに効く事実を名指しし、「推奨」「採用すべき」などの選定を表す表現がない（REQ-009）。
 ** 本文が日本語である（NFR-001）。
 
@@ -210,7 +228,8 @@ glibc の `printf` には `_Decimal128` の書式がないので、プローブ�
 * テスト: `git status --short --untracked-files=all` を記録してから `docs/research/decimal-backend-survey/run.sh` を1回実行し、もう一度 `git status --short --untracked-files=all` を見る。変更と未追跡のパスを `git status --porcelain --untracked-files=all` と `git diff --name-only master...HEAD` で列挙する。
 * Done when:
 ** 1つのコマンド `docs/research/decimal-backend-survey/run.sh` が22件すべてのプローブの結果行を出し、`不一致 0` で終了状態 0 になり、未実行は `d128@clang-*` と `libdfp@clang-*` の4件だけである（REQ-005）。
-** 実行の前後で `git status` の出力が同じである（NFR-003 の「追加の手作業なし」と、実行が作業ツリーを汚さないこと）。
+** 実行の前後で `git status --short --untracked-files=all` の出力が同じである（NFR-003 の「追加の手作業なし」と、実行が作業ツリーを汚さないこと）。
+** 実行の前後で `find docs/research/decimal-backend-survey -type f -exec sha256sum {} + | sort` の出力が同じである。成果物は未追跡なので、`git status` だけでは中身の書き換えが見えないためである。
 ** 列挙したパスがすべて `docs/research/decimal-backend-survey/` か `docs/task-requirements/` の下にあり、`lib/`、`standard/`、`docs/wayfinder/` がない（NFR-002 の commit 前の確認）。
 
 === T8: commit 後の確認と issue #1 の解消（PR を仕上げる工程で実施）
@@ -281,7 +300,160 @@ T7 までは commit しない。T8 は、PR を仕上げる工程で対象の変
 
 == 検証結果
 
-（実装時に記入する）
+実施日は 2026-10-26。ツールチェーンは nixpkgs rev `674a2028` の gcc 16.2.0 と clang 21.1.8。
+障害を起こす手順は、セッションの scratchpad にある使い捨てのスクリプトで実行し、作業ツリーには残していない。
+
+=== テストの要否
+
+テストのシームは「テストの方針」のとおり `run.sh` の結果行、集計行、終了状態である。
+新しいテストファイルは書いていない。`run.sh` の照合そのものがプローブの回帰の検査で、ランナーの分岐は障害を起こす手順で確かめた。
+ランナーの分岐（一致、不一致、未実行、変種だけの記録、繰り返しの食い違い）が壊れると、下の手順のどれかが落ちる。
+プローブが観測すべきことを観測しているかは、この手順では検出できない。既知の値との照合（次節）と、レポートの根拠の検査（T6）で補った。
+
+=== 既知の値との照合
+
+各プローブの最初の出力を、`--record` の前に各タスクの「既知の値」と照らした。食い違いは1件で、原因を調べてから記録した。
+
+[cols="1,3,1",options="header"]
+|===
+|記録 |照らした値 |結果
+|`i128`
+|`sizeof=16`、`div_1_3=0.333333333333333333`、`div_2_3=0.666666666666666666`、`add_01_02=0.300000000000000000`、`sum_001_x1000=10.000000000000000000`、`int128_max=170141183460469231731687303715884105727`、`overflow_wrapped=-0.000000000000000010`、`overflow_builtin_detected=1`、`mul_wide=overflow_detected`
+|すべて一致
+|`d128`
+|`DEC128_MANT_DIG=34`、`DEC128_MAX_EXP=6145`、`DEC128_MIN_EXP=-6142`、`div_1_3`、`div_2_3`、`add_01_02=+3E-1`、`sum_001_x1000=+1000E-2`、`mul_wide=+1234567890123456789012345678901234E+2`、`overflow=+inf`
+|すべて一致
+|`d128` のオーバーフローのフラグ
+|IEEE 754-2008 では、オーバーフローはフラグを立てる
+|`fetestexcept(FE_OVERFLOW)` が 0 を返して食い違った。gcc 16.2.0 の `libgcc.a` を `readelf -s` で見ると、BID のフラグは libgcc の TLS 変数 `__bid_IDEC_glbflags` にあり、glibc の浮動小数点環境とは別である。libgcc 内部の `__dfp_test_except(FE_OVERFLOW)` を足すと 1 を返し、正本どおりフラグが立っていた。食い違いはプローブの読み方の問題で、両方の値を記録した
+|`mpd`
+|T3 の具体値、`quantize_1005_*` の9モード（`ROUND_UP`、`CEILING`、`HALF_UP`、`05UP` で 1.01、ほかは 1.00）、`MPD_MAX_PREC=999999999999999999` など（libmpdec の Context の文書の 64ビットの値）
+|すべて一致
+|`mpd` の確保回数
+|mpdecimal 4.0.1 の `libmpdec/mpalloc.c` の `mpd_qnew_size` は、構造体と係数をそれぞれ `mpd_alloc` で確保する
+|`alloc_qnew=2` で一致。`alloc_qdiv_1_3=0` と `alloc_qdiv_1_3_static_result=0` は、ソースから回数が一意に決まらないので観測値として扱い、レポートでは「確保が0回だった」とだけ書いた
+|`intel`
+|T4 の値と、5モードの量子化（`UP` と `TIES_AWAY` で `+101E-2`、ほかは `+100E-2`）、`overflow=+Inf`、`overflow_flags=overflow,inexact`
+|すべて一致
+|`libdfp`
+|T4 の値と、5モードの量子化（`UPWARD` と `TONEARESTFROMZERO` で `+101E-2`、ほかは `+100E-2`）、`overflow=+inf`
+|一致。`overflow_fe_overflow=0` は `d128` と同じ理由で、libdfp は libbid のフラグを読む関数を共有ライブラリから公開していない（`nm -D` で `except` を含むシンボルが0件）。レポートでは未確認事項に置いた
+|`ffi`
+|`mpd_qnew_direct=ok`、`mpd_add_01_02=0.3`、`d128_add_01_02=+3E-1`、`i128_add_01_02=0.300000000000000000`
+|すべて一致
+|`ffi-unit-return`
+|`lib/CodeGen.ml:556-557` と `587-591` から、`Not allowed` を含むエラーと 0 でない終了状態
+|`Description: Not allowed` と `exit=255` で一致
+|===
+
+T2 の見込み（GCC 単体には丸めモードを切り替える公開 API がない）は、gcc 16.2.0 の `include` ディレクトリに `fe_dec_setround`、`quantized128`、`__dfp_set_round` の宣言がなく（`grep` の該当0件）、`libgcc.a` には内部関数 `__dfp_set_round` だけがあることで確かめた。`d128.c` は `quantize_1005_<mode>` を出さない。
+
+=== タスクごとの `Done when`
+
+[cols="1,4,1",options="header"]
+|===
+|タスク |観測した結果 |判定
+|T1
+|記録がない状態で `不一致  i128@gcc-O0: 記録ファイル expected/i128.txt がない` など4行、`一致 0 / 不一致 4 / 未実行 0`、終了状態 1。「改ざん」で4変種が `不一致` と `div_1_3` の行の差分（1回目、2回目とも）を出し、終了状態 1。「変種の記録」の1回目は `一致*  i128@clang-O2（変種別の記録）` で終了状態 0、2回目は `不一致  i128@clang-O2` だけで終了状態 1。「変種の食い違いの記録」は `--record` 後に `expected/i128@gcc-O2.txt` と `expected/i128@clang-O2.txt` ができ、続く照合で2つが `一致*`、`-O0` の2つが `一致`、終了状態 0。「繰り返しの食い違い」で4変種が `2回の実行の出力が異なる` と両方の出力を出し、終了状態 1、`expected/i128.txt` は変わらない。「2回目だけの食い違い」で4変種が `2回目の出力` の差分だけを出し、終了状態 1。戻した後は i128 の4変種が `一致` で終了状態 0
+|pass
+|T2
+|`d128@gcc-O0` と `d128@gcc-O2` が `一致`。`未実行  d128@clang-O0: clang-dfp: error: GNU decimal type extension not supported` と `-O2` の同じ行が出て、集計の一致に数えられていない
+|pass
+|T3
+|`mpd@gcc-O0`、`mpd@gcc-O2`、`mpd@clang-O0`、`mpd@clang-O2` が `一致`
+|pass
+|T4
+|`intel@*` の4行と `libdfp@gcc-*` の2行が `一致`、`libdfp@clang-O0` と `-O2` が `clang-dfp` の理由で `未実行`。「curl 遮断」では nix の依存はキャッシュから取れ、`未実行  intel@gcc-O0: intel-dfp: 取得: curl: (7) Failed to connect to netlib.org:443 over proxy 127.0.0.1 ...` の形の4行と、`libdfp@gcc-*` の2行（`github.com:443`）が出た。集計は `一致 12 / 不一致 0 / 未実行 10` で、通常の `一致 18 / 未実行 4` から一致が6件減り未実行が6件増えた。終了状態 0。キャッシュの仮説は当たり、`run.sh` の URL を書き換える代替手順は使っていない
+|pass
+|T5
+|`一致    ffi` の下に `mpd_qnew_direct=ok`、`mpd_add_01_02=0.3`、`d128_add_01_02=+3E-1`、`i128_add_01_02=0.300000000000000000`、`exit=0` が表示された。`ffi-unit-return` も `一致`。「ビルド上限」（`ZUSTRAL_BUILD_TIMEOUT=0.01`）で `未実行  ffi: zustral: 上限 0.01 秒を超えた` と `ffi-unit-return` の同じ行が出て、`一致 16 / 不一致 0 / 未実行 6`、終了状態 0
+|pass
+|T6
+|README の `〔probe: <記録> / <key>〕` を重複を除いて70件抜き出し、70件とも `expected/<記録>.txt` に `<key>=` の行があった（`grep -o` と `while read` の1行）。`〔run: …〕` の14件はすべて `run.sh` の出力に同じ結果行があった。`〔src: …〕` の22件はすべて「一次資料」の表に行があり、URL または場所と版を持つ。抜き出しで外れたのは「読み方」の節の書式の説明（`<記録>`、`<行>`、`<ID>`）だけである。事実の文を1文ずつ読み、根拠のない文は未確認事項へ移した（例: 演算ライブラリの内部のヒープ使用、libdfp の例外フラグの公開 API、ヘッダの衝突）。「推奨」「採用すべき」などの選定の表現は、下流の節の「どれを選ぶべきかは書かない」の1か所だけで、選定ではない
+|pass
+|T7
+|`docs/research/decimal-backend-survey/run.sh` が22件すべての結果行を出し、最後の行は `一致 18 / 不一致 0 / 未実行 4`、終了状態 0。未実行は `d128@clang-O0`、`d128@clang-O2`、`libdfp@clang-O0`、`libdfp@clang-O2` の4件だけ。実行の前後で `git status --short --untracked-files=all` の出力と、`docs/research/decimal-backend-survey` の sha256 の一覧が同じだった。文書を更新し終えた後の `git status --porcelain --untracked-files=all` の列挙は、`docs/research/decimal-backend-survey/` の未追跡の18ファイルと、`docs/task-requirements/issue1-backend-docs-survey-decimal-backends/` の変更した3文書（要件定義書、設計文書、実装計画）だけで、`git diff --name-only master...HEAD` は `docs/task-requirements/issue1-backend-docs-survey-decimal-backends/` の4ファイルだけである。`lib/`、`standard/`、`docs/wayfinder/` はない
+|pass
+|T8
+|未実施。commit 後の Phase 9 で行う
+|未実施
+|===
+
+=== EARS 規則と Gherkin シナリオの実証
+
+使ったツールは、すべて `run.sh` の実行と、その出力・README の読み取りである。証拠は上の表に書いた結果行で、生の出力はセッションの scratchpad（作業ツリーの外）に置いた。
+
+[cols="2,3,1",options="header"]
+|===
+|規則・シナリオ |確かめ方と結果 |判定
+|REQ-001 |README の比較表と観点ごとの節が3系統×5観点を埋め、decimal128 を GCC、libdfp、Intel DFP の列と節に分けている |pass
+|REQ-002 |観点ごとの節に、ヒープ確保の要否、固定サイズか、解放の要否、有効桁数と指数の範囲、丸めモードの一覧、上限を超えたときの挙動、依存、ライセンス、入手手段、公式のプラットフォーム、決定性が系統ごとにある |pass
+|REQ-003 |T6 の抽出検査（引用の全件が記録または一次資料の表にある）と1文ずつの確認 |pass
+|REQ-004 |他のプラットフォームの主張6か所に「出典のみ・未実測」と一次資料の ID（URL と版）がある。根拠のない内容は「未確認事項」の9項目にある（差分レビューで2項目を足した） |pass
+|REQ-005 |1コマンド `run.sh` が全プローブを実行した（T7）。README の「再実行の方法」にコマンドと前提がある |pass
+|REQ-006 |不一致は T1、未実行は T4 と T5 の障害の手順で確かめた。README は未実行のプローブに依存する主張（clang での決定性）を未確認事項に置いた |pass
+|REQ-007 |T5 の Zustral プログラムの出力と、README の C ABI の節（`lib/Type.ml:22-29`、`lib/CodeGen.ml:554-591` の引用と、ビルドできなかった場合の規則） |pass
+|REQ-008 |T1〜T5 の4変種と2回実行の一致、README の決定性の表 |pass
+|REQ-009 |README の「下流の問いに効く事実」が 0004、0005、0008 ごとに事実を挙げ、選定を書いていない |pass
+|REQ-010 |T8 で行う |未実施（Phase 9）
+|NFR-001 |README は日本語 |pass
+|NFR-002 |T7 の列挙（commit 前）。commit 後の確認は T8 |pass（commit 前）
+|NFR-003 |T7 で、追加の手作業なしに1回の実行で終わり、作業ツリーが変わらなかった。クリーンな作業ツリーでの再実行は T8 |pass（commit 前）
+|このマシンで観測できる主張はプローブ出力を根拠に持つ |README の比較表の有効桁数の行と GCC の節に「34桁 〔probe: d128 / DEC128_MANT_DIG〕」があり、`expected/d128.txt` に `DEC128_MANT_DIG=34` がある |pass
+|このマシンで観測できない主張は出典のみと明記される |GCC の節の「AArch64 … BID が既定 … 出典のみ・未実測 〔src: gcc-configure〕」。表の gcc-configure 行に URL と「開発版の文書、2026-10-25 更新」がある |pass
+|記録と食い違う出力は失敗として見える |T1 の「改ざん」 |pass
+|依存を取得できないプローブは未実行として表示される |T4 の「curl 遮断」 |pass
+|コンパイラをビルドできれば Zustral プログラムで確かめる |T5 の `一致    ffi` とその下の出力 |pass
+|コンパイラをビルドできなければ理由を残して C だけで確かめる |表示側は T5 の「ビルド上限」、レポート側は README の「コンパイラをビルドできなかった場合」の節 |pass
+|結果が一致しない組み合わせは隠さず示される |表示側は T1 の「改ざん」（変種 id と差分）と「変種の食い違いの記録」（`一致*`）。レポート側は、実測では食い違いがなかったので、README の決定性の節が「変種だけの記録は1つもない」と照合した id を書いている |pass
+|clang でコンパイルできない系統は clang 比較を未実行と示す |T2 と T4 の `未実行  d128@clang-*` と `未実行  libdfp@clang-*` の4行 |pass
+|===
+
+集計: pass 21、fail 0、未実施 1（REQ-010。T8 で Phase 9 に行う）。
+
+=== 差分レビュー後の再確認
+
+差分レビュー（Phase 6）で、README のうち根拠より多くを述べていた文や、実際の動作と食い違う文を、次の6点で直した。`run.sh`、プローブ、記録は変えていない。
+
+[cols="2,3,1",options="header"]
+|===
+|直した箇所 |内容 |関わる規則
+|確保と解放の節、0005 の節
+|mpdecimal の「演算は確保しない」「静的な値なら演算の確保は0回にできる」を、観測した 1/3 の除算1つの結果に絞った。`mpd_qnew` の値でも確保は0回だったので、静的な値が0回の理由であるかのような書き方もやめた
+|REQ-003、REQ-009
+|GCC の `_Decimal128` の節、0008 の節
+|「35桁の入力は最近接偶数に丸められる」を、丸めの向きを述べない形に改めた。落ちる桁が5で残る桁が4なので、最近接偶数と切り捨てが同じ結果になる。`d128` の入力はコンパイル時に変換されるリテラルであることも書き、0008 の節に libdfp と Intel DFP の `mul_wide` を根拠に足した
+|REQ-003
+|0005 の節
+|「`void` を返す C 関数は Zustral から直接呼べない」を、`ffi-unit-return` が示す「戻り値 `Unit` で束縛するとコンパイルが失敗する」に絞った。`lib/CodeGen.ml` は `Foreign_Import` ごとに自前の C の宣言を出すので、戻り値の型を偽った束縛はありうるが、試していない（未確認事項に足した）
+|REQ-003、REQ-007
+|GCC の `_Decimal128` の節、未確認事項
+|本文が再実行できない手作業の確認（ヘッダの `grep`）を根拠にしていた1文を消した。未確認事項には「公開 API がないこと」ではなく、手作業の確認そのものを置いた。公開 API がないことの根拠は GCC のマニュアル（gcc-dfp）である
+|REQ-003、REQ-004
+|再実行の方法
+|「初回のネットワーク接続」を直した。`run.sh` は libdfp と Intel DFP の tarball を一時ディレクトリへ毎回取得する（T4 の「curl 遮断」で、nix のキャッシュがあっても2つが未実行になったことがこれを示す）。前提のホストのコマンドに `grep` と `sed` を足した。設計文書の前提も同じく直した
+|REQ-005
+|比較表
+|`__int128` の「整数部21桁」を「170141183460469231731 まで（21桁）」にした。21桁の整数部すべてを表せるわけではない
+|REQ-002、REQ-003
+|===
+
+再確認の結果:
+
+* README の引用を抜き出し直した。重複を除いた `〔probe: …〕` 71件はすべて `expected/` の記録にキーがあり、`〔src: …〕` 22件はすべて一次資料の表に行がある。`〔run: …〕` 14件はすべて次の実行の結果行にある（「読み方」の書式の説明を除く）。REQ-003 と「このマシンで観測できる主張はプローブ出力を根拠に持つ」は pass のまま。
+* 修正後に、`/tmp` から `run.sh` を絶対パスで1回実行した。最後の行は `一致 18 / 不一致 0 / 未実行 4`、終了状態 0 で、未実行は `d128@clang-*` と `libdfp@clang-*` の4件だけだった。実行の前後で `git status --porcelain --ignored --untracked-files=all | sha256sum` は同じ値（`03bd0082…6eb3608`）だった。REQ-005、REQ-006、REQ-007、REQ-008、NFR-003 は pass のまま。
+* 0004、0005、0008 の節は事実だけを挙げ、選定の表現は「どれを選ぶべきかは書かない」の1か所だけである。REQ-009 は pass のまま。
+* 共通処理の変更はない。差分は `docs/research/decimal-backend-survey/` の新規ファイルと `docs/task-requirements/` の文書だけで、既存のコードも、ほかから使われる処理も変えていない。`probes/bid128.h` は今回の3つのプローブ（`d128.c`、`libdfp.c`、`ffi/shim.c`）だけが使い、3つとも上の実行で一致した。
+
+=== 計画からの逸脱
+
+* `probes/bid128.h` を足した。`d128.c`、`libdfp.c`、`ffi/shim.c` が同じ BID の出力を使うためである。
+* `libdfp.c` の出力を `strfromd128` から BID の分解に変えた。3つの decimal128 実装を同じ形で並べるためである。
+* libdfp のプローブのコンパイルに `-D__STDC_WANT_DEC_FP__` を足した。libdfp のヘッダは、これがないと `fe_dec_setround` と `quantized128` を宣言しない。
+* `d128.c` に `overflow_fe_overflow` と `overflow_libgcc_dfp_test_except` を足した（「既知の値との照合」）。
+* Zustral コンパイラを一時ディレクトリで起動するように変えた。最初は設計どおり `docs/research/decimal-backend-survey/` で起動し、コンパイラがそこに `calltree.html` と `error.html` を書いた（`.gitignore` 済みで `git status` には出ない）。2つを手で消してから改め、`git status --ignored` でそのディレクトリに無視されたファイルが残っていないことを確かめた。
+* 変種だけの記録は `<系統>@<変種>` の id に限った。最初の実装は `ffi` にも `expected/ffi.txt` を変種の記録として扱い、`一致*` と誤表示した。
+* 要件定義書の2か所（Gherkin の例の gcc 13.3.0、セキュリティの「版を固定しない」）を、設計の rev 固定と gcc 16.2.0 に合わせて直した。設計文書も実装に合わせて直した。
 
 == 判断から学べること
 
