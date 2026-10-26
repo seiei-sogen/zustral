@@ -110,7 +110,7 @@ T2〜T5 でも T1 と同じく、プローブを書いたら記録がない状�
 * [x] T5: Zustral FFI プローブ
 * [x] T6: 調査レポート
 * [x] T7: 範囲と再実行性の最終確認
-* [ ] T8: commit 後の確認と issue #1 の解消。未実施。commit 後の PR を仕上げる工程（Phase 9）で行うと決めてあり、実装の工程では commit しないため
+* [x] T8: commit 後の確認と issue #1 の解消
 
 === T1: ランナーと `__int128` 系統を端から端まで通す
 
@@ -375,8 +375,8 @@ T2 の見込み（GCC 単体には丸めモードを切り替える公開 API �
 |`docs/research/decimal-backend-survey/run.sh` が22件すべての結果行を出し、最後の行は `一致 18 / 不一致 0 / 未実行 4`、終了状態 0。未実行は `d128@clang-O0`、`d128@clang-O2`、`libdfp@clang-O0`、`libdfp@clang-O2` の4件だけ。実行の前後で `git status --short --untracked-files=all` の出力と、`docs/research/decimal-backend-survey` の sha256 の一覧が同じだった。文書を更新し終えた後の `git status --porcelain --untracked-files=all` の列挙は、`docs/research/decimal-backend-survey/` の未追跡の18ファイルと、`docs/task-requirements/issue1-backend-docs-survey-decimal-backends/` の変更した3文書（要件定義書、設計文書、実装計画）だけで、`git diff --name-only master...HEAD` は `docs/task-requirements/issue1-backend-docs-survey-decimal-backends/` の4ファイルだけである。`lib/`、`standard/`、`docs/wayfinder/` はない
 |pass
 |T8
-|未実施。commit 後の Phase 9 で行う
-|未実施
+|手順1: commit `a3546781` で `git diff --stat master...HEAD -- lib standard docs/wayfinder` の出力が空。手順2: `git worktree add` で `$TMPDIR/clean-run` に commit `a3546781` を取り出し（無視されたファイルが0件、`austral` も `_build/` もない状態）、`/tmp` から `run.sh` を絶対パスで実行した。22件の結果行と `一致 18 / 不一致 0 / 未実行 4`、終了状態 0。未実行は `d128@clang-*` と `libdfp@clang-*` の4件だけ。確かめた後に `git worktree remove` で消した。手順3: issue #1 に解消コメント（0004・0005・0008 の要点、commit 固定のレポートへのリンク、PR #11 へのリンク）を投稿し、クローズした（`state` は `CLOSED`、`stateReason` は `COMPLETED`）。issue #9 の本文は、編集前と編集後の `diff` が「（まだない）」の1行の置き換え（`29c29`）だけである
+|pass
 |===
 
 === EARS 規則と Gherkin シナリオの実証
@@ -395,10 +395,10 @@ T2 の見込み（GCC 単体には丸めモードを切り替える公開 API �
 |REQ-007 |T5 の Zustral プログラムの出力と、README の C ABI の節（`lib/Type.ml:22-29`、`lib/CodeGen.ml:554-591` の引用と、ビルドできなかった場合の規則） |pass
 |REQ-008 |T1〜T5 の4変種と2回実行の一致、README の決定性の表 |pass
 |REQ-009 |README の「下流の問いに効く事実」が 0004、0005、0008 ごとに事実を挙げ、選定を書いていない |pass
-|REQ-010 |T8 で行う |未実施（Phase 9）
+|REQ-010 |T8 の手順3。`gh issue view 1` が `CLOSED` と解消コメントを示し、`gh issue view 9` の「ここまでの決定」が規定の1行になった |pass
 |NFR-001 |README は日本語 |pass
-|NFR-002 |T7 の列挙（commit 前）。commit 後の確認は T8 |pass（commit 前）
-|NFR-003 |T7 で、追加の手作業なしに1回の実行で終わり、作業ツリーが変わらなかった。クリーンな作業ツリーでの再実行は T8 |pass（commit 前）
+|NFR-002 |T7 の列挙（commit 前）と T8 の手順1（commit 後） |pass
+|NFR-003 |T7 で、追加の手作業なしに1回の実行で終わり、作業ツリーが変わらなかった。T8 の手順2で、commit から取り出した新しい作業ツリーでも同じ結果になった |pass
 |このマシンで観測できる主張はプローブ出力を根拠に持つ |README の比較表の有効桁数の行と GCC の節に「34桁 〔probe: d128 / DEC128_MANT_DIG〕」があり、`expected/d128.txt` に `DEC128_MANT_DIG=34` がある |pass
 |このマシンで観測できない主張は出典のみと明記される |GCC の節の「AArch64 … BID が既定 … 出典のみ・未実測 〔src: gcc-configure〕」。表の gcc-configure 行に URL と「開発版の文書、2026-10-25 更新」がある |pass
 |記録と食い違う出力は失敗として見える |T1 の「改ざん」 |pass
@@ -409,7 +409,7 @@ T2 の見込み（GCC 単体には丸めモードを切り替える公開 API �
 |clang でコンパイルできない系統は clang 比較を未実行と示す |T2 と T4 の `未実行  d128@clang-*` と `未実行  libdfp@clang-*` の4行 |pass
 |===
 
-集計: pass 21、fail 0、未実施 1（REQ-010。T8 で Phase 9 に行う）。
+集計: pass 22、fail 0、未実施 0。
 
 === 差分レビュー後の再確認
 

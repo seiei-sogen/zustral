@@ -854,7 +854,7 @@ body {
 <p>&#10003; T7: 範囲と再実行性の最終確認</p>
 </li>
 <li>
-<p>&#10063; T8: commit 後の確認と issue #1 の解消。未実施。commit 後の PR を仕上げる工程（Phase 9）で行うと決めてあり、実装の工程では commit しないため</p>
+<p>&#10003; T8: commit 後の確認と issue #1 の解消</p>
 </li>
 </ul>
 </div>
@@ -1568,8 +1568,8 @@ glibc の <code>printf</code> には <code>_Decimal128</code> の書式がない
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">T8</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">未実施。commit 後の Phase 9 で行う</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">未実施</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">手順1: commit <code>a3546781</code> で <code>git diff --stat master&#8230;&#8203;HEAD&#8201;&#8212;&#8201;lib standard docs/wayfinder</code> の出力が空。手順2: <code>git worktree add</code> で <code>$TMPDIR/clean-run</code> に commit <code>a3546781</code> を取り出し（無視されたファイルが0件、<code>austral</code> も <code>_build/</code> もない状態）、<code>/tmp</code> から <code>run.sh</code> を絶対パスで実行した。22件の結果行と <code>一致 18 / 不一致 0 / 未実行 4</code>、終了状態 0。未実行は <code>d128@clang-<strong></code> と <code>libdfp@clang-</strong></code> の4件だけ。確かめた後に <code>git worktree remove</code> で消した。手順3: issue #1 に解消コメント（0004・0005・0008 の要点、commit 固定のレポートへのリンク、PR #11 へのリンク）を投稿し、クローズした（<code>state</code> は <code>CLOSED</code>、<code>stateReason</code> は <code>COMPLETED</code>）。issue #9 の本文は、編集前と編集後の <code>diff</code> が「（まだない）」の1行の置き換え（<code>29c29</code>）だけである</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
 </tr>
 </tbody>
 </table>
@@ -1640,8 +1640,8 @@ glibc の <code>printf</code> には <code>_Decimal128</code> の書式がない
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">REQ-010</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">T8 で行う</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">未実施（Phase 9）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T8 の手順3。<code>gh issue view 1</code> が <code>CLOSED</code> と解消コメントを示し、<code>gh issue view 9</code> の「ここまでの決定」が規定の1行になった</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">NFR-001</p></td>
@@ -1650,13 +1650,13 @@ glibc の <code>printf</code> には <code>_Decimal128</code> の書式がない
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">NFR-002</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">T7 の列挙（commit 前）。commit 後の確認は T8</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">pass（commit 前）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T7 の列挙（commit 前）と T8 の手順1（commit 後）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">NFR-003</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">T7 で、追加の手作業なしに1回の実行で終わり、作業ツリーが変わらなかった。クリーンな作業ツリーでの再実行は T8</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">pass（commit 前）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">T7 で、追加の手作業なしに1回の実行で終わり、作業ツリーが変わらなかった。T8 の手順2で、commit から取り出した新しい作業ツリーでも同じ結果になった</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">このマシンで観測できる主張はプローブ出力を根拠に持つ</p></td>
@@ -1701,7 +1701,7 @@ glibc の <code>printf</code> には <code>_Decimal128</code> の書式がない
 </tbody>
 </table>
 <div class="paragraph">
-<p>集計: pass 21、fail 0、未実施 1（REQ-010。T8 で Phase 9 に行う）。</p>
+<p>集計: pass 22、fail 0、未実施 0。</p>
 </div>
 </div>
 <div class="sect2">
