@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 640" font-family="sans-serif">
+<title>run.sh のプローブごとのループ: deps_of と need で依存を取り、build、execute を2回、--record なら記録を書き、記録と cmp して 一致、一致*、不一致、未実行 のどれかを出す</title>
+<defs><marker id="a" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#57606a"/></marker></defs>
+<rect width="900" height="640" fill="#ffffff"/>
+<g font-size="13" fill="#1f2328">
+<rect x="330" y="10" width="240" height="44" rx="8" fill="#e8f1fb" stroke="#0b5cad"/>
+<text x="450" y="37" text-anchor="middle">for id in PROBES（22件、表の順）</text>
+<rect x="300" y="80" width="300" height="50" rx="8" fill="#e8f1fb" stroke="#0b5cad"/>
+<text x="450" y="101" text-anchor="middle">deps_of id の順に need dep</text>
+<text x="450" y="120" text-anchor="middle" font-size="11" fill="#57606a">fetch の結果を DEP / DEP_ERR にメモ</text>
+<rect x="20" y="80" width="220" height="50" rx="8" fill="#eaeef2" stroke="#57606a"/>
+<text x="130" y="101" text-anchor="middle" font-weight="bold">未実行  id: dep: 理由</text>
+<text x="130" y="120" text-anchor="middle" font-size="11">SKIP+1（終了状態は変えない）</text>
+<rect x="300" y="160" width="300" height="44" rx="8" fill="#e8f1fb" stroke="#0b5cad"/>
+<text x="450" y="187" text-anchor="middle">build id d  &gt; build.log</text>
+<rect x="660" y="160" width="220" height="50" rx="8" fill="#ffebe9" stroke="#a40e26"/>
+<text x="770" y="181" text-anchor="middle" font-weight="bold" fill="#a40e26">不一致  id: ビルドに失敗した</text>
+<text x="770" y="200" text-anchor="middle" font-size="11">build.log の末尾20行、FAIL+1</text>
+<rect x="300" y="230" width="300" height="44" rx="8" fill="#e8f1fb" stroke="#0b5cad"/>
+<text x="450" y="257" text-anchor="middle">execute を2回 → out1, out2（末尾に exit=N）</text>
+<rect x="300" y="300" width="300" height="50" rx="8" fill="#fff8e5" stroke="#7d4e00"/>
+<text x="450" y="321" text-anchor="middle">RECORD=1 のときだけ</text>
+<text x="450" y="340" text-anchor="middle" font-size="11">同じなら family_rec か variant_rec を書く</text>
+<rect x="660" y="300" width="220" height="50" rx="8" fill="#ffebe9" stroke="#a40e26"/>
+<text x="770" y="321" text-anchor="middle" font-weight="bold" fill="#a40e26">不一致  id: 2回の実行の出力が異なる</text>
+<text x="770" y="340" text-anchor="middle" font-size="11">両方の差分、FAIL+1、記録しない</text>
+<rect x="300" y="376" width="300" height="50" rx="8" fill="#e8f1fb" stroke="#0b5cad"/>
+<text x="450" y="397" text-anchor="middle">rec を選ぶ: variant_rec があればそれ</text>
+<text x="450" y="416" text-anchor="middle" font-size="11">なければ expected/&lt;系統&gt;.txt</text>
+<rect x="660" y="376" width="220" height="50" rx="8" fill="#ffebe9" stroke="#a40e26"/>
+<text x="770" y="397" text-anchor="middle" font-weight="bold" fill="#a40e26">不一致  id: 記録ファイル … がない</text>
+<text x="770" y="416" text-anchor="middle" font-size="11">out1 を表示、FAIL+1</text>
+<rect x="300" y="452" width="300" height="44" rx="8" fill="#e8f1fb" stroke="#0b5cad"/>
+<text x="450" y="479" text-anchor="middle">for n in 1 2: cmp rec outN</text>
+<rect x="660" y="452" width="220" height="50" rx="8" fill="#ffebe9" stroke="#a40e26"/>
+<text x="770" y="473" text-anchor="middle" font-weight="bold" fill="#a40e26">不一致  id</text>
+<text x="770" y="492" text-anchor="middle" font-size="11">違った回ごとに diff -u、FAIL+1</text>
+<rect x="300" y="526" width="300" height="50" rx="8" fill="#dafbe1" stroke="#116329"/>
+<text x="450" y="547" text-anchor="middle" font-weight="bold" fill="#116329">一致    id ／ 一致*  id（変種別の記録）</text>
+<text x="450" y="566" text-anchor="middle" font-size="11">PASS+1。id が ffi なら out1 も表示</text>
+<rect x="250" y="596" width="400" height="36" rx="8" fill="#f6f8fa" stroke="#57606a"/>
+<text x="450" y="619" text-anchor="middle">最後に「一致 N / 不一致 M / 未実行 K」、終了状態は M==0 なら 0</text>
+</g>
+<g stroke="#57606a" stroke-width="2" fill="none" marker-end="url(#a)">
+<line x1="450" y1="54" x2="450" y2="76"/>
+<line x1="300" y1="105" x2="244" y2="105"/>
+<line x1="450" y1="130" x2="450" y2="156"/>
+<line x1="600" y1="182" x2="656" y2="182"/>
+<line x1="450" y1="204" x2="450" y2="226"/>
+<line x1="450" y1="274" x2="450" y2="296"/>
+<line x1="600" y1="325" x2="656" y2="325"/>
+<line x1="450" y1="350" x2="450" y2="372"/>
+<line x1="600" y1="401" x2="656" y2="401"/>
+<line x1="450" y1="426" x2="450" y2="448"/>
+<line x1="600" y1="474" x2="656" y2="474"/>
+<line x1="450" y1="496" x2="450" y2="522"/>
+</g>
+<g font-size="11" fill="#1f2328">
+<text x="250" y="98">取れない</text>
+<text x="606" y="176">失敗</text>
+<text x="604" y="314">out1≠out2</text>
+<text x="604" y="392">rec なし</text>
+<text x="604" y="466">違う回あり</text>
+<text x="458" y="514">2回とも同じ</text>
+</g>
+</svg>

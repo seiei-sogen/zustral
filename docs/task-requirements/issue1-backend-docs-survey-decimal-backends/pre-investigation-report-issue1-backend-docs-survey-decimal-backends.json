@@ -1,0 +1,406 @@
+{
+  "meta": {
+    "schema_version": 2,
+    "subject": "issue #1: Zustral の Decimal 候補バックエンド3系統の調査に向けた、リポジトリと実行環境の現状",
+    "generated_at": "2026-10-26T14:25:57+09:00",
+    "repo_root": "/home/agir_wsl/develop/ghq_repos/github.com/seiei-sogen/zustral-worktrees/feat/issue1-backend-docs-survey-decimal-backends",
+    "git_ref": "feat/issue1-backend-docs-survey-decimal-backends @ bcf6cfd3efd3abd736060d3e322e9bf0fefde487",
+    "investigations": [
+      {
+        "skill": "pstack:how",
+        "question": "Zustral のプログラムは今どうやって C に届くか（C バックエンドの出力、Foreign_Import で渡せる型、外部ライブラリのリンク、ビルドとテストの枠組み）。C ABI 観点を実際の Zustral プログラムで確かめられるかが要件を左右するため選んだ。設計理由は判断に効かないため pstack:why は使わない。"
+      }
+    ],
+    "omitted": "lib/ の型検査・単相化の内部詳細、stdlib 各モジュールの中身、エディタ拡張は判断に効かないため省いた。"
+  },
+  "problem": {
+    "summary": "mpdecimal、IEEE 754-2008 decimal128、__int128 固定小数点の3系統を、確保と解放・精度と丸め・C ABI・依存とライセンスと移植性・決定性の5観点で比べる研究チケットの要件を決める。そのために、Zustral から C を呼ぶ経路と、このマシンで観測できる範囲を確かめた。",
+    "scope": "対象は FFI 経路（lib/CodeGen.ml ほか）、コンパイラの CLI とビルド、test-programs と examples の枠組み、wayfinder の約束（地図 issue #9）、このマシンのツールチェーンと nixpkgs の入手可能性。3系統のライブラリ自体の性質（精度、丸めモード、ライセンス全文など）は実装段階でレポートが一次資料とプローブで確かめるため、ここでは調べていない。"
+  },
+  "related_files": [
+    {
+      "path": "docs/wayfinder/tickets/0001-decimal-backend-survey.md",
+      "relevance": "low",
+      "role": "issue #1 の元になったチケットファイル。問いと5観点の文面は issue #1 本文と同じ。トラッカーが GitHub Issues に移ったため、このブランチでは変更しない（別 PR で削除予定）。",
+      "key_symbols": [
+        {
+          "name": "知りたいこと（5観点）",
+          "kind": "doc",
+          "location": "docs/wayfinder/tickets/0001-decimal-backend-survey.md:20-27",
+          "note": "確保と解放、精度と丸め、C ABI、依存とライセンスと移植性、決定性。正本は issue #1 本文。"
+        }
+      ]
+    },
+    {
+      "path": "docs/wayfinder/map.md",
+      "relevance": "low",
+      "role": "地図の旧ファイル。地図の正本は issue #9 に移った。このブランチでは変更しない。",
+      "key_symbols": [
+        {
+          "name": "ここまでの決定",
+          "kind": "doc",
+          "location": "docs/wayfinder/map.md:32-36",
+          "note": "issue #9 本文に同名の節があり、解消時はそちらへ1行足す。"
+        }
+      ]
+    },
+    {
+      "path": "lib/CodeGen.ml",
+      "relevance": "medium",
+      "role": "Foreign_Import 関数の C ラッパーを生成し、FFI で渡せる型を決める。変更はしないが、C ABI 観点の事実の根拠になる。",
+      "key_symbols": [
+        {
+          "name": "param_type_to_c_type",
+          "kind": "function",
+          "location": "lib/CodeGen.ml:554-585",
+          "note": "Unit、レコードとユニオン（MonoNamedType）、参照、リージョンは \"Not allowed\"。整数、Float32/64、Bool、Address/Pointer、Fn、Span は許可。"
+        },
+        {
+          "name": "return_type_to_c_type",
+          "kind": "function",
+          "location": "lib/CodeGen.ml:587-591",
+          "note": "戻り値も同じ対応表を使うため、void を返す C 関数は直接束縛できない。"
+        }
+      ]
+    },
+    {
+      "path": "lib/Type.ml",
+      "relevance": "medium",
+      "role": "整数型の幅の定義。128ビット整数がないことの根拠。",
+      "key_symbols": [
+        {
+          "name": "integer_width",
+          "kind": "type",
+          "location": "lib/Type.ml:22-29",
+          "note": "Width8/16/32/64/ByteSize/Index のみ。"
+        }
+      ]
+    },
+    {
+      "path": "lib/TypingPass.ml",
+      "relevance": "medium",
+      "role": "Foreign_Import の型検査上の制約を持つ。",
+      "key_symbols": [
+        {
+          "name": "TForeignFunction の生成",
+          "kind": "function",
+          "location": "lib/TypingPass.ml:619-627",
+          "note": "型パラメータなし、かつ Unsafe_Module 内でなければエラー。シグネチャの型の可否はここでは検査しない。"
+        }
+      ]
+    },
+    {
+      "path": "lib/Util.ml",
+      "relevance": "medium",
+      "role": "コンパイラが実行ファイルを作るときの C コンパイラ呼び出し。",
+      "key_symbols": [
+        {
+          "name": "compile_c_code",
+          "kind": "function",
+          "location": "lib/Util.ml:202-203",
+          "note": "\"cc <src> -fwrapv -lm -o <out>\" に固定。追加の C ファイルや -l は渡せない。"
+        }
+      ]
+    },
+    {
+      "path": "lib/CliParser.ml",
+      "relevance": "medium",
+      "role": "コンパイラの CLI フラグ。外部ライブラリのリンクに使えるフラグがないことの根拠。",
+      "key_symbols": [
+        {
+          "name": "--target-type=c",
+          "kind": "config",
+          "location": "lib/CliParser.ml:55",
+          "note": "C ソースだけを出力する。外部ライブラリとのリンクは利用者が自分で C コンパイラを呼ぶ。"
+        }
+      ]
+    },
+    {
+      "path": "lib/CRenderer.ml",
+      "relevance": "low",
+      "role": "C 予約語の改名表に _Decimal32/64/128 が載るだけで、10進型の生成経路はない。",
+      "key_symbols": [
+        {
+          "name": "is_c_keyword",
+          "kind": "function",
+          "location": "lib/CRenderer.ml:28",
+          "note": "_Decimal128 などを識別子として出さないための予約語一覧。"
+        }
+      ]
+    },
+    {
+      "path": "lib/prelude.c",
+      "relevance": "low",
+      "role": "生成 C の先頭に置かれるランタイム。au_*_t の typedef を定める。",
+      "key_symbols": [
+        {
+          "name": "au_*_t typedef",
+          "kind": "type",
+          "location": "lib/prelude.c:15-27",
+          "note": "stdint.h の固定幅整数と double などへの別名。128ビット型はない。"
+        }
+      ]
+    },
+    {
+      "path": "examples/ffi/FFI.aum",
+      "relevance": "medium",
+      "role": "Foreign_Import で C 関数を呼ぶ最小の既存例。Zustral 経由の FFI プローブの雛形になる。",
+      "key_symbols": [
+        {
+          "name": "Put_Character / Put_String",
+          "kind": "function",
+          "location": "examples/ffi/FFI.aum:1-14",
+          "note": "pragma Unsafe_Module と pragma Foreign_Import(External_Name => ...) の書き方。"
+        }
+      ]
+    },
+    {
+      "path": "test-programs/runner.py",
+      "relevance": "low",
+      "role": "e2e テストの実行器。C 出力を gcc で自前ビルドする手順の前例。",
+      "key_symbols": [
+        {
+          "name": "gcc_cmd",
+          "kind": "config",
+          "location": "test-programs/runner.py:400-408",
+          "note": "gcc -fwrapv -Wno-builtin-declaration-mismatch <c> -lm。"
+        }
+      ]
+    },
+    {
+      "path": "flake.nix",
+      "relevance": "low",
+      "role": "コンパイラの dev shell。OCaml、dune 3、menhir、zarith などを提供する。",
+      "key_symbols": [
+        {
+          "name": "devShell buildInputs",
+          "kind": "config",
+          "location": "flake.nix:11-30",
+          "note": "C コンパイラや10進ライブラリは含まない。"
+        }
+      ]
+    },
+    {
+      "path": "Makefile",
+      "relevance": "low",
+      "role": "コンパイラのビルド手順（BuiltInModules 生成、dune build、austral バイナリの複写）。",
+      "key_symbols": [
+        {
+          "name": "all",
+          "kind": "config",
+          "location": "Makefile:7-12",
+          "note": "make でコンパイラ austral を作る。"
+        }
+      ]
+    }
+  ],
+  "responsibilities": [
+    {
+      "component": "C バックエンド",
+      "path": "lib/Compiler.ml",
+      "responsibility": "型付きモジュールを単相化し、CodeGen で C の AST にし、CRenderer で文字列化して prelude.c の後ろへ連結する。",
+      "collaborators": [
+        "lib/CodeGen.ml",
+        "lib/CRenderer.ml",
+        "lib/prelude.c",
+        "lib/CliEngine.ml"
+      ]
+    },
+    {
+      "component": "FFI ラッパー生成",
+      "path": "lib/CodeGen.ml",
+      "responsibility": "Foreign_Import 関数ごとに、Austral 由来の型で extern 宣言を書いた内部 C 関数を生成し、渡せない型を codegen 時のエラーで拒む。",
+      "collaborators": [
+        "lib/TypingPass.ml",
+        "lib/Error.ml"
+      ]
+    },
+    {
+      "component": "wayfinder トラッカー",
+      "path": "https://github.com/seiei-sogen/zustral/issues/9",
+      "responsibility": "地図 issue #9 がトラッカーの約束と「ここまでの決定」を持ち、#1〜#8 は sub-issue として依存関係で結ばれる。",
+      "collaborators": [
+        "https://github.com/seiei-sogen/zustral/issues/1",
+        "https://github.com/seiei-sogen/zustral/issues/4",
+        "https://github.com/seiei-sogen/zustral/issues/5",
+        "https://github.com/seiei-sogen/zustral/issues/8"
+      ]
+    }
+  ],
+  "how": {
+    "overview": "Zustral のプログラムは、pragma Unsafe_Module のモジュールで本体のない関数に pragma Foreign_Import を付けて C 関数を呼ぶ。コンパイラは1つの C 翻訳単位を出し、実行ファイルを作る場合は固定の cc 呼び出しでリンクする。外部の10進ライブラリを使うには、--target-type=c で C を出して利用者が自分でリンクする必要がある。",
+    "key_concepts": [
+      {
+        "name": "Foreign_Import",
+        "meaning": "C 関数を Austral の関数として宣言する pragma。型パラメータを持てず、Unsafe_Module 内に限られる。",
+        "evidence": "lib/TypingPass.ml:619-627"
+      },
+      {
+        "name": "FFI で渡せる型",
+        "meaning": "Bool、8〜64ビット整数、ByteSize、Index、Float32、Float64、Address/Pointer、Fn、Span。レコード値、Unit、参照、リージョンは不可。",
+        "evidence": "lib/CodeGen.ml:554-585"
+      },
+      {
+        "name": "@embed",
+        "meaning": "C の式を直接埋め込む脱出口。FFI で表せない呼び出しの代替経路になりうる。",
+        "evidence": "test-programs/suites/001-trivial/002-embed/Test.aum:9"
+      }
+    ],
+    "flows": [
+      {
+        "trigger": "austral compile <module> --entrypoint=M:main --target-type=c --output=x.c",
+        "steps": [
+          {
+            "location": "lib/TypingPass.ml:619-627",
+            "symbol": "TForeignFunction",
+            "action": "Foreign_Import 付き関数を外部関数として型付けする。型パラメータや安全モジュール内なら拒む。"
+          },
+          {
+            "location": "lib/CodeGen.ml:554-591",
+            "symbol": "param_type_to_c_type",
+            "action": "引数と戻り値の型を C 型へ写す。レコード値や Unit なら codegen 時に \"Not allowed\" で失敗する。"
+          },
+          {
+            "location": "lib/Compiler.ml:146-147",
+            "symbol": "prelude_c",
+            "action": "prelude.c を先頭に、生成した C を連結する。"
+          },
+          {
+            "location": "lib/Util.ml:202-203",
+            "symbol": "compile_c_code",
+            "action": "--target-type=exe の場合だけ cc ... -fwrapv -lm で実行ファイルにする。追加ライブラリは渡せない。"
+          }
+        ],
+        "result": "C ソースまたは実行ファイル。外部ライブラリを使う C は利用者が別途 cc で -l を付けてリンクする。"
+      }
+    ],
+    "gotchas": [
+      {
+        "description": "128ビット整数型がないため、__int128 も _Decimal128 も値として FFI を越えられない。C 側の値を Address/Pointer の裏に置くか、C のシムで包む必要がある。",
+        "evidence": [
+          "lib/Type.ml:22-29",
+          "lib/CodeGen.ml:554-585"
+        ]
+      },
+      {
+        "description": "void を返す C 関数は戻り値型 Unit が拒まれるため直接束縛できない。mpdecimal の多くの関数はシム経由になりうる（ライブラリ側のシグネチャは未確認）。",
+        "evidence": [
+          "lib/CodeGen.ml:555-556",
+          "lib/CodeGen.ml:587-591"
+        ]
+      },
+      {
+        "description": "生成 C の extern 宣言は au_* 型で書かれ、ライブラリのヘッダと同じ翻訳単位に置くと型の衝突が起きうる。テスト実行器が -Wno-builtin-declaration-mismatch を付けているのはこの種の不一致のため。実際に衝突するかは未検証。",
+        "evidence": [
+          "test-programs/runner.py:400-408",
+          "lib/Util.ml:202-203"
+        ]
+      },
+      {
+        "description": "コンパイラ自身のビルドは flake.nix の dev shell（OCaml、dune 3）が要り、PATH には ocaml と dune がない。",
+        "evidence": [
+          "flake.nix:11-30",
+          "Makefile:7-12"
+        ]
+      }
+    ]
+  },
+  "why": null,
+  "constraints": [
+    {
+      "type": "convention",
+      "description": "wayfinder のトラッカーは GitHub Issues。確保は issue へのアサイン、解消は解消コメントの投稿、issue のクローズ、地図 issue #9 の「ここまでの決定」への1行で行う。issue #1 は seiei-sogen にアサイン済み。リポジトリ内の docs/wayfinder/ はこのブランチで変更しない。",
+      "evidence": "https://github.com/seiei-sogen/zustral/issues/9 本文「トラッカーの約束（GitHub Issues）」と「ここまでの決定」（gh issue view 9、2026-10-26）。旧ファイルは docs/wayfinder/map.md:21-36。"
+    },
+    {
+      "type": "business",
+      "description": "0001 は答えが事実の research チケットで、バックエンドの選定は 0004（スケールの置き場）と 0005（線形か値型か）が下し、0008（桁あふれ）は 0004 と 0005 の後に続く。",
+      "evidence": "docs/wayfinder/tickets/0004-scale-in-type-or-value.md:6, docs/wayfinder/tickets/0005-decimal-linear-or-value.md:6, docs/wayfinder/tickets/0008-overflow-without-exceptions.md:6 チケット番号 000N は issue #N に対応する（issue #1 タイトル「0001: 10進バックエンドの実像を掴む」）。"
+    },
+    {
+      "type": "technical",
+      "description": "Zustral の FFI は128ビット整数とレコードの値渡しを表現できない。",
+      "evidence": "lib/Type.ml:22-29, lib/CodeGen.ml:554-585"
+    },
+    {
+      "type": "technical",
+      "description": "コンパイラの CLI には追加の C ファイルやリンクするライブラリを渡すフラグがなく、外部ライブラリとのリンクは --target-type=c の出力を自分で cc に渡す必要がある。",
+      "evidence": "lib/CliParser.ml:55, lib/Util.ml:202-203"
+    },
+    {
+      "type": "technical",
+      "description": "このマシンは x86_64 の Ubuntu 24.04.1 で、gcc 13.3.0 と glibc 2.39 がある。clang は PATH にない。",
+      "evidence": "uname -m、gcc --version、ldd --version、clang --version の実行結果（2026-10-26、このマシン）"
+    },
+    {
+      "type": "technical",
+      "description": "このマシンの gcc 13.3.0 は __DECIMAL_BID_FORMAT__=1、__DEC128_MANT_DIG__=34、__DEC128_MIN_EXP__=(-6142)、__DEC128_MAX_EXP__=6145、__SIZEOF_INT128__=16 を定義する。",
+      "evidence": "echo | gcc -dM -E - の出力（2026-10-26、このマシン）"
+    },
+    {
+      "type": "dependency",
+      "description": "nixpkgs（登録 rev 674a2028661e）には mpdecimal 4.0.1（BSD-2-Clause）と clang 21.1.8 があり、libdfp、Intel DFP（intelrdfpmath）、decNumber の名前のパッケージは見つからなかった。",
+      "evidence": "nix eval nixpkgs#mpdecimal.version / .meta.license.spdxId、nix eval nixpkgs#clang.version、nix search nixpkgs 'dfp|bid128|decnumber' の結果（2026-10-26、このマシン）"
+    },
+    {
+      "type": "convention",
+      "description": "このリポジトリの設計文書は日本語で書かれている。",
+      "evidence": "docs/wayfinder/map.md:1-19、https://github.com/seiei-sogen/zustral/issues/1 本文"
+    }
+  ],
+  "existing_patterns": [
+    {
+      "name": "Foreign_Import による C 呼び出し",
+      "description": "pragma Unsafe_Module のモジュールで、本体のない関数に pragma Foreign_Import(External_Name => \"sym\") を付ける。",
+      "examples": [
+        "examples/ffi/FFI.aum:1-14",
+        "standard/src/IO/Terminal.aum:145-149"
+      ],
+      "applies_to": "C ABI 観点を Zustral プログラムから確かめるプローブ"
+    },
+    {
+      "name": "C 出力を自前で gcc に渡す",
+      "description": "--target-type=c で C を出し、gcc -fwrapv -Wno-builtin-declaration-mismatch <c> -lm でビルドして実行し、stdout を期待値と比べる。",
+      "examples": [
+        "test-programs/runner.py:363-372",
+        "test-programs/runner.py:400-408",
+        "test-programs/runner.py:446-451"
+      ],
+      "applies_to": "外部ライブラリをリンクする Zustral 経由のプローブの実行手順"
+    },
+    {
+      "name": "wayfinder の解消（GitHub Issues）",
+      "description": "答えを issue へ解消コメントとして投稿し、issue をクローズし、地図 issue #9 の「ここまでの決定」の「（まだない）」を1行に置き換える。",
+      "examples": [
+        "https://github.com/seiei-sogen/zustral/issues/9 本文「トラッカーの約束（GitHub Issues）」"
+      ],
+      "applies_to": "issue #1 の解消と地図 issue #9 への記録（Phase 9）"
+    }
+  ],
+  "change_guidance": [],
+  "open_questions": [
+    "Zustral コンパイラのビルドがこのマシンの nix dev shell で現実的な時間に通るかは未確認。Zustral 経由の FFI プローブを実施できるかを左右する。確認先は flake.nix の dev shell での make。",
+    "mpdecimal のヘッダと Zustral が生成する au_* 型の extern 宣言を同じ翻訳単位に置いたときに型の衝突が起きるかは未検証。FFI プローブの組み立て方を左右する。確認先は小さな Zustral プログラムを --target-type=c で出して mpdecimal とリンクする実験。",
+    "libdfp と Intel DFP は nixpkgs にパッケージが見つからず、このマシンで実測できるかは未確定。実測できなければその系統の主張は出典のみになる。確認先は各プロジェクトの公式リポジトリのビルド手順。",
+    "clang は PATH になく nixpkgs から 21.1.8 を取れるが、clang が _Decimal128 をこのマシンでサポートするかは未確認。決定性をコンパイラ間で比べられる範囲を左右する。確認先は nix shell nixpkgs#clang での小さなコンパイル。",
+    "3系統のライブラリ自体の性質（mpdecimal の確保モデルと丸めモード、_Decimal128 の実装が libgcc の BID か、ライセンス全文など）はこの調査の範囲外で、実装段階のレポートが一次資料とプローブで確かめる。"
+  ],
+  "suggested_entry_points": [
+    {
+      "path": "https://github.com/seiei-sogen/zustral/issues/1",
+      "reason": "問いと5観点の正本。"
+    },
+    {
+      "path": "examples/ffi/FFI.aum:1",
+      "reason": "Zustral 経由の FFI プローブの雛形。"
+    },
+    {
+      "path": "lib/CodeGen.ml:554",
+      "reason": "FFI で渡せる型の正本。C ABI 観点の事実の根拠。"
+    },
+    {
+      "path": "test-programs/runner.py:400",
+      "reason": "C 出力を外部ライブラリとリンクして実行する手順の前例。"
+    }
+  ]
+}

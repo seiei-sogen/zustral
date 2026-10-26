@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data: https: http:; style-src 'unsafe-inline'; font-src 'self' data:;">
+  <meta name="generator" content="asciidoc-to-colorful-html">
+  <title>レビューガイド: 10進バックエンドの実像を掴む（issue #1）</title>
+  <style>
+/*
+ * Standalone Asciidoctor theme.
+ * The palette and document treatments are adapted from
+ * document-base/supplemental-ui/css/custom.css.
+ */
+
+:root {
+  color-scheme: light;
+  --color-ink: #23354a;
+  --color-muted: #607286;
+  --color-primary: #176b87;
+  --color-primary-dark: #123f5d;
+  --color-primary-soft: #e9f5f7;
+  --color-secondary: #6d52a3;
+  --color-secondary-soft: #f1edfa;
+  --color-accent: #d98716;
+  --color-positive: #2f805d;
+  --color-danger: #b64c55;
+  --color-border: #c9d9e3;
+  --color-code-bg: #f3f6f8;
+  --color-surface: #ffffff;
+  --shadow-page: 0 1.4rem 4rem rgb(25 64 88 / 15%);
+  --shadow-soft: 0 0.25rem 1rem rgb(31 75 98 / 9%);
+  --radius-large: 1rem;
+  --radius-medium: 0.55rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 20rem;
+  scroll-behavior: smooth;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--color-ink);
+  background:
+    radial-gradient(circle at 12% 8%, rgb(64 176 174 / 18%), transparent 28rem),
+    radial-gradient(circle at 88% 12%, rgb(126 93 184 / 13%), transparent 25rem),
+    linear-gradient(145deg, #eef7f8 0%, #f8f7fc 52%, #fff8ed 100%);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP",
+    "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+::selection {
+  color: #142b3c;
+  background: #bde8ed;
+}
+
+.page-frame {
+  width: min(74rem, calc(100% - 2rem));
+  margin: 2.5rem auto;
+}
+
+.doc {
+  position: relative;
+  min-width: 0;
+  padding: clamp(1.4rem, 4vw, 4rem);
+  overflow-wrap: anywhere;
+  border: 1px solid rgb(195 216 226 / 85%);
+  border-radius: var(--radius-large);
+  background: #fff;
+  box-shadow: var(--shadow-page);
+}
+
+.doc::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0.38rem;
+  border-radius: var(--radius-large) var(--radius-large) 0 0;
+  background: linear-gradient(90deg, var(--color-primary), #43a6a1 48%, var(--color-secondary));
+  content: "";
+}
+
+.doc h1,
+.doc h2,
+.doc h3,
+.doc h4,
+.doc h5,
+.doc h6 {
+  color: var(--color-primary-dark);
+  font-weight: 750;
+  line-height: 1.4;
+  letter-spacing: 0.015em;
+  scroll-margin-top: 1.5rem;
+}
+
+.doc h1,
+.doc #header > h1 {
+  margin: 0 0 2.3rem;
+  font-size: clamp(2rem, 5vw, 3rem);
+  letter-spacing: 0.025em;
+}
+
+.doc h1::after,
+.doc #header > h1::after {
+  display: block;
+  width: 5.4rem;
+  height: 0.32rem;
+  margin-top: 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-primary), #43a6a1, var(--color-secondary));
+  content: "";
+}
+
+.doc h2 {
+  margin: 2.8rem 0 1.2rem;
+  padding: 0.68rem 1rem 0.68rem 1.1rem;
+  border-left: 0.34rem solid var(--color-primary);
+  border-radius: 0 var(--radius-medium) var(--radius-medium) 0;
+  background: linear-gradient(90deg, var(--color-primary-soft), #f8fbfc 72%, transparent);
+  font-size: clamp(1.45rem, 3vw, 1.9rem);
+}
+
+.doc h3 {
+  margin: 2.25rem 0 0.9rem;
+  padding-bottom: 0.38rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: clamp(1.22rem, 2.3vw, 1.5rem);
+}
+
+.doc h4 {
+  margin: 1.8rem 0 0.7rem;
+  color: #285d72;
+  font-size: 1.14rem;
+}
+
+.doc h5,
+.doc h6 {
+  margin: 1.5rem 0 0.55rem;
+  font-size: 1rem;
+}
+
+.doc p,
+.doc li,
+.doc dd {
+  line-height: 1.82;
+}
+
+.doc p {
+  margin: 0.8rem 0 1rem;
+}
+
+.doc a {
+  color: #086f91;
+  text-decoration-color: #76adbd;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+.doc a:hover {
+  color: #084f70;
+  text-decoration-color: currentcolor;
+}
+
+.doc ul,
+.doc ol {
+  padding-left: 1.55rem;
+}
+
+.doc li + li {
+  margin-top: 0.28rem;
+}
+
+.doc li::marker {
+  color: var(--color-primary);
+  font-weight: 750;
+}
+
+.doc dl dt {
+  margin-top: 1rem;
+  color: var(--color-primary-dark);
+  font-weight: 750;
+}
+
+.doc hr {
+  height: 1px;
+  margin: 2.4rem 0;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--color-border), transparent);
+}
+
+.doc #toc,
+.doc .toc {
+  margin: 1.6rem 0 2.2rem;
+  padding: 1rem 1.2rem;
+  border: 1px solid #cddde5;
+  border-radius: var(--radius-medium);
+  background: linear-gradient(135deg, #f1f9fa, #f7f4fc);
+  box-shadow: var(--shadow-soft);
+}
+
+.doc #toctitle {
+  margin-bottom: 0.45rem;
+  color: var(--color-primary-dark);
+  font-weight: 800;
+}
+
+.doc #toc ul {
+  margin: 0.3rem 0;
+}
+
+.doc table.tableblock {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 1.6rem 0 1.9rem;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  border-collapse: collapse;
+  background: #fff;
+  box-shadow: var(--shadow-soft);
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.doc table.tableblock thead {
+  color: #fff;
+  background: linear-gradient(90deg, var(--color-primary-dark), var(--color-primary));
+}
+
+.doc table.tableblock th,
+.doc table.tableblock td {
+  padding: 0.72rem 0.85rem;
+  border: 1px solid #d7e2e8;
+  text-align: left;
+  vertical-align: top;
+}
+
+.doc table.tableblock th {
+  font-weight: 750;
+}
+
+.doc table.tableblock tbody tr:nth-child(even) {
+  background: #f5f9fa;
+}
+
+.doc table.tableblock tbody tr:hover {
+  background: #edf6f7;
+}
+
+.doc :not(pre) > code,
+.doc kbd {
+  padding: 0.12em 0.4em;
+  border: 1px solid #d6e0e6;
+  border-radius: 0.3rem;
+  color: #87421f;
+  background: var(--color-code-bg);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+}
+
+.doc kbd {
+  color: #36495a;
+  background: linear-gradient(#fff, #edf1f4);
+  box-shadow: 0 0.12rem 0 #c3ced5;
+}
+
+.doc pre {
+  max-width: 100%;
+  margin: 0;
+  overflow: auto;
+  border: 1px solid #cbd8df;
+  border-left: 0.26rem solid var(--color-primary);
+  border-radius: var(--radius-medium);
+  color: #213446;
+  background: #f4f7f9;
+  box-shadow: var(--shadow-soft);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9rem;
+  line-height: 1.62;
+  tab-size: 4;
+}
+
+.doc pre code {
+  display: block;
+  padding: 1rem 1.1rem;
+  color: inherit;
+  background: transparent;
+}
+
+.doc .listingblock,
+.doc .literalblock {
+  margin: 1.35rem 0 1.65rem;
+}
+
+.doc .quoteblock blockquote {
+  margin: 1.4rem 0;
+  padding: 1rem 1.25rem;
+  border-left: 0.32rem solid #5b9da5;
+  border-radius: 0 var(--radius-medium) var(--radius-medium) 0;
+  color: #40566a;
+  background: #f2f8f8;
+}
+
+.doc .quoteblock .attribution {
+  margin-top: -0.9rem;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.doc .sidebarblock,
+.doc .exampleblock > .content {
+  margin: 1.5rem 0;
+  padding: 1rem 1.2rem;
+  border: 1px solid #d8d0e8;
+  border-radius: var(--radius-medium);
+  background: linear-gradient(135deg, #faf8ff, var(--color-secondary-soft));
+  box-shadow: var(--shadow-soft);
+}
+
+.doc .admonitionblock {
+  margin: 1.5rem 0;
+  overflow: hidden;
+  border: 1px solid #c8dce2;
+  border-left: 0.32rem solid var(--color-primary);
+  border-radius: var(--radius-medium);
+  background: #f5fafb;
+  box-shadow: var(--shadow-soft);
+}
+
+.doc .admonitionblock > table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+}
+
+.doc .admonitionblock td.icon {
+  width: 7.5rem;
+  padding: 0.95rem 0.75rem;
+  color: var(--color-primary-dark);
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.doc .admonitionblock td.content {
+  padding: 0.95rem 1rem;
+  border-left: 1px solid rgb(188 211 221 / 85%);
+  background: transparent;
+}
+
+.doc .admonitionblock.tip {
+  border-left-color: var(--color-positive);
+  background: #f0faf5;
+}
+
+.doc .admonitionblock.warning,
+.doc .admonitionblock.caution {
+  border-left-color: var(--color-accent);
+  background: #fff9ed;
+}
+
+.doc .admonitionblock.important {
+  border-left-color: var(--color-danger);
+  background: #fff5f5;
+}
+
+.doc .imageblock {
+  margin: 1.75rem 0 2rem;
+  text-align: center;
+}
+
+.doc img,
+.doc svg,
+.doc video {
+  max-width: 100%;
+  height: auto;
+}
+
+.doc .imageblock img {
+  border: 1px solid #d5e0e5;
+  border-radius: var(--radius-medium);
+  background: #fff;
+  box-shadow: 0 0.4rem 1.2rem rgb(31 75 98 / 12%);
+}
+
+.doc .title,
+.doc .imageblock > .title,
+.doc .listingblock > .title,
+.doc .tableblock > .title {
+  margin: 0.45rem 0;
+  color: var(--color-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.doc mark {
+  padding: 0.08em 0.2em;
+  border-radius: 0.2rem;
+  color: inherit;
+  background: #ffeca8;
+}
+
+.doc details {
+  margin: 1rem 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: #fbfdfd;
+}
+
+.doc summary {
+  color: var(--color-primary-dark);
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.doc #footnotes {
+  margin-top: 3rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-muted);
+  font-size: 0.92rem;
+}
+
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 0.18rem solid #fff;
+  outline-offset: 0.12rem;
+  box-shadow: 0 0 0 0.34rem #0b5e7a;
+}
+
+@media screen and (max-width: 768px) {
+  .page-frame {
+    width: min(100% - 1rem, 74rem);
+    margin: 0.5rem auto;
+  }
+
+  .doc {
+    padding: 1.35rem 1rem 2rem;
+    border-radius: 0.75rem;
+    font-size: 0.98rem;
+  }
+
+  .doc h1,
+  .doc #header > h1 {
+    margin-bottom: 1.8rem;
+    font-size: 1.85rem;
+  }
+
+  .doc h2 {
+    margin-top: 2.2rem;
+    padding: 0.58rem 0.72rem;
+    font-size: 1.38rem;
+  }
+
+  .doc h3 {
+    font-size: 1.2rem;
+  }
+
+  .doc table.tableblock th,
+  .doc table.tableblock td {
+    min-width: 7rem;
+    padding: 0.58rem 0.65rem;
+  }
+
+  .doc .admonitionblock > table,
+  .doc .admonitionblock > table > tbody,
+  .doc .admonitionblock > table > tbody > tr,
+  .doc .admonitionblock td {
+    display: block;
+    width: 100%;
+  }
+
+  .doc .admonitionblock td.icon {
+    padding-bottom: 0.25rem;
+    text-align: left;
+  }
+
+  .doc .admonitionblock td.content {
+    border-top: 1px solid rgb(188 211 221 / 85%);
+    border-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+@media print {
+  @page {
+    margin: 15mm;
+  }
+
+  body {
+    color: #111;
+    background: #fff;
+    font-size: 10.5pt;
+  }
+
+  .page-frame {
+    width: auto;
+    margin: 0;
+  }
+
+  .doc {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .doc::before {
+    display: none;
+  }
+
+  .doc h1,
+  .doc h2,
+  .doc h3,
+  .doc h4,
+  .doc h5,
+  .doc h6 {
+    color: #111;
+    break-after: avoid;
+  }
+
+  .doc h2 {
+    border-left-color: #555;
+    background: none;
+  }
+
+  .doc table.tableblock,
+  .doc pre,
+  .doc .admonitionblock,
+  .doc .imageblock img,
+  .doc #toc,
+  .doc .sidebarblock,
+  .doc .exampleblock > .content {
+    box-shadow: none;
+  }
+
+  .doc table.tableblock thead {
+    color: #111;
+    background: #eee;
+  }
+
+  .doc pre,
+  .doc table,
+  .doc .admonitionblock,
+  .doc .imageblock {
+    break-inside: avoid;
+  }
+
+  .doc a {
+    color: inherit;
+    text-decoration: underline;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="page-frame">
+    <article class="doc">
+<h1>レビューガイド: 10進バックエンドの実像を掴む（issue #1）</h1>
+<div id="toc" class="toc">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_3分で分かる変更概要">1. 3分で分かる変更概要</a></li>
+<li><a href="#_最初に読む_root">2. 最初に読む root</a></li>
+<li><a href="#_推奨する読解順">3. 推奨する読解順</a></li>
+<li><a href="#_実行時フロー">4. 実行時フロー</a></li>
+<li><a href="#_難しい処理">5. 難しい処理</a>
+<ul class="sectlevel2">
+<li><a href="#_プローブごとの判定run_sh_のメインループ">5.1. プローブごとの判定（<code>run.sh</code> のメインループ）</a></li>
+<li><a href="#_zustral_から_c_ライブラリを呼ぶプローブffi">5.2. Zustral から C ライブラリを呼ぶプローブ（<code>ffi</code>）</a></li>
+</ul>
+</li>
+<li><a href="#_重要コードの解説">6. 重要コードの解説</a></li>
+<li><a href="#_テストとの対応">7. テストとの対応</a></li>
+<li><a href="#_重点チェック">8. 重点チェック</a></li>
+<li><a href="#_既知の制約と対象外">9. 既知の制約と対象外</a></li>
+</ul>
+</div>
+<div class="sect1">
+<h2 id="_3分で分かる変更概要">1. 3分で分かる変更概要</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1">何が変わるか</dt>
+<dd>
+<p><code>docs/research/decimal-backend-survey/</code> に、10進数の実行時表現の候補3系統（mpdecimal、decimal128、<code>__int128</code> 固定小数点）を比べた日本語のレポート <code>README.md</code> と、その根拠を1コマンドで再実行するスクリプト <code>run.sh</code>、小さな検証プログラム（プローブ）、記録した出力（<code>expected/</code>）を足す。</p>
+</dd>
+<dt class="hdlist1">なぜ必要か</dt>
+<dd>
+<p>下流のチケット 0004・0005・0008（issue #4、#5、#8）が Decimal の型や桁あふれを決めるとき、候補の違いを「信じて」ではなく、再実行できる証拠で読めるようにするため。</p>
+</dd>
+<dt class="hdlist1">どこに影響するか</dt>
+<dd>
+<p>コンパイラ（<code>lib/</code>）、標準ライブラリ（<code>standard/</code>）、テスト、CI は変えない。差分は <code>docs/research/decimal-backend-survey/</code> の新規ファイルと、<code>docs/task-requirements/issue1-backend-docs-survey-decimal-backends/</code> の文書だけである。</p>
+</dd>
+<dt class="hdlist1">対象外</dt>
+<dd>
+<p>バックエンドの選定、decimal の実装、速度の計測、他のプラットフォームでの実測。</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>最初に読むのは <code>run.sh</code> である。レポートの観測できる主張は、すべてここで再実行される出力に根拠を持つ。</p>
+</div>
+<div class="paragraph">
+<p>比較の範囲は <code>master&#8230;&#8203;HEAD</code>（分岐点 <code>bcf6cfd3</code>）と、PR を仕上げる commit で足す未コミットの変更である。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_最初に読む_root">2. 最初に読む root</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1">主 root</dt>
+<dd>
+<p><code>docs/research/decimal-backend-survey/run.sh</code> のメインループ（<code>for id in "${PROBES[@]}"</code> から最後の <code>[[ $FAIL == 0 ]]</code> まで）。1つのプローブが「一致」「不一致」「未実行」のどれになるかが、ここで決まる。</p>
+</dd>
+<dt class="hdlist1">補助 root</dt>
+<dd>
+<p>設計文書の「データの形」の節（依存表、プローブ表、プローブの出力と結果）。<code>run.sh</code> はこの3つの表をそのままコードにしたものなので、表を先に読むとコードが追いやすい。</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_推奨する読解順">3. 推奨する読解順</h2>
+<div class="sectionbody">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>設計文書「データの形」。依存の名前、プローブ id（<code>&lt;系統&gt;@&lt;コンパイラ&gt;-&lt;最適化&gt;</code>）、結果の3値と終了状態の規則をつかむ。</p>
+</li>
+<li>
+<p><code>run.sh</code> の <code>fetch</code> と <code>need</code>。依存を1回だけ取得してメモする仕組みと、取れなかったときの理由の作り方（<code>DEP_ERR</code>）を見る。</p>
+</li>
+<li>
+<p><code>run.sh</code> の <code>deps_of</code>。どのプローブがどの依存を、どの順で要求するかを見る。<code>d128</code> と <code>libdfp</code> の clang 変種だけが <code>clang-dfp</code> を要求する。</p>
+</li>
+<li>
+<p><code>run.sh</code> の <code>build</code> と <code>execute</code>。プローブごとのコンパイルの引数と、出力の末尾に <code>exit=&lt;終了コード&gt;</code> を足す形を見る。</p>
+</li>
+<li>
+<p><code>run.sh</code> のメインループ。図1と照らして読む。</p>
+</li>
+<li>
+<p><code>probes/i128.c</code>、<code>probes/d128.c</code>、<code>probes/mpd.c</code>、<code>probes/intel.c</code>、<code>probes/libdfp.c</code> と共有の <code>probes/bid128.h</code>（<code>print_bid128</code>）。どの値を <code>key=value</code> で出すかを見る。</p>
+</li>
+<li>
+<p><code>probes/ffi/Probe.aum</code>、<code>probes/ffi/shim.c</code>、<code>probes/ffi/UnitReturn.aum</code>。図2と照らして読む。</p>
+</li>
+<li>
+<p><code>expected/*.txt</code> と <code>README.md</code>。README の <code>〔probe: &lt;記録&gt; / &lt;key&gt;〕</code> が記録の行を指していることを確かめる。</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_実行時フロー">4. 実行時フロー</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1">入力</dt>
+<dd>
+<p>引数なし（照合）か <code>--record</code>（記録の作り直し）。環境変数 <code>ZUSTRAL_BUILD_TIMEOUT</code>（既定 600 秒）。</p>
+</dd>
+<dt class="hdlist1">外部 I/O</dt>
+<dd>
+<p><code>nix build</code> で固定した nixpkgs（rev <code>674a2028661e</code>）の gcc、clang、mpdecimal を取る。<code>curl</code> で libdfp（GitHub の tarball）と Intel DFP（netlib の tarball）を毎回取得し、sha256 を照合して一時ディレクトリでビルドする。<code>nix develop &lt;リポジトリ直下&gt; --command make</code> で Zustral コンパイラをビルドする。</p>
+</dd>
+<dt class="hdlist1">一時ファイル</dt>
+<dd>
+<p>すべて <code>mktemp -d</code> の <code>$T</code> に置き、<code>trap</code> で終了時に消す。例外は Zustral の <code>make</code> が作る <code>austral</code>、<code>_build/</code>、<code>lib/BuiltInModules.ml</code> で、どれも <code>.gitignore</code> 済み。</p>
+</dd>
+<dt class="hdlist1">出力</dt>
+<dd>
+<p>プローブごとに1行の結果と、不一致なら差分。最後に <code>一致 N / 不一致 M / 未実行 K</code>。</p>
+</dd>
+<dt class="hdlist1">終了状態</dt>
+<dd>
+<p>不一致が1件以上なら 1、それ以外は 0。未実行だけでは 0 のまま。</p>
+</dd>
+<dt class="hdlist1">早期終了</dt>
+<dd>
+<p>ない。1つのプローブが失敗しても次へ進む。再試行もしない。</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_難しい処理">5. 難しい処理</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_プローブごとの判定run_sh_のメインループ">5.1. プローブごとの判定（<code>run.sh</code> のメインループ）</h3>
+<div class="imageblock">
+<div class="content">
+<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5MDAgNjQwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiI+Cjx0aXRsZT5ydW4uc2gg44Gu44OX44Ot44O844OW44GU44Go44Gu44Or44O844OXOiBkZXBzX29mIOOBqCBuZWVkIOOBp+S+neWtmOOCkuWPluOCiuOAgWJ1aWxk44CBZXhlY3V0ZSDjgpIy5Zue44CBLS1yZWNvcmQg44Gq44KJ6KiY6Yyy44KS5pu444GN44CB6KiY6Yyy44GoIGNtcCDjgZfjgaYg5LiA6Ie044CB5LiA6Ie0KuOAgeS4jeS4gOiHtOOAgeacquWun+ihjCDjga7jganjgozjgYvjgpLlh7rjgZk8L3RpdGxlPgo8ZGVmcz48bWFya2VyIGlkPSJhIiBtYXJrZXJXaWR0aD0iMTAiIG1hcmtlckhlaWdodD0iMTAiIHJlZlg9IjkiIHJlZlk9IjUiIG9yaWVudD0iYXV0byI+PHBhdGggZD0iTTAsMCBMMTAsNSBMMCwxMCB6IiBmaWxsPSIjNTc2MDZhIi8+PC9tYXJrZXI+PC9kZWZzPgo8cmVjdCB3aWR0aD0iOTAwIiBoZWlnaHQ9IjY0MCIgZmlsbD0iI2ZmZmZmZiIvPgo8ZyBmb250LXNpemU9IjEzIiBmaWxsPSIjMWYyMzI4Ij4KPHJlY3QgeD0iMzMwIiB5PSIxMCIgd2lkdGg9IjI0MCIgaGVpZ2h0PSI0NCIgcng9IjgiIGZpbGw9IiNlOGYxZmIiIHN0cm9rZT0iIzBiNWNhZCIvPgo8dGV4dCB4PSI0NTAiIHk9IjM3IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5mb3IgaWQgaW4gUFJPQkVT77yIMjLku7bjgIHooajjga7poIbvvIk8L3RleHQ+CjxyZWN0IHg9IjMwMCIgeT0iODAiIHdpZHRoPSIzMDAiIGhlaWdodD0iNTAiIHJ4PSI4IiBmaWxsPSIjZThmMWZiIiBzdHJva2U9IiMwYjVjYWQiLz4KPHRleHQgeD0iNDUwIiB5PSIxMDEiIHRleHQtYW5jaG9yPSJtaWRkbGUiPmRlcHNfb2YgaWQg44Gu6aCG44GrIG5lZWQgZGVwPC90ZXh0Pgo8dGV4dCB4PSI0NTAiIHk9IjEyMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxMSIgZmlsbD0iIzU3NjA2YSI+ZmV0Y2gg44Gu57WQ5p6c44KSIERFUCAvIERFUF9FUlIg44Gr44Oh44OiPC90ZXh0Pgo8cmVjdCB4PSIyMCIgeT0iODAiIHdpZHRoPSIyMjAiIGhlaWdodD0iNTAiIHJ4PSI4IiBmaWxsPSIjZWFlZWYyIiBzdHJva2U9IiM1NzYwNmEiLz4KPHRleHQgeD0iMTMwIiB5PSIxMDEiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtd2VpZ2h0PSJib2xkIj7mnKrlrp/ooYwgIGlkOiBkZXA6IOeQhueUsTwvdGV4dD4KPHRleHQgeD0iMTMwIiB5PSIxMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTEiPlNLSVArMe+8iOe1guS6hueKtuaFi+OBr+WkieOBiOOBquOBhO+8iTwvdGV4dD4KPHJlY3QgeD0iMzAwIiB5PSIxNjAiIHdpZHRoPSIzMDAiIGhlaWdodD0iNDQiIHJ4PSI4IiBmaWxsPSIjZThmMWZiIiBzdHJva2U9IiMwYjVjYWQiLz4KPHRleHQgeD0iNDUwIiB5PSIxODciIHRleHQtYW5jaG9yPSJtaWRkbGUiPmJ1aWxkIGlkIGQgICZndDsgYnVpbGQubG9nPC90ZXh0Pgo8cmVjdCB4PSI2NjAiIHk9IjE2MCIgd2lkdGg9IjIyMCIgaGVpZ2h0PSI1MCIgcng9IjgiIGZpbGw9IiNmZmViZTkiIHN0cm9rZT0iI2E0MGUyNiIvPgo8dGV4dCB4PSI3NzAiIHk9IjE4MSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNhNDBlMjYiPuS4jeS4gOiHtCAgaWQ6IOODk+ODq+ODieOBq+WkseaVl+OBl+OBnzwvdGV4dD4KPHRleHQgeD0iNzcwIiB5PSIyMDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTEiPmJ1aWxkLmxvZyDjga7mnKvlsL4yMOihjOOAgUZBSUwrMTwvdGV4dD4KPHJlY3QgeD0iMzAwIiB5PSIyMzAiIHdpZHRoPSIzMDAiIGhlaWdodD0iNDQiIHJ4PSI4IiBmaWxsPSIjZThmMWZiIiBzdHJva2U9IiMwYjVjYWQiLz4KPHRleHQgeD0iNDUwIiB5PSIyNTciIHRleHQtYW5jaG9yPSJtaWRkbGUiPmV4ZWN1dGUg44KSMuWbniDihpIgb3V0MSwgb3V0Mu+8iOacq+WwvuOBqyBleGl0PU7vvIk8L3RleHQ+CjxyZWN0IHg9IjMwMCIgeT0iMzAwIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjUwIiByeD0iOCIgZmlsbD0iI2ZmZjhlNSIgc3Ryb2tlPSIjN2Q0ZTAwIi8+Cjx0ZXh0IHg9IjQ1MCIgeT0iMzIxIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5SRUNPUkQ9MSDjga7jgajjgY3jgaDjgZE8L3RleHQ+Cjx0ZXh0IHg9IjQ1MCIgeT0iMzQwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjExIj7lkIzjgZjjgarjgokgZmFtaWx5X3JlYyDjgYsgdmFyaWFudF9yZWMg44KS5pu444GPPC90ZXh0Pgo8cmVjdCB4PSI2NjAiIHk9IjMwMCIgd2lkdGg9IjIyMCIgaGVpZ2h0PSI1MCIgcng9IjgiIGZpbGw9IiNmZmViZTkiIHN0cm9rZT0iI2E0MGUyNiIvPgo8dGV4dCB4PSI3NzAiIHk9IjMyMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNhNDBlMjYiPuS4jeS4gOiHtCAgaWQ6IDLlm57jga7lrp/ooYzjga7lh7rlipvjgYznlbDjgarjgos8L3RleHQ+Cjx0ZXh0IHg9Ijc3MCIgeT0iMzQwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjExIj7kuKHmlrnjga7lt67liIbjgIFGQUlMKzHjgIHoqJjpjLLjgZfjgarjgYQ8L3RleHQ+CjxyZWN0IHg9IjMwMCIgeT0iMzc2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjUwIiByeD0iOCIgZmlsbD0iI2U4ZjFmYiIgc3Ryb2tlPSIjMGI1Y2FkIi8+Cjx0ZXh0IHg9IjQ1MCIgeT0iMzk3IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5yZWMg44KS6YG444G2OiB2YXJpYW50X3JlYyDjgYzjgYLjgozjgbDjgZ3jgow8L3RleHQ+Cjx0ZXh0IHg9IjQ1MCIgeT0iNDE2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjExIj7jgarjgZHjgozjgbAgZXhwZWN0ZWQvJmx0O+ezu+e1sSZndDsudHh0PC90ZXh0Pgo8cmVjdCB4PSI2NjAiIHk9IjM3NiIgd2lkdGg9IjIyMCIgaGVpZ2h0PSI1MCIgcng9IjgiIGZpbGw9IiNmZmViZTkiIHN0cm9rZT0iI2E0MGUyNiIvPgo8dGV4dCB4PSI3NzAiIHk9IjM5NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNhNDBlMjYiPuS4jeS4gOiHtCAgaWQ6IOiomOmMsuODleOCoeOCpOODqyDigKYg44GM44Gq44GEPC90ZXh0Pgo8dGV4dCB4PSI3NzAiIHk9IjQxNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxMSI+b3V0MSDjgpLooajnpLrjgIFGQUlMKzE8L3RleHQ+CjxyZWN0IHg9IjMwMCIgeT0iNDUyIiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ0IiByeD0iOCIgZmlsbD0iI2U4ZjFmYiIgc3Ryb2tlPSIjMGI1Y2FkIi8+Cjx0ZXh0IHg9IjQ1MCIgeT0iNDc5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5mb3IgbiBpbiAxIDI6IGNtcCByZWMgb3V0TjwvdGV4dD4KPHJlY3QgeD0iNjYwIiB5PSI0NTIiIHdpZHRoPSIyMjAiIGhlaWdodD0iNTAiIHJ4PSI4IiBmaWxsPSIjZmZlYmU5IiBzdHJva2U9IiNhNDBlMjYiLz4KPHRleHQgeD0iNzcwIiB5PSI0NzMiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjYTQwZTI2Ij7kuI3kuIDoh7QgIGlkPC90ZXh0Pgo8dGV4dCB4PSI3NzAiIHk9IjQ5MiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxMSI+6YGV44Gj44Gf5Zue44GU44Go44GrIGRpZmYgLXXjgIFGQUlMKzE8L3RleHQ+CjxyZWN0IHg9IjMwMCIgeT0iNTI2IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjUwIiByeD0iOCIgZmlsbD0iI2RhZmJlMSIgc3Ryb2tlPSIjMTE2MzI5Ii8+Cjx0ZXh0IHg9IjQ1MCIgeT0iNTQ3IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iIzExNjMyOSI+5LiA6Ie0ICAgIGlkIO+8jyDkuIDoh7QqICBpZO+8iOWkieeoruWIpeOBruiomOmMsu+8iTwvdGV4dD4KPHRleHQgeD0iNDUwIiB5PSI1NjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTEiPlBBU1MrMeOAgmlkIOOBjCBmZmkg44Gq44KJIG91dDEg44KC6KGo56S6PC90ZXh0Pgo8cmVjdCB4PSIyNTAiIHk9IjU5NiIgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzNiIgcng9IjgiIGZpbGw9IiNmNmY4ZmEiIHN0cm9rZT0iIzU3NjA2YSIvPgo8dGV4dCB4PSI0NTAiIHk9IjYxOSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+5pyA5b6M44Gr44CM5LiA6Ie0IE4gLyDkuI3kuIDoh7QgTSAvIOacquWun+ihjCBL44CN44CB57WC5LqG54q25oWL44GvIE09PTAg44Gq44KJIDA8L3RleHQ+CjwvZz4KPGcgc3Ryb2tlPSIjNTc2MDZhIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiIG1hcmtlci1lbmQ9InVybCgjYSkiPgo8bGluZSB4MT0iNDUwIiB5MT0iNTQiIHgyPSI0NTAiIHkyPSI3NiIvPgo8bGluZSB4MT0iMzAwIiB5MT0iMTA1IiB4Mj0iMjQ0IiB5Mj0iMTA1Ii8+CjxsaW5lIHgxPSI0NTAiIHkxPSIxMzAiIHgyPSI0NTAiIHkyPSIxNTYiLz4KPGxpbmUgeDE9IjYwMCIgeTE9IjE4MiIgeDI9IjY1NiIgeTI9IjE4MiIvPgo8bGluZSB4MT0iNDUwIiB5MT0iMjA0IiB4Mj0iNDUwIiB5Mj0iMjI2Ii8+CjxsaW5lIHgxPSI0NTAiIHkxPSIyNzQiIHgyPSI0NTAiIHkyPSIyOTYiLz4KPGxpbmUgeDE9IjYwMCIgeTE9IjMyNSIgeDI9IjY1NiIgeTI9IjMyNSIvPgo8bGluZSB4MT0iNDUwIiB5MT0iMzUwIiB4Mj0iNDUwIiB5Mj0iMzcyIi8+CjxsaW5lIHgxPSI2MDAiIHkxPSI0MDEiIHgyPSI2NTYiIHkyPSI0MDEiLz4KPGxpbmUgeDE9IjQ1MCIgeTE9IjQyNiIgeDI9IjQ1MCIgeTI9IjQ0OCIvPgo8bGluZSB4MT0iNjAwIiB5MT0iNDc0IiB4Mj0iNjU2IiB5Mj0iNDc0Ii8+CjxsaW5lIHgxPSI0NTAiIHkxPSI0OTYiIHgyPSI0NTAiIHkyPSI1MjIiLz4KPC9nPgo8ZyBmb250LXNpemU9IjExIiBmaWxsPSIjMWYyMzI4Ij4KPHRleHQgeD0iMjUwIiB5PSI5OCI+5Y+W44KM44Gq44GEPC90ZXh0Pgo8dGV4dCB4PSI2MDYiIHk9IjE3NiI+5aSx5pWXPC90ZXh0Pgo8dGV4dCB4PSI2MDQiIHk9IjMxNCI+b3V0MeKJoG91dDI8L3RleHQ+Cjx0ZXh0IHg9IjYwNCIgeT0iMzkyIj5yZWMg44Gq44GXPC90ZXh0Pgo8dGV4dCB4PSI2MDQiIHk9IjQ2NiI+6YGV44GG5Zue44GC44KKPC90ZXh0Pgo8dGV4dCB4PSI0NTgiIHk9IjUxNCI+MuWbnuOBqOOCguWQjOOBmDwvdGV4dD4KPC9nPgo8L3N2Zz4K" alt="run.sh のプローブごとのループと、一致・一致*・不一致・未実行への分岐">
+</div>
+<div class="title">Figure 1. 図1. <code>run.sh</code> が1つのプローブを処理する流れ</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">入力</dt>
+<dd>
+<p>プローブ id と、その依存の名前の列。</p>
+</dd>
+<dt class="hdlist1">判断</dt>
+<dd>
+<p>依存が1つでも取れなければ未実行。取れたのにビルドが失敗したら不一致。2回の実行出力が、選んだ記録とどちらも等しければ一致、どちらかが違えば不一致。</p>
+</dd>
+<dt class="hdlist1">正常時</dt>
+<dd>
+<p><code>一致    &lt;id&gt;</code>。変種だけの記録 <code>expected/&lt;id&gt;.txt</code> と等しければ <code>一致*  &lt;id&gt;（変種別の記録）</code>。</p>
+</dd>
+<dt class="hdlist1">失敗時</dt>
+<dd>
+<p>不一致は差分か build.log の末尾を出し、最後に終了状態 1 で終わる。未実行は理由を1行で出し、終了状態を変えない。</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>不変条件:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>「一致」に数えるのは、このマシンで実際にビルドして2回実行し、記録と照合したプローブだけである。</p>
+</li>
+<li>
+<p>ビルド失敗は「未実行」に混ぜない。壊れたプローブが成功に見えるのを防ぐためである。clang が <code>_Decimal128</code> を扱えないことは、ビルド失敗ではなく依存 <code>clang-dfp</code> の取得失敗として扱う。</p>
+</li>
+<li>
+<p><code>--record</code> は、2回の出力が食い違ったプローブの記録を書かない。食い違いを記録にしてしまうと、決定性の検査が同語反復になるためである。</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_zustral_から_c_ライブラリを呼ぶプローブffi">5.2. Zustral から C ライブラリを呼ぶプローブ（<code>ffi</code>）</h3>
+<div class="imageblock">
+<div class="content">
+<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5MDAgNDcwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiI+Cjx0aXRsZT5mZmkg44OX44Ot44O844OW44Gu57WE44G/56uL44Gm44Go5a6f6KGMOiBydW4uc2gg44GMIFByb2JlLmF1bSDjgpLkuIDmmYLjg4fjgqPjg6zjgq/jg4jjg6rjgbjopIflhpnjgZfjgaYgYXVzdHJhbCBjb21waWxlIOOBpyBmZmkuYyDjgpLlh7rjgZfjgIFnY2Mg44GMIGZmaS5jIOOBqCBzaGltLmMg44KS5Yil44Gu57+76Kiz5Y2Y5L2N44Go44GX44GmIG1wZGVjaW1hbCDjgajjg6rjg7Pjgq/jgZfjgIHlrp/ooYzmmYLjga8gWnVzdHJhbCDjga4gbWFpbiDjgYzjg53jgqTjg7Pjgr/jgaDjgZHjgpLjgrfjg6DjgbjmuKHjgZk8L3RpdGxlPgo8ZGVmcz48bWFya2VyIGlkPSJiIiBtYXJrZXJXaWR0aD0iMTAiIG1hcmtlckhlaWdodD0iMTAiIHJlZlg9IjkiIHJlZlk9IjUiIG9yaWVudD0iYXV0byI+PHBhdGggZD0iTTAsMCBMMTAsNSBMMCwxMCB6IiBmaWxsPSIjNTc2MDZhIi8+PC9tYXJrZXI+PC9kZWZzPgo8cmVjdCB3aWR0aD0iOTAwIiBoZWlnaHQ9IjQ3MCIgZmlsbD0iI2ZmZmZmZiIvPgo8ZyBmb250LXNpemU9IjEzIiBmaWxsPSIjMWYyMzI4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4KPHJlY3QgeD0iMjAiIHk9IjIwIiB3aWR0aD0iMTYwIiBoZWlnaHQ9IjUwIiByeD0iOCIgZmlsbD0iI2U4ZjFmYiIgc3Ryb2tlPSIjMGI1Y2FkIi8+PHRleHQgeD0iMTAwIiB5PSI1MCI+cnVuLnNoIGJ1aWxkIGZmaTwvdGV4dD4KPHJlY3QgeD0iMjMwIiB5PSIyMCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSI1MCIgcng9IjgiIGZpbGw9IiNmNmY4ZmEiIHN0cm9rZT0iIzU3NjA2YSIvPjx0ZXh0IHg9IjMzMCIgeT0iNDIiPmF1c3RyYWwgY29tcGlsZTwvdGV4dD48dGV4dCB4PSIzMzAiIHk9IjYwIiBmb250LXNpemU9IjExIiBmaWxsPSIjNTc2MDZhIj7kuIDmmYLjg4fjgqPjg6zjgq/jg4jjg6rjgafotbfli5U8L3RleHQ+CjxyZWN0IHg9IjQ4MCIgeT0iMjAiIHdpZHRoPSIxNjAiIGhlaWdodD0iNTAiIHJ4PSI4IiBmaWxsPSIjZjZmOGZhIiBzdHJva2U9IiM1NzYwNmEiLz48dGV4dCB4PSI1NjAiIHk9IjUwIj5mZmkuY++8iOeUn+aIkCBD77yJPC90ZXh0Pgo8cmVjdCB4PSI2OTAiIHk9IjIwIiB3aWR0aD0iMTkwIiBoZWlnaHQ9IjUwIiByeD0iOCIgZmlsbD0iI2Y2ZjhmYSIgc3Ryb2tlPSIjNTc2MDZhIi8+PHRleHQgeD0iNzg1IiB5PSI0MiI+Z2NjIC1md3JhcHY8L3RleHQ+PHRleHQgeD0iNzg1IiB5PSI2MCIgZm9udC1zaXplPSIxMSIgZmlsbD0iIzU3NjA2YSI+ZmZpLmMgKyBzaGltLmMgKyAtbG1wZGVjPC90ZXh0Pgo8cmVjdCB4PSI2OTAiIHk9IjExMCIgd2lkdGg9IjE5MCIgaGVpZ2h0PSI1NiIgcng9IjgiIGZpbGw9IiNmZmY4ZTUiIHN0cm9rZT0iIzdkNGUwMCIvPjx0ZXh0IHg9Ijc4NSIgeT0iMTMzIj5zaGltLmMg44Gv5Yil44Gu57+76Kiz5Y2Y5L2NPC90ZXh0Pjx0ZXh0IHg9Ijc4NSIgeT0iMTUyIiBmb250LXNpemU9IjExIj5tcGRlY2ltYWwuaCDjgpLoqq3jgoDjga7jga/jgZPjgZPjgaDjgZE8L3RleHQ+CjwvZz4KPGcgc3Ryb2tlPSIjNTc2MDZhIiBzdHJva2Utd2lkdGg9IjIiIG1hcmtlci1lbmQ9InVybCgjYikiPgo8bGluZSB4MT0iMTgwIiB5MT0iNDUiIHgyPSIyMjYiIHkyPSI0NSIvPjxsaW5lIHgxPSI0MzAiIHkxPSI0NSIgeDI9IjQ3NiIgeTI9IjQ1Ii8+PGxpbmUgeDE9IjY0MCIgeTE9IjQ1IiB4Mj0iNjg2IiB5Mj0iNDUiLz4KPGxpbmUgeDE9Ijc4NSIgeTE9IjExMCIgeDI9Ijc4NSIgeTI9Ijc0Ii8+CjwvZz4KPHRleHQgeD0iMjAiIHk9IjIwNSIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiMxZjIzMjgiPuWun+ihjOaZgu+8iFByb2JlLmF1bSDjga4gbWFpbu+8iTwvdGV4dD4KPGcgZm9udC1zaXplPSIxMyIgZmlsbD0iIzFmMjMyOCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+CjxyZWN0IHg9IjIwIiB5PSIyMjAiIHdpZHRoPSIyMDAiIGhlaWdodD0iNDAiIHJ4PSI4IiBmaWxsPSIjZThmMWZiIiBzdHJva2U9IiMwYjVjYWQiLz48dGV4dCB4PSIxMjAiIHk9IjI0NSI+WnVzdHJhbCBtYWluPC90ZXh0Pgo8cmVjdCB4PSIzNTAiIHk9IjIyMCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSI0MCIgcng9IjgiIGZpbGw9IiNmZmY4ZTUiIHN0cm9rZT0iIzdkNGUwMCIvPjx0ZXh0IHg9IjQ1MCIgeT0iMjQ1Ij5zaGltXyog77yIaW50MzJfdCDjgpLov5TjgZnvvIk8L3RleHQ+CjxyZWN0IHg9IjY4MCIgeT0iMjIwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iI2Y2ZjhmYSIgc3Ryb2tlPSIjNTc2MDZhIi8+PHRleHQgeD0iNzgwIiB5PSIyNDUiPmxpYm1wZGVjIC8gbGliZ2NjIOOBriBCSUQ8L3RleHQ+CjwvZz4KPGcgc3Ryb2tlPSIjYzlkMWQ5IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWRhc2hhcnJheT0iNCA0Ij48bGluZSB4MT0iMTIwIiB5MT0iMjYwIiB4Mj0iMTIwIiB5Mj0iNDU1Ii8+PGxpbmUgeDE9IjQ1MCIgeTE9IjI2MCIgeDI9IjQ1MCIgeTI9IjQ1NSIvPjxsaW5lIHgxPSI3ODAiIHkxPSIyNjAiIHgyPSI3ODAiIHkyPSI0NTUiLz48L2c+CjxnIHN0cm9rZT0iIzU3NjA2YSIgc3Ryb2tlLXdpZHRoPSIyIiBtYXJrZXItZW5kPSJ1cmwoI2IpIj4KPGxpbmUgeDE9IjEyMCIgeTE9IjI5MCIgeDI9Ijc3NiIgeTI9IjI5MCIvPgo8bGluZSB4MT0iMTIwIiB5MT0iMzM1IiB4Mj0iNDQ2IiB5Mj0iMzM1Ii8+CjxsaW5lIHgxPSI0NTAiIHkxPSIzNTUiIHgyPSI3NzYiIHkyPSIzNTUiLz4KPGxpbmUgeDE9IjEyMCIgeTE9IjQwMCIgeDI9IjQ0NiIgeTI9IjQwMCIvPgo8bGluZSB4MT0iNDUwIiB5MT0iNDI1IiB4Mj0iNzc2IiB5Mj0iNDI1Ii8+CjwvZz4KPGcgZm9udC1zaXplPSIxMiIgZmlsbD0iIzFmMjMyOCI+Cjx0ZXh0IHg9IjEzMCIgeT0iMjgzIj5NcGRfUW5ldygpIOKGkiBtcGRfcW5ldyDjgpLnm7TmjqXvvIjmiLvjgorlgKQgQWRkcmVzc1tOYXQ4Xe+8iTwvdGV4dD4KPHRleHQgeD0iMTMwIiB5PSIzMjgiPk1wZF9TZXQgLyBNcGRfQWRkKEFkZHJlc3NbTmF0OF0g4oCmKTwvdGV4dD4KPHRleHQgeD0iNDYwIiB5PSIzNDgiPm1wZF9xc2V0X3N0cmluZyAvIG1wZF9xYWRk77yIdm9pZCDjgpLov5TjgZnvvIk8L3RleHQ+Cjx0ZXh0IHg9IjEzMCIgeT0iMzkzIj5EMTI4X1NldCAvIEQxMjhfQWRkKDE244OQ44Kk44OI44Gu6aCY5Z+f44GuIEFkZHJlc3MpPC90ZXh0Pgo8dGV4dCB4PSI0NjAiIHk9IjQxOCI+bWVtY3B5IOOBpyBfRGVjaW1hbDEyOCDjgavoqq3jgb/jgIF6ID0geCArIHk8L3RleHQ+Cjx0ZXh0IHg9IjEzMCIgeT0iNDUwIiBmaWxsPSIjNTc2MDZhIj5JMTI4Xyog44KC5ZCM44GY5b2i44CCMTDpgLLjga7lgKTjgZ3jga7jgoLjga7jga8gRkZJIOOCkui2iuOBiOOBquOBhDwvdGV4dD4KPC9nPgo8L3N2Zz4K" alt="Probe.aum を C にし、shim.c と別の翻訳単位でリンクして、ポインタだけをシムへ渡す流れ">
+</div>
+<div class="title">Figure 2. 図2. <code>ffi</code> プローブの組み立てと実行</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">入力</dt>
+<dd>
+<p><code>probes/ffi/Probe.aum</code> と <code>probes/ffi/shim.c</code>。</p>
+</dd>
+<dt class="hdlist1">判断</dt>
+<dd>
+<p>Zustral の <code>Foreign_Import</code> は128ビット整数、レコードの値、戻り値 <code>Unit</code> を表せない（<code>lib/Type.ml:22-29</code>、<code>lib/CodeGen.ml:554-591</code>）。そのため10進の値は FFI を越えさせず、16バイトの領域や <code>mpd_t</code> へのポインタ（<code>Address[Nat8]</code>）だけを渡す。<code>void</code> を返すライブラリ関数は、<code>int32_t</code> を返す <code>shim_*</code> 関数で包む。</p>
+</dd>
+<dt class="hdlist1">設計理由</dt>
+<dd>
+<p>mpdecimal のヘッダを生成 C と同じ翻訳単位に入れると型が衝突した（設計文書の実験2）。だから <code>shim.c</code> を別の翻訳単位にし、リンクだけで結ぶ。</p>
+</dd>
+<dt class="hdlist1">正常時</dt>
+<dd>
+<p><code>一致    ffi</code> の下に <code>mpd_qnew_direct=ok</code>、<code>mpd_add_01_02=0.3</code>、<code>d128_add_01_02=+3E-1</code>、<code>i128_add_01_02=0.300000000000000000</code>、<code>exit=0</code> が出る。</p>
+</dd>
+<dt class="hdlist1">失敗時</dt>
+<dd>
+<p>コンパイラのビルドが失敗するか上限を超えると、<code>ffi</code> と <code>ffi-unit-return</code> は <code>未実行  ffi: zustral: &lt;理由&gt;</code> になる。</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_重要コードの解説">6. 重要コードの解説</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 30%;">
+<col style="width: 30%;">
+<col style="width: 20%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">シンボル</th>
+<th class="tableblock halign-left valign-top">責務</th>
+<th class="tableblock halign-left valign-top">入力と出力</th>
+<th class="tableblock halign-left valign-top">副作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>run.sh</code> の <code>fetch</code> / <code>need</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">依存を名前で1回だけ取得し、結果か理由をメモする</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">依存名 → <code>DEP[name]</code>（パス）か <code>DEP_ERR[name]</code>（理由1行）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nix build</code>、<code>curl</code>、依存のビルド（<code>timeout 600</code>）、Zustral の <code>make</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>run.sh</code> の <code>build_tarball</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">tarball の取得、sha256 照合、<code>nix shell</code> の下でのビルド</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">名前、URL、sha256、ビルドの命令 → <code>DEP</code> か、失敗した段（取得、sha256、configure、make）付きの <code>DEP_ERR</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>$T/dep-&lt;name&gt;</code> への展開とビルド</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>run.sh</code> の <code>build</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">系統ごとのコンパイルとリンク。すべて <code>-fwrapv</code> 付き（Zustral の生成コードと同じ条件）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">id、作業ディレクトリ → <code>$d/bin</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コンパイラの起動。<code>ffi</code> は一時ディレクトリで <code>austral compile</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>run.sh</code> の <code>execute</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">プローブを実行し、出力の末尾に <code>exit=N</code> を足す</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">id → <code>out1</code> / <code>out2</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ffi-unit-return</code> だけはコンパイラの起動そのものを「実行」とする</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/bid128.h</code> の <code>print_bid128</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">BID 形式の16バイトを <code>&lt;符号&gt;&lt;係数&gt;E&lt;指数&gt;</code> で出す。glibc の <code>printf</code> に <code>_Decimal128</code> の書式がないため</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">キーと16バイトへのポインタ → 1行の出力</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">なし</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/ffi/shim.c</code> の <code>shim_d128_set</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">係数と指数から BID のビット列を直接組む</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">領域、係数（<code>int64_t</code>）、指数 → 0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">領域へ16バイトを書く</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_テストとの対応">7. テストとの対応</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>新しいテストファイルはない。<code>run.sh</code> の照合そのものがプローブの回帰の検査で、ランナーの分岐は失敗条件を外から起こして確かめた（実装計画「テストの方針」と「検証結果」）。</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 28.5714%;">
+<col style="width: 42.8571%;">
+<col style="width: 28.5715%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">要件・シナリオ</th>
+<th class="tableblock halign-left valign-top">確かめ方</th>
+<th class="tableblock halign-left valign-top">結果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-005、REQ-006、REQ-008、NFR-003</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>run.sh</code> を1回実行。実行の前後で作業ツリーの状態が同じか</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>一致 18 / 不一致 0 / 未実行 4</code>、終了状態 0。前後で同じ</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">記録と食い違う出力は失敗として見える（REQ-006）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>expected/i128.txt</code> の1行を書き換えて実行（改ざん）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">i128 の4変種が不一致、差分が出て <code>一致 14 / 不一致 4 / 未実行 4</code>、終了状態 1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">依存を取得できないプローブは未実行として表示される（REQ-006）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>https_proxy=http://127.0.0.1:9</code> で実行（curl 遮断）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intel@<strong></code> と <code>libdfp@gcc-</strong></code> の6件が理由付きで未実行、<code>一致 12 / 不一致 0 / 未実行 10</code>、終了状態 0</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コンパイラをビルドできなければ理由を残して C だけで確かめる（REQ-007）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ZUSTRAL_BUILD_TIMEOUT=0.01</code> で実行（ビルド上限）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ffi</code> と <code>ffi-unit-return</code> が未実行、<code>一致 16 / 不一致 0 / 未実行 6</code>、終了状態 0</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">clang でコンパイルできない系統は clang 比較を未実行と示す（REQ-008）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">通常の実行</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>d128@clang-<strong></code> と <code>libdfp@clang-</strong></code> の4件が <code>clang-dfp: error: GNU decimal type extension not supported</code> で未実行</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">このマシンで観測できる主張はプローブ出力を根拠に持つ（REQ-003）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">README の <code>〔probe: …〕</code> を抜き出し、記録にキーがあるか数える</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">71件すべてある</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REQ-010</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">commit の後に、新しい作業ツリーで <code>run.sh</code> を実行し、issue #1 と #9 を更新する（実装計画 T8）</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">このガイドの作成時点では未実施</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>上の表の改ざん、curl 遮断、ビルド上限、<code>run.sh</code> の通常実行は、このガイドの作成直前（2026-10-26）にも実行し、同じ結果を得た。</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_重点チェック">8. 重点チェック</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><code>run.sh</code> で、依存を取れた後のビルド失敗が「未実行」ではなく「不一致」に数えられているか。逆になると、壊れたプローブが成功に見える。</p>
+</li>
+<li>
+<p><code>deps_of</code> の clang 変種で、<code>clang-dfp</code> が <code>d128</code> と <code>libdfp</code> だけに付いているか。<code>mpd</code>、<code>intel</code>、<code>i128</code> に付くと、clang で測れる決定性を測らずに未実行にしてしまう。</p>
+</li>
+<li>
+<p><code>--record</code> で、2回の出力が食い違ったプローブの記録を書いていないか。書くと、食い違いが正解として残る。</p>
+</li>
+<li>
+<p><code>shim_d128_set</code> は、係数が小さく指数が範囲内の値だけを正しく組む作りである。プローブが渡すのは 1E-1 と 2E-1 だけだが、この前提を読み取れるか。前提の外の値を渡すと、無効な BID のビット列ができる。</p>
+</li>
+<li>
+<p>README の各事実の文に <code>〔probe: …〕</code>、<code>〔run: …〕</code>、<code>〔src: …〕</code> のどれかが付き、他のプラットフォームの主張に「出典のみ・未実測」が付いているか。抜けると、推測が事実として下流の判断に紛れる。</p>
+</li>
+<li>
+<p>README の「下流の問いに効く事実」が、事実を挙げるだけで、特定のバックエンドを推していないか（REQ-009）。推すと、下流の壁打ちが追認になる。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_既知の制約と対象外">9. 既知の制約と対象外</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>決定性は、このマシン（x86_64 Linux）の gcc と clang、<code>-O0</code> と <code>-O2</code>、2回の実行の範囲だけを測った。ライブラリ本体は1つの最適化レベルでビルドした。</p>
+</li>
+<li>
+<p>clang 21.1.8 は <code>_Decimal128</code> を拒むので、GCC <code>_Decimal128</code> と libdfp の clang での決定性は測れない。</p>
+</li>
+<li>
+<p>GitHub のアーカイブや netlib の tarball の sha256 が将来変わると、libdfp や Intel DFP は未実行になる（失敗にはならない）。</p>
+</li>
+<li>
+<p>libdfp と Intel DFP の tarball は実行のたびにダウンロードする。ネットワークがないと、その6件は未実行になる。</p>
+</li>
+<li>
+<p>プローブは「記録との一致」しか確かめない。記録自体の正しさは、既知の値との照合（実装計画「既知の値との照合」）とレポートのレビューで確かめた。</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+    </article>
+  </div>
+</body>
+</html>
