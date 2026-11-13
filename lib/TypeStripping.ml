@@ -33,72 +33,43 @@ type stripped_ty =
   | SMonoTy of mono_id
   | SRegionTyVar of identifier * qident
 
+(* The arguments are stripped from left to right: stripping a type variable
+   that was not replaced raises, and the first one decides the message. *)
 let rec strip_type (ty: ty): stripped_ty =
-  match strip_type' ty with
-  | Some ty ->
-     ty
-  | None ->
-     internal_err "strip_type called with a region type as its argument"
-
-and strip_type' (ty: ty): stripped_ty option =
   match ty with
   | Unit ->
-     Some SUnit
+     SUnit
   | Boolean ->
-     Some SBoolean
+     SBoolean
   | Integer (s, w) ->
-     Some (SInteger (s, w))
+     SInteger (s, w)
   | SingleFloat ->
-     Some SSingleFloat
+     SSingleFloat
   | DoubleFloat ->
-     Some SDoubleFloat
+     SDoubleFloat
   | NamedType (n, args, _) ->
-     Some (SNamedType (n, List.filter_map strip_type' args))
+     SNamedType (n, List.map strip_type args)
   | RegionTy r ->
-     Some (SRegionTy r)
+     SRegionTy r
   | ReadRef (ty, r) ->
-     (match (strip_type' ty) with
-      | Some ty ->
-         (match (strip_type' r) with
-          | Some r ->
-             Some (SReadRef (ty, r))
-          | None ->
-             internal_err "unable to strip read ref type")
-      | None ->
-         internal_err "read ref instantiated with a region type.")
+     let ty = strip_type ty in
+     let r = strip_type r in
+     SReadRef (ty, r)
   | WriteRef (ty, r) ->
-     (match (strip_type' ty) with
-      | Some ty ->
-         (match (strip_type' r) with
-          | Some r ->
-             Some (SWriteRef (ty, r))
-          | None ->
-             internal_err "unable to strip write ref type")
-      | None ->
-         internal_err "write ref instantiated with a region type.")
+     let ty = strip_type ty in
+     let r = strip_type r in
+     SWriteRef (ty, r)
   | Span (ty, r) ->
-     (match (strip_type' ty) with
-      | Some ty ->
-         (match (strip_type' r) with
-          | Some r ->
-             Some (SSpan (ty, r))
-          | None ->
-             internal_err "unable to strip span type")
-      | None ->
-         internal_err "span instantiated with a region type.")
+     let ty = strip_type ty in
+     let r = strip_type r in
+     SSpan (ty, r)
   | SpanMut (ty, r) ->
-     (match (strip_type' ty) with
-      | Some ty ->
-         (match (strip_type' r) with
-          | Some r ->
-             Some (SSpanMut (ty, r))
-          | None ->
-             internal_err "unable to strip span! type")
-      | None ->
-         internal_err "span! instantiated with a region type.")
+     let ty = strip_type ty in
+     let r = strip_type r in
+     SSpanMut (ty, r)
   | TyVar (TypeVariable (name, u, source, _)) ->
      if u = RegionUniverse then
-       Some (SRegionTyVar (name, source))
+       SRegionTyVar (name, source)
      else
        (* Why? Because when instantiating a monomorph, we do search and replace
           of type variables with their substitutions. So if there are variables
@@ -107,23 +78,11 @@ and strip_type' (ty: ty): stripped_ty option =
           type variable has no replacement. *)
        generic_error (TypeVariableNotReplaced name)
   | Address ty ->
-     (match (strip_type' ty) with
-      | Some ty ->
-         Some (SAddress ty)
-      | None ->
-         internal_err "Address type instantiated with a region type.")
+     SAddress (strip_type ty)
   | Pointer ty ->
-     (match (strip_type' ty) with
-      | Some ty ->
-         Some (SPointer ty)
-      | None ->
-         internal_err "Pointer type instantiated with a region type.")
+     SPointer (strip_type ty)
   | FnPtr (args, rt) ->
-     let rt =
-       (match strip_type' rt with
-        | Some ty -> ty
-        | _ -> internal_err "Function pointer type instantiated with a region type.")
-     in
-     Some (SFnPtr (List.filter_map strip_type' args, rt))
+     let rt = strip_type rt in
+     SFnPtr (List.map strip_type args, rt)
   | MonoTy id ->
-     Some (SMonoTy id)
+     SMonoTy id
