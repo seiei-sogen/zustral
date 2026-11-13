@@ -24,7 +24,6 @@ open Stages.Linked
 open Id
 open Region
 open Error
-open Error.Placed
 
 let make_substs2 (bindings: type_bindings) (typarams: typarams): type_bindings =
   let f (tp: type_parameter): (type_parameter * ty) option =

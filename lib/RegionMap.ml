@@ -7,7 +7,6 @@
 
 open IdentifierMap
 open Error
-open Error.Placed
 open Region
 
 type region_map = region IdentifierMap.t

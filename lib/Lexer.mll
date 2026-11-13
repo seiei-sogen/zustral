@@ -8,7 +8,6 @@
 {
 open Lexing
 open Error
-open Error.Placed
 open Parser
 
 let advance_line lexbuf =

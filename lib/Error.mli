@@ -74,69 +74,35 @@ val location_module_name : location -> module_name option
 (** The span of a location, if it has one. *)
 val location_span : location -> span option
 
-(** Raise a parse error. *)
-val parse_error : ParseErrors.t -> 'a
+(** Raise a parse error. The lexer and the parser know the place where they
+    stop. *)
+val parse_error : place -> ParseErrors.t -> 'a
 
 (** Raise an error with the user's command line arguments. *)
-val cli_error : CliErrors.t -> 'a
+val cli_error : place -> CliErrors.t -> 'a
 
 (** Raise a type error. *)
-val type_error : TypeErrors.t -> 'a
+val type_error : place -> TypeErrors.t -> 'a
 
 (** Raise a linearity error. *)
-val linearity_error : LinearityErrors.t -> 'a
+val linearity_error : place -> LinearityErrors.t -> 'a
 
 (** Raise a declaration error. *)
-val declaration_error : DeclarationErrors.t -> 'a
+val declaration_error : place -> DeclarationErrors.t -> 'a
 
 (** Raise an error with the definition of the program entrypoint. *)
-val entrypoint_error : EntrypointErrors.t -> 'a
+val entrypoint_error : place -> EntrypointErrors.t -> 'a
 
 (** Raise a generic error. *)
-val generic_error : GenericErrors.t -> 'a
+val generic_error : place -> GenericErrors.t -> 'a
 
 (** Raise an internal error. *)
-val internal_err : string -> 'a
+val internal_err : place -> string -> 'a
 
-(** The value of a successful result. Raises the error of a failed one. A
-    caller that cannot go on after the failure uses this on a function that
-    returns its failure as a value. *)
-val ok_or_raise : ('a, error) result -> 'a
-
-(** The raising functions, with the place of the error as the first argument.
-    They replace the ones above, file by file (issue #107): a file that opens
-    this module after [Error] cannot raise without saying where. *)
-module Placed : sig
-  (** Raise a parse error. The lexer and the parser know the place where they
-      stop. *)
-  val parse_error : place -> ParseErrors.t -> 'a
-
-  (** Raise an error with the user's command line arguments. *)
-  val cli_error : place -> CliErrors.t -> 'a
-
-  (** Raise a type error. *)
-  val type_error : place -> TypeErrors.t -> 'a
-
-  (** Raise a linearity error. *)
-  val linearity_error : place -> LinearityErrors.t -> 'a
-
-  (** Raise a declaration error. *)
-  val declaration_error : place -> DeclarationErrors.t -> 'a
-
-  (** Raise an error with the definition of the program entrypoint. *)
-  val entrypoint_error : place -> EntrypointErrors.t -> 'a
-
-  (** Raise a generic error. *)
-  val generic_error : place -> GenericErrors.t -> 'a
-
-  (** Raise an internal error. *)
-  val internal_err : place -> string -> 'a
-
-  (** The value of a successful result. Raises the error of a failed one, at
-      the given place. A caller that cannot go on after the failure uses this
-      on a function that returns its failure as a value. *)
-  val ok_or_raise : place -> ('a, error) result -> 'a
-end
+(** The value of a successful result. Raises the error of a failed one, at
+    the given place. A caller that cannot go on after the failure uses this
+    on a function that returns its failure as a value. *)
+val ok_or_raise : place -> ('a, error) result -> 'a
 
 (** The place of a part of the program whose span is [span], inside a part
     whose place is [outer]. A statement the compiler made up has the empty

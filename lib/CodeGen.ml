@@ -18,7 +18,6 @@ open CRepr
 open Util
 open Escape
 open Error
-open Error.Placed
 
 (* Codegen implementation notes:
 

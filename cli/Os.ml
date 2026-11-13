@@ -7,7 +7,6 @@
 open Austral_core
 open Unix
 open Error
-open Error.Placed
 open HtmlError
 
 let read_stream_to_string stream: string =

@@ -9,7 +9,6 @@ open Identifier
 open Stages.Ast
 open Stages.Combined
 open Error
-open Error.Placed
 open Span
 
 let is_abort (name: qident): bool =

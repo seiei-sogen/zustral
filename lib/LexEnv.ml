@@ -8,7 +8,6 @@ open Identifier
 open Common
 open Type
 open Error
-open Error.Placed
 
 type var_source =
   | VarConstant

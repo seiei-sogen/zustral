@@ -8,7 +8,6 @@
 open Identifier
 open TypeParameter
 open Error
-open Error.Placed
 
 type typarams = TyParams of type_parameter list
 [@@deriving show]

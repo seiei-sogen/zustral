@@ -8,7 +8,6 @@ open Id
 open Env
 open Type
 open Error
-open Error.Placed
 open CodeGen
 open CRepr
 

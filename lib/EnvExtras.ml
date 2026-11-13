@@ -9,7 +9,6 @@ open Identifier
 open Env
 open EnvTypes
 open Error
-open Error.Placed
 
 let get_decl_by_name_or_die (place: place) (env: env) (name: sident): decl =
   match get_decl_by_name place env name with

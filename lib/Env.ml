@@ -16,7 +16,6 @@ open LexEnv
 open EnvTypes
 open EnvUtils
 open Error
-open Error.Placed
 
 (** The module environment contains module metadata. *)
 type mod_env = mod_rec list

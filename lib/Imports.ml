@@ -8,7 +8,6 @@ open Identifier
 open IdentifierMap
 open Id
 open Error
-open Error.Placed
 
 type import_map =
   ImportMap of {

@@ -8,7 +8,6 @@ open Common
 open Type
 open Stages.Tast
 open Error
-open Error.Placed
 module Ast = Stages.Ast
 module AstDB = Stages.AstDB
 

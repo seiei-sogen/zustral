@@ -14,7 +14,7 @@ let error (message: string): austral_error =
 
 let test_catch _ =
   assert_equal (Ok 1) (Outcome.catch (fun () -> 1));
-  assert_equal (Error [error "a"]) (Outcome.catch (fun () -> internal_err "a"));
+  assert_equal (Error [error "a"]) (Outcome.catch (fun () -> internal_err NoSpan "a"));
   (* Only the compiler's own exception becomes a value. *)
   assert_raises Not_found (fun () -> Outcome.catch (fun () -> raise Not_found))
 

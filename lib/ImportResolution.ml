@@ -10,7 +10,6 @@ open Imports
 open Cst
 open BuiltIn
 open Error
-open Error.Placed
 open Id
 open Env
 open EnvTypes

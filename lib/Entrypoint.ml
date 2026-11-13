@@ -10,7 +10,6 @@ open Env
 open Type
 open TypeParameters
 open Error
-open Error.Placed
 open BuiltIn
 open CodeGen
 open MonoTypeBindings

@@ -75,62 +75,32 @@ let location_span (location: location): span option =
   | At { span; _ } -> Some span
   | InModule _ | Nowhere -> None
 
-(* Raising *)
+(* Raising. Every function takes the place first: the code that raises
+   says where the error is. *)
 
-let raise_error (error: error): 'a =
-  raise (Austral_error (AustralError { location = Nowhere; error; source_ctx = None }))
+let raise_error (place: place) (error: error): 'a =
+  raise (Austral_error (AustralError { location = locate None place; error; source_ctx = None }))
 
-let parse_error (e: ParseErrors.t): 'a = raise_error (Parse e)
+let parse_error (place: place) (e: ParseErrors.t): 'a = raise_error place (Parse e)
 
-let cli_error (e: CliErrors.t): 'a = raise_error (Cli e)
+let cli_error (place: place) (e: CliErrors.t): 'a = raise_error place (Cli e)
 
-let type_error (e: TypeErrors.t): 'a = raise_error (Type e)
+let type_error (place: place) (e: TypeErrors.t): 'a = raise_error place (Type e)
 
-let linearity_error (e: LinearityErrors.t): 'a = raise_error (Linearity e)
+let linearity_error (place: place) (e: LinearityErrors.t): 'a = raise_error place (Linearity e)
 
-let declaration_error (e: DeclarationErrors.t): 'a = raise_error (Declaration e)
+let declaration_error (place: place) (e: DeclarationErrors.t): 'a = raise_error place (Declaration e)
 
-let entrypoint_error (e: EntrypointErrors.t): 'a = raise_error (Entrypoint e)
+let entrypoint_error (place: place) (e: EntrypointErrors.t): 'a = raise_error place (Entrypoint e)
 
-let generic_error (e: GenericErrors.t): 'a = raise_error (Generic e)
+let generic_error (place: place) (e: GenericErrors.t): 'a = raise_error place (Generic e)
 
-let internal_err (message: string): 'a = raise_error (Internal message)
+let internal_err (place: place) (message: string): 'a = raise_error place (Internal message)
 
-let ok_or_raise (result: ('a, error) result): 'a =
+let ok_or_raise (place: place) (result: ('a, error) result): 'a =
   match result with
   | Ok value -> value
-  | Error error -> raise_error error
-
-(* The raising functions that take the place. A converted file opens this
-   module after [Error], so that it cannot raise without saying where. The
-   functions above serve the files whose errors still get their span from a
-   handler on the way up; when the last of those is converted (issue #107),
-   these take their names. *)
-module Placed = struct
-  let raise_error (place: place) (error: error): 'a =
-    raise (Austral_error (AustralError { location = locate None place; error; source_ctx = None }))
-
-  let parse_error (place: place) (e: ParseErrors.t): 'a = raise_error place (Parse e)
-
-  let cli_error (place: place) (e: CliErrors.t): 'a = raise_error place (Cli e)
-
-  let type_error (place: place) (e: TypeErrors.t): 'a = raise_error place (Type e)
-
-  let linearity_error (place: place) (e: LinearityErrors.t): 'a = raise_error place (Linearity e)
-
-  let declaration_error (place: place) (e: DeclarationErrors.t): 'a = raise_error place (Declaration e)
-
-  let entrypoint_error (place: place) (e: EntrypointErrors.t): 'a = raise_error place (Entrypoint e)
-
-  let generic_error (place: place) (e: GenericErrors.t): 'a = raise_error place (Generic e)
-
-  let internal_err (place: place) (message: string): 'a = raise_error place (Internal message)
-
-  let ok_or_raise (place: place) (result: ('a, error) result): 'a =
-    match result with
-    | Ok value -> value
-    | Error error -> raise_error place error
-end
+  | Error error -> raise_error place error
 
 let place_inside (outer: place) (span: span): place =
   match outer with

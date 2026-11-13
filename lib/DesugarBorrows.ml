@@ -239,6 +239,6 @@ and transform_whens (supply: Supply.t) (whens: AstDP.abstract_when list): AstDB.
 let transform_expr (supply: Supply.t) (expr: AstDP.aexpr): AstDB.aexpr =
   let (expr, acc, _) = lift_borrows supply expr [] in
   if (List.length acc) > 0 then
-    Error.Placed.generic_error Error.NoSpan BorrowExpressionNotAllowed
+    Error.generic_error Error.NoSpan BorrowExpressionNotAllowed
   else
     expr

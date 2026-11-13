@@ -27,7 +27,6 @@ open TastUtil
 open Stages.Linked
 open Util
 open Error
-open Error.Placed
 
 (* The place is where an error in the statement is reported. *)
 type stmt_ctx = StmtCtx of module_name * env * region_map * typarams * ty * place

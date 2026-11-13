@@ -12,7 +12,6 @@
 open Type
 open TypeVarSet
 open Error
-open Error.Placed
 
 let type_universe (place: place) = function
     Unit -> FreeUniverse

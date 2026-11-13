@@ -17,7 +17,6 @@ open EnvTypes
 open EnvExtras
 open EnvUtils
 open Error
-open Error.Placed
 
 let check_instance_argument_has_right_universe (place: place) (universe: universe) (arg: ty): unit =
   if universe_compatible universe (type_universe place arg) then

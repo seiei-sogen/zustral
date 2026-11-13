@@ -14,7 +14,6 @@ open Type
 open TypeParameter
 open TypeSystem
 open Error
-open Error.Placed
 
 let universe_compatible param arg =
   (* The check here is:

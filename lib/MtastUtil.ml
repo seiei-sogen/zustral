@@ -12,7 +12,6 @@
 open MonoType
 open Stages.Mtast
 open Error
-open Error.Placed
 
 let rec get_type (e: mexpr): mono_ty =
   match e with

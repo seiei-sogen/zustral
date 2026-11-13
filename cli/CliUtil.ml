@@ -6,7 +6,6 @@
 *)
 open Austral_core
 open Error
-open Error.Placed
 
 type arg =
   | BoolFlag of string

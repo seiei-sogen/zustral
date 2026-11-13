@@ -17,7 +17,6 @@ open TastUtil
 open Env
 open EnvTypes
 open Error
-open Error.Placed
 
 type ctx = env * module_name * place
 

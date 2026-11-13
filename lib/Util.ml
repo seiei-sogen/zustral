@@ -7,7 +7,6 @@
 
 open Identifier
 open Error
-open Error.Placed
 
 let string_explode (s: string): char list =
   List.init (String.length s) (String.get s)

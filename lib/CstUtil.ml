@@ -8,7 +8,6 @@ open Identifier
 open Common
 open Cst
 open Error
-open Error.Placed
 
 let make_module_body (name: module_name) (imports: concrete_import_list list) (pragmas: pragma list) (defs: concrete_def list) (docstring: docstring) =
   let is_unsafe_module p =

@@ -6,7 +6,6 @@
 *)
 open Util
 open Error
-open Error.Placed
 
 type escaped_string = EscapedString of string
 [@@deriving show]

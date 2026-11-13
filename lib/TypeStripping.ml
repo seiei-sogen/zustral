@@ -14,7 +14,6 @@ open Id
 open Identifier
 open Region
 open Error
-open Error.Placed
 
 type stripped_ty =
   | SUnit

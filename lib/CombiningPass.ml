@@ -16,7 +16,6 @@ open Stages.Combined
 open Env
 open ImportResolution
 open Error
-open Error.Placed
 
 let parse_slots (imports: import_map) (slots: concrete_slot list): qslot list =
   List.map

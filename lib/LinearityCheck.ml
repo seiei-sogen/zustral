@@ -9,7 +9,6 @@ open Stages.Tast
 open Type
 open TypeSystem
 open Error
-open Error.Placed
 
 (* Data structures *)
 

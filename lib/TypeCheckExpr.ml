@@ -26,7 +26,6 @@ open LexEnv
 open TypeBindings
 open TypeMatch
 open Error
-open Error.Placed
 open Util
 
 (* Expression Context *)

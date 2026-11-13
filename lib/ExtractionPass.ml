@@ -27,7 +27,6 @@ open BuiltIn
 open TypeVarSet
 open Util
 open Error
-open Error.Placed
 
 let check_slots_are_free (place: place) (name: identifier) (slots: typed_slot list): unit =
   let check_slot_is_free (slot: typed_slot): unit =

@@ -8,7 +8,6 @@
 open Cst
 open Span
 open Error
-open Error.Placed
 
 let parse' f (code: string) (filename: string) =
   let lexbuf = Lexing.from_string code in

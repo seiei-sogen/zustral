@@ -14,7 +14,6 @@ open Stages.Tast
 open Identifier
 open StringSet
 open Error
-open Error.Placed
 
 let arglist_size = function
   | (TPositionalArglist l) -> List.length l

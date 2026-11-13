@@ -8,7 +8,6 @@ open Austral_core
 open Identifier
 open CliUtil
 open Error
-open Error.Placed
 
 type entrypoint =
   | Entrypoint of module_name * identifier

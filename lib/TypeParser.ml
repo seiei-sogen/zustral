@@ -22,7 +22,6 @@ open Stages.Ast
 open Env
 open EnvTypes
 open Error
-open Error.Placed
 
 let decl_type_signature (decl: decl): type_signature option =
   match decl with
