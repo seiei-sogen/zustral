@@ -677,7 +677,7 @@ and is_constant = function
      (is_constant c) && (is_constant t) && (is_constant f)
   | TRecordConstructor (_, values) ->
      List.for_all (fun (_, v) -> is_constant v) values
-  | TUnionConstructor (_, _, _, _, values) ->
+  | TUnionConstructor { args = values; _ } ->
      List.for_all (fun (_, v) -> is_constant v) values
   | TEmbed _ ->
      true
@@ -689,9 +689,9 @@ and is_constant = function
      true
   | TPointerSlotAccessor _ ->
      true
-  | TArrayIndex (_, idx, _, _) ->
+  | TArrayIndex (_, idx, _, _, _) ->
      is_constant idx
-  | TSpanIndex (_, idx, _, _) ->
+  | TSpanIndex (_, idx, _, _, _) ->
      is_constant idx
 
 let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (supply: Supply.t) (decl: linked_definition): typed_decl * Supply.t =

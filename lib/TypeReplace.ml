@@ -89,11 +89,11 @@ let rec replace_tyvars_expr (bindings: type_bindings) (expr: texpr): texpr =
      let ty = replace_variables bindings ty
      and args = List.map (fun (n, e) -> (n, replace_tyvars_expr bindings e)) args in
      TRecordConstructor (ty, args)
-  | TUnionConstructor (ty, id, tyargs, case_name, args) ->
-     let ty = replace_variables bindings ty
-     and args = List.map (fun (n, e) -> (n, replace_tyvars_expr bindings e)) args in
+  | TUnionConstructor { union_id; type_name; tyargs; universe; case_name; args } ->
+     let args = List.map (fun (n, e) -> (n, replace_tyvars_expr bindings e)) args in
      let tyargs = List.map (replace_variables bindings) tyargs in
-     TUnionConstructor (ty, id, tyargs, case_name, args)
+     let universe = replaced_universe universe tyargs in
+     TUnionConstructor { union_id; type_name; tyargs; universe; case_name; args }
   | TEmbed (ty, fmt, args) ->
      let ty = replace_variables bindings ty
      and args = List.map (replace_tyvars_expr bindings) args in
@@ -113,18 +113,18 @@ let rec replace_tyvars_expr (bindings: type_bindings) (expr: texpr): texpr =
      let expr = replace_tyvars_expr bindings expr in
      let ty = replace_variables bindings ty in
      TPointerSlotAccessor (expr, name, ty)
-  | TArrayIndex (expr, index, elem_ty, ty) ->
+  | TArrayIndex (expr, index, elem_ty, region, mode) ->
      let expr = replace_tyvars_expr bindings expr in
      let index = replace_tyvars_expr bindings index in
-     let ty = replace_variables bindings ty in
      let elem_ty = replace_variables bindings elem_ty in
-     TArrayIndex (expr, index, elem_ty, ty)
-   | TSpanIndex (expr, index, elem_ty, ty) ->
+     let region = replace_region_variables bindings region in
+     TArrayIndex (expr, index, elem_ty, region, mode)
+   | TSpanIndex (expr, index, elem_ty, region, mode) ->
      let expr = replace_tyvars_expr bindings expr in
      let index = replace_tyvars_expr bindings index in
-     let ty = replace_variables bindings ty in
      let elem_ty = replace_variables bindings elem_ty in
-     TSpanIndex (expr, index, elem_ty, ty)
+     let region = replace_region_variables bindings region in
+     TSpanIndex (expr, index, elem_ty, region, mode)
 
 let rec replace_tyvars_stmt (bindings: type_bindings) (stmt: tstmt): tstmt =
   match stmt with

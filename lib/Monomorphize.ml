@@ -138,9 +138,10 @@ let strip_and_mono_list (env: env) (tys: ty list): (mono_ty list * env) =
   let tys = List.map strip_type tys in
   monomorphize_ty_list env tys
 
-(* The monomorph of a union, from the union's ID and type arguments. The type
-   of the value the node makes or matches has these as its parts, and is
-   monomorphized first, so this registers no new monomorph. *)
+(* The monomorph of a union, from the union's ID and type arguments. It
+   registers the monomorphs of the arguments, then the union's, in the order
+   monomorphizing the named type would: for a constructor that is where they
+   are registered; for a `case`, the value's type has them already. *)
 let union_monomorph (env: env) (id: union_id) (tyargs: ty list): (union_mono_id * env) =
   let (tyargs, env) = strip_and_mono_list env tyargs in
   let { typarams; _ }: union_decl = get_union NoSpan env id in
@@ -282,11 +283,10 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
      let (ty, env) = strip_and_mono env ty in
      let (args, env) = monomorphize_named_expr_list env args in
      (MRecordConstructor (ty, args), env)
-  | TUnionConstructor (ty, id, tyargs, case_name, args) ->
-     let (ty, env) = strip_and_mono env ty in
-     let (id, env) = union_monomorph env id tyargs in
+  | TUnionConstructor { union_id; tyargs; case_name; args; _ } ->
+     let (id, env) = union_monomorph env union_id tyargs in
      let (args, env) = monomorphize_named_expr_list env args in
-     (MUnionConstructor (ty, id, case_name, args), env)
+     (MUnionConstructor (id, case_name, args), env)
   | TEmbed (ty, fmt, args) ->
      let (ty, env) = strip_and_mono env ty in
      let (args, env) = monomorphize_expr_list env args in
@@ -308,22 +308,18 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
      let (expr, env) = monomorphize_expr env expr in
      let (ty, env) = strip_and_mono env ty in
      (MPointerSlotAccessor (expr, name, ty), env)
-  | TArrayIndex (expr, idx, elem_ty, ty) ->
+  | TArrayIndex (expr, idx, elem_ty, region, mode) ->
      let (expr, env) = monomorphize_expr env expr in
      let (idx, env) = monomorphize_expr env idx in
-     let (ty, env) = strip_and_mono env ty in
-     (* The element type is a part of the type, monomorphized just before, so
-        this registers no new monomorph. *)
      let (elem_ty, env) = strip_and_mono env elem_ty in
-     (MArrayIndex (expr, idx, elem_ty, ty), env)
-   | TSpanIndex (expr, idx, elem_ty, ty) ->
+     let (region, env) = strip_and_mono env (ty_of_ref_region region) in
+     (MArrayIndex (expr, idx, elem_ty, region, mode), env)
+   | TSpanIndex (expr, idx, elem_ty, region, mode) ->
      let (expr, env) = monomorphize_expr env expr in
      let (idx, env) = monomorphize_expr env idx in
-     let (ty, env) = strip_and_mono env ty in
-     (* The element type is a part of the type, monomorphized just before, so
-        this registers no new monomorph. *)
      let (elem_ty, env) = strip_and_mono env elem_ty in
-     (MSpanIndex (expr, idx, elem_ty, ty), env)
+     let (region, env) = strip_and_mono env (ty_of_ref_region region) in
+     (MSpanIndex (expr, idx, elem_ty, region, mode), env)
 
 and monomorphize_expr_list (env: env) (exprs: texpr list): (mexpr list * env) =
   match exprs with

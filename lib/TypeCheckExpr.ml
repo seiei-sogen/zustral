@@ -349,11 +349,21 @@ and augment_union_constructor (ctx: expr_ctx) (union_id: union_id) (type_name: q
     let bindings'' = merge_bindings (ctx_place ctx) bindings bindings' in
     check_bindings (ctx_place ctx) typarams bindings'';
     (* The arguments of rt'': rt' replaced the variables of rt with bindings,
-       and rt'' those of rt' with bindings that bindings'' holds. *)
+       and rt'' those of rt' with bindings that bindings'' holds. The universe
+       of rt'' is not the declared one when that is `Type`: each replacement
+       computed it again from the arguments. *)
     let tyargs = List.map (fun a -> replace_variables bindings'' (replace_variables bindings a)) tyargs in
+    let rt_universe = type_universe (ctx_place ctx) rt'' in
     (* Check the resulting type is in the correct universe *)
-    if universe_compatible universe (type_universe (ctx_place ctx) rt'') then
-      TUnionConstructor (rt'', union_id, tyargs, case_name, List.map2 (fun a b -> (a, b)) slot_names arguments)
+    if universe_compatible universe rt_universe then
+      TUnionConstructor {
+          union_id;
+          type_name;
+          tyargs;
+          universe = rt_universe;
+          case_name;
+          args = List.map2 (fun a b -> (a, b)) slot_names arguments;
+        }
     else
       generic_error (ctx_place ctx) ConstructorUniverseMismatch
 
@@ -790,8 +800,7 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
         | FnPtr _ | MonoTy _ ->
            type_error (ctx_place ctx) (CantIndexNotSpan ty)
       in
-      (* Construct the result type. *)
-      TArrayIndex (expr, index_expr, elem_ty, ReadRef (elem_ty, reg))
+      TArrayIndex (expr, index_expr, elem_ty, reg, ReadBorrow)
     end
   | WriteRef (ty, reg) -> begin
       let elem_ty: ty =
@@ -805,13 +814,12 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
         | FnPtr _ | MonoTy _ ->
            type_error (ctx_place ctx) (CantIndexNotSpan ty)
       in
-      (* Construct the result type. *)
-      TArrayIndex (expr, index_expr, elem_ty, WriteRef (elem_ty, reg))
+      TArrayIndex (expr, index_expr, elem_ty, reg, WriteBorrow)
     end
   | Span (ty, reg) ->
-     TSpanIndex (expr, index_expr, ty, ReadRef (ty, reg))
+     TSpanIndex (expr, index_expr, ty, reg, ReadBorrow)
   | SpanMut (ty, reg) ->
-     TSpanIndex (expr, index_expr, ty, WriteRef (ty, reg))
+     TSpanIndex (expr, index_expr, ty, reg, WriteBorrow)
   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
   | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
      type_error (ctx_place ctx) (ArrayIndexNotReference (get_type (ctx_place ctx) expr))

@@ -37,3 +37,10 @@ val get_binding : type_bindings -> type_parameter -> ty option
    found in the bindings, do nothing. *)
 val replace_variables : type_bindings -> ty -> ty
 
+(** The universe of a named type of that universe whose arguments are these,
+    once their type variables are replaced: a type of the `Type` universe
+    takes the universe of its arguments. *)
+val replaced_universe : universe -> ty list -> universe
+
+val replace_region_variables : type_bindings -> ref_region -> ref_region
+

@@ -42,6 +42,10 @@ and find_arg_with_name l name =
   let (_, value) = List.find (fun (n, _) -> name = n) l in
   value
 
+let reference_type (elem_ty: ty) (region: ref_region): Common.borrowing_mode -> ty = function
+  | ReadBorrow -> ReadRef (elem_ty, region)
+  | WriteBorrow -> WriteRef (elem_ty, region)
+
 let rec get_type (place: place) = function
   | TNilConstant ->
      Unit
@@ -85,8 +89,8 @@ let rec get_type (place: place) = function
      get_type place t
   | TRecordConstructor (ty, _) ->
      ty
-  | TUnionConstructor (ty, _, _, _, _) ->
-     ty
+  | TUnionConstructor { type_name; tyargs; universe; _ } ->
+     NamedType (type_name, tyargs, universe)
   | TEmbed (ty, _, _) ->
      ty
   | TDeref (_, ty) ->
@@ -95,5 +99,5 @@ let rec get_type (place: place) = function
      Integer (Unsigned, WidthByteSize)
   | TSlotAccessor (_, _, ty) -> ty
   | TPointerSlotAccessor (_, _, ty) -> ty
-  | TArrayIndex (_, _, _, ty) -> ty
-  | TSpanIndex (_, _, _, ty) -> ty
+  | TArrayIndex (_, _, elem_ty, region, mode) -> reference_type elem_ty region mode
+  | TSpanIndex (_, _, elem_ty, region, mode) -> reference_type elem_ty region mode

@@ -275,12 +275,12 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
      CIfExpression (g c, g t, g f)
   | MRecordConstructor (ty, values) ->
      CCast (CStructInitializer (List.map (fun (n, v) -> (gen_member n, g v)) values), gen_type ty)
-  | MUnionConstructor (ty, id, case_name, values) ->
+  | MUnionConstructor (id, case_name, values) ->
      let args = CStructInitializer (List.map (fun (n, v) -> (gen_member n, g v)) values) in
      CCast (CStructInitializer [
                 (tag_slot, union_tag_value id case_name);
                 (data_slot, CStructInitializer [(gen_member case_name, args)])
-              ], gen_type ty)
+              ], gen_type (MonoNamedType (mono_id_of_union id)))
   | MEmbed (ty, expr, args) ->
      CEmbed (gen_type ty, CSource expr, List.map g args)
   | MDeref (e, _) ->
@@ -293,7 +293,7 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
   | MPointerSlotAccessor (expr, slot, _) ->
      let expr = g expr in
      CAddressOf (CPointerStructAccessor (CDeref expr, gen_member slot))
-  | MArrayIndex (expr, idx, elem_ty, _) ->
+  | MArrayIndex (expr, idx, elem_ty, _, _) ->
      let expr = g expr
      and idx = g idx in
      let elem_ty = gen_type elem_ty in
@@ -301,7 +301,7 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
          CFuncall (CIdent.generated "au_array_index", [expr; idx; CSizeOf elem_ty]),
          CPointer elem_ty
        )
-  | MSpanIndex (expr, idx, elem_ty, _) ->
+  | MSpanIndex (expr, idx, elem_ty, _, _) ->
      let expr = g expr
      and idx = g idx in
      let elem_ty = gen_type elem_ty in

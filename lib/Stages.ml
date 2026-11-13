@@ -545,14 +545,23 @@ module Tast = struct
     | TNegation of texpr
     | TIfExpression of texpr * texpr * texpr
     | TRecordConstructor of ty * (identifier * texpr) list
-    | TUnionConstructor of ty * union_id * ty list * identifier * (identifier * texpr) list
-    (** The type is the union's, with the type arguments that follow the ID. *)
+    | TUnionConstructor of {
+        union_id: union_id;
+        type_name: qident;
+        tyargs: ty list;
+        universe: universe;
+        case_name: identifier;
+        args: (identifier * texpr) list;
+      }
+    (** The type is `NamedType (type_name, tyargs, universe)`: `get_type`
+        builds it, so the monomorph of the union and the type of the value
+        come from the same type arguments. *)
     | TSlotAccessor of texpr * identifier * ty
     | TPointerSlotAccessor of texpr * identifier * ty
-    | TArrayIndex of texpr * texpr * ty * ty
-    | TSpanIndex of texpr * texpr * ty * ty
-    (** The first type is the element type; the second, the type of the
-        expression, is a reference to the element. *)
+    | TArrayIndex of texpr * texpr * ty * ref_region * borrowing_mode
+    | TSpanIndex of texpr * texpr * ty * ref_region * borrowing_mode
+    (** The element type, and the region and the mode of the reference to the
+        element that the expression is: `get_type` builds that reference type. *)
     | TEmbed of ty * string * texpr list
     | TDeref of texpr * ty
     (** The type is the one of the value the reference points to. *)
@@ -672,17 +681,18 @@ module Mtast = struct
     | MNegation of mexpr
     | MIfExpression of mexpr * mexpr * mexpr
     | MRecordConstructor of mono_ty * (identifier * mexpr) list
-    | MUnionConstructor of mono_ty * union_mono_id * identifier * (identifier * mexpr) list
+    | MUnionConstructor of union_mono_id * identifier * (identifier * mexpr) list
+    (** The type is the monomorph's: `get_type` builds it. *)
     | MEmbed of mono_ty * string * mexpr list
     | MDeref of mexpr * mono_ty
     (** The type is the one of the value the reference points to. *)
     | MSizeOf of mono_ty
     | MSlotAccessor of mexpr * identifier * mono_ty
     | MPointerSlotAccessor of mexpr * identifier * mono_ty
-    | MArrayIndex of mexpr * mexpr * mono_ty * mono_ty
-    | MSpanIndex of mexpr * mexpr * mono_ty * mono_ty
-    (** The first type is the element type; the second, the type of the
-        expression, is a reference to the element. *)
+    | MArrayIndex of mexpr * mexpr * mono_ty * mono_ty * borrowing_mode
+    | MSpanIndex of mexpr * mexpr * mono_ty * mono_ty * borrowing_mode
+    (** The element type, and the region and the mode of the reference to the
+        element that the expression is: `get_type` builds that reference type. *)
 
   and mtyped_when =
     MTypedWhen of identifier * mono_binding list * mstmt

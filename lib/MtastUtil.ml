@@ -9,6 +9,10 @@ open MonoType
 open Stages.Mtast
 open Error
 
+let mono_reference_type (elem_ty: mono_ty) (region: mono_ty): Common.borrowing_mode -> mono_ty = function
+  | ReadBorrow -> MonoReadRef (elem_ty, region)
+  | WriteBorrow -> MonoWriteRef (elem_ty, region)
+
 let rec get_type (e: mexpr): mono_ty =
   match e with
   | MNilConstant ->
@@ -57,8 +61,8 @@ let rec get_type (e: mexpr): mono_ty =
      get_type t
   | MRecordConstructor (ty, _) ->
      ty
-  | MUnionConstructor (ty, _, _, _) ->
-     ty
+  | MUnionConstructor (id, _, _) ->
+     MonoNamedType (Id.mono_id_of_union id)
   | MEmbed (ty, _, _) ->
      ty
   | MDeref (_, ty) ->
@@ -67,5 +71,5 @@ let rec get_type (e: mexpr): mono_ty =
      MonoInteger (Unsigned, Width64)
   | MSlotAccessor (_, _, ty) -> ty
   | MPointerSlotAccessor (_, _, ty) -> ty
-  | MArrayIndex (_, _, _, ty) -> ty
-  | MSpanIndex (_, _, _, ty) -> ty
+  | MArrayIndex (_, _, elem_ty, region, mode) -> mono_reference_type elem_ty region mode
+  | MSpanIndex (_, _, elem_ty, region, mode) -> mono_reference_type elem_ty region mode

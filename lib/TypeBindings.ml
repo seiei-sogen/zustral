@@ -116,6 +116,21 @@ let try_merge_bindings (TypeBindings a) (TypeBindings b) =
 let merge_bindings (place: place) (a: type_bindings) (b: type_bindings): type_bindings =
   ok_or_raise place (try_merge_bindings a b)
 
+let replaced_universe (u: universe) (args: ty list): universe =
+  match u with
+  | TypeUniverse ->
+     (* The universe of an argument is unknown only for a MonoTy, which exists
+        only during monomorphization, where errors have no span. *)
+     if any_arg_is_linear NoSpan args then
+       LinearUniverse
+     else
+       if any_arg_is_type NoSpan args then
+         TypeUniverse
+       else
+         FreeUniverse
+  | FreeUniverse | LinearUniverse | RegionUniverse ->
+     u
+
 let rec replace_variables bindings ty =
   match ty with
   | Unit ->
@@ -130,21 +145,7 @@ let rec replace_variables bindings ty =
      DoubleFloat
   | NamedType (n, a, u) ->
      let a' = List.map (replace_variables bindings) a in
-     (* The universe of an argument is unknown only for a MonoTy, which exists
-        only during monomorphization, where errors have no span. *)
-     (match u with
-      | TypeUniverse ->
-         let u' = if any_arg_is_linear NoSpan a' then
-                    LinearUniverse
-                  else
-                    if any_arg_is_type NoSpan a' then
-                      TypeUniverse
-                    else
-                      FreeUniverse
-         in
-         NamedType (n, a', u')
-      | FreeUniverse | LinearUniverse | RegionUniverse ->
-         NamedType (n, a', u))
+     NamedType (n, a', replaced_universe u a')
   | TyVar tv ->
      (match get_binding bindings (tyvar_to_typaram tv) with
       | Some ty -> ty
@@ -152,13 +153,13 @@ let rec replace_variables bindings ty =
   | RegionTy r ->
      RegionTy r
   | ReadRef (ty, region) ->
-     ReadRef (replace_variables bindings ty, ref_region_of_ty (replace_variables bindings (ty_of_ref_region region)))
+     ReadRef (replace_variables bindings ty, replace_region_variables bindings region)
   | WriteRef (ty, region) ->
-     WriteRef (replace_variables bindings ty, ref_region_of_ty (replace_variables bindings (ty_of_ref_region region)))
+     WriteRef (replace_variables bindings ty, replace_region_variables bindings region)
   | Span (ty, region) ->
-     Span (replace_variables bindings ty, ref_region_of_ty (replace_variables bindings (ty_of_ref_region region)))
+     Span (replace_variables bindings ty, replace_region_variables bindings region)
   | SpanMut (ty, region) ->
-     SpanMut (replace_variables bindings ty, ref_region_of_ty (replace_variables bindings (ty_of_ref_region region)))
+     SpanMut (replace_variables bindings ty, replace_region_variables bindings region)
   | Address ty ->
      Address (replace_variables bindings ty)
   | Pointer ty ->
@@ -167,6 +168,9 @@ let rec replace_variables bindings ty =
      FnPtr (List.map (replace_variables bindings) args, replace_variables bindings rt)
   | MonoTy id ->
      MonoTy id
+
+and replace_region_variables bindings (region: ref_region): ref_region =
+  ref_region_of_ty (replace_variables bindings (ty_of_ref_region region))
 
 let rec bindings_from_list (place: place) lst =
   match lst with

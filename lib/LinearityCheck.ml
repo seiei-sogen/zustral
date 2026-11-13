@@ -250,7 +250,7 @@ let rec count (name: identifier) (expr: texpr): appearances =
      merge (c e) (merge (c t) (c f))
   | TRecordConstructor (_, args) ->
      merge_list (List.map (fun (_, e) -> c e) args)
-  | TUnionConstructor (_, _, _, _, args) ->
+  | TUnionConstructor { args; _ } ->
      merge_list (List.map (fun (_, e) -> c e) args)
   | TEmbed (_, _, args) ->
      merge_list (List.map c args)
@@ -262,9 +262,9 @@ let rec count (name: identifier) (expr: texpr): appearances =
      c e
   | TPointerSlotAccessor (e, _, _) ->
      c e
-  | TArrayIndex (e, i, _, _) ->
+  | TArrayIndex (e, i, _, _, _) ->
      merge (c e) (c i)
-  | TSpanIndex (e, i, _, _) ->
+  | TSpanIndex (e, i, _, _, _) ->
      merge (c e) (c i)
  
 (* Utilities *)
