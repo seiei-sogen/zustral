@@ -1,1 +1,1 @@
-A linear record returned from a generic function and never consumed is rejected with the same message as when it is made directly (009).
+A linear record returned from a generic function and never consumed is rejected with the same message as when it is made directly (009). The linearity check runs on the generic body, before any instantiation, so a type argument cannot weaken it.

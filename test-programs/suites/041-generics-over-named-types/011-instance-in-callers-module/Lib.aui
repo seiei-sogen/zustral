@@ -1,0 +1,7 @@
+module Lib is
+    typeclass Describe(T: Free) is
+        method describe(x: T): Unit;
+    end;
+    generic [T: Free(Describe)]
+    function show(x: T): Unit;
+end module.

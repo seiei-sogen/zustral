@@ -1,0 +1,16 @@
+import Lib (Describe, describe, show);
+module body Test is
+    record Point: Free is
+        x: Int32;
+    end;
+    instance Describe(Point) is
+        method describe(p: Point): Unit is
+            printLn("point");
+            return nil;
+        end;
+    end;
+    function main(): ExitCode is
+        show(Point(x => 7));
+        return ExitSuccess();
+    end;
+end module body.

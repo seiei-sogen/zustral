@@ -1,5 +1,6 @@
 module body Test is
     record Foo: Free is
+        n: Int32;
     end;
 
     generic [T: Type]
@@ -8,7 +9,13 @@ module body Test is
     end;
 
     function main(): ExitCode is
-        let opt: Option[Foo] := wrap(Foo());
+        let opt: Option[Foo] := wrap(Foo(n => 40));
+        case opt of
+            when Some(value: Foo) do
+                printLn(value.n);
+            when None do
+                printLn("none");
+        end case;
         return ExitSuccess();
     end;
 end module body.
