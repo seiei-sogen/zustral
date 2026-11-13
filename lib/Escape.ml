@@ -6,36 +6,37 @@
 *)
 open Util
 open Error
+open Error.Placed
 
 type escaped_string = EscapedString of string
 [@@deriving show]
 
-let rec escape_string s =
-  EscapedString (string_implode (escape_list (string_explode s)))
+let rec escape_string (place: place) s =
+  EscapedString (string_implode (escape_list place (string_explode s)))
 
-and escape_list lst =
+and escape_list place lst =
   match lst with
-  | ('\\' :: 'n' :: rest) -> '\n' :: (escape_list rest)
-  | ('\\' :: 'r' :: rest) -> '\r' :: (escape_list rest)
-  | ('\\' :: 't' :: rest) -> '\t' :: (escape_list rest)
-  | ('\\' :: '\'' :: rest) -> '\'' :: (escape_list rest)
-  | ('\\' :: '"' :: rest) -> '"' :: (escape_list rest)
-  | ('\\' :: '\\' :: rest) -> '\\' :: (escape_list rest)
-  | ('\\' :: ' ' :: rest) -> consume_whitespace (' ' :: rest)
-  | ('\\' :: '\n' :: rest) -> consume_whitespace (' ' :: rest)
-  | ('\\' :: '\r' :: rest) -> consume_whitespace (' ' :: rest)
-  | ('\\' :: '\t' :: rest) -> consume_whitespace (' ' :: rest)
-  | (head :: rest) -> head :: (escape_list rest)
+  | ('\\' :: 'n' :: rest) -> '\n' :: (escape_list place rest)
+  | ('\\' :: 'r' :: rest) -> '\r' :: (escape_list place rest)
+  | ('\\' :: 't' :: rest) -> '\t' :: (escape_list place rest)
+  | ('\\' :: '\'' :: rest) -> '\'' :: (escape_list place rest)
+  | ('\\' :: '"' :: rest) -> '"' :: (escape_list place rest)
+  | ('\\' :: '\\' :: rest) -> '\\' :: (escape_list place rest)
+  | ('\\' :: ' ' :: rest) -> consume_whitespace place (' ' :: rest)
+  | ('\\' :: '\n' :: rest) -> consume_whitespace place (' ' :: rest)
+  | ('\\' :: '\r' :: rest) -> consume_whitespace place (' ' :: rest)
+  | ('\\' :: '\t' :: rest) -> consume_whitespace place (' ' :: rest)
+  | (head :: rest) -> head :: (escape_list place rest)
   | nil -> nil
 
-and consume_whitespace lst =
+and consume_whitespace place lst =
   match lst with
-  | (' '  :: rest) -> consume_whitespace rest
-  | ('\n' :: rest) -> consume_whitespace rest
-  | ('\r' :: rest) -> consume_whitespace rest
-  | ('\t' :: rest) -> consume_whitespace rest
+  | (' '  :: rest) -> consume_whitespace place rest
+  | ('\n' :: rest) -> consume_whitespace place rest
+  | ('\r' :: rest) -> consume_whitespace place rest
+  | ('\t' :: rest) -> consume_whitespace place rest
   | ('\\' :: rest) -> rest
-  | _ -> generic_error BadWhitespaceEscape
+  | _ -> generic_error place BadWhitespaceEscape
 
 let escaped_to_string (EscapedString s) =
   s

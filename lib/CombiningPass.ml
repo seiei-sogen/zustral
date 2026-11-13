@@ -60,7 +60,7 @@ let parse_method_defs (place: place) (module_name: module_name) (imports: import
                   parse_params imports params,
                   qualify_typespec imports rt,
                   method_docstring,
-                  abs_stmt imports body))
+                  abs_stmt place imports body))
     methods
 
 let match_decls (module_name: module_name) (ii: import_map) (bi: import_map) (decl: concrete_decl) (def: concrete_def): combined_definition =
@@ -69,20 +69,16 @@ let match_decls (module_name: module_name) (ii: import_map) (bi: import_map) (de
   in
   match decl with
   | ConcreteConstantDecl (span, name, ty, docstring) ->
-     adorn_error_with_span span
-       (fun _ ->
-         match def with
+     (match def with
          | ConcreteConstantDef (defspan, name', ty', value, _) ->
             if (name = name') && (ty = ty') then
-              CConstant (defspan, VisPublic, name, qualify_typespec ii ty, abs_expr bi value, docstring)
+              CConstant (defspan, VisPublic, name, qualify_typespec ii ty, abs_expr (AtSpan span) bi value, docstring)
             else
               declaration_error (AtSpan span) (DeclarationTypeMismatch name)
          | _ ->
             declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = ConstantDeclaration }))
   | ConcreteOpaqueTypeDecl (span, name, typarams, universe, docstring) ->
-     adorn_error_with_span span
-       (fun _ ->
-         match def with
+     (match def with
          | ConcreteRecordDef (ConcreteRecord (defspan, name', typarams', universe', slots, _)) ->
             if (name = name') && (typarams = typarams') && (universe = universe') then
               let qname = make_qname name' in
@@ -116,9 +112,7 @@ let match_decls (module_name: module_name) (ii: import_map) (bi: import_map) (de
          | _ ->
             declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = TypeDeclaration }))
   | ConcreteFunctionDecl (span, name, typarams, params, rt, docstring) ->
-     adorn_error_with_span span
-       (fun _ ->
-         match def with
+     (match def with
          | ConcreteFunctionDef (defspan, name', typarams', params', rt', body, _, pragmas) ->
             if (name = name') && (typarams = typarams') && (params = params') && (rt = rt') then
               let qname = make_qname name' in
@@ -128,7 +122,7 @@ let match_decls (module_name: module_name) (ii: import_map) (bi: import_map) (de
                          name_typarams (AtSpan span) bi typarams qname,
                          parse_params ii params,
                          qualify_typespec ii rt,
-                         abs_stmt bi body,
+                         abs_stmt (AtSpan span) bi body,
                          docstring,
                          pragmas)
             else
@@ -146,9 +140,7 @@ let match_decls (module_name: module_name) (ii: import_map) (bi: import_map) (de
          | _ ->
             declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = FunctionDeclaration }))
   | ConcreteInstanceDecl (span, name, typarams, argument, docstring) ->
-     adorn_error_with_span span
-       (fun _ ->
-         match def with
+     (match def with
          | ConcreteInstanceDef (ConcreteInstance (defspan, name', typarams', argument', methods, _)) ->
             if (name = name') && (typarams = typarams') && (argument = argument') then
               (* Instance names might refer to an imported typeclass, so we have to
@@ -181,7 +173,7 @@ let private_def module_name im def =
                 VisPrivate,
                 name,
                 qualify_typespec im ty,
-                abs_expr im value,
+                abs_expr NoSpan im value,
                 docstring)
   | ConcreteRecordDef (ConcreteRecord (span, name, typarams, universe, slots, docstring)) ->
      let qname = make_qname name in
@@ -209,7 +201,7 @@ let private_def module_name im def =
                 name_typarams NoSpan im typarams qname,
                 parse_params im params,
                 qualify_typespec im rt,
-                abs_stmt im body,
+                abs_stmt NoSpan im body,
                 docstring,
                 pragmas)
   | ConcreteTypeClassDef (ConcreteTypeClass (span, name, typaram, methods, docstring)) ->

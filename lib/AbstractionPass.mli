@@ -17,6 +17,6 @@ open Cst
 module Ast = Stages.Ast
 open Ast
 
-val abs_stmt : import_map -> cstmt -> astmt
+val abs_stmt : Error.place -> import_map -> cstmt -> astmt
 
-val abs_expr :import_map -> cexpr -> aexpr
+val abs_expr : Error.place -> import_map -> cexpr -> aexpr

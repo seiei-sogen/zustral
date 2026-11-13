@@ -15,9 +15,9 @@ let test_render_bool _ =
   assert_equal (r_e (CBool false)) "false"
 
 let test_render_string _ =
-  assert_equal (r_e (CString  (escape_string "abcd"))) "\"abcd\"";
-  assert_equal (r_e (CString (escape_string "\""))) "\"\\\"\"";
-  assert_equal (r_e (CString (escape_string "\"\"\""))) "\"\\\"\\\"\\\"\""
+  assert_equal (r_e (CString  (escape_string Austral_core.Error.NoSpan "abcd"))) "\"abcd\"";
+  assert_equal (r_e (CString (escape_string Austral_core.Error.NoSpan "\""))) "\"\\\"\"";
+  assert_equal (r_e (CString (escape_string Austral_core.Error.NoSpan "\"\"\""))) "\"\\\"\\\"\\\"\""
 
 (* Which names get the reserved-word escape. The cases that issue #92 calls
    bugs are here as they are today. *)

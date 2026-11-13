@@ -12,7 +12,7 @@ type escaped_string
 
 (* Given a string with escape characters, process the escape characters and
    return a escaped string. *)
-val escape_string : string -> escaped_string
+val escape_string : Error.place -> string -> escaped_string
 
 (* Return a escaped string as a regular string *)
 val escaped_to_string : escaped_string -> string
