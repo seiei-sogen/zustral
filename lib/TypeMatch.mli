@@ -24,6 +24,10 @@ val match_type_with_value : ctx -> ty -> texpr -> type_bindings
 
 val match_type : ctx -> ty -> ty -> type_bindings
 
+(** [match_type] with a failure returned as a value, the error that reports
+    it. For a caller that goes on when the types do not match. *)
+val try_match_type : ctx -> ty -> ty -> (type_bindings, Error.error) result
+
 val match_typarams : ctx -> typarams -> ty list -> type_bindings
 
 (** Find an instance of the given typeclass given the dispatch type.

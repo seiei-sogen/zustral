@@ -872,11 +872,13 @@ and augment_typecast (ctx: expr_ctx) (expr: aexpr) (ty: qtypespec): texpr =
        | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
        | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
        | FnPtr _ | MonoTy _ ->
-          (try
-             let _ = match_type_ctx ctx target_type (get_type expr') in
-             expr'
-           with Austral_error _ ->
-             type_error (CastInvalid { target = target_type; source = get_type expr' })))
+          (match try_match_type (ctx_env ctx, ctx_module_name ctx) target_type (get_type expr') with
+           | Ok _ ->
+              expr'
+           | Error _ ->
+              (* Every failure becomes this error, also an internal error from
+                 checking a constraint of a type variable in the target type. *)
+              type_error (CastInvalid { target = target_type; source = get_type expr' })))
 
 and augment_arglist (ctx: expr_ctx) (args: abstract_arglist): typed_arglist =
   match args with
