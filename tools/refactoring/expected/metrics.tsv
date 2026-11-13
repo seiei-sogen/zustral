@@ -12,7 +12,7 @@ lib/CIdent.ml	41	0	0	0	0	0	1	0	0	0
 lib/CRenderer.ml	305	0	0	0	0	0	1	0	0	0
 lib/CRepr.ml	107	0	0	0	0	0	5	0	0	0
 lib/CliErrors.ml	142	0	1	0	0	0	10	0	0	0
-lib/CodeGen.ml	756	10	0	0	0	6	0	4	0	0
+lib/CodeGen.ml	737	4	0	0	0	5	0	4	0	0
 lib/CombiningPass.ml	370	17	0	0	0	8	0	0	0	0
 lib/Common.ml	69	0	0	0	0	0	3	0	0	0
 lib/Compiler.ml	151	0	0	0	0	0	6	0	0	0
@@ -26,13 +26,14 @@ lib/Entrypoint.ml	157	12	0	0	0	3	0	4	0	0
 lib/EntrypointErrors.ml	63	0	0	0	0	0	0	0	0	0
 lib/Env.ml	591	6	0	0	0	2	1	3	0	0
 lib/EnvExtras.ml	26	1	0	0	0	0	0	1	0	0
-lib/EnvTypes.ml	308	0	0	0	0	0	1	0	0	0
+lib/EnvTypes.ml	313	0	0	0	0	0	1	0	0	0
 lib/EnvUtils.ml	55	0	0	0	0	0	0	0	0	0
 lib/Error.ml	243	12	0	0	0	0	1	1	0	0
 lib/ErrorText.ml	57	0	0	0	0	0	2	0	0	0
 lib/Escape.ml	53	1	0	0	0	1	1	0	0	0
-lib/ExportInstantiation.ml	66	10	0	0	0	0	0	0	0	0
-lib/ExtractionPass.ml	465	14	0	0	0	4	0	0	0	0
+lib/ExportInstantiation.ml	26	0	0	0	0	0	0	0	0	0
+lib/ExtractionPass.ml	473	14	0	0	0	4	0	0	0	0
+lib/ForeignType.ml	84	2	0	0	0	0	0	0	0	0
 lib/GenericErrors.ml	239	0	0	0	0	0	0	0	0	0
 lib/HtmlError.ml	304	0	0	0	0	0	0	0	0	0
 lib/Id.ml	134	0	0	0	0	0	0	0	0	0
@@ -50,7 +51,7 @@ lib/LinearityErrors.ml	159	0	0	0	0	0	0	0	0	0
 lib/LiteralTyping.ml	128	1	0	0	0	5	0	0	0	0
 lib/MonoType.ml	37	0	0	0	0	0	0	0	0	0
 lib/MonoTypeBindings.ml	44	0	0	0	0	0	0	0	0	0
-lib/Monomorphize.ml	766	8	0	0	0	1	0	5	0	0
+lib/Monomorphize.ml	813	9	0	0	0	1	0	6	0	0
 lib/MtastUtil.ml	86	2	0	0	0	0	0	1	0	0
 lib/NumberLiteral.ml	92	0	0	0	0	0	2	0	0	0
 lib/Outcome.ml	53	0	1	0	0	0	0	0	0	0
