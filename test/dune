@@ -10,5 +10,6 @@
   OutcomeTest
   BuiltInNamesTest
   CompilerTest
-  TypeCheckExprTest)
+  TypeCheckExprTest
+  TypeMatchTest)
  (libraries austral_core austral_cli ounit2))

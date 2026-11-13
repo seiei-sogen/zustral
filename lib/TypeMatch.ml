@@ -234,6 +234,12 @@ and check_type_implements_constraints (ctx: ctx) (tv: type_var) (ty: ty) (constr
       (List.of_seq (SIdentSet.to_seq constraints))
 
 and try_constraint (ctx: ctx) (tv: type_var) (ty: ty) (typeclass_name: sident): (unit, error) result =
+  (* get_decl_by_name raises when the module of the name is not in the
+     environment. The miss is returned here, before it can. *)
+  match get_module_by_name (ctx_env ctx) (sident_module_name typeclass_name) with
+  | None ->
+     Error (Declaration (DeclarationErrors.UnknownModule (sident_module_name typeclass_name)))
+  | Some _ ->
   (* Find the typeclass. *)
   match get_decl_by_name (ctx_env ctx) typeclass_name with
   | Some (TypeClass { id; _ }) ->
@@ -252,10 +258,12 @@ and try_constraint (ctx: ctx) (tv: type_var) (ty: ty) (typeclass_name: sident): 
      Error (Internal "No typeclass with the given name. This should have been validated in the extraction pass.")
 
 and try_get_instance (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: decl_id): ((decl * type_bindings) option, error) result =
-  let mod_id: mod_id =
-    let (ModRec { id; _ }) = Option.get (get_module_by_name env source_module_name) in
-    id
-  in
+  match get_module_by_name env source_module_name with
+  | None ->
+     Error (Declaration (DeclarationErrors.UnknownModule source_module_name))
+  (* visible_instances looks the module up again, by this ID. It was found
+     here, so that lookup does not miss. *)
+  | Some (ModRec { id = mod_id; _ }) ->
   let pred (decl: decl): (decl * type_bindings) option =
     match decl with
     | Instance { typeclass_id; argument; _ } ->
