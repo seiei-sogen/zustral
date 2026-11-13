@@ -16,7 +16,7 @@ open Austral_core.Identifier
 
 let compile (code: string): CRepr.c_program Outcome.t =
   Compiler.compile
-    [Compiler.BodyModuleSource { body_filename = "Test.aum"; body_code = code }]
+    [Pipeline.BodyModuleSource { body_filename = "Test.aum"; body_code = code }]
     (Some (make_mod_name "Test", make_ident "main"))
 
 (* The generated C names a declaration (`decl_`), an instance method (`meth_`),

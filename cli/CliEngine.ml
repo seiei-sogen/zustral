@@ -7,7 +7,6 @@
 open Austral_core
 open CliParser
 open Version
-open Compiler
 open CRenderer
 open Os
 open Error
@@ -28,33 +27,33 @@ type source_map = string SourceMap.t
 
 (* Parsing file contents *)
 
-let make_module_source (m: mod_source): module_source =
+let make_module_source (m: mod_source): Pipeline.module_source =
   match m with
   | ModuleSource { inter_path; body_path; } ->
-     TwoFileModuleSource {
+     Pipeline.TwoFileModuleSource {
          int_filename = inter_path;
          int_code = read_file_to_string inter_path;
          body_filename = body_path;
          body_code = read_file_to_string body_path
        }
   | ModuleBodySource { body_path; } ->
-     BodyModuleSource {
+     Pipeline.BodyModuleSource {
          body_filename = body_path;
          body_code = read_file_to_string body_path
        }
 
-let parse_source_files (mods: mod_source list): (module_source list * source_map) =
+let parse_source_files (mods: mod_source list): (Pipeline.module_source list * source_map) =
   let contents = List.map make_module_source mods in
   (* Build source map for error handling *)
   let source_maps =
     List.map (fun source ->
         match source with
-        | TwoFileModuleSource { int_filename; int_code; body_filename; body_code; } ->
+        | Pipeline.TwoFileModuleSource { int_filename; int_code; body_filename; body_code; } ->
            let smap = SourceMap.empty in
            let smap = SourceMap.add int_filename int_code smap in
            let smap = SourceMap.add body_filename body_code smap in
            smap
-        | BodyModuleSource { body_filename; body_code; } ->
+        | Pipeline.BodyModuleSource { body_filename; body_code; } ->
            let smap = SourceMap.empty in
            let smap = SourceMap.add body_filename body_code smap in
            smap)
@@ -135,7 +134,7 @@ and print_compile_usage _: unit =
 
 and exec_compile (modules: mod_source list) (target: target) (error_reporting_mode: error_reporting_mode): unit =
   (* Parse source files *)
-  let (mods, source_map): (module_source list * source_map) = parse_source_files modules in
+  let (mods, source_map): (Pipeline.module_source list * source_map) = parse_source_files modules in
   (* No error leaves the compiler as an exception. If a bug in it lets one
      out, it is reported here like a returned one, in the format asked for. *)
   match Result.join (Outcome.catch (fun () -> exec_target mods target)) with
@@ -173,7 +172,7 @@ and try_adding_source_ctx (error: austral_error) (source_map: source_map): austr
 (** Compile the modules and write what the target asks for. The errors of the
     compiler, and those of writing the output and running `cc`, are in the
     result. *)
-and exec_target (mods: module_source list) (target: target): unit Outcome.t =
+and exec_target (mods: Pipeline.module_source list) (target: target): unit Outcome.t =
   match target with
   | TypeCheck ->
      (* Compile everything, emit no code. *)
@@ -193,7 +192,7 @@ and exec_target (mods: module_source list) (target: target): unit Outcome.t =
 
 (** Compile the modules to C. Without an entrypoint, the result is a
     library. *)
-and compile_to_c (mods: module_source list) (entrypoint: entrypoint option): string Outcome.t =
+and compile_to_c (mods: Pipeline.module_source list) (entrypoint: entrypoint option): string Outcome.t =
   let entrypoint =
     Option.map (fun (Entrypoint (module_name, name): entrypoint) -> (module_name, name)) entrypoint
   in

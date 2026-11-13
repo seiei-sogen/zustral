@@ -41,8 +41,10 @@ T=$(mktemp -d)
 trap 'rm -rf "$T"' EXIT
 
 # The core is lib/, the command line is cli/. BuiltInModules.ml is generated
-# from lib/builtin/ by concat_builtins.py.
-sources() { (cd "$ROOT" && ls lib/*.ml lib/*.mll lib/*.mly cli/*.ml 2> /dev/null | grep -v '^lib/BuiltInModules\.ml$'); }
+# from lib/builtin/ by concat_builtins.py. An interface with no implementation
+# (lib/Pipeline.mli) holds type definitions, so it is counted like a source.
+interfaces_alone() { for i in lib/*.mli; do [[ -e ${i%i} || $i == lib/BuiltInModules.mli ]] || echo "$i"; done; }
+sources() { (cd "$ROOT" && ls lib/*.ml lib/*.mll lib/*.mly cli/*.ml $(interfaces_alone) 2> /dev/null | grep -v '^lib/BuiltInModules\.ml$'); }
 
 count() { # regex file
   grep -cE -- "$1" "$ROOT/$2" || true

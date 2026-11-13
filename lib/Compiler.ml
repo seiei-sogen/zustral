@@ -27,6 +27,7 @@ open ReturnCheck
 open LinearityCheck
 open Entrypoint
 open ExportInstantiation
+open Pipeline
 
 let append_import_to_interface (ci: concrete_module_interface) (import: concrete_import_list): concrete_module_interface =
   let (ConcreteModuleInterface (mn, docstring, imports, decls)) = ci in
@@ -45,18 +46,6 @@ let append_import_to_body (cb: concrete_module_body) (import: concrete_import_li
 (** The environment, and the C generated so far, one unit per module in the
     order the modules were compiled. *)
 type compiler = Compiler of env * c_unit list
-
-type module_source =
-  | TwoFileModuleSource of {
-      int_filename: string;
-      int_code: string;
-      body_filename: string;
-      body_code: string
-    }
-  | BodyModuleSource of {
-      body_filename: string;
-      body_code: string
-    }
 
 open Outcome.Syntax
 
@@ -85,11 +74,17 @@ let parse_and_combine (env: env) (source: module_source): (module_name * Combine
         let* (combined: Combined.combined_module) = body_as_combined env cb in
         Ok (name, combined))
 
+(* The two checks define the types they return, which Pipeline names, so their
+   interfaces cannot name Pipeline's types without a cycle. The types are
+   checked here instead. *)
+let check_returns: Pipeline.check_returns = check_ends_in_return
+let check_linearity: Pipeline.check_linearity = check_module_linearity
+
 let compile_mod (c: compiler) (source: module_source): compiler Outcome.t =
   let (Compiler (env, units)) = c in
   let* (name, combined) = parse_and_combine env source in
   in_module name
-    (let* (returning: returning_module) = check_ends_in_return combined in
+    (let* (returning: returning_module) = check_returns combined in
      let* ((env, combined): env * SmallCombined.combined_module) =
        with_supply env (fun supply -> DesugaringPass.desugar supply returning)
      in
@@ -97,7 +92,7 @@ let compile_mod (c: compiler) (source: module_source): compiler Outcome.t =
      let* ((env, typed): env * typed_module) =
        with_supply env (fun supply -> augment_module env supply linked)
      in
-     let* (checked: checked_module) = check_module_linearity typed in
+     let* (checked: checked_module) = check_linearity typed in
      let* (env: env) = extract_bodies env checked in
      let* ((env, mono): env * mono_module) = monomorphize env checked in
      let* ((env, unit): env * c_unit) = with_supply env (fun supply -> gen_module env supply mono) in
@@ -114,8 +109,7 @@ let rec compile_multiple (c: compiler) (modules: module_source list): compiler O
 let fake_mod_source (is: string) (bs: string): module_source =
   TwoFileModuleSource { int_filename = ""; int_code = is; body_filename = ""; body_code = bs }
 
-let finish (compiler: compiler) (entrypoint: (module_name * identifier) option): c_program Outcome.t =
-  let (Compiler (env, units)) = compiler in
+let finish: Pipeline.finish = fun (env: env) (units: c_unit list) (entrypoint: entrypoint option) ->
   (* The wrapper functions. *)
   let* (env, decls, exported) = monomorphize_wrappers env in
   let* (env, wrapper_unit) =
@@ -143,9 +137,9 @@ let compile_modules (sources: module_source list): compiler Outcome.t =
   let* (c: compiler) = empty_compiler () in
   compile_multiple c sources
 
-let compile (sources: module_source list) (entrypoint: (module_name * identifier) option): c_program Outcome.t =
-  let* (compiler: compiler) = compile_modules sources in
-  finish compiler entrypoint
+let compile (sources: module_source list) (entrypoint: entrypoint option): c_program Outcome.t =
+  let* (Compiler (env, units)) = compile_modules sources in
+  finish env units entrypoint
 
 let check (sources: module_source list): unit Outcome.t =
   Outcome.map ignore (compile_modules sources)

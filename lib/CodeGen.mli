@@ -6,8 +6,6 @@
 *)
 open Identifier
 open Id
-open Env
-open Stages.Mtast
 open CRepr
 
 val gen_function_id : function_id -> CIdent.t
@@ -28,4 +26,4 @@ val gen_foreign_type : MonoType.mono_ty ForeignType.foreign_ty -> c_ty
 
     The variables it makes up are numbered from the supply, which comes back
     without them. *)
-val gen_module : env -> Supply.t -> mono_module -> (c_unit * Supply.t) Outcome.t
+val gen_module : Pipeline.generate

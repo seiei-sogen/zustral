@@ -31,7 +31,7 @@ open Stages.Mtast
     5. You're done.
 
 *)
-val monomorphize : env -> LinearityCheck.checked_module -> (env * mono_module) Outcome.t
+val monomorphize : Pipeline.monomorphize
 
 (** Instantiate the functions the program exports, and everything they use.
     Called once, after all modules. Returns the declarations, and for each

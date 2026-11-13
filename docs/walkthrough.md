@@ -1,185 +1,172 @@
-# How the Austral Compiler Works
+# コンパイラの流れ
 
-This document is a walkthrough of every stage in the Austral bootstrapping
-compiler's pipeline, from source to target.
+この文書は、ソースから C のプログラムができるまでの段を、順にたどる。言葉は `CONTEXT.md` の「コンパイラ」の節に従う。
 
-# Overview
+## 全体
 
-The overall pipeline looks like this:
+![コンパイラの流れ](pipeline.png)
 
-![Compiler pipeline](pipeline.png)
+図の元は `docs/pipeline.dot` である。`docs/` で `make` を実行すると、`pipeline.png` を作り直す。
 
-# Parsing
+段の型と、流れの全体の型は、`lib/Pipeline.mli` に1か所にまとめてある。各段のモジュールは、入口の関数にこの型を付ける。段の型を変えるときは、このファイルを変える。ビルドが、合わなくなった箇所を挙げる。
 
-Every Austral module is divided into two files: the module interface file and
-the module body file.
+例外は、return の検査と線形性の検査である。この2つは、返す型（`ReturnCheck.returning_module`、`LinearityCheck.checked_module`）を自分のモジュールで定義する。`lib/Pipeline.mli` はその型を名指すので、検査のモジュールが `Pipeline` の型を名指すと、依存が循環する。そこで、2つの検査は自分のインターフェースに型を書き、`lib/Compiler.ml` が `Pipeline.check_returns` と `Pipeline.check_linearity` の型を付けて使う。型が食い違えば、そこでビルドが止まる。
 
-Each one is parsed into a separate **CST** (concrete syntax tree) by the
-functions in the `ParserInterface` module.
+流れの全体は、次の2つの関数である。どちらも `lib/Compiler.ml` にある。
 
-# Import Insertion Pass
-
-Each of the module interface and module body are modified to have an implicit
-import of all the symbols in the `Austral.Pervasive` module.
-
-# Combining Pass
-
-The combining pass takes the CST for the module interface and for the module
-body and combines them into a single representation, where all declarations are
-present and have visibility information derived from whether or not they appear
-in the module interface.
-
-# Extraction Pass
-
-The extraction pass goes through a combined module and extracts its declarations
-into the environment. The bodies of functions and methods are ignored.
-
-# Typing Pass
-
-The typing pass is the largest pass by volume: type checking happens here, and
-the untyped AST is converted into a **TAST** (typed abstract syntax tree).
-
-# Linearity Checking
-
-This section describes Austral's **linearity checker**. The linearity checker
-works a lot like abstract interpretation: we traverse the code in execution
-order, keeping track of different things in a state table to implement the
-linearity and borrowing rules.
-
-The linearity checker starts with a function or method to check. Then it
-traverses the code in depth-first order, essentially the order of control
-flow. Throughout the traversal we keep track of two things:
-
-1. The **loop depth**.
-
-2. The **state table**.
-
-The loop depth is: at this point in the code, how many loops are we in? This is
-used to enforce the rule that a linear variable cannot be consumed inside a
-loop, when said variable was defined outside that loop (because the variable
-could be consumed multiple times).
-
-For example:
-
-```
-let x: T := Make_T();
-while ... do
-    let y: U := Make_U();
-    for i from 0 to n do
-        while ... do
-            consume_y(y);
-        end while;
-    end for;
-end while;
-consume_t(x);
+```ocaml
+type compile = module_source list -> entrypoint option -> c_program Outcome.t
+type check = module_source list -> unit Outcome.t
 ```
 
-Here, `x` is defined and consumed at a loop deoth of 0, `y` is defined at a loop
-depth of 1 and consumed at a loop depth of 3.
+- `module_source` は、1つのモジュールのソースの文字列である。インターフェースと本体の2つか、本体だけである。ファイルを読むのは、呼ぶ側（`cli/CliEngine.ml`）である。
+- `entrypoint` は、モジュールの名前と、その中の関数の名前の組である。
+- `Outcome.t` は、`('a, austral_error list) result` である。失敗は値で返る。
+- `compile` は、組み込みモジュール（`Austral.Pervasive`、`Austral.Memory` の順）をコンパイルし、渡されたモジュールを順にコンパイルし、最後に1回だけ仕上げ（`finish`）を行う。
+- `check` は、コマンドラインの型検査だけのモードが使う。仕上げを行わない。
 
-The state table associates linear variables to two things:
+1つのモジュールは、`compile_mod` が段を順につなぐ。つなぎ方は `Outcome.Syntax` の `let*` である。最初の失敗で止まる。モジュールの名前が分かった後の段が返したエラーには、ドライバがその名前を付ける（`in_module`）。
 
-1. The loop depth where that variable is defined.
+## 段の型を読む
 
-2. The current **consumption state** of the variable, which is one of
-   `{Unconsumed, BorrowedRead, BorrowedWrite, Consumed}`.
+段の型から、次のことが読める。
 
-This is how it works:
+- `Outcome.t` を返す段は、失敗しうる。今は、すべての段が `Outcome.t` を返す。
+- `env` を返す段は、環境を変える。抽出、本体の取り出し、単相化である。
+- `Supply.t` を受け取る段は、番号を取る。脱糖、型検査、C の生成である。ドライバは `Env.with_supply` で環境から番号の元を取り出して渡し、段が返した番号の元を環境に戻す。
+- 検査の段は、検査を通ったことを表す抽象型を返す。`ReturnCheck.returning_module` と `LinearityCheck.checked_module` である。作れるのは検査の関数だけである。次の段はこの型を受け取るので、検査を飛ばすことも、順序を入れ替えることもできない。
 
-**The Linearity Checking Algorithm:** Given a function or method definition:
+## 構文解析
 
-1. Initialize `loopDepth` to 0 and `state` to the empty state table.
+```ocaml
+type 'tree parse = string -> string -> 'tree Outcome.t
+```
 
-2. Iterate over every parameter `p` of a linear type:
+モジュールは、インターフェースのファイル（`.aui`）と本体のファイル（`.aum`）に分かれる。本体だけのモジュールもある。`lib/ParserInterface.ml` の `parse_module_int` と `parse_module_body` が、それぞれを構文木（`Cst`）にする。引数は、ソースの文字列とファイル名である。
 
-    1. Add an entry `(name = p, depth = 0, state = Unconsumed)` to the state
-       table.
+構文解析の後、ドライバは、インターフェースと本体に、`Austral.Pervasive` の取り込みを足す。`Austral.Pervasive` そのものには足さない。
 
-3. Traverse the code in depth-first order:
+## 結合
 
-    1. When entering a `for` or `while` loop body, increase `loopDepth` by one.
+```ocaml
+type combine = env -> concrete_module_interface -> concrete_module_body -> Combined.combined_module Outcome.t
+type combine_body = env -> concrete_module_body -> Combined.combined_module Outcome.t
+```
 
-    2. Dually, when leaving a loop body, decrease `loopDepth` by one.
+`lib/CombiningPass.ml` の `combine` が、インターフェースと本体を1つのモジュールにまとめる。宣言には、インターフェースに現れるかどうかから、公開の範囲が付く。本体だけのモジュールは `body_as_combined` が扱い、すべての宣言を公開にする。
 
-    3. When encountering a `let` statement defining a variable `x` of a linear type:
+結合は、取り込みを解決し（`lib/ImportResolution.ml`）、名前を修飾する。文と式は、抽象構文木（`Ast`）になる（`lib/AbstractionPass.ml`）。
 
-        1. Add an entry `(name = x, depth = depth, state = Unconsumed)` to the
-           state table.
+## return の検査
 
-    4. When encountering an `if` statement, traverse the true and false branches
-       separately. The two resulting tables must have the same set of variable
-       names. For each variable, check the state is the same in both
-       tables. This is to enforce that if a variable is consumed in one branch
-       it is consumed in all others. Continue with either table.
+```ocaml
+type check_returns = Combined.combined_module -> ReturnCheck.returning_module Outcome.t
+```
 
-    5. Analogously with `case` statements.
+`lib/ReturnCheck.ml` の `check_ends_in_return` が、関数とメソッドの本体が、`return` 文か `Abort` の呼び出しで終わることを確かめる。
 
-    6. When encountering a `borrow` statement for a variable `x`, check that `x`
-       is `Unconsumed`. Mark `x` as `BorrowedRead` or `BorrowedWrite` for the
-       duration of the statement's body, when the body ends, mark `x` as
-       `Unconsumed`.
+## 脱糖
 
-    7. When encountering a `return` statement, ensure that all variables in the
-       state table are consumed. Otherwise, signal an error.
+```ocaml
+type desugar = Supply.t -> ReturnCheck.returning_module -> (SmallCombined.combined_module * Supply.t) Outcome.t
+```
 
-    8. When encountering an expression, for each variable `x` in the state
-       table:
+`lib/DesugaringPass.ml` の `desugar` が、文と式を、後の段が受け取る小さな言語に書き換える。3つの書き換えを順に行う。
 
-       1. Count the number of times `x` is consumed in the expression and call
-          it `C` (e.g., for `f(x, g(x))` it's twice).
+1. 制御の持ち上げ（`lib/LiftControlPass.ml`）。出力は `AstLC` である。
+2. パスの展開（`lib/DesugarPaths.ml`）。出力は `AstDP` である。
+3. 無名の借用の展開（`lib/DesugarBorrows.ml`）。出力は `AstDB` である。
 
-       2. Count the number of times `x` appears in a read-only anonymous borrow
-          (`&`) and a read-write anonymous borrow (`&!`) and call them `R` and
-          `W`, respectively (e.g., in `f(&x, &x, &!x)` then `R` is two and `W`
-          is one).
+脱糖が出す利用者のエラーは、定数の値の中の借用の1つである。借用を包む文がないからである。
 
-       3. Count the number of times `x` appears at the head of a path and call it
-         `P` (e.g., `x.foo` counts as once).
+## 抽出
 
-       4. Then:
+```ocaml
+type extract = env -> SmallCombined.combined_module -> (env * Linked.linked_module) Outcome.t
+```
 
-           1. If `C > 1`, signal an error, because `x` is being consumed more than once.
+`lib/ExtractionPass.ml` の `extract` が、宣言を環境に登録し、シグネチャの型を読む。関数とメソッドの本体は、まだ登録しない。出力の `Linked` では、宣言が、環境の中の id を持つ。
 
-           2. If `C = 1`, check in the table that `x` is `Unconsumed`, and that
-              `R`, `W`, and `P` are zero (i.e.: we're not reading or borrowing
-              in the same expression where we're consuming), and that the loop
-              depth where `x` was defined is the same as the current value of
-              `loopDepth`. Mark `x` as consumed and move on.
+## 型検査
 
-           3. If `C = 0`:
+```ocaml
+type check_types = env -> Supply.t -> Linked.linked_module -> (Tast.typed_module * Supply.t) Outcome.t
+```
 
-               1. If `W > 1`: signal an error (we can't borrow mutably multiple
-                  times in the same expression).
+`lib/TypingPass.ml` の `augment_module` が、文と式に型を付ける。出力は `Tast` である。借用の領域の番号を、番号の元から取る。
 
-               2. If `W = 1`, check in the table that `x` is `Unconsumed`, and
-                  check that `R` and `P` are zero (i.e., we can't borrow mutably
-                  and also read within the same expression).
+式の型検査の入口は、`lib/TypeCheckExpr.mli` の3つである。
 
-               3. If `W = 0`, either `R` and `P` can be non-zero (i.e., we can
-                  read freely) iff `x` is `Unconsumed`.
+- `infer` は、式から型を求める。
+- `check` は、式が、与えた型を持つことを確かめる。
+- `check_annotated` は、型注釈（`e : T` と `let x: T := e`）の位置で使う。`check` とは振る舞いが違う。リテラルにキャストを付けて C に出し、書き込みの参照を読み取りの参照に変えることを受け付ける。
 
-    9. When leaving the body of a `let` statement or `case` clause, ensure the
-       linear variable(s) introduced is `Consumed`, and then remove it from the
-       table.
+数値リテラルだけに当てはまる規則は、`lib/LiteralTyping.ml` にある。
 
-# Body Extraction Pass
+## 線形性の検査
 
-In the body extraction pass, the bodies of functions and instance methods are
-extracted from a typed module instance and stored in the environment. We need
-the bodies in the environment to instantiate generic functions in the
-monomorphization pass.
+```ocaml
+type check_linearity = Tast.typed_module -> LinearityCheck.checked_module Outcome.t
+```
 
-# Monomorphization Pass
+`lib/LinearityCheck.ml` の `check_module_linearity` が、線形の値がちょうど1回使われることと、借用の規則を調べる。関数とメソッドの本体を、1つずつ、実行の順にたどる。
 
-In the monomorphization pass, generic types and functions are instantiated into
-concrete types.
+たどりながら、次の2つを持つ。
 
-# Code Generation
+- ループの深さ。ループの本体に入ると1つ増える。
+- 状態の表。変数ごとに、型、定義したときのループの深さ、使われた状態を持つ。状態は `Unconsumed`、`BorrowedRead`、`BorrowedWrite`、`Consumed` の4つである。表は、ループの中で使った変数の一覧も持つ。
 
-In the code generation pass, a monomorphized module is converted into a C
-translation unit.
+規則は、次のとおりである。表には、どの宇宙の変数も入る。宇宙が `Linear` か `Type` でない変数は、使っても `Consumed` にならない。下の規則のエラーは、`borrow` 文のもの（5）を除いて、宇宙が `Linear` か `Type` の変数にだけ出る。
 
-# Rendering
+1. 引数を、深さ 0、`Unconsumed` で表に入れる。`let` や `case` の束縛も、そのときの深さで入れる。
+2. 式を調べるとき、表の変数ごとに、式の中で使われた回数を数える。`Unconsumed` の変数を1回使うと、`Consumed` になる。2回以上使うとエラーである。借用されている変数や、もう使った変数を使うのもエラーである。
+3. 定義したときと違う深さで使った変数は、ループの中で使った変数の一覧に入る。ループを出るとき、ループの中で使って、代入し直していない変数があれば、エラーである。
+4. `if` は、2つの枝を別々にたどり、両方の表にある変数の状態が同じことを確かめる。宇宙が `Linear` か `Type` の変数だけを比べる。`case` は、枝の表を2つずつ組にして比べる（1つ目と2つ目、3つ目と4つ目、のように）。
+5. `borrow` 文は、元の変数が `Unconsumed` であることを確かめ、本体の間だけ `BorrowedRead` か `BorrowedWrite` にする。読み取りの借用は、読み取りの借用の中でも行える。
+6. `return` 文では、表のすべての変数が `Consumed` でなければならない。書き込みの参照と書き込みのスパンは、使わずに捨ててよい。
+7. 束縛の範囲を出るとき、その変数が `Consumed` でなければエラーである。書き込みの参照と書き込みのスパンは除く。
+8. 使った変数に代入すると、`Unconsumed` に戻る。使っていない変数への代入はエラーである。
 
-In the rendering pass, implemented in the `CRender` module, the C code AST is
-rendered into C code which is dumped to a file for GCC/Clang to compile.
+式の中で数えるのは、変数が使われた回数だけである。無名の借用（`&x`、`&!x`）は、脱糖が `borrow` 文に書き換えている。
+
+## 本体の取り出し
+
+```ocaml
+type extract_bodies = env -> LinearityCheck.checked_module -> env Outcome.t
+```
+
+`lib/BodyExtractionPass.ml` の `extract_bodies` が、関数とインスタンスのメソッドの本体を、環境に入れる。汎用の関数を単相化するときに、本体が要るからである。失敗は、環境の内部エラーだけである。
+
+## 単相化
+
+```ocaml
+type monomorphize = env -> LinearityCheck.checked_module -> (env * Mtast.mono_module) Outcome.t
+```
+
+`lib/Monomorphize.ml` の `monomorphize` が、汎用の宣言を、使われている型ごとの宣言に展開する。出力は `Mtast` である。単相は環境に登録する。単相の本体の中で、さらに別の単相が見つかれば、それも登録する。新しい単相がなくなるまで繰り返す。単相化の後の型（`MonoType.mono_ty`）に残る型変数は、領域の型変数（`MonoRegionTyVar`）だけである。
+
+## C の生成
+
+```ocaml
+type generate = env -> Supply.t -> Mtast.mono_module -> (c_unit * Supply.t) Outcome.t
+```
+
+`lib/CodeGen.ml` の `gen_module` が、`Mtast` のモジュールから、C の構文木（`lib/CRepr.ml`）の1つの単位を作る。C の変数の番号を、番号の元から取る。前の段の型が表せない状態に備えて、内部エラーを出しうる（issue #117）。
+
+## 仕上げ
+
+```ocaml
+type finish = env -> c_unit list -> entrypoint option -> c_program Outcome.t
+```
+
+すべてのモジュールの後に、`lib/Compiler.ml` の `finish` が1回だけ動く。
+
+1. 公開する関数を単相化する（`Monomorphize.monomorphize_wrappers`）。その C を、1つの単位として作る。
+2. 公開する関数の包みを作る（`lib/ExportInstantiation.ml` の `all_wrappers`）。
+3. エントリポイントが与えられていれば、その C を作る（`lib/Entrypoint.ml` の `entrypoint_code`）。
+
+出力の `c_program` は、C の前置き（`lib/prelude.c`）、モジュールごとの単位、包みの単位、エントリポイントを、書き出す順に持つ。
+
+## 文字列にする
+
+C のプログラムを文字列にするのは、端である。`cli/CliEngine.ml` が、`lib/CRenderer.ml` の `render_program` を1回だけ呼ぶ。端は、その文字列をファイルに書き、実行ファイルを作るときは `cc` を呼ぶ。

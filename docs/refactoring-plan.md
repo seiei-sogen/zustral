@@ -127,27 +127,38 @@ type compile = source list -> entrypoint option -> c_program outcome
 
 ### 4.2 段は、関数の型である
 
+段の型は、R27 で `lib/Pipeline.mli` に1か所にまとめた。次は、そのファイルからの抜き書きである。
+
 ```ocaml
-type parse           = source -> parsed_module outcome
-type combine         = env -> parsed_module -> combined_module outcome
-type check_returns   = combined_module -> returning_module outcome
-type desugar         = returning_module -> small_combined_module
-type extract         = env -> small_combined_module -> (env * linked_module) outcome
-type check_types     = env -> linked_module -> typed_module outcome
-type check_linearity = typed_module -> checked_module outcome
-type extract_bodies  = env -> checked_module -> env
-type monomorphize    = env -> checked_module -> (env * mono_module) outcome
-type generate        = env -> mono_module -> c_unit
+type 'tree parse      = string -> string -> 'tree Outcome.t
+type combine          = env -> concrete_module_interface -> concrete_module_body -> Combined.combined_module Outcome.t
+type combine_body     = env -> concrete_module_body -> Combined.combined_module Outcome.t
+type check_returns    = Combined.combined_module -> ReturnCheck.returning_module Outcome.t
+type desugar          = Supply.t -> ReturnCheck.returning_module -> (SmallCombined.combined_module * Supply.t) Outcome.t
+type extract          = env -> SmallCombined.combined_module -> (env * Linked.linked_module) Outcome.t
+type check_types      = env -> Supply.t -> Linked.linked_module -> (Tast.typed_module * Supply.t) Outcome.t
+type check_linearity  = Tast.typed_module -> LinearityCheck.checked_module Outcome.t
+type extract_bodies   = env -> LinearityCheck.checked_module -> env Outcome.t
+type monomorphize     = env -> LinearityCheck.checked_module -> (env * Mtast.mono_module) Outcome.t
+type generate         = env -> Supply.t -> Mtast.mono_module -> (c_unit * Supply.t) Outcome.t
 
 (* すべてのモジュールの後に、1回だけ *)
-type finish          = env -> entrypoint option -> c_unit list outcome
+type finish           = env -> c_unit list -> entrypoint option -> c_program Outcome.t
 ```
 
-並びは、計画の時点の `compile_mod`（`lib/Compiler.ml` の 92 行から）と `post_compile`（130 行）のとおりである。`post_compile` は、R10 で `finish` になった。段を足したり、入れ替えたりはしない。`finish` は、公開する関数の包みと、エントリポイントを作る。公開する関数の型の検査（`lib/ExportInstantiation.ml`）は、いまここで失敗しうる。
+並びは、計画の時点の `compile_mod`（`lib/Compiler.ml` の 92 行から）と `post_compile`（130 行）のとおりである。`post_compile` は、R10 で `finish` になった。段を足したり、入れ替えたりはしていない。`finish` は、公開する関数の包みと、エントリポイントを作る。
 
-- `outcome` のない段は、失敗しない。目標は、`desugar` と `generate` がそうなることである。R13 の時点では、どちらも失敗しうる。脱糖は、利用者のエラーを2種類出す（定数の中の借用など）。C の生成は、外部関数の型のエラーを出す（R22 で前の段へ移す）。そのため、R13 では、この2つも `outcome` を返す。本体の取り出し（`extract_bodies`）も、内部エラーを出しうるので `outcome` を返す。`lib/CodeGen.ml` には、例外を投げる箇所が、計画の時点で 16、R23 の後で 13 ある。目標は 0 である。前の段の型が、不正な入力を表せなくする。
-- `returning_module` と `checked_module` は、検査を通ったことを表す型である。計画の時点では、検査の後も、検査の前と同じ型のままだった。検査を通していないモジュールを、後ろの段へ渡せた。R23 で、検査の関数だけが作れる抽象型になった。
-- `env` は、今も値として受け渡している。id の採番だけが、大域の状態に残っている。次の番号を持つ値を、`env` に入れて受け渡す。脱糖、型検査、C の生成も番号を取るので、進めた値を返す必要がある。上の型では、見やすさのために省いた。
+各段のモジュールは、入口の関数にこの型を付ける（`val extract : Pipeline.extract` など）。`lib/Compiler.ml` は、段をつなぐだけである。
+
+計画の最初の目標と違う点は、次のとおりである。
+
+- **構文解析と結合は、2つずつある。** インターフェースと本体は、別々のファイルなので、別々に読む。ドライバは、読んだ後に、`Austral.Pervasive` の取り込みを足す。本体だけのモジュールは、`combine_body` で結合する。
+- **`desugar` は、今も失敗しうる。** 定数の値の中の借用は、エラーである。借用を包む文がないからである。目標の2種類のうち、代入の左辺のエラーは、R24 で構文木の型がなくした。
+- **`generate` は、今も失敗しうる。** `lib/CodeGen.ml` には、内部エラーを投げる箇所が 4 ある（計画の時点で 16）。段の木が型の全体を持つことと、領域の型変数が残ることから来ている（R24 の「結果（2回目）」）。目標の 0 には届いていない。
+- **`extract_bodies` は、`outcome` を返す。** 本体を2回付けるなど、環境の内部エラーを出しうるからである。
+- **脱糖、型検査、C の生成は、`Supply.t` を受け取り、進めた値を返す。** 最初の型では、見やすさのために省いていた。ドライバは、`Env.with_supply` で `env` から取り出して渡し、戻った値を `env` に入れる（R16）。
+- **`finish` は、C のプログラム全体（`c_program`）を返す。** R10 で、文字列にする前の値を返す形にした。モジュールごとの単位は、引数で受け取る。
+- **return の検査と線形性の検査は、自分のインターフェースに型を書く。** 2つの検査は、検査を通ったことを表す抽象型（`returning_module`、`checked_module`。R23）を定義する。`lib/Pipeline.mli` はその型を名指すので、検査のモジュールが `Pipeline` を名指すと、依存が循環する。`lib/Compiler.ml` が、2つの検査に `Pipeline` の型を付けて使う。
 
 ### 4.3 エラーは、構造のある値である
 

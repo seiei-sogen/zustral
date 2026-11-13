@@ -5,13 +5,10 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 (** The type checker. *)
-open Env
-open Stages.Linked
-open Stages.Tast
 
 (** The context for statement checking. *)
 type stmt_ctx
 
 (** Check the types of a module. The regions of its borrows are numbered from
     the supply, which comes back without them. *)
-val augment_module : env -> Supply.t -> linked_module -> (typed_module * Supply.t) Outcome.t
+val augment_module : Pipeline.check_types
