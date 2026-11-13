@@ -1,0 +1,13 @@
+module body Test is
+    function addByte(a: Int64, b: Nat8): Int64 is
+        return a;
+    end;
+
+    function main(): ExitCode is
+        let trappingAdd: Fn[Nat8, Int64, Int64] := addByte;
+        let x: Int64 := 40;
+        let y: Int64 := x + 300;
+        printLn(y);
+        return ExitSuccess();
+    end;
+end module body.
