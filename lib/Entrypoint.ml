@@ -68,23 +68,23 @@ let rec check_entrypoint_validity (env: env) (name: qident): function_id * entry
         })
 
 and is_root_cap_type = function
-  | NamedType (name, [], LinearUniverse) ->
+  | NamedType (name, _, [], LinearUniverse) ->
      let m = equal_module_name (source_module_name name) pervasive_module_name
      and n = equal_identifier (original_name name) (make_ident BuiltInNames.root_capability_name) in
      m && n
-  | NamedType (_, [], (FreeUniverse | TypeUniverse | RegionUniverse))
-  | NamedType (_, _ :: _, _)
+  | NamedType (_, _, [], (FreeUniverse | TypeUniverse | RegionUniverse))
+  | NamedType (_, _, _ :: _, _)
   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
   | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
      false
 
 and is_exit_code_type = function
-  | NamedType (name, [], FreeUniverse) ->
+  | NamedType (name, _, [], FreeUniverse) ->
      let m = equal_module_name (source_module_name name) pervasive_module_name
      and n = equal_identifier (original_name name) (make_ident BuiltInNames.exit_code_name) in
      m && n
-  | NamedType (_, [], (LinearUniverse | TypeUniverse | RegionUniverse))
-  | NamedType (_, _ :: _, _)
+  | NamedType (_, _, [], (LinearUniverse | TypeUniverse | RegionUniverse))
+  | NamedType (_, _, _ :: _, _)
   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
   | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
      false

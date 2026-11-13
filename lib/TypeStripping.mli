@@ -20,7 +20,7 @@ type stripped_ty =
   | SInteger of signedness * integer_width
   | SSingleFloat
   | SDoubleFloat
-  | SNamedType of qident * stripped_ty list
+  | SNamedType of qident * Id.type_decl_id * stripped_ty list
   | SRegionTy of region
   | SReadRef of stripped_ty * stripped_ty
   | SWriteRef of stripped_ty * stripped_ty

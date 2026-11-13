@@ -559,7 +559,7 @@ module Tast = struct
         case_name: identifier;
         args: (identifier * texpr) list;
       }
-    (** The type is `NamedType (type_name, tyargs, universe)`: `get_type`
+    (** The type is `NamedType (type_name, UnionTypeId union_id, tyargs, universe)`: `get_type`
         builds it, so the monomorph of the union and the type of the value
         come from the same type arguments. *)
     | TSlotAccessor of texpr * identifier * ty

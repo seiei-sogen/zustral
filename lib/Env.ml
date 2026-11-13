@@ -141,16 +141,23 @@ let register (type id) (place: place) (env: env) (registration: id registration)
     let (id, supply) = fresh supply in
     (Env { mods; methods; decls = (make id) :: decls; monos; exports; supply }, id)
   in
+  (* A record or a union has its ID already. It still takes the number a
+     declaration takes, and leaves it unused, so that the declarations after it
+     have the numbers they had before its ID was reserved: a function's number
+     is in the name the generated C gives it. *)
+  let add_reserved (type kind_id) (id: kind_id) (make: kind_id -> decl): (env * kind_id) =
+    add_decl (fun supply -> (id, snd (Supply.next_decl_id supply))) make
+  in
   match registration with
   | NewConstant { mod_id; vis; name; ty; docstring } ->
      name_must_be_free mod_id name;
      add_decl fresh_constant_id (fun id -> Constant { id; mod_id; vis; name; ty; docstring })
-  | NewRecord { mod_id; vis; name; docstring; typarams; universe; slots } ->
+  | NewRecord { id; mod_id; vis; name; docstring; typarams; universe; slots } ->
      name_must_be_free mod_id name;
-     add_decl fresh_record_id (fun id -> Record { id; mod_id; vis; name; docstring; typarams; universe; slots })
-  | NewUnion { mod_id; vis; name; docstring; typarams; universe } ->
+     add_reserved id (fun id -> Record { id; mod_id; vis; name; docstring; typarams; universe; slots })
+  | NewUnion { id; mod_id; vis; name; docstring; typarams; universe } ->
      name_must_be_free mod_id name;
-     add_decl fresh_union_id (fun id -> Union { id; mod_id; vis; name; docstring; typarams; universe })
+     add_reserved id (fun id -> Union { id; mod_id; vis; name; docstring; typarams; universe })
   | NewUnionCase { mod_id; vis; union_id; name; docstring; slots } ->
      (* Not checked (#86): a case can take the name of another case, or of any
         other declaration of the module. *)
@@ -178,6 +185,16 @@ let register (type id) (place: place) (env: env) (registration: id registration)
      let (id, supply) = fresh_ins_meth_id supply in
      let meth = InsMethRec { id; instance_id; method_id; docstring; name; typarams; value_params; rt; body } in
      (Env { mods; methods = meth :: methods; decls; monos; exports; supply }, id)
+
+let reserve_record_id (env: env): (env * record_id) =
+  let (Env { mods; methods; decls; monos; exports; supply }) = env in
+  let (id, supply) = fresh_record_id supply in
+  (Env { mods; methods; decls; monos; exports; supply }, id)
+
+let reserve_union_id (env: env): (env * union_id) =
+  let (Env { mods; methods; decls; monos; exports; supply }) = env in
+  let (id, supply) = fresh_union_id supply in
+  (Env { mods; methods; decls; monos; exports; supply }, id)
 
 (* The lookups by an ID that says its kind. Each looks only at the declarations
    of that kind, so what it returns is one, and it misses in the one case that
@@ -427,13 +444,13 @@ let get_type_monomorph (env: env) (id: mono_id): (mod_id * TypeSignature.type_si
     | MonoRecordDefinition { id = mono_id; type_id; tyargs; _ } ->
        if equal_mono_id id (mono_id_of_record mono_id) then
          let { mod_id; name; typarams; universe; _ }: record_decl = get_record env type_id in
-         Some (mod_id, TypeSignature.TypeSignature (name, typarams, universe), tyargs)
+         Some (mod_id, TypeSignature.TypeSignature (name, typarams, universe, RecordTypeId type_id), tyargs)
        else
          None
     | MonoUnionDefinition { id = mono_id; type_id; tyargs; _ } ->
        if equal_mono_id id (mono_id_of_union mono_id) then
          let { mod_id; name; typarams; universe; _ }: union_decl = get_union NoSpan env type_id in
-         Some (mod_id, TypeSignature.TypeSignature (name, typarams, universe), tyargs)
+         Some (mod_id, TypeSignature.TypeSignature (name, typarams, universe, UnionTypeId type_id), tyargs)
        else
          None
     | MonoFunction _ | MonoInstanceMethod _ ->

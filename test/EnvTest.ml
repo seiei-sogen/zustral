@@ -80,8 +80,10 @@ let test_monomorph_key_not_registered _ =
         imported_instances = InstanceIdSet.empty
       }
   in
+  let (env, exit_code_id) = Env.reserve_union_id env in
   let (env, _) =
     Env.register NoSpan env (NewUnion {
+        id = exit_code_id;
         mod_id;
         vis = TypeVisPublic;
         name = exit_code;
@@ -98,7 +100,7 @@ let test_monomorph_key_not_registered _ =
         docstring = Docstring "";
         typarams = Austral_core.TypeParameters.empty_typarams;
         value_params = [];
-        rt = Austral_core.Type.NamedType (make_qident (pervasive, exit_code, exit_code), [], Austral_core.Type.FreeUniverse);
+        rt = Austral_core.Type.NamedType (make_qident (pervasive, exit_code, exit_code), Id.UnionTypeId exit_code_id, [], Austral_core.Type.FreeUniverse);
         impl = BodyNotAttached
       })
   in

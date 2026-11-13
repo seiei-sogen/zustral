@@ -89,8 +89,8 @@ let rec get_type (place: place) = function
      get_type place t
   | TRecordConstructor (ty, _) ->
      ty
-  | TUnionConstructor { type_name; tyargs; universe; _ } ->
-     NamedType (type_name, tyargs, universe)
+  | TUnionConstructor { union_id; type_name; tyargs; universe; _ } ->
+     NamedType (type_name, Id.UnionTypeId union_id, tyargs, universe)
   | TEmbed (ty, _, _) ->
      ty
   | TDeref (_, ty) ->

@@ -16,7 +16,7 @@ type stripped_ty =
   | SInteger of signedness * integer_width
   | SSingleFloat
   | SDoubleFloat
-  | SNamedType of qident * stripped_ty list
+  | SNamedType of qident * Id.type_decl_id * stripped_ty list
   | SRegionTy of region
   | SReadRef of stripped_ty * stripped_ty
   | SWriteRef of stripped_ty * stripped_ty
@@ -41,8 +41,8 @@ let rec strip_type (ty: ty): stripped_ty =
      SSingleFloat
   | DoubleFloat ->
      SDoubleFloat
-  | NamedType (n, args, _) ->
-     SNamedType (n, List.map strip_type args)
+  | NamedType (n, id, args, _) ->
+     SNamedType (n, id, List.map strip_type args)
   | RegionTy r ->
      SRegionTy r
   | ReadRef (ty, r) ->

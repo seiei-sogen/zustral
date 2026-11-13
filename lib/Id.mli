@@ -32,9 +32,10 @@ type mono_id
 (** {1 IDs that say what kind of declaration they stand for}
 
     Each of these takes the next number of the declarations, so the kinds
-    share one sequence, and prints as the others do. Its type says which kind
-    of declaration the environment made it for, so the lookup that takes it
-    returns a declaration of that kind. *)
+    share one sequence, and prints as the others do. A record's and a union's
+    ID take theirs from a sequence of their own ({!Supply.next_type_id}). Its
+    type says which kind of declaration the environment made it for, so the
+    lookup that takes it returns a declaration of that kind. *)
 
 (** The type of constant IDs. *)
 type constant_id
@@ -63,6 +64,12 @@ type union_id
 
 (** The type of instance IDs. *)
 type instance_id
+[@@deriving (eq, show)]
+
+(** The ID of the declaration a named type names: a record or a union. *)
+type type_decl_id =
+  | RecordTypeId of record_id
+  | UnionTypeId of union_id
 [@@deriving (eq, show)]
 
 (** {1 Monomorph IDs that say what kind of monomorph they stand for}

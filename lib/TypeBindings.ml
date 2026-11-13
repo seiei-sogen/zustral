@@ -134,9 +134,9 @@ let rec replace_variables bindings ty =
      SingleFloat
   | DoubleFloat ->
      DoubleFloat
-  | NamedType (n, a, u) ->
+  | NamedType (n, id, a, u) ->
      let a' = List.map (replace_variables bindings) a in
-     NamedType (n, a', replaced_universe u a')
+     NamedType (n, id, a', replaced_universe u a')
   | TyVar tv ->
      (match get_binding bindings (tyvar_to_typaram tv) with
       | Some ty -> ty

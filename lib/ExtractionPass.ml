@@ -83,23 +83,24 @@ let check_all_type_parameters_appear_in_signature (place: place) (typarams: typa
   in
   List.iter check_typaram (typarams_as_list typarams)
 
-let rec extract_type_signatures (CombinedModule { decls; _ }): type_signature list =
-  List.filter_map extract_type_signatures' decls
+(* What is left of extracting a definition once the IDs of the records and
+   unions of its module are reserved: it gets the environment and the type
+   signatures of the module, and registers the definition. *)
+type extraction = env -> type_signature list -> env * linked_definition
 
-and extract_type_signatures' (def: combined_definition): type_signature option =
-  match def with
-  | CConstant _ ->
-     None
-  | CRecord (_, _, name, typarams, universe, _, _) ->
-     Some (TypeSignature (name, typarams, universe))
-  | CUnion (_, _, name, typarams, universe, _, _) ->
-     Some (TypeSignature (name, typarams, universe))
-  | CFunction _ ->
-     None
-  | CTypeclass _ ->
-     None
-  | CInstance _ ->
-     None
+(* The parsers of the types a definition writes, which look the types of the
+   module up in its signatures. *)
+let parsers (env: env) (local_types: type_signature list)
+    : (place -> region_map -> typarams -> Ast.qtypespec -> ty)
+      * (place -> typarams -> Combined.qslot -> typed_slot)
+      * (place -> typarams -> Combined.qparam -> value_parameter) =
+  let parse' (place: place) = parse_type place env local_types in
+  let parse_slot (place: place) (typarams: typarams) (Combined.QualifiedSlot (n, ts)): typed_slot =
+    TypedSlot (n, parse' place empty_region_map typarams ts)
+  and parse_param (place: place) (typarams: typarams) (Combined.QualifiedParameter (n, ts)): value_parameter =
+    ValueParameter (n, parse' place empty_region_map typarams ts)
+  in
+  (parse', parse_slot, parse_param)
 
 (* The first region type variable that a value of this type holds, in the C
    the code generator writes for it. A reference, a pointer and an address hold
@@ -113,7 +114,7 @@ let rec region_held_by_value (place: place) (env: env) (seen: ty list) (ty: ty):
       | FreeUniverse | LinearUniverse | TypeUniverse -> None)
   | ReadRef (ty, _) | WriteRef (ty, _) | Address ty | Pointer ty ->
      region_held_by_value place env seen ty
-  | NamedType (name, args, _) ->
+  | NamedType (name, _, args, _) ->
      if List.exists (equal_ty ty) seen then
        None
      else
@@ -198,11 +199,15 @@ let rec extract (env: env) (cmodule: combined_module): (env * linked_module) Out
         in
         add_module env input)
   in
-  (* Extract the list of local type signatures. This lets us parse type
-     specifiers without reference to the environment. *)
-  let sigs: type_signature list = extract_type_signatures cmodule in
+  (* Reserve the IDs of the records and unions of the module, and extract the
+     list of local type signatures. This lets us parse type specifiers before
+     the types they name are registered. *)
+  let* (env, reserved): (env * (type_signature option * extraction) list) =
+    Outcome.catch (fun () -> map_with_context (fun (env, def) -> reserve_definition env mod_id name def) env decls)
+  in
+  let sigs: type_signature list = List.filter_map fst reserved in
   (* Extract all declarations from the module into the environment. *)
-  let* (env, linked_defs) = extract_definitions env mod_id name sigs decls in
+  let* (env, linked_defs) = extract_definitions env sigs (List.map snd reserved) in
   let* () = Outcome.catch (fun () -> List.iter2 (check_instance_methods_hold_no_region env) decls linked_defs) in
   (* Construct the linked module *)
   let lmod = LinkedModule {
@@ -218,34 +223,34 @@ let rec extract (env: env) (cmodule: combined_module): (env * linked_module) Out
   in
   Ok (env, lmod)
 
-(** Given the environment, the ID of the module we're extracting, the list of
-    local type signatures, and a list of combined definitions, add all relevant
-    decls to the environment, and return all corresponding linked decls. *)
-and extract_definitions (env: env) (mod_id: mod_id) (mn: module_name) (local_types: type_signature list) (defs: combined_definition list): (env * (linked_definition list)) Outcome.t =
-  let f ((env, comb_def): (env * combined_definition)): (env * linked_definition) Outcome.t =
-    Outcome.catch (fun () -> extract_definition env mod_id mn local_types comb_def)
+(** Given the environment, the list of local type signatures, and what is left
+    of extracting each definition of a module, add all relevant decls to the
+    environment, and return all corresponding linked decls. *)
+and extract_definitions (env: env) (local_types: type_signature list) (extractions: extraction list): (env * (linked_definition list)) Outcome.t =
+  let f ((env, extraction): (env * extraction)): (env * linked_definition) Outcome.t =
+    Outcome.catch (fun () -> extraction env local_types)
   in
-  Outcome.traverse_with_context f env defs
+  Outcome.traverse_with_context f env extractions
 
-(** Given the environment, the ID of the module we're extracting, the list of
-    local type signatures, and a combined definition, add all relevant decls to
-    the environment, and return a linked definition. *)
-and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_types: type_signature list) (def: combined_definition): (env * linked_definition)  =
+(** Given the environment, the ID of the module we're extracting, and a
+    combined definition, reserve the ID of a record or a union, and return its
+    type signature, with what is left of extracting the definition: adding all
+    relevant decls to the environment, and returning a linked definition. *)
+and reserve_definition (env: env) (mod_id: mod_id) (mn: module_name) (def: combined_definition): (env * (type_signature option * extraction)) =
   let rm = empty_region_map in
-  let parse' (place: place) = parse_type place env local_types in
-  let rec parse_slot (place: place) (typarams: typarams) (Combined.QualifiedSlot (n, ts)): typed_slot =
-    TypedSlot (n, parse' place rm typarams ts)
-  and parse_param (place: place) (typarams: typarams) (Combined.QualifiedParameter (n, ts)): value_parameter =
-    ValueParameter (n, parse' place rm typarams ts)
-  in
   match def with
   | CConstant (span, vis, name, typespec, def, docstring) ->
+     (env, (None, fun env local_types ->
+     let (parse', _, _) = parsers env local_types in
      (let place: place = AtSpan span in
          let ty = parse' place rm empty_typarams typespec in
          let (env, decl_id) = register place env (NewConstant { mod_id; vis; name; ty; docstring }) in
          let decl = LConstant (decl_id, vis, name, ty, def, docstring) in
-         (env, decl))
+         (env, decl))))
   | CRecord (span, vis, name, typarams, universe, slots, docstring) ->
+     let (env, id) = reserve_record_id env in
+     (env, (Some (TypeSignature (name, typarams, universe, RecordTypeId id)), fun env local_types ->
+     let (_, parse_slot, _) = parsers env local_types in
      (let place: place = AtSpan span in
          let slots = List.map (parse_slot place typarams) slots in
          (* If the universe is `Free`, check that there are no slots with types in the `Type` or `Linear` universes. *)
@@ -278,10 +283,13 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
            | FreeUniverse | LinearUniverse | TypeUniverse ->
               ()
          in
-         let (env, decl_id) = register place env (NewRecord { mod_id; vis; name; docstring; typarams; universe; slots }) in
+         let (env, decl_id) = register place env (NewRecord { id; mod_id; vis; name; docstring; typarams; universe; slots }) in
          let decl = LRecord (decl_id, vis, name, typarams, universe, slots, docstring) in
-         (env, decl))
+         (env, decl))))
   | CUnion (span, vis, name, typarams, universe, cases, docstring) ->
+     let (env, id) = reserve_union_id env in
+     (env, (Some (TypeSignature (name, typarams, universe, UnionTypeId id)), fun env local_types ->
+     let (_, parse_slot, _) = parsers env local_types in
      (let place: place = AtSpan span in
          (* If the universe is `Free`, check that there are no cases with slots with types in the `Type` or `Linear` universes. *)
          let _ =
@@ -311,7 +319,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
               ()
          in
          (* Add the union itself to the env *)
-         let (env, union_id) = register place env (NewUnion { mod_id; vis; name; docstring; typarams; universe }) in
+         let (env, union_id) = register place env (NewUnion { id; mod_id; vis; name; docstring; typarams; universe }) in
          (* If the union is public, the cases are public, otherwise they are private. *)
          let case_vis: vis =
            match vis with
@@ -336,8 +344,10 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
          let (env, linked_cases) = add_union_cases place env cases in
          (* Construct the decl *)
          let decl = LUnion (union_id, vis, name, typarams, universe, linked_cases, docstring) in
-         (env, decl))
+         (env, decl))))
   | CFunction (span, vis, name, typarams, params, rt, body, docstring, pragmas) ->
+     (env, (None, fun env local_types ->
+     let (parse', _, parse_param) = parsers env local_types in
      (let place: place = AtSpan span in
          let value_params = List.map (parse_param place typarams) params
          and rt = parse' place rm typarams rt
@@ -410,8 +420,10 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
               env
          in
          let decl = LFunction (decl_id, vis, name, typarams, value_params, rt, body, docstring, pragmas) in
-         (env, decl))
+         (env, decl))))
   | CTypeclass (span, vis, name, typaram, methods, docstring) ->
+     (env, (None, fun env local_types ->
+     let (parse', _, parse_param) = parsers env local_types in
      (let place: place = AtSpan span in
          (* Check: the universe is one of {Type, Linear, Free} *)
          let _ =
@@ -446,8 +458,10 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
          let (env, linked_methods) = add_type_class_methods place env methods in
          (* Construct the decl *)
          let decl = LTypeclass (typeclass_id, vis, name, typaram, linked_methods, docstring) in
-         (env, decl))
+         (env, decl))))
   | CInstance (span, decl_span, vis, name, typarams, argument, methods, docstring) ->
+     (env, (None, fun env local_types ->
+     let (parse', _, parse_param) = parsers env local_types in
      (let place: place = AtSpan span in
          let typeclass_name = qident_to_sident name |> sident_name in
          (* First add the instance to the env, then the methods. *)
@@ -517,7 +531,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
          let (env, linked_methods) = add_instance_methods place env methods in
          (* Construct the decl *)
          let decl = LInstance (instance_id, vis, name, typarams, argument, linked_methods, docstring) in
-         (env, decl))
+         (env, decl))))
 
 (** Utility functions to add lists of things to the environment. *)
 and add_union_cases (place: place) (env: env) (cases: union_case_input list): (env * (linked_case list)) =

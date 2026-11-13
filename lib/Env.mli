@@ -78,6 +78,19 @@ val module_name_from_id : Error.place -> env -> mod_id -> module_name
     cases, typeclass methods, instances and instance methods are not checked. *)
 val register : Error.place -> env -> 'id registration -> (env * 'id)
 
+(** The ID of a record that the module being extracted declares, before the
+    record is registered: the type parser reads the types of the module before
+    their declarations are registered, and a named type holds the ID of its
+    declaration. The record is registered under it ([NewRecord]).
+
+    A record whose ID is reserved and that is never registered has an ID that
+    no lookup finds. Extraction reserves the IDs of the records and unions of
+    a module, and registers each, unless it stops at an error. *)
+val reserve_record_id : env -> (env * record_id)
+
+(** {!reserve_record_id} for a union. *)
+val reserve_union_id : env -> (env * union_id)
+
 (** Raise the error [register] raises when a declaration of the module already
     has the name. For a check that must report a taken name before its own
     errors, as the extraction of a foreign function does. *)

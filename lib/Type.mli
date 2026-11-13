@@ -38,7 +38,9 @@ type ty =
   | Integer of signedness * integer_width
   | SingleFloat
   | DoubleFloat
-  | NamedType of qident * ty list * universe
+  | NamedType of qident * Id.type_decl_id * ty list * universe
+  (** The name, as the program wrote it, and the ID of the record or union
+      it stands for. *)
   | RegionTy of region
   | ReadRef of ty * ref_region
   | WriteRef of ty * ref_region

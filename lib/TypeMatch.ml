@@ -90,9 +90,9 @@ let rec try_match_type (ctx: ctx) (a: ty) (b: ty): (type_bindings, error) result
       | Unit | Boolean | Integer _ | SingleFloat | NamedType _ | RegionTy _ | ReadRef _
       | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
          Error (Type (TypeMismatch { expected = a; actual = b })))
-  | NamedType (n, args, _) ->
+  | NamedType (n, _, args, _) ->
      (match b with
-      | NamedType (n', args', _) ->
+      | NamedType (n', _, args', _) ->
          (* We ignore the universe, since the type system is nominal. *)
          if n = n' then
            try_match_type_list ctx args args'

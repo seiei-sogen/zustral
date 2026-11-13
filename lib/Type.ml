@@ -38,7 +38,9 @@ type ty =
   | Integer of signedness * integer_width
   | SingleFloat
   | DoubleFloat
-  | NamedType of qident * ty list * universe
+  | NamedType of qident * Id.type_decl_id * ty list * universe
+  (** The name, as the program wrote it, and the ID of the record or union
+      it stands for. *)
   | RegionTy of region
   | ReadRef of ty * ref_region
   | WriteRef of ty * ref_region
@@ -118,7 +120,7 @@ let rec type_string = function
      BuiltInNames.type_name BuiltInNames.Float32
   | DoubleFloat ->
      BuiltInNames.type_name BuiltInNames.Float64
-  | NamedType (n, args, _) ->
+  | NamedType (n, _, args, _) ->
      (ident_string (local_name n)) ^ args_string args
   | RegionTy r ->
      "Region<" ^ (string_of_int (region_id r)) ^ ">"
@@ -194,9 +196,12 @@ let rec equal_ty a b =
       | Unit | Boolean | Integer _ | SingleFloat | NamedType _ | RegionTy _ | ReadRef _
       | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
          false)
-  | NamedType (n, args, u) ->
+  | NamedType (n, _, args, u) ->
      (match b with
-      | NamedType (n', args', u') ->
+      | NamedType (n', _, args', u') ->
+         (* By the name, as before the type held an ID: a name stands for one
+            declaration, but the same declaration under two names (#50) stays
+            two types. *)
          (equal_qident n n')
          && (List.for_all (fun (a', b') -> equal_ty a' b') (List.map2 (fun a' b' -> (a',b')) args args'))
          && (equal_universe u u')

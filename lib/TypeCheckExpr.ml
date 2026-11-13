@@ -253,8 +253,8 @@ and augment_callable (ctx: expr_ctx) (name: qident) (callable: callable) (from_c
   match callable with
   | FunctionCallable (id, typarams, params, rt) ->
      augment_function_call ctx id name typarams params rt from_context args
-  | RecordConstructor (_, typarams, universe, slots) ->
-     augment_record_constructor ctx name typarams universe slots from_context args
+  | RecordConstructor (id, typarams, universe, slots) ->
+     augment_record_constructor ctx id name typarams universe slots from_context args
   | UnionConstructor { union_id; type_params; universe; case } ->
      let type_name: qident = (let { name; mod_id; _ }: union_decl = get_union (ctx_place ctx) (ctx_env ctx) union_id in
                                  (* TODO: constructing a fake qident *)
@@ -282,7 +282,7 @@ and augment_function_call (ctx: expr_ctx) (id: function_id) name typarams params
   let substs = make_substs (ctx_place ctx) bindings'' typarams in
   TFuncall (id, name, arguments', rt'', substs)
 
-and augment_record_constructor (ctx: expr_ctx) (name: qident) (typarams: typarams) (universe: universe) (slots: typed_slot list) (from_context: context_bindings) (args: typed_arglist) =
+and augment_record_constructor (ctx: expr_ctx) (id: record_id) (name: qident) (typarams: typarams) (universe: universe) (slots: typed_slot list) (from_context: context_bindings) (args: typed_arglist) =
   (* Check: the argument list must be named *)
   let args' = (match args with
                | TPositionalArglist l ->
@@ -305,6 +305,7 @@ and augment_record_constructor (ctx: expr_ctx) (name: qident) (typarams: typaram
     let bindings = check_argument_list ctx (original_name name) params arguments in
     (* Use the bindings to get the effective return type *)
     let rt = NamedType (name,
+                        RecordTypeId id,
                         List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams),
                         universe)
     in
@@ -341,7 +342,7 @@ and augment_union_constructor (ctx: expr_ctx) (union_id: union_id) (type_name: q
     let bindings = check_argument_list ctx case_name params arguments in
     (* Use the bindings to get the effective return type *)
     let tyargs = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams) in
-    let rt = NamedType (type_name, tyargs, universe) in
+    let rt = NamedType (type_name, UnionTypeId union_id, tyargs, universe) in
     let rt' = replace_variables bindings rt in
     let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) case_name params rt' from_context bindings in
     (* Check: the set of bindings equals the set of type parameters *)
@@ -672,7 +673,7 @@ and augment_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identifier): t
   (* The pointed-to type is a record. *)
   let (type_name, type_args): qident * ty list = begin
       match ty with
-      | NamedType (name, args, _) ->
+      | NamedType (name, _, args, _) ->
          (name, args)
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
       | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
@@ -735,7 +736,7 @@ and augment_pointer_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identi
   (* ... to a record. *)
   let (type_name, type_args): qident * ty list = begin
       match ty3 with
-      | NamedType (name, args, _) ->
+      | NamedType (name, _, args, _) ->
          (name, args)
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
       | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->

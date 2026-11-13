@@ -27,6 +27,13 @@ val next_mod_id : t -> int * t
 
 val next_decl_id : t -> int * t
 
+(** For a record or a union. A record or a union also takes a number from
+    {!next_decl_id} when it is registered, and leaves it unused: its own number
+    comes from here, earlier, so that the types of its module can name it before
+    it is registered, and the other declarations keep the numbers they would
+    have if it took its number from {!next_decl_id}. *)
+val next_type_id : t -> int * t
+
 val next_ins_meth_id : t -> int * t
 
 val next_mono_id : t -> int * t

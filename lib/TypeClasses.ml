@@ -55,7 +55,7 @@ let check_instance_argument_has_right_shape (place: place) (typarams: typarams) 
   | Integer _ -> ()
   | SingleFloat -> ()
   | DoubleFloat -> ()
-  | NamedType (_, args, _) ->
+  | NamedType (_, _, args, _) ->
      let _ = all_distinct (List.map is_tyvar args) in
      let _ = no_leftovers (List.length args) in
      ()
@@ -126,9 +126,9 @@ let overlapping_instances (place: place) (a: ty) (b: ty): bool =
       | DoubleFloat -> true
       | Unit | Boolean | Integer _ | SingleFloat | NamedType _ | RegionTy _ | ReadRef _
       | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ -> false)
-  | NamedType (name, _, _) ->
+  | NamedType (name, _, _, _) ->
      (match b with
-      | NamedType (name', _, _) ->
+      | NamedType (name', _, _, _) ->
          equal_qident name name'
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
       | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
@@ -213,7 +213,7 @@ and is_type_local (place: place) (decl_place: place) (env: env) (mod_id: mod_id)
      true
   | DoubleFloat ->
      true
-  | NamedType (name, _, _) ->
+  | NamedType (name, _, _, _) ->
      (match get_decl_by_name place env (qident_to_sident name) with
       | Some decl ->
          equal_mod_id mod_id (decl_mod_id decl)

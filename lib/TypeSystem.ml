@@ -14,7 +14,7 @@ let type_universe = function
   | Integer _ -> FreeUniverse
   | SingleFloat -> FreeUniverse
   | DoubleFloat -> FreeUniverse
-  | NamedType (_, _, u) -> u
+  | NamedType (_, _, _, u) -> u
   | RegionTy _ -> RegionUniverse
   | ReadRef _ -> FreeUniverse
   | WriteRef _ -> LinearUniverse
@@ -53,7 +53,7 @@ let rec type_variables = function
      TypeVarSet.empty
   | DoubleFloat ->
      TypeVarSet.empty
-  | NamedType (_, a, _) ->
+  | NamedType (_, _, a, _) ->
      List.fold_left TypeVarSet.union TypeVarSet.empty (List.map type_variables a)
   | RegionTy _ ->
      TypeVarSet.empty

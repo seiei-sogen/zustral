@@ -35,6 +35,11 @@ type union_id = decl_id
 type instance_id = decl_id
 [@@deriving (eq, show)]
 
+type type_decl_id =
+  | RecordTypeId of record_id
+  | UnionTypeId of union_id
+[@@deriving (eq, show)]
+
 type ins_meth_id = InsMethId of int
 [@@deriving (eq, show)]
 
@@ -80,11 +85,15 @@ let fresh_function_id: Supply.t -> function_id * Supply.t =
 let fresh_typeclass_id: Supply.t -> typeclass_id * Supply.t =
   fresh_decl_id
 
+let fresh_type_id (supply: Supply.t): decl_id * Supply.t =
+  let (number, supply) = Supply.next_type_id supply in
+  (DeclId number, supply)
+
 let fresh_record_id: Supply.t -> record_id * Supply.t =
-  fresh_decl_id
+  fresh_type_id
 
 let fresh_union_id: Supply.t -> union_id * Supply.t =
-  fresh_decl_id
+  fresh_type_id
 
 let fresh_instance_id: Supply.t -> instance_id * Supply.t =
   fresh_decl_id

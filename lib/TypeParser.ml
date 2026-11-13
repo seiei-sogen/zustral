@@ -18,15 +18,16 @@ open Stages.Ast
 open Env
 open EnvTypes
 open Error
+open Id
 
 let decl_type_signature (decl: decl): type_signature option =
   match decl with
   | Constant _ ->
      None
-  | Record { name; typarams; universe; _ } ->
-     Some (TypeSignature (name, typarams, universe))
-  | Union { name; typarams; universe; _ } ->
-     Some (TypeSignature (name, typarams, universe))
+  | Record { id; name; typarams; universe; _ } ->
+     Some (TypeSignature (name, typarams, universe, RecordTypeId id))
+  | Union { id; name; typarams; universe; _ } ->
+     Some (TypeSignature (name, typarams, universe, UnionTypeId id))
   | UnionCase _ ->
      None
   | Function _ ->
@@ -172,7 +173,7 @@ and all_arguments_are_free (args: ty list): bool =
 
 let get_type_signature (place: place) (env: env) (sigs: type_signature list) (name: qident) =
   let get_local_type_signature (sigs: type_signature list) (name: qident): type_signature option =
-    List.find_opt (fun (TypeSignature (n, _, _)) -> n = (local_name name)) sigs
+    List.find_opt (fun (TypeSignature (n, _, _, _)) -> n = (local_name name)) sigs
 
   and get_foreign_type_signature (env: env) (name: qident): type_signature option =
     match get_decl_by_name place env (qident_to_sident name) with
@@ -182,8 +183,20 @@ let get_type_signature (place: place) (env: env) (sigs: type_signature list) (na
        None
   in
   match get_local_type_signature sigs name with
-  | (Some ts) ->
-     Some ts
+  | (Some (TypeSignature (n, typarams, universe, local_id))) ->
+     (* The local signature is found by the local name, also for a name that
+        the module imports and declares as a type (#28): the checks read the
+        local type, and the type is the imported declaration. So the ID is the
+        one of the declaration the name stands for, when that is a record or a
+        union, and the reserved one of the local type otherwise: a type of the
+        module that is not registered yet, or a name that also stands for a
+        union case or a typeclass method (#86). *)
+     let id: type_decl_id =
+       match get_foreign_type_signature env name with
+       | Some (TypeSignature (_, _, _, id)) -> id
+       | None -> local_id
+     in
+     Some (TypeSignature (n, typarams, universe, id))
   | None ->
      get_foreign_type_signature env name
 
@@ -252,7 +265,7 @@ and parse_user_defined_type (place: place) (env: env) (sigs: type_signature list
      type_error place (UnresolvedType (original_name name))
 
 and parse_user_defined_type' (place: place) (ts: type_signature) (name: qident) (args: ty list): ty =
-  let (TypeSignature (_, ts_params, declared_universe)) = ts in
+  let (TypeSignature (_, ts_params, declared_universe, id)) = ts in
   (* Check: the number of type parameters in the signature matches the number of
      type arguments *)
   check_param_arity_matches place ts_params args name;
@@ -261,7 +274,7 @@ and parse_user_defined_type' (place: place) (ts: type_signature) (name: qident) 
   check_universes_match place ts_params args;
   (* Construct the named type *)
   let universe = effective_universe place name ts_params declared_universe args in
-  NamedType (name, args, universe)
+  NamedType (name, id, args, universe)
 
 and check_param_arity_matches (place: place) (params: typarams) (args: ty list) (ty_name: qident) : unit =
   let expected: int = typarams_size params

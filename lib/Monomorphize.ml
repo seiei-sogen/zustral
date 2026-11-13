@@ -78,7 +78,7 @@ let rec monomorphize_ty (env: env) (ty: stripped_ty): (mono_ty * env) =
   | SPointer ty ->
      let (ty, env) = monomorphize_ty env ty in
      (MonoPointer ty, env)
-  | SNamedType (name, args) ->
+  | SNamedType (name, _, args) ->
      let (args, env) = monomorphize_ty_list env args in
      (match get_decl_by_name NoSpan env (qident_to_sident name) with
       | Some decl ->
@@ -745,10 +745,10 @@ and mono_to_ty (env: env) (ty: mono_ty): ty =
   | MonoNamedType mono_id ->
      (* The declared type, over its own type parameters, instantiated with the
         monomorph's type arguments. *)
-     let (mod_id, TypeSignature.TypeSignature (name, typarams, universe), tyargs) = get_type_monomorph env mono_id in
+     let (mod_id, TypeSignature.TypeSignature (name, typarams, universe, type_id), tyargs) = get_type_monomorph env mono_id in
      let qname: qident = make_qident (module_name_from_id NoSpan env mod_id, name, name) in
      let params: ty list = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams) in
-     replace_variables (make_bindings env typarams tyargs) (NamedType (qname, params, universe))
+     replace_variables (make_bindings env typarams tyargs) (NamedType (qname, type_id, params, universe))
   | MonoRegionTy r ->
      RegionTy r
   | MonoReadRef (ty, region) ->

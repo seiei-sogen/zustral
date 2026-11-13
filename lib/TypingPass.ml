@@ -219,10 +219,11 @@ and augment_destructure (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (spa
       (* Check: the value must be a public record type *)
       let rec_ty = get_type place value' in
       (match rec_ty with
-       | (NamedType (name, _, u)) ->
+       | (NamedType (name, id, _, u)) ->
           let (source_module, vis, record_typarams, slots) = get_record_definition place env name rec_ty in
           let orig_type = NamedType (
                               make_qident (source_module, original_name name, original_name name),
+                              id,
                               List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list record_typarams),
                               u
                             )
@@ -530,7 +531,7 @@ and augment_case (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span
 
 and get_union_type_definition (place: place) (importing_module: module_name) (env: env) (ty: ty): (Id.union_id * ty list * ty * union_case_decl list) =
   let (name, tyargs): qident * ty list = (match ty with
-                      | NamedType (n, a, _) ->
+                      | NamedType (n, _, a, _) ->
                          (n, a)
                       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat
                       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _
@@ -548,7 +549,7 @@ and get_union_type_definition (place: place) (importing_module: module_name) (en
        let n = make_qident (module_name, name, name)
        and args = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams)
        in
-       let ty = NamedType (n, args, universe)
+       let ty = NamedType (n, Id.UnionTypeId id, args, universe)
        and cases = get_union_cases env id in
        (id, tyargs, ty, cases)
      else

@@ -222,6 +222,8 @@ type const_input = {
   }
 
 type record_input = {
+    id: record_id;
+    (** Reserved before the record is registered ({!Env.reserve_record_id}). *)
     mod_id: mod_id;
     vis: type_vis;
     name: identifier;
@@ -232,6 +234,8 @@ type record_input = {
   }
 
 type union_input = {
+    id: union_id;
+    (** Reserved before the union is registered ({!Env.reserve_union_id}). *)
     mod_id: mod_id;
     vis: type_vis;
     name: identifier;

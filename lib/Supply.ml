@@ -8,6 +8,7 @@
 type t = {
     mod_ids: int;
     decl_ids: int;
+    type_ids: int;
     ins_meth_ids: int;
     mono_ids: int;
     temporaries: int;
@@ -22,6 +23,7 @@ type t = {
 let initial: t = {
     mod_ids = 1;
     decl_ids = 1;
+    type_ids = 1;
     ins_meth_ids = 1;
     mono_ids = 1;
     temporaries = 0;
@@ -36,6 +38,9 @@ let next_mod_id (supply: t): int * t =
 
 let next_decl_id (supply: t): int * t =
   (supply.decl_ids, { supply with decl_ids = supply.decl_ids + 1 })
+
+let next_type_id (supply: t): int * t =
+  (supply.type_ids, { supply with type_ids = supply.type_ids + 1 })
 
 let next_ins_meth_id (supply: t): int * t =
   (supply.ins_meth_ids, { supply with ins_meth_ids = supply.ins_meth_ids + 1 })
