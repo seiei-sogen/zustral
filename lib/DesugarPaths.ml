@@ -7,7 +7,6 @@
 open Identifier
 open Common
 open Stages
-open Error
 
 let rec desugar_elem (elem: AstLC.path_elem) (subpath: AstDP.aexpr) (is_ref_transform: bool): AstDP.aexpr =
   match elem with
@@ -89,14 +88,8 @@ and transform_expr (expr: AstLC.aexpr): AstDP.aexpr =
   | AstLC.Reborrow q ->
      AstDP.Reborrow q
 
-and transform_lvalue (expr: AstLC.aexpr): AstDP.aexpr =
-  match expr with
-  (* Transform paths *)
-  | AstLC.Path (head, path_exprs) ->
-     desugar_path head path_exprs WriteBorrow false
-  (* Everything else is not a valid lvalue. *)
-  | _ ->
-     generic_error InvalidLvalue
+and transform_lvalue (AstLC.LValue (head, path_exprs)): AstDP.aexpr =
+  desugar_path head path_exprs WriteBorrow false
 
 and transform_stmt (stmt: AstLC.astmt): AstDP.astmt =
   match stmt with
@@ -108,9 +101,9 @@ and transform_stmt (stmt: AstLC.astmt): AstDP.astmt =
      AstDP.ADestructure (span, m, qbl, transform_expr e, transform_stmt s)
   | AstLC.AAssign (span, lv, e) -> begin
       match lv with
-      | AstLC.Path (name, []) ->
+      | AstLC.LValue (name, []) ->
          AstDP.AAssignVar (span, name, transform_expr e)
-      | _ ->
+      | AstLC.LValue (_, _ :: _) ->
          AstDP.AAssign (span, transform_lvalue lv, transform_expr e)
      end
   | AstLC.AInitialAssign (name, ty, e) ->

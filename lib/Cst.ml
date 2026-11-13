@@ -96,9 +96,7 @@ and cexpr =
 
 and cstmt =
   | CSkip of span
-  | CLet of span * mutability * identifier * typespec * cexpr
-  | CDestructure of span * mutability * concrete_binding list * cexpr
-  | CAssign of span * cexpr * cexpr
+  | CAssign of span * concrete_lvalue * cexpr
   | CIf of span * cexpr * cstmt * cstmt
   | CCase of span * cexpr * concrete_when list
   | CWhile of span * cexpr * cstmt
@@ -111,9 +109,18 @@ and cstmt =
       body: cstmt;
       mode: borrow_stmt_kind
     }
-  | CBlock of span * cstmt list
+  | CBlock of span * concrete_block_elem list
   | CDiscarding of span * cexpr
   | CReturn of span * cexpr
+
+(* A `let` is not a statement: it scopes the rest of its block. *)
+and concrete_block_elem =
+  | CLet of span * mutability * identifier * typespec * cexpr
+  | CDestructure of span * mutability * concrete_binding list * cexpr
+  | CStatement of cstmt
+
+and concrete_lvalue =
+  ConcreteLvalue of span * identifier * concrete_path_elem list
 
 and concrete_binding =
   ConcreteBinding of  {

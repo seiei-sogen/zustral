@@ -4,7 +4,7 @@ cli/CliEngine.ml	200	0	0	0	39	0	0	0	0	0
 cli/CliParser.ml	177	11	0	0	0	5	4	0	0	0
 cli/CliUtil.ml	120	6	0	0	0	5	3	1	0	0
 cli/Os.ml	73	2	2	0	13	1	1	0	0	0
-lib/AbstractionPass.ml	144	2	0	0	0	1	0	0	0	0
+lib/AbstractionPass.ml	142	0	0	0	0	1	0	0	0	0
 lib/BodyExtractionPass.ml	25	0	0	0	0	1	0	0	0	0
 lib/BuiltIn.ml	36	0	0	0	0	0	0	0	0	0
 lib/BuiltInNames.ml	184	0	0	0	0	0	0	0	0	0
@@ -16,11 +16,11 @@ lib/CodeGen.ml	744	10	0	0	0	6	0	4	0	0
 lib/CombiningPass.ml	382	19	4	0	0	10	0	2	0	0
 lib/Common.ml	69	0	0	0	0	0	3	0	0	0
 lib/Compiler.ml	151	0	0	0	0	0	6	0	0	0
-lib/Cst.ml	156	0	0	0	0	0	2	0	0	0
+lib/Cst.ml	163	0	0	0	0	0	2	0	0	0
 lib/CstUtil.ml	162	4	0	0	0	6	0	0	0	0
 lib/DeclarationErrors.ml	334	0	0	0	0	0	0	0	0	0
 lib/DesugarBorrows.ml	244	1	0	0	0	0	0	0	0	0
-lib/DesugarPaths.ml	153	1	0	0	0	2	0	0	0	0
+lib/DesugarPaths.ml	146	0	0	0	0	0	0	0	0	0
 lib/DesugaringPass.ml	43	0	0	0	0	0	0	0	0	0
 lib/Entrypoint.ml	157	12	0	0	0	3	0	4	0	0
 lib/EntrypointErrors.ml	63	0	0	0	0	0	0	0	0	0
@@ -33,7 +33,7 @@ lib/ErrorText.ml	57	0	0	0	0	0	2	0	0	0
 lib/Escape.ml	53	1	0	0	0	1	1	0	0	0
 lib/ExportInstantiation.ml	66	10	0	0	0	0	0	0	0	0
 lib/ExtractionPass.ml	471	14	6	0	0	5	0	0	0	0
-lib/GenericErrors.ml	254	0	0	0	0	0	0	0	0	0
+lib/GenericErrors.ml	239	0	0	0	0	0	0	0	0	0
 lib/HtmlError.ml	301	0	0	0	0	0	0	0	0	0
 lib/Id.ml	81	0	0	0	0	0	0	0	0	0
 lib/Identifier.ml	62	0	0	0	0	0	2	0	0	0
@@ -44,7 +44,7 @@ lib/Imports.ml	56	1	0	0	0	0	0	0	0	0
 lib/InstanceIdSet.ml	15	0	0	0	0	0	0	0	0	0
 lib/LexEnv.ml	53	1	0	0	0	0	0	0	0	0
 lib/Lexer.mll	174	4	0	0	0	0	0	0	0	0
-lib/LiftControlPass.ml	224	0	0	0	0	0	0	0	0	0
+lib/LiftControlPass.ml	227	0	0	0	0	0	0	0	0	0
 lib/LinearityCheck.ml	715	21	11	0	0	2	0	9	0	0
 lib/LinearityErrors.ml	159	0	0	0	0	0	0	0	0	0
 lib/LiteralTyping.ml	128	1	0	0	0	5	0	0	0	0
@@ -63,7 +63,7 @@ lib/RegionMap.ml	24	1	0	0	0	0	0	0	0	0
 lib/ReturnCheck.ml	100	2	2	0	0	2	0	0	0	0
 lib/SourceContext.ml	60	0	0	0	0	0	1	0	0	0
 lib/Span.ml	64	0	0	0	0	0	1	0	0	0
-lib/Stages.ml	678	0	0	0	0	0	8	0	0	0
+lib/Stages.ml	684	0	0	0	0	0	8	0	0	0
 lib/StringSet.ml	8	0	0	0	0	0	0	0	0	0
 lib/Supply.ml	68	0	0	0	0	0	0	0	0	0
 lib/TastUtil.ml	111	2	0	0	0	0	0	1	0	0

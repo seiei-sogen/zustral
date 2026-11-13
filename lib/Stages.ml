@@ -34,7 +34,7 @@ module Ast = struct
     | ASkip of span
     | ALet of span * mutability * identifier * qtypespec * astmt
     | ADestructure of span * mutability * qbinding list * aexpr * astmt
-    | AAssign of span * aexpr * aexpr
+    | AAssign of span * lvalue * aexpr
     | AInitialAssign of qident * qtypespec * aexpr
     | AIf of span * aexpr * astmt * astmt
     | AWhen of span * aexpr * astmt
@@ -93,6 +93,9 @@ module Ast = struct
     | SlotAccessor of identifier
     | PointerSlotAccessor of identifier
     | ArrayIndex of aexpr
+
+  (** The left side of an assignment: a variable and a path into it. *)
+  and lvalue = LValue of qident * path_elem list
 end
 
 (** The combined representation merges the interface and body. *)
@@ -150,7 +153,7 @@ module AstLC = struct
     | ASkip of span
     | ALet of span * mutability * identifier * qtypespec * astmt
     | ADestructure of span * mutability * qbinding list * aexpr * astmt
-    | AAssign of span * aexpr * aexpr
+    | AAssign of span * lvalue * aexpr
     | AInitialAssign of qident * qtypespec * aexpr
     | AIf of span * aexpr * astmt * astmt
     | AWhen of span * aexpr * astmt
@@ -212,6 +215,9 @@ module AstLC = struct
     | SlotAccessor of identifier
     | PointerSlotAccessor of identifier
     | ArrayIndex of aexpr
+
+  (** The left side of an assignment: a variable and a path into it. *)
+  and lvalue = LValue of qident * path_elem list
 end
 
 (** The AstLC, but paths are desugared. *)

@@ -294,16 +294,16 @@ method_def:
 /* Statements */
 
 statement:
-  | if_statement { $1 }
+  | if_statement { CStatement $1 }
   | let_stmt { $1 }
-  | lvalue ASSIGN expression SEMI { CAssign (from_loc $loc, $1, $3) }
-  | expression SEMI { CDiscarding (from_loc $loc, $1) }
-  | CASE expression OF when_stmt* END CASE SEMI { CCase (from_loc $loc, $2, $4) }
-  | WHILE expression DO block END WHILE SEMI { CWhile (from_loc $loc, $2, $4) }
-  | FOR identifier FROM expression TO expression DO block END FOR SEMI { CFor (from_loc $loc, $2, $4, $6, $8) }
-  | borrow_stmt { $1 }
-  | RETURN expression SEMI { CReturn (from_loc $loc, $2) }
-  | SKIP SEMI { CSkip (from_loc $loc) }
+  | lvalue ASSIGN expression SEMI { CStatement (CAssign (from_loc $loc, $1, $3)) }
+  | expression SEMI { CStatement (CDiscarding (from_loc $loc, $1)) }
+  | CASE expression OF when_stmt* END CASE SEMI { CStatement (CCase (from_loc $loc, $2, $4)) }
+  | WHILE expression DO block END WHILE SEMI { CStatement (CWhile (from_loc $loc, $2, $4)) }
+  | FOR identifier FROM expression TO expression DO block END FOR SEMI { CStatement (CFor (from_loc $loc, $2, $4, $6, $8)) }
+  | borrow_stmt { CStatement $1 }
+  | RETURN expression SEMI { CStatement (CReturn (from_loc $loc, $2)) }
+  | SKIP SEMI { CStatement (CSkip (from_loc $loc)) }
   ;
 
 if_statement:
@@ -344,7 +344,7 @@ var_mutability:
   ;
 
 lvalue:
-  | n=identifier elems=path_rest* { CPath (from_loc $loc, n, elems) }
+  | n=identifier elems=path_rest* { ConcreteLvalue (from_loc $loc, n, elems) }
   ;
 
 when_stmt:

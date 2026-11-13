@@ -33,12 +33,9 @@ type t =
   | OverlappingInstances
   | DuplicateTypeParameter of type_parameter option
   | TypeWrongArity of { typename: identifier; expected: int; actual: int option }
-  | LetOutsideStatementList
-  | DestructureOutsideStatementList
   | ForeignFunctionTypeNotAllowed
   | InvalidDeclInContext
   | BorrowExpressionNotAllowed
-  | InvalidLvalue
   | BadWhitespaceEscape
   | SymbolImportedTwice
   | VariableAlreadyExists of identifier
@@ -137,14 +134,6 @@ let render (error: t): err_text =
           Text " arguments."
         ]
       | None -> [Text "."])
-  | LetOutsideStatementList ->
-     [
-       Text "Let statement not in a list context"
-     ]
-  | DestructureOutsideStatementList ->
-     [
-       Text "Destructure statement not in a list context"
-     ]
   | ForeignFunctionTypeNotAllowed ->
      [
        Text "Not allowed"
@@ -156,10 +145,6 @@ let render (error: t): err_text =
   | BorrowExpressionNotAllowed ->
      [
        Text "Borrow expressions not allowed in this context."
-     ]
-  | InvalidLvalue ->
-     [
-       Text "Invalid lvalue."
      ]
   | BadWhitespaceEscape ->
      [

@@ -27,7 +27,7 @@ let rec lift (supply: Supply.t) (stmt: Ast.astmt): AstLC.astmt * Supply.t =
   | Ast.AAssign (span, lv, e) ->
      let (tmp, supply): identifier * Supply.t = fresh_ident supply in
      let e = transform e in
-     let lv = transform lv in
+     let lv = transform_lvalue lv in
      (AstLC.ABlock (
          empty_span,
          AstLC.LetTmp (
@@ -210,6 +210,9 @@ and transform_arglist al =
   match al with
   | Ast.Positional el -> AstLC.Positional (List.map transform el)
   | Ast.Named idel -> AstLC.Named (List.map (fun (id, e) -> (id, transform e)) idel)
+
+and transform_lvalue (Ast.LValue (head, pel)): AstLC.lvalue =
+  AstLC.LValue (head, transform_path pel)
 
 and transform_path (elems: Ast.path_elem list): AstLC.path_elem list =
   List.map transform_elem elems

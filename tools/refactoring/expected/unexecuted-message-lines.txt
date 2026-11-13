@@ -21,14 +21,8 @@ lib/DeclarationErrors.ml	| InstanceArgumentRegion ->
 lib/DeclarationErrors.ml	Text "Typeclass arguments cannot be regions."
 lib/GenericErrors.ml	| CannotAssignToConstant ->
 lib/GenericErrors.ml	Text "Cannot assign a value to a constant."
-lib/GenericErrors.ml	| LetOutsideStatementList ->
-lib/GenericErrors.ml	Text "Let statement not in a list context"
-lib/GenericErrors.ml	| DestructureOutsideStatementList ->
-lib/GenericErrors.ml	Text "Destructure statement not in a list context"
 lib/GenericErrors.ml	| InvalidDeclInContext ->
 lib/GenericErrors.ml	Text "Invalid decl in this context"
-lib/GenericErrors.ml	| InvalidLvalue ->
-lib/GenericErrors.ml	Text "Invalid lvalue."
 lib/GenericErrors.ml	| SymbolImportedTwice ->
 lib/GenericErrors.ml	Text "Cannot add symbol to the import map twice."
 lib/GenericErrors.ml	| ParameterNotFound ->

@@ -11,18 +11,13 @@ open Ast
 open Escape
 open Qualifier
 open Span
-open Error
 
 let rec abs_stmt im stmt =
   match stmt with
   | CSkip span ->
      ASkip span
-  | CLet _ ->
-     generic_error LetOutsideStatementList
-  | CDestructure _ ->
-     generic_error DestructureOutsideStatementList
   | CAssign (span, lvalue, value) ->
-     AAssign (span, abs_expr im lvalue, abs_expr im value)
+     AAssign (span, abs_lvalue im lvalue, abs_expr im value)
   | CIf (span, c, t, f) ->
      let c = abs_expr im c
      and t = abs_stmt im t
@@ -110,6 +105,9 @@ and abs_arglist im args =
   | ConcreteNamedArgs l ->
      Named (List.map (fun (n, v) -> (n, abs_expr im v)) l)
 
+and abs_lvalue im (ConcreteLvalue (_, head, es)) =
+  LValue (qualify_identifier im head, List.map (abs_path_elem im) es)
+
 and abs_path_elem im elem =
   match elem with
   | CSlotAccessor i ->
@@ -122,7 +120,7 @@ and abs_path_elem im elem =
 (* Given a list of statements, find the first let statement, if any, and put the
    remainder of the list under its body. Then call let_reshape on that
    remainder. *)
-and let_reshape (im: import_map) (l: cstmt list): astmt =
+and let_reshape (im: import_map) (l: concrete_block_elem list): astmt =
   match l with
   | first::rest ->
      (match first with
@@ -135,7 +133,7 @@ and let_reshape (im: import_map) (l: cstmt list): astmt =
          and b = let_reshape im rest
          in
          ADestructure (span, mut, bs', e', b)
-      | s ->
+      | CStatement s ->
          (if rest = [] then
             abs_stmt im s
           else
