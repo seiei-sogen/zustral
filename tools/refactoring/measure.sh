@@ -111,13 +111,14 @@ count_names() { # file
   name_lines < "$ROOT/$1" | wc -l
 }
 
-# Mutable state: creating a ref cell, a Hashtbl or a Buffer, declaring a
+# Mutable state: creating a ref cell, a Hashtbl, a Buffer or a lexing buffer
+# (which the lexer changes on every token and every newline), declaring a
 # mutable field, assigning a field or an element (<-), changing an Array or
 # Bytes in place, incr and decr, a lazy value, a Queue or a Stack. Each counts
 # whatever its scope: a local cell is as mutable as a global one. Reading
 # state (!r, Buffer.contents) and assigning a ref cell (:=, after the ref
 # that made it counted) do not count.
-STATE_PATTERN='= *ref ([a-z0-9("\[]|\[\])|^\s*ref \(|Hashtbl\.(create|add|replace)|Buffer\.create|^\s*mutable [a-z_]+ *:|<-'
+STATE_PATTERN='= *ref ([a-z0-9("\[]|\[\])|^\s*ref \(|Hashtbl\.(create|add|replace)|Buffer\.create|Lexing\.from_(string|channel|function)|^\s*mutable [a-z_]+ *:|<-'
 STATE_PATTERN+='|(Array|Bytes)\.(unsafe_)?(set|fill|blit)|(^|[^_a-zA-Z0-9])(incr|decr|lazy)( |$|\()|Lazy\.'
 STATE_PATTERN+='|(^|[^_a-zA-Z0-9])(Queue|Stack)\.'
 

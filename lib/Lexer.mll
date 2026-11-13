@@ -10,13 +10,9 @@ open Lexing
 open Error
 open Parser
 
-let advance_line lexbuf =
-  let pos = lexbuf.lex_curr_p in
-  let pos' = { pos with
-    pos_bol = lexbuf.lex_curr_pos;
-    pos_lnum = pos.pos_lnum + 1
-  } in
-  lexbuf.lex_curr_p <- pos'
+(* The pieces of a string literal, last piece first. *)
+let literal_text (pieces: string list): string =
+  String.concat "" (List.rev pieces)
 }
 
 (* Helper regexes *)
@@ -53,7 +49,7 @@ let char_constant = '\'' (ascii_char | '\\' ['n' 'r' 't' '\\']) '\''
 
 rule token = parse
   (* Comments *)
-  | comment { advance_line lexbuf; token lexbuf }
+  | comment { new_line lexbuf; token lexbuf }
   (* Brackets *)
   | "(" { LPAREN }
   | ")" { RPAREN }
@@ -133,8 +129,8 @@ rule token = parse
   | ":=" { ASSIGN }
   | "!" { DEREF }
   (* Strings and docstrings *)
-  | "\"\"\"" { read_triple_string (Buffer.create 64) lexbuf }
-  | '"' { read_string (Buffer.create 64) lexbuf }
+  | "\"\"\"" { read_triple_string [] lexbuf }
+  | '"' { read_string [] lexbuf }
   (* Identifiers and constants *)
   | "nil" { NIL }
   | "true" { TRUE }
@@ -150,25 +146,25 @@ rule token = parse
   | "@embed" { EMBED }
   (* etc. *)
   | whitespace { token lexbuf }
-  | newline { advance_line lexbuf; token lexbuf }
+  | newline { new_line lexbuf; token lexbuf }
   | eof { EOF }
   | _ {
     parse_error (AtSpan (Span.from_lexbuf lexbuf)) (InvalidCharacter (Lexing.lexeme lexbuf))
   }
 
-(* `acc` holds the characters of the literal read so far. Each literal gets a
-   buffer of its own, so nothing is left over from the literal before it or
-   from a file that ended inside one. *)
-and read_string acc = parse
-  | '"' { STRING_CONSTANT (Buffer.contents acc) }
-  | '\\' '"' { Buffer.add_char acc '"'; read_string acc lexbuf }
-  | [^ '"'] { Buffer.add_string acc (Lexing.lexeme lexbuf); read_string acc lexbuf }
+(* `pieces` holds the text of the literal read so far, last piece first.
+   Each literal starts from the empty list, so nothing is left over from the
+   literal before it or from a file that ended inside one. *)
+and read_string pieces = parse
+  | '"' { STRING_CONSTANT (literal_text pieces) }
+  | '\\' '"' { read_string ("\"" :: pieces) lexbuf }
+  | [^ '"'] { read_string (Lexing.lexeme lexbuf :: pieces) lexbuf }
   | eof { parse_error (AtSpan (Span.from_lexbuf lexbuf)) StringEof }
   | _ { parse_error (AtSpan (Span.from_lexbuf lexbuf)) (StringInvalidCharacter (Lexing.lexeme lexbuf)) }
 
-and read_triple_string acc = parse
-  | "\"\"\"" { TRIPLE_STRING_CONSTANT (Buffer.contents acc) }
-  | '\n' { advance_line lexbuf; Buffer.add_string acc "\n"; read_triple_string acc lexbuf }
-  | '\\' "\"\"\"" { Buffer.add_string acc "\"\"\""; read_triple_string acc lexbuf }
+and read_triple_string pieces = parse
+  | "\"\"\"" { TRIPLE_STRING_CONSTANT (literal_text pieces) }
+  | '\n' { new_line lexbuf; read_triple_string ("\n" :: pieces) lexbuf }
+  | '\\' "\"\"\"" { read_triple_string ("\"\"\"" :: pieces) lexbuf }
   | eof { parse_error (AtSpan (Span.from_lexbuf lexbuf)) TripleStringEof }
-  | _ { Buffer.add_string acc (Lexing.lexeme lexbuf); read_triple_string acc lexbuf }
+  | _ { read_triple_string (Lexing.lexeme lexbuf :: pieces) lexbuf }

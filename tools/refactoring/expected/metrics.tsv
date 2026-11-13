@@ -44,7 +44,7 @@ lib/ImportResolution.ml	100	4	0	0	0	0	0	0	0	0
 lib/Imports.ml	56	1	0	0	0	0	0	0	0	0
 lib/InstanceIdSet.ml	15	0	0	0	0	0	0	0	0	0
 lib/LexEnv.ml	53	1	0	0	0	0	0	0	0	0
-lib/Lexer.mll	174	4	0	3	0	0	0	0	0	0
+lib/Lexer.mll	170	4	0	0	0	0	0	0	0	0
 lib/LiftControlPass.ml	227	0	0	0	0	0	0	0	0	0
 lib/LinearityCheck.ml	700	18	0	0	0	0	0	6	0	0
 lib/LinearityErrors.ml	159	0	0	0	0	0	0	0	0	0
@@ -57,7 +57,7 @@ lib/NumberLiteral.ml	92	0	0	0	0	0	2	0	0	0
 lib/Outcome.ml	53	0	1	0	0	0	0	0	0	0
 lib/ParseErrors.ml	52	0	0	0	0	0	3	0	0	0
 lib/Parser.mly	570	0	0	0	0	0	0	0	0	0
-lib/ParserInterface.ml	27	1	1	0	0	0	0	0	0	0
+lib/ParserInterface.ml	27	1	1	1	0	0	0	0	0	0
 lib/Pipeline.mli	91	0	0	0	0	0	6	0	0	0
 lib/Qualifier.ml	30	0	0	0	0	0	0	0	0	0
 lib/Region.ml	16	0	0	0	0	0	0	0	0	0

@@ -1,7 +1,8 @@
 # One line of OCaml per row, after the verdict the pattern of the column state must give it.
 # count: the line creates or changes mutable state, whatever its scope. skip: it does not.
-# The lexer's lines count: its Buffer is made for one literal and its lexbuf for one
-# file, but both are mutable, as a local ref cell is.
+# The lexer's lexbuf counts where it is made: it is made for one file, but it is
+# mutable, as a local ref cell is. Calls that change it later (Lexing.new_line,
+# the rules of the lexer) do not count, as Buffer.add_string does not.
 count	let counter = ref 0
 count	  let seen = ref [] in
 count	  ref (Some x)
@@ -10,6 +11,8 @@ count	  Hashtbl.replace table key value;
 count	let string_acc: Buffer.t = Buffer.create 64
 count	  | '"' { read_string (Buffer.create 64) lexbuf }
 count	  let buf = Buffer.create 16 in
+count	  let lexbuf = Lexing.from_string code in
+count	  let lexbuf = Lexing.from_channel ic in
 count	  mutable count: int;
 count	  lexbuf.lex_curr_p <- pos'
 count	  record.count <- record.count + 1;
@@ -27,6 +30,7 @@ count	  let pending = Queue.create () in
 count	  Stack.push frame stack;
 skip	  let x = !counter in
 skip	  Buffer.add_string buf s;
+skip	  Lexing.new_line lexbuf;
 skip	  let text = Buffer.contents buf in
 skip	  let refined = refine ty in
 skip	  | VarLocal Immutable ->
