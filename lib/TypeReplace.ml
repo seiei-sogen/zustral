@@ -97,9 +97,10 @@ let rec replace_tyvars_expr (bindings: type_bindings) (expr: texpr): texpr =
      let ty = replace_variables bindings ty
      and args = List.map (replace_tyvars_expr bindings) args in
      TEmbed (ty, fmt, args)
-  | TDeref expr ->
+  | TDeref (expr, ty) ->
      let expr = replace_tyvars_expr bindings expr in
-     TDeref expr
+     let ty = replace_variables bindings ty in
+     TDeref (expr, ty)
   | TSizeOf ty ->
      let ty = replace_variables bindings ty in
      TSizeOf ty

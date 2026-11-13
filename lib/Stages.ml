@@ -549,7 +549,8 @@ module Tast = struct
     | TArrayIndex of texpr * texpr * ty
     | TSpanIndex of texpr * texpr * ty
     | TEmbed of ty * string * texpr list
-    | TDeref of texpr
+    | TDeref of texpr * ty
+    (** The type is the one of the value the reference points to. *)
     | TSizeOf of ty
   [@@deriving show]
 
@@ -668,7 +669,8 @@ module Mtast = struct
     | MRecordConstructor of mono_ty * (identifier * mexpr) list
     | MUnionConstructor of mono_ty * identifier * (identifier * mexpr) list
     | MEmbed of mono_ty * string * mexpr list
-    | MDeref of mexpr
+    | MDeref of mexpr * mono_ty
+    (** The type is the one of the value the reference points to. *)
     | MSizeOf of mono_ty
     | MSlotAccessor of mexpr * identifier * mono_ty
     | MPointerSlotAccessor of mexpr * identifier * mono_ty

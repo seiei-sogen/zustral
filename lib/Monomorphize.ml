@@ -280,9 +280,12 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
      let (ty, env) = strip_and_mono env ty in
      let (args, env) = monomorphize_expr_list env args in
      (MEmbed (ty, fmt, args), env)
-  | TDeref expr ->
+  | TDeref (expr, ty) ->
      let (expr, env) = monomorphize_expr env expr in
-     (MDeref expr, env)
+     (* The type is a part of the type of the expression, monomorphized just
+        before, so this registers no new monomorph. *)
+     let (ty, env) = strip_and_mono env ty in
+     (MDeref (expr, ty), env)
   | TSizeOf ty ->
      let (ty, env) = strip_and_mono env ty in
      (MSizeOf ty, env)

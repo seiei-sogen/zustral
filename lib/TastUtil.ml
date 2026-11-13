@@ -89,19 +89,8 @@ let rec get_type (place: place) = function
      ty
   | TEmbed (ty, _, _) ->
      ty
-  | TDeref e ->
-     (match get_type place e with
-      | ReadRef (t, _) ->
-         t
-      | WriteRef (t, _) ->
-         t
-      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
-      | RegionTy _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
-      | MonoTy _ ->
-         (* The type checker makes a dereference only of an expression it has
-            found to be a reference. The stage tree does not keep the parts of
-            that type apart. *)
-         internal_err place ("a dereference expression was constructed whose argument is not a reference type."))
+  | TDeref (_, ty) ->
+     ty
   | TSizeOf _ ->
      Integer (Unsigned, WidthByteSize)
   | TSlotAccessor (_, _, ty) -> ty

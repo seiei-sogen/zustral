@@ -61,19 +61,8 @@ let rec get_type (e: mexpr): mono_ty =
      ty
   | MEmbed (ty, _, _) ->
      ty
-  | MDeref e ->
-     (match get_type e with
-      | MonoReadRef (t, _) ->
-         t
-      | MonoWriteRef (t, _) ->
-         t
-      | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
-      | MonoNamedType _ | MonoRegionTy _ | MonoSpan _ | MonoSpanMut _ | MonoAddress _
-      | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
-         (* The type checker makes a dereference only of an expression it has
-            found to be a reference. The stage tree does not keep the parts of
-            that type apart. *)
-         internal_err NoSpan ("a dereference expression was constructed whose argument is not a reference type."))
+  | MDeref (_, ty) ->
+     ty
   | MSizeOf _ ->
      MonoInteger (Unsigned, Width64)
   | MSlotAccessor (_, _, ty) -> ty

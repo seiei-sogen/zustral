@@ -648,13 +648,13 @@ and augment_deref (ctx: expr_ctx) (expr: aexpr): texpr =
    | ReadRef (ty', _) ->
       (match type_universe (ctx_place ctx) ty' with
        | FreeUniverse ->
-          TDeref expr'
+          TDeref (expr', ty')
        | LinearUniverse | TypeUniverse | RegionUniverse ->
           linearity_error (ctx_place ctx) (DereferenceNonFree ty'))
    | WriteRef (ty', _) ->
       (match type_universe (ctx_place ctx) ty' with
        | FreeUniverse ->
-          TDeref expr'
+          TDeref (expr', ty')
        | LinearUniverse | TypeUniverse | RegionUniverse ->
           linearity_error (ctx_place ctx) (DereferenceNonFree ty'))
    | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _

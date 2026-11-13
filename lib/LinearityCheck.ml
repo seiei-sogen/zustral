@@ -253,7 +253,7 @@ let rec count (name: identifier) (expr: texpr): appearances =
      merge_list (List.map (fun (_, e) -> c e) args)
   | TEmbed (_, _, args) ->
      merge_list (List.map c args)
-  | TDeref e ->
+  | TDeref (e, _) ->
      c e
   | TSizeOf _ ->
      zero_appearances

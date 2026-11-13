@@ -298,7 +298,7 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
               ], gen_type ty)
   | MEmbed (ty, expr, args) ->
      CEmbed (gen_type ty, CSource expr, List.map g args)
-  | MDeref e ->
+  | MDeref (e, _) ->
      CDeref (g e)
   | MSizeOf ty ->
      CSizeOf (gen_type ty)
