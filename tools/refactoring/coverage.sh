@@ -14,8 +14,8 @@
 #                            expected/unexecuted-message-lines.txt
 #   coverage.sh --messages --record
 #                            rewrite that record
-#   coverage.sh --unexecuted list every line that no program executes: file, line,
-#                            definition, text
+#   coverage.sh --unexecuted list every line that no program executes in full: file,
+#                            line, definition, which, points (some or none), text
 #   coverage.sh --unexecuted --check
 #                            fail if one of them has no reason on the record,
 #                            expected/unexecuted-lines.tsv, or if a row of the
@@ -94,8 +94,8 @@ if [[ $MODE == messages ]]; then
 fi
 
 if [[ $MODE == unexecuted ]]; then
-  line_report
-  python3 "$HERE/unexecuted-lines.py" "${UNEXECUTED_CHECK[@]}" "$T/cobertura.xml" "$ROOT"
+  point_report
+  python3 "$HERE/unexecuted-lines.py" "${UNEXECUTED_CHECK[@]}" "$T/points.coverage" "$ROOT"
   exit $?
 fi
 
