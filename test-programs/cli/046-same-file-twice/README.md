@@ -1,0 +1,1 @@
+For cli/CliEngine.ml, parse_source_files: the function that merges two source maps holding the same file name, which a module given twice on the command line reaches. Shows what the compiler reports for the second copy of the module.

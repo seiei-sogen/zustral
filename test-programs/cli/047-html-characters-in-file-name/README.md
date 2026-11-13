@@ -1,0 +1,1 @@
+For lib/HtmlError.ml, sanatize_string: the arms for `<`, `>` and `&`, which the name of a file with an error reaches when the compiler writes `error.html`. Shows the error and that `error.html` is written.
