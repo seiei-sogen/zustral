@@ -84,19 +84,15 @@ let try_add_binding (TypeBindings m) (tp: type_parameter) (ty: ty): (type_bindin
      else
        Error (Type (TyparamRedefinition { param = tp; was = ty'; redef = ty }))
   | None ->
-     match ty with
-     | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
-     | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
-     | Pointer _ | FnPtr _ ->
-      if universe_compatible (typaram_universe tp) (type_universe ty) then
-        Ok (TypeBindings (BindingsMap.add tp ty m))
-      else
-        Error (Type (TyparamBindingWrongUniverse {
-            param = tp;
-            ty;
-            expected = typaram_universe tp;
-            actual = type_universe ty;
-          }))
+     if universe_compatible (typaram_universe tp) (type_universe ty) then
+       Ok (TypeBindings (BindingsMap.add tp ty m))
+     else
+       Error (Type (TyparamBindingWrongUniverse {
+           param = tp;
+           ty;
+           expected = typaram_universe tp;
+           actual = type_universe ty;
+         }))
 
 (* Add multiple bindings to a bindings map. *)
 let rec try_add_bindings bs pairs =
@@ -116,8 +112,6 @@ let merge_bindings (place: place) (a: type_bindings) (b: type_bindings): type_bi
 let replaced_universe (u: universe) (args: ty list): universe =
   match u with
   | TypeUniverse ->
-     (* The universe of an argument is unknown only for a MonoTy, which exists
-        only during monomorphization, where errors have no span. *)
      if any_arg_is_linear args then
        LinearUniverse
      else
