@@ -88,8 +88,9 @@ type t =
   | InstanceArgumentRegion
   | InstanceShadowsTypeclassParam of identifier
 
-(* The advice of the errors for a type declared in the Region universe, whether
-   the type is used before or after its declaration. *)
+(* The advice of the errors for something declared in the Region universe where
+   a type is needed: a type (used before or after its declaration) or the
+   parameter of a typeclass. *)
 let use_another_universe: err_text =
   [
     Break;
@@ -250,15 +251,8 @@ let render (error: t): err_text =
        Text " cannot be declared to be in the ";
        Code "Region";
        Text " universe, because regions are distinct from types.";
-       Break;
-       Text "Consider using one of ";
-       Code "Type";
-       Text ", ";
-       Code "Linear";
-       Text ", or ";
-       Code "Free";
-       Text " instead.";
      ]
+     @ use_another_universe
   | TypesAreNotRegions { name; declaration } ->
      [
        Text "The ";
