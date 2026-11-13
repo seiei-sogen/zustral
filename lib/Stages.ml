@@ -600,14 +600,14 @@ module Mtast = struct
   and mdecl =
     | MConstant of constant_id * identifier * mono_ty * mexpr
     | MRecord of record_id * identifier * mono_slot list
-    | MRecordMonomorph of mono_id * mono_slot list
+    | MRecordMonomorph of record_mono_id * mono_slot list
     | MUnion of union_id * identifier * mono_case list
-    | MUnionMonomorph of mono_id * mono_case list
+    | MUnionMonomorph of union_mono_id * mono_case list
     | MFunction of function_id * identifier * mvalue_parameter list * mono_ty * mstmt
-    | MFunctionMonomorph of mono_id * function_id * mvalue_parameter list * mono_ty * mstmt
+    | MFunctionMonomorph of function_mono_id * function_id * mvalue_parameter list * mono_ty * mstmt
     | MForeignFunction of function_id * identifier * mvalue_parameter list * mono_ty * mono_ty ForeignType.foreign_signature * string
     | MConcreteInstance of instance_id * qident * mono_ty  * concrete_method list
-    | MMethodMonomorph of mono_id * mvalue_parameter list * mono_ty * mstmt
+    | MMethodMonomorph of method_mono_id * mvalue_parameter list * mono_ty * mstmt
 
   and concrete_method =
     MConcreteMethod of ins_meth_id * identifier * mvalue_parameter list * mono_ty * mstmt
@@ -648,15 +648,15 @@ module Mtast = struct
     | MParamVar of identifier * mono_ty
     | MLocalVar of identifier * mono_ty
     | MTemporary of identifier * mono_ty
-    | MGenericFunVar of mono_id * mono_ty
+    | MGenericFunVar of function_mono_id * mono_ty
     | MConcreteFunVar of function_id * mono_ty
     | MConcreteFuncall of function_id * qident * mexpr list * mono_ty
     (** Represents a call to a concrete function. *)
-    | MGenericFuncall of mono_id * mexpr list * mono_ty
+    | MGenericFuncall of function_mono_id * mexpr list * mono_ty
     (** Represents a call to a generic function. *)
     | MConcreteMethodCall of ins_meth_id * qident * mexpr list * mono_ty
     (** Represents a call to an instance method of a concrete instance. *)
-    | MGenericMethodCall of ins_meth_id * mono_id * mexpr list * mono_ty
+    | MGenericMethodCall of ins_meth_id * method_mono_id * mexpr list * mono_ty
     (** Represents a call to an instance method of a generic instance. *)
     | MFptrCall of identifier * mexpr list * mono_ty
     | MCast of mexpr * mono_ty

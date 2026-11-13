@@ -175,7 +175,7 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
        let (tyargs, env) = monomorphize_ty_list env tyargs in
        let substs: mono_type_bindings = mono_bindings_from_list (List.map2 (fun tp mt -> (tp, mt)) typarams tyargs) in
        let (env, mono_id) = add_or_get_function_monomorph env decl_id substs in
-       (MGenericFunVar (mono_id_of_function mono_id, rt), env)
+       (MGenericFunVar (mono_id, rt), env)
      else
        (* The function is concrete. *)
        (MConcreteFunVar (decl_id, rt), env)
@@ -193,7 +193,7 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
        let (tyargs, env) = monomorphize_ty_list env tyargs in
        let substs: mono_type_bindings = mono_bindings_from_list (List.map2 (fun tp mt -> (tp, mt)) typarams tyargs) in
        let (env, mono_id) = add_or_get_function_monomorph env decl_id substs in
-       (MGenericFuncall (mono_id_of_function mono_id, args, rt), env)
+       (MGenericFuncall (mono_id, args, rt), env)
      else
        (* The function is concrete. *)
        (MConcreteFuncall (decl_id, name, args, rt), env)
@@ -211,7 +211,7 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
         let (tyargs, env) = monomorphize_ty_list env tyargs in
         let substs: mono_type_bindings = mono_bindings_from_list (List.map2 (fun tp mt -> (tp, mt)) typarams tyargs) in
         let (env, mono_id) = add_or_get_instance_method_monomorph env ins_meth_id substs in
-        (MGenericMethodCall (ins_meth_id, mono_id_of_method mono_id, args, rt), env)
+        (MGenericMethodCall (ins_meth_id, mono_id, args, rt), env)
       else
         (* The instance is concrete. *)
         (MConcreteMethodCall (ins_meth_id, name, args, rt), env))
@@ -575,7 +575,7 @@ and instantiate_monomorph (env: env) (mono: monomorph): (env * mdecl) =
       (* Store the monomorphic slot list in the environment. *)
       let env = store_record_monomorph_definition env id slots in
       (* Construct a monomorphic record decl. *)
-      let decl: mdecl = MRecordMonomorph (mono_id_of_record id, slots) in
+      let decl: mdecl = MRecordMonomorph (id, slots) in
       (* Return the new environment and the declaration. *)
       (env, decl))
   | MonoUnionDefinition { id; type_id; tyargs; _ } ->
@@ -602,7 +602,7 @@ and instantiate_monomorph (env: env) (mono: monomorph): (env * mdecl) =
      (* Store the monomorphic slot list in the environment. *)
      let env = store_union_monomorph_definition env id cases in
      (* Construct a monomorphic record decl. *)
-     let decl: mdecl = MUnionMonomorph (mono_id_of_union id, cases) in
+     let decl: mdecl = MUnionMonomorph (id, cases) in
      (* Return the new environment and the declaration. *)
      (env, decl)
   | MonoFunction { id; function_id; tyargs; _ } ->
@@ -632,7 +632,7 @@ and instantiate_monomorph (env: env) (mono: monomorph): (env * mdecl) =
      (* Store the monomorphic body in the environment. *)
      let env = store_function_monomorph_definition env id body in
      (* Construct a monomorphic record decl. *)
-     let decl: mdecl = MFunctionMonomorph (mono_id_of_function id, function_id, params, rt, body) in
+     let decl: mdecl = MFunctionMonomorph (id, function_id, params, rt, body) in
      (* Return the new environment and the declaration. *)
      (env, decl)
   | MonoInstanceMethod { id; method_id; tyargs; _ } ->
@@ -662,7 +662,7 @@ and instantiate_monomorph (env: env) (mono: monomorph): (env * mdecl) =
       (* Store the monomorphic body in the environment. *)
       let env = store_instance_method_monomorph_definition env id body in
       (* Construct a monomorphic record decl. *)
-      let decl: mdecl = MMethodMonomorph (mono_id_of_method id, params, rt, body) in
+      let decl: mdecl = MMethodMonomorph (id, params, rt, body) in
       (* Return the new environment and the declaration. *)
       (env, decl))
 
