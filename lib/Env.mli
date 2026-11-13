@@ -78,6 +78,11 @@ val module_name_from_id : Error.place -> env -> mod_id -> module_name
     cases, typeclass methods, instances and instance methods are not checked. *)
 val register : Error.place -> env -> 'id registration -> (env * 'id)
 
+(** Raise the error [register] raises when a declaration of the module already
+    has the name. For a check that must report a taken name before its own
+    errors, as the extraction of a foreign function does. *)
+val name_must_be_free : Error.place -> env -> mod_id -> identifier -> unit
+
 (** Given a function ID, the export name of that function and its checked
     signature, register them in the environment. *)
 val add_exported_function : env -> function_id -> string -> ty ForeignType.foreign_signature -> env

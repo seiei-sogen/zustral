@@ -116,23 +116,26 @@ let get_decl_by_name (place: place) (env: env) (name: sident): decl option =
   | None ->
      declaration_error place (UnknownModule (sident_module_name name))
 
-(* The one way a declaration or an instance method enters the environment. The
-   rule about names that are already taken is here and nowhere else. A kind of
-   registration that is not checked today says so in its arm, and a check for
-   it belongs in that arm. *)
+(* The duplicate rule: a name is taken if any declaration of the module has it,
+   union cases and typeclass methods included. The rule does not look at the
+   names the module imports (#28) or at the names of the built-in types (#51).
+   This is the only place that has it: `register` calls it, and so does the
+   extraction of a function, before it checks a foreign signature. *)
+let name_must_be_free (place: place) (env: env) (mod_id: mod_id) (name: identifier): unit =
+  let module_name: module_name = module_name_from_id place env mod_id in
+  match get_decl_by_name place env (make_sident module_name name) with
+  | Some _ ->
+     declaration_error place (DeclarationAlreadyExists { name; module_name })
+  | None ->
+     ()
+
+(* The one way a declaration or an instance method enters the environment. A
+   kind of registration that is not checked against the duplicate rule today
+   says so in its arm, and a check for it belongs in that arm. *)
 let register (type id) (place: place) (env: env) (registration: id registration): (env * id) =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
-  (* The duplicate rule: a name is taken if any declaration of the module has
-     it, union cases and typeclass methods included. The rule does not look at
-     the names the module imports (#28) or at the names of the built-in types
-     (#51). *)
   let name_must_be_free (mod_id: mod_id) (name: identifier): unit =
-    let module_name: module_name = module_name_from_id place env mod_id in
-    match get_decl_by_name place env (make_sident module_name name) with
-    | Some _ ->
-       declaration_error place (DeclarationAlreadyExists { name; module_name })
-    | None ->
-       ()
+    name_must_be_free place env mod_id name
   in
   let add_decl (type kind_id) (fresh: Supply.t -> kind_id * Supply.t) (make: kind_id -> decl): (env * kind_id) =
     let (id, supply) = fresh supply in

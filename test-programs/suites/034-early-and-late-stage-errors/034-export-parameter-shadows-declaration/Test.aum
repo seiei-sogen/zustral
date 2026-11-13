@@ -1,0 +1,12 @@
+pragma Unsafe_Module;
+
+module body Test is
+    pragma Foreign_Export(External_Name => "g");
+    function g(g: Int32): Unit is
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

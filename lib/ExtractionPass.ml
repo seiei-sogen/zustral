@@ -301,6 +301,9 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
            (* Check: all type parameters must appear in the type signature. *)
            check_all_type_parameters_appear_in_signature place typarams value_params rt
          in
+         (* A taken name is reported before a signature that is not allowed, as
+            it was when the signature was checked in a later stage. *)
+         name_must_be_free place env mod_id name;
          let fn_input: function_input = {
              mod_id = mod_id;
              vis = vis;
