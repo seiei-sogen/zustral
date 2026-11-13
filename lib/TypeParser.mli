@@ -18,6 +18,6 @@ open Env
    type specifier is being parsed in.Arith_status
 
    The third argument is the list of type parameters known at parse time.  *)
-val parse_type : env -> type_signature list -> region_map -> typarams -> qtypespec -> ty
+val parse_type : Error.place -> env -> type_signature list -> region_map -> typarams -> qtypespec -> ty
 
 val universe_compatible : universe -> universe -> bool

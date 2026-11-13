@@ -36,7 +36,7 @@ let update_rm (StmtCtx (mn, menv, _, typarams, rt)) (rm: region_map): stmt_ctx =
 (* Since the extraction pass has already happened, we can simplify the call to
    `parse_type` by passing an empty list of local type signatures. *)
 let parse_typespec (env: env) (rm: region_map) (typarams: typarams) (ty: qtypespec): ty =
-  parse_type env [] rm typarams ty
+  parse_type place_from_adorn env [] rm typarams ty
 
 let infer_expr (module_name: module_name) (env: env) (rm: region_map) (typarams: typarams) (lexenv: lexenv) (expr: aexpr): texpr =
   let ctx: TypeCheckExpr.expr_ctx = TypeCheckExpr.make_ctx module_name env rm typarams lexenv in

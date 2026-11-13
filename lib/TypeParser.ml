@@ -22,6 +22,7 @@ open Stages.Ast
 open Env
 open EnvTypes
 open Error
+open Error.Placed
 
 let decl_type_signature (decl: decl): type_signature option =
   match decl with
@@ -42,24 +43,24 @@ let decl_type_signature (decl: decl): type_signature option =
   | Instance _ ->
      None
 
-let parse_function_pointer (args: ty list): ty =
+let parse_function_pointer (place: place) (args: ty list): ty =
   match args with
   | [] ->
-     parse_error FunctionPointerNoArgs
+     parse_error place FunctionPointerNoArgs
   | [r] ->
      FnPtr ([], r)
   | _ ->
-     let args: ty list = Util.butlast place_from_adorn args
-     and rt: ty = Util.last place_from_adorn args in
+     let args: ty list = Util.butlast place args
+     and rt: ty = Util.last place args in
      FnPtr (args, rt)
 
-let parse_built_in_type (name: qident) (args: ty list): ty option =
+let parse_built_in_type (place: place) (name: qident) (args: ty list): ty option =
   if is_address_type name then
     match args with
     | [ty] ->
        Some (Address ty)
     | _ ->
-       generic_error (TypeWrongArity {
+       generic_error place (TypeWrongArity {
            typename = make_ident BuiltInNames.address_name;
            expected = 1;
            actual = None;
@@ -70,7 +71,7 @@ let parse_built_in_type (name: qident) (args: ty list): ty option =
       | [ty] ->
          Some (Pointer ty)
       | _ ->
-         generic_error (TypeWrongArity {
+         generic_error place (TypeWrongArity {
              typename = make_ident BuiltInNames.pointer_name;
              expected = 1;
              actual = None;
@@ -108,11 +109,11 @@ let parse_built_in_type (name: qident) (args: ty list): ty option =
       | Some BuiltInNames.Static ->
          Some (RegionTy static_region)
       | Some BuiltInNames.Fn ->
-         Some (parse_function_pointer args)
+         Some (parse_function_pointer place args)
       | None ->
          None
 
-let rec effective_universe name (typarams: typarams) declared_universe args =
+let rec effective_universe (place: place) name (typarams: typarams) declared_universe args =
   (* Algorithm:
 
      1. If the declared universe is Free then none of the type parameters can be Linear or Type.
@@ -142,11 +143,11 @@ let rec effective_universe name (typarams: typarams) declared_universe args =
      if all_arguments_are_free args then
        FreeUniverse
      else
-       generic_error (FreeTypeWithNonFreeArgument name)
+       generic_error place (FreeTypeWithNonFreeArgument name)
   | LinearUniverse ->
      LinearUniverse
   | RegionUniverse ->
-     internal_err "effective_universe called with a region type"
+     internal_err place "effective_universe called with a region type"
   | TypeUniverse ->
      assert ((typarams_size typarams) > 0);
      if any_arg_is_linear args then
@@ -191,11 +192,11 @@ let get_type_signature (env: env) (sigs: type_signature list) (name: qident) =
 
 (* Parsing *)
 
-let rec parse_type (env: env) (sigs: type_signature list) (rm: region_map) (typarams: typarams) (ts: qtypespec): ty =
+let rec parse_type (place: place) (env: env) (sigs: type_signature list) (rm: region_map) (typarams: typarams) (ts: qtypespec): ty =
   match ts with
   | QTypeSpecifier (name, args) ->
-     let args' = List.map (parse_type env sigs rm typarams) args in
-     (match parse_built_in_type name args' with
+     let args' = List.map (parse_type place env sigs rm typarams) args in
+     (match parse_built_in_type place name args' with
       | Some ty ->
          ty
       | None ->
@@ -207,25 +208,25 @@ let rec parse_type (env: env) (sigs: type_signature list) (rm: region_map) (typa
               | Some ty ->
                  ty
               | None ->
-                 parse_user_defined_type env sigs name args')))
+                 parse_user_defined_type place env sigs name args')))
   | QReadRef (ty, r) ->
-     let ty' = parse_type env sigs rm typarams ty
-     and r' = parse_type env sigs rm typarams r
+     let ty' = parse_type place env sigs rm typarams ty
+     and r' = parse_type place env sigs rm typarams r
      in
      ReadRef (ty', ref_region_of_ty r')
   | QWriteRef (ty, r) ->
-     let ty' = parse_type env sigs rm typarams ty
-     and r' = parse_type env sigs rm typarams r
+     let ty' = parse_type place env sigs rm typarams ty
+     and r' = parse_type place env sigs rm typarams r
      in
      WriteRef (ty', ref_region_of_ty r')
   | QSpan (ty, r) ->
-     let ty' = parse_type env sigs rm typarams ty
-     and r' = parse_type env sigs rm typarams r
+     let ty' = parse_type place env sigs rm typarams ty
+     and r' = parse_type place env sigs rm typarams r
      in
      Span (ty', ref_region_of_ty r')
   | QSpanWrite (ty, r) ->
-     let ty' = parse_type env sigs rm typarams ty
-     and r' = parse_type env sigs rm typarams r
+     let ty' = parse_type place env sigs rm typarams ty
+     and r' = parse_type place env sigs rm typarams r
      in
      SpanMut (ty', ref_region_of_ty r')
 
@@ -246,44 +247,44 @@ and is_region (rm: region_map) (name: qident): ty option =
   | (Some r) -> Some (RegionTy r)
   | None -> None
 
-and parse_user_defined_type (env: env) (sigs: type_signature list) (name: qident) (args: ty list): ty =
+and parse_user_defined_type (place: place) (env: env) (sigs: type_signature list) (name: qident) (args: ty list): ty =
   match get_type_signature env sigs name with
   | Some ts ->
-     parse_user_defined_type' ts name args
+     parse_user_defined_type' place ts name args
   | None ->
-     type_error (UnresolvedType (original_name name))
+     type_error place (UnresolvedType (original_name name))
 
-and parse_user_defined_type' (ts: type_signature) (name: qident) (args: ty list): ty =
+and parse_user_defined_type' (place: place) (ts: type_signature) (name: qident) (args: ty list): ty =
   let (TypeSignature (_, ts_params, declared_universe)) = ts in
   (* Check: the number of type parameters in the signature matches the number of
      type arguments *)
-  check_param_arity_matches ts_params args name;
+  check_param_arity_matches place ts_params args name;
   (* Check: the universe of each type argument matches the universe of each type
      parameter in the type signature. *)
-  check_universes_match ts_params args;
+  check_universes_match place ts_params args;
   (* Construct the named type *)
-  let universe = effective_universe name ts_params declared_universe args in
+  let universe = effective_universe place name ts_params declared_universe args in
   NamedType (name, args, universe)
 
-and check_param_arity_matches (params: typarams) (args: ty list) (ty_name: qident) : unit =
+and check_param_arity_matches (place: place) (params: typarams) (args: ty list) (ty_name: qident) : unit =
   let expected: int = typarams_size params
   and got: int = List.length args
   in
   if expected = got then
     ()
   else
-    generic_error (TypeWrongArity { typename = original_name ty_name; expected; actual = Some got })
+    generic_error place (TypeWrongArity { typename = original_name ty_name; expected; actual = Some got })
 
-and check_universes_match (params: typarams) (args: ty list): unit =
-  let _ = List.map2 check_universes_match' (typarams_as_list params) args in ()
+and check_universes_match (place: place) (params: typarams) (args: ty list): unit =
+  let _ = List.map2 (check_universes_match' place) (typarams_as_list params) args in ()
 
-and check_universes_match' (tp: type_parameter) (arg: ty): unit =
+and check_universes_match' (place: place) (tp: type_parameter) (arg: ty): unit =
   let param_u = typaram_universe tp
   and arg_u = type_universe arg in
   if universe_compatible param_u arg_u then
     ()
   else
-    type_error (TypeArgumentWrongUniverse { param = tp; expected = param_u; actual = arg_u })
+    type_error place (TypeArgumentWrongUniverse { param = tp; expected = param_u; actual = arg_u })
 
 and universe_compatible param arg =
   (* The check here is:

@@ -97,7 +97,7 @@ let is_bool (e: texpr): bool =
 (* Since the extraction pass has already happened, we can simplify the call to
    `parse_type` by passing an empty list of local type signatures. *)
 let parse_typespec (ctx: expr_ctx) (ty: qtypespec): ty =
-  parse_type (ctx_env ctx) [] (ctx_region_map ctx) (ctx_typarams ctx) ty
+  parse_type place_from_adorn (ctx_env ctx) [] (ctx_region_map ctx) (ctx_typarams ctx) ty
 
 let get_record_definition (env: env) (name: qident) (ty: ty): (module_name * type_vis * typarams * typed_slot list) =
   match get_decl_by_name env (qident_to_sident name) with

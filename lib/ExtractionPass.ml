@@ -27,8 +27,9 @@ open BuiltIn
 open TypeVarSet
 open Util
 open Error
+open Error.Placed
 
-let check_slots_are_free (name: identifier) (slots: typed_slot list): unit =
+let check_slots_are_free (place: place) (name: identifier) (slots: typed_slot list): unit =
   let check_slot_is_free (slot: typed_slot): unit =
     let (TypedSlot (_, ty)) = slot in
     match type_universe ty with
@@ -37,20 +38,20 @@ let check_slots_are_free (name: identifier) (slots: typed_slot list): unit =
     | RegionUniverse ->
        ()
     | LinearUniverse ->
-        linearity_error (FreeContainsLinear { name; universe = LinearUniverse; parameter = false })
+        linearity_error place (FreeContainsLinear { name; universe = LinearUniverse; parameter = false })
     | TypeUniverse ->
-        linearity_error (FreeContainsLinear { name; universe = TypeUniverse; parameter = false })
+        linearity_error place (FreeContainsLinear { name; universe = TypeUniverse; parameter = false })
   in
   List.iter check_slot_is_free slots
 
-let check_cases_are_free (cases: typed_case list): unit =
+let check_cases_are_free (place: place) (cases: typed_case list): unit =
   let check_case_is_free (case: typed_case): unit =
     let (TypedCase (name, slots)) = case in
-    check_slots_are_free name slots
+    check_slots_are_free place name slots
   in
   List.iter check_case_is_free cases
 
-let check_typarams_are_free (name: identifier) (typarams: typarams): unit =
+let check_typarams_are_free (place: place) (name: identifier) (typarams: typarams): unit =
   let check_universe (u: universe) =
     match u with
     | FreeUniverse ->
@@ -58,13 +59,13 @@ let check_typarams_are_free (name: identifier) (typarams: typarams): unit =
     | RegionUniverse ->
        ()
     | LinearUniverse ->
-       linearity_error (FreeContainsLinear { name; universe = LinearUniverse; parameter = true })
+       linearity_error place (FreeContainsLinear { name; universe = LinearUniverse; parameter = true })
     | TypeUniverse ->
-       linearity_error (FreeContainsLinear { name; universe = TypeUniverse; parameter = true })
+       linearity_error place (FreeContainsLinear { name; universe = TypeUniverse; parameter = true })
   in
   List.iter (fun tp -> check_universe (typaram_universe tp)) (typarams_as_list typarams)
 
-let check_all_type_parameters_appear_in_signature (typarams: typarams) (params: value_parameter list) (rt: ty): unit =
+let check_all_type_parameters_appear_in_signature (place: place) (typarams: typarams) (params: value_parameter list) (rt: ty): unit =
   (* Get the type variables from the value parameter list. *)
   let param_tyvars: TypeVarSet.t list = List.map (fun (ValueParameter (_, ty)) -> type_variables ty) params in
   let param_tyvars: TypeVarSet.t = List.fold_left TypeVarSet.union TypeVarSet.empty param_tyvars in
@@ -78,7 +79,7 @@ let check_all_type_parameters_appear_in_signature (typarams: typarams) (params: 
     if TypeVarSet.mem tv signature_tyvars then
       ()
     else
-      declaration_error (TyparamNotInSignature tp)
+      declaration_error place (TyparamNotInSignature tp)
   in
   List.iter check_typaram (typarams_as_list typarams)
 
@@ -161,28 +162,30 @@ and extract_definitions (env: env) (mod_id: mod_id) (mn: module_name) (local_typ
     the environment, and return a linked definition. *)
 and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_types: type_signature list) (def: combined_definition): (env * linked_definition)  =
   let rm = empty_region_map in
-  let parse' = parse_type env local_types in
-  let rec parse_slot (typarams: typarams) (Combined.QualifiedSlot (n, ts)): typed_slot =
-    TypedSlot (n, parse' rm typarams ts)
-  and parse_param (typarams: typarams) (Combined.QualifiedParameter (n, ts)): value_parameter =
-    ValueParameter (n, parse' rm typarams ts)
+  let parse' (place: place) = parse_type place env local_types in
+  let rec parse_slot (place: place) (typarams: typarams) (Combined.QualifiedSlot (n, ts)): typed_slot =
+    TypedSlot (n, parse' place rm typarams ts)
+  and parse_param (place: place) (typarams: typarams) (Combined.QualifiedParameter (n, ts)): value_parameter =
+    ValueParameter (n, parse' place rm typarams ts)
   in
   match def with
   | CConstant (span, vis, name, typespec, def, docstring) ->
      adorn_error_with_span span
        (fun _ ->
-         let ty = parse' rm empty_typarams typespec in
+         let place: place = AtSpan span in
+         let ty = parse' place rm empty_typarams typespec in
          let (env, decl_id) = register env (NewConstant { mod_id; vis; name; ty; docstring }) in
          let decl = LConstant (decl_id, vis, name, ty, def, docstring) in
          (env, decl))
   | CRecord (span, vis, name, typarams, universe, slots, docstring) ->
      adorn_error_with_span span
        (fun _ ->
-         let slots = List.map (parse_slot typarams) slots in
+         let place: place = AtSpan span in
+         let slots = List.map (parse_slot place typarams) slots in
          (* If the universe is `Free`, check that there are no slots with types in the `Type` or `Linear` universes. *)
          let _ =
            if universe = FreeUniverse then
-             check_slots_are_free name slots
+             check_slots_are_free place name slots
            else
              ()
          in
@@ -195,14 +198,14 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
              if (is_address_type qname) || (is_pointer_type qname) then
                ()
              else
-               check_typarams_are_free name typarams
+               check_typarams_are_free place name typarams
            else
              ()
          in
          (* If the universe is `Region`, fail. *)
          let _ =
            if universe = RegionUniverse then
-             declaration_error (TypesAreNotRegions { name; declaration = RecordDeclaration })
+             declaration_error place (TypesAreNotRegions { name; declaration = RecordDeclaration })
            else
              ()
          in
@@ -212,12 +215,13 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
   | CUnion (span, vis, name, typarams, universe, cases, docstring) ->
      adorn_error_with_span span
        (fun _ ->
+         let place: place = AtSpan span in
          (* If the universe is `Free`, check that there are no cases with slots with types in the `Type` or `Linear` universes. *)
          let _ =
            if universe = FreeUniverse then
-             let cases = List.map (fun (Combined.QualifiedCase (n, slots)) -> TypedCase (n, List.map (parse_slot typarams) slots)) cases
+             let cases = List.map (fun (Combined.QualifiedCase (n, slots)) -> TypedCase (n, List.map (parse_slot place typarams) slots)) cases
              in
-             check_cases_are_free cases
+             check_cases_are_free place cases
            else
              ()
          in
@@ -225,14 +229,14 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
             the `Linear` or `Type` universes. *)
          let _ =
            if universe = FreeUniverse then
-             check_typarams_are_free name typarams
+             check_typarams_are_free place name typarams
            else
              ()
          in
          (* If the universe is `Region`, fail. *)
          let _ =
            if universe = RegionUniverse then
-             declaration_error (TypesAreNotRegions { name; declaration = UnionDeclaration })
+             declaration_error place (TypesAreNotRegions { name; declaration = UnionDeclaration })
            else
              ()
          in
@@ -253,7 +257,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
              vis = case_vis;
              union_id = union_id;
              name = n;
-             slots = List.map (parse_slot typarams) slots;
+             slots = List.map (parse_slot place typarams) slots;
              docstring = docstring;
            }
          in
@@ -266,8 +270,9 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
   | CFunction (span, vis, name, typarams, params, rt, body, docstring, pragmas) ->
      adorn_error_with_span span
        (fun _ ->
-         let value_params = List.map (parse_param typarams) params
-         and rt = parse' rm typarams rt
+         let place: place = AtSpan span in
+         let value_params = List.map (parse_param place typarams) params
+         and rt = parse' place rm typarams rt
          and external_name: string option =
            (match pragmas with
             | [ForeignImportPragma s] ->
@@ -285,7 +290,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
            (* Check: if we have both an export name and an external name, raise an error. *)
            match (external_name, export_name) with
            | (Some _, Some _) ->
-              declaration_error (ForeignImportExport name)
+              declaration_error place (ForeignImportExport name)
            | _ ->
               ()
          in
@@ -294,7 +299,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
            match export_name with
            | Some _ ->
               if typarams_size typarams > 0 then
-                declaration_error (ExportGeneric name)
+                declaration_error place (ExportGeneric name)
               else
                 ()
            | None ->
@@ -302,7 +307,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
          in
          let _ =
            (* Check: all type parameters must appear in the type signature. *)
-           check_all_type_parameters_appear_in_signature typarams value_params rt
+           check_all_type_parameters_appear_in_signature place typarams value_params rt
          in
          let fn_input: function_input = {
              mod_id = mod_id;
@@ -331,6 +336,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
   | CTypeclass (span, vis, name, typaram, methods, docstring) ->
      adorn_error_with_span span
        (fun _ ->
+         let place: place = AtSpan span in
          (* Check: the universe is one of {Type, Linear, Free} *)
          let _ =
            match typaram_universe typaram with
@@ -338,16 +344,16 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
            | LinearUniverse -> ()
            | FreeUniverse -> ()
            | RegionUniverse ->
-              declaration_error (TypeclassParamIsRegion name)
+              declaration_error place (TypeclassParamIsRegion name)
          in
          (* Add the typeclass itself to the env *)
          let (env, typeclass_id) = register env (NewTypeClass { mod_id; vis; name; docstring; param = typaram; }) in
          (* Convert the list of methods into a list of type_class_method records *)
-         let typarams = typarams_from_list (AtSpan span) [typaram] in
+         let typarams = typarams_from_list place [typaram] in
          let method_map (Combined.CMethodDecl (name, method_typarams, params, rt, docstring)): type_class_method_input =
-           let effective_typarams: typarams = merge_typarams (AtSpan span) typarams method_typarams in
-           let value_params = List.map (parse_param effective_typarams) params
-           and rt = parse' rm effective_typarams rt in
+           let effective_typarams: typarams = merge_typarams place typarams method_typarams in
+           let value_params = List.map (parse_param place effective_typarams) params
+           and rt = parse' place rm effective_typarams rt in
            {
              mod_id;
              vis;
@@ -368,9 +374,10 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
   | CInstance (span, vis, name, typarams, argument, methods, docstring) ->
      adorn_error_with_span span
        (fun _ ->
+         let place: place = AtSpan span in
          let typeclass_name = qident_to_sident name |> sident_name in
          (* First add the instance to the env, then the methods. *)
-         let argument = parse' rm typarams argument in
+         let argument = parse' place rm typarams argument in
          (* Find typeclass info. *)
          let (typeclass_id, typeclass_mod_id, typeclass_param_name, universe): typeclass_id * mod_id * identifier * universe =
            match get_decl_by_name env (qident_to_sident name) with
@@ -379,41 +386,41 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
                | TypeClass { id; mod_id; param; _ } ->
                   (id, mod_id, typaram_name param, typaram_universe param)
                | _ ->
-                  declaration_error (InstanceForNonTypeclass typeclass_name))
+                  declaration_error place (InstanceForNonTypeclass typeclass_name))
            | None ->
-              declaration_error (UnknownTypeclass typeclass_name)
+              declaration_error place (UnknownTypeclass typeclass_name)
          in
          (* Check the argument has the right universe for the typeclass. *)
-         let _ = check_instance_argument_has_right_universe universe argument in
+         let _ = check_instance_argument_has_right_universe place universe argument in
          (* Check the argument has the right shape. *)
-         let _ = check_instance_argument_has_right_shape typarams argument in
+         let _ = check_instance_argument_has_right_shape place typarams argument in
          (* Check that the non of the type parameters in the generic instance
             collide with the type parameter of the typeclass. *)
-         let _ = check_disjoint_typarams typeclass_param_name typarams in
+         let _ = check_disjoint_typarams place typeclass_param_name typarams in
          (* Local uniqueness: does this instance collide with other instances in this module? *)
          let _ =
            let other_instances: instance_decl list =
              List.filter (fun (instance: instance_decl) -> equal_typeclass_id typeclass_id instance.typeclass_id)
                (module_instances env mod_id)
            in
-           check_instance_locally_unique other_instances argument
+           check_instance_locally_unique place other_instances argument
          in
          (* Global uniqueness: check orphan rules. *)
-         let _ = check_instance_orphan_rules env mod_id typeclass_mod_id argument in
+         let _ = check_instance_orphan_rules place env mod_id typeclass_mod_id argument in
          (* Add the instance to the env *)
          let input: instance_input = { mod_id; vis; typeclass_id; docstring; typarams; argument } in
          let (env, instance_id) = register env (NewInstance input) in
          (* Convert the list of methods into a list of instance_method_input records *)
          let method_map (CMethodDef (name, method_typarams, params, rt, meth_docstring, body)): (instance_method_input * astmt) =
-           let effective_typarams: typarams = merge_typarams (AtSpan span) typarams method_typarams in
-           let value_params = List.map (parse_param effective_typarams) params
-           and rt = parse' rm effective_typarams rt
+           let effective_typarams: typarams = merge_typarams place typarams method_typarams in
+           let value_params = List.map (parse_param place effective_typarams) params
+           and rt = parse' place rm effective_typarams rt
            and method_id: decl_id =
              (match get_method_from_typeclass_id_and_name env typeclass_id name with
               | Some (TypeClassMethod { id; _ }) ->
                  id
               | _ ->
-                 declaration_error (TypeclassNoMethod {
+                 declaration_error place (TypeclassNoMethod {
                      typeclass = typeclass_name;
                      method_name = name;
                    }))
