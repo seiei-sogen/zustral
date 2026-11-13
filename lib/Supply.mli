@@ -46,6 +46,9 @@ val next_borrow_region : t -> int * t
     the static region. *)
 val next_region : t -> int * t
 
+(** For a variable that only the generated C has ([tmp<n>]). *)
+val next_c_variable : t -> int * t
+
 (** Apply a function that takes numbers to the elements of a list, from the
     first to the last, handing the supply on. *)
 val map : (t -> 'a -> 'b * t) -> t -> 'a list -> 'b list * t

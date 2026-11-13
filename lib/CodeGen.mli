@@ -29,5 +29,8 @@ val gen_integer_type : signedness -> integer_width -> c_ty
     whose types C cannot take is found here, and so are states the earlier
     stages should have ruled out. When the type checker decides the first
     (issue #115) and the types rule out the second (issue #117), this returns
-    a plain [c_unit]. *)
-val gen_module : env -> mono_module -> c_unit Outcome.t
+    a plain [c_unit].
+
+    The variables it makes up are numbered from the supply, which comes back
+    without them. *)
+val gen_module : env -> Supply.t -> mono_module -> (c_unit * Supply.t) Outcome.t

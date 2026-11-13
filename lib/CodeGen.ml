@@ -71,12 +71,10 @@ open Error
 
 (* Name generation *)
 
-let counter = ref 0
-
-let new_variable _: CIdent.t =
-  let v = "tmp" ^ (string_of_int !counter) in
-  counter := !counter + 1;
-  CIdent.generated v
+let new_variable (supply: Supply.t): CIdent.t * Supply.t =
+  let (number, supply) = Supply.next_c_variable supply in
+  let v = "tmp" ^ (string_of_int number) in
+  (CIdent.generated v, supply)
 
 (* Identifiers *)
 
@@ -324,45 +322,57 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
 
 (* Statements *)
 
-let rec gen_stmt (mn: module_name) (stmt: mstmt): c_stmt =
+(* The supply numbers the variables that a destructuring and a `case`
+   statement need in C. A statement takes its variable before its
+   sub-statements take theirs, and the sub-statements go from the last to the
+   first: the `else` branch before the `then` branch, the second statement of
+   a block before the first. The names are in the generated C, so this order
+   stays. It is the order OCaml evaluated the arguments of the constructors in,
+   when the names came from a global counter. *)
+let rec gen_stmt (mn: module_name) (supply: Supply.t) (stmt: mstmt): c_stmt * Supply.t =
   let ge = gen_exp mn
   and gs = gen_stmt mn
   in
   match stmt with
   | MSkip ->
-     CBlock []
+     (CBlock [], supply)
   | MLet (n, t, b) ->
      let l = CLet (gen_ident n, gen_type t, None) in
-     CBlock [l; gs b]
+     let (b, supply) = gs supply b in
+     (CBlock [l; b], supply)
   | MDestructure (bs, e, b) ->
-     let tmp = new_variable () in
+     let (tmp, supply) = new_variable supply in
      let vardecl = CLet (tmp, gen_type (get_type e), Some (ge e))
      and bs' = List.map (fun (MonoBinding { name; ty; rename; }) -> CLet (gen_ident rename, gen_type ty, Some (CStructAccessor (CVar tmp, gen_member name)))) bs
-     and b' = gs b
+     and (b', supply) = gs supply b
      in
-     CBlock (List.concat [[vardecl]; bs'; [b']])
+     (CBlock (List.concat [[vardecl]; bs'; [b']]), supply)
   | MAssign (lvalue, rvalue) ->
-     CAssign (CDeref (ge lvalue), ge rvalue)
+     (CAssign (CDeref (ge lvalue), ge rvalue), supply)
   | MAssignVar (name, rvalue) ->
-     CAssign (CVar (gen_ident (local_name name)), ge rvalue)
+     (CAssign (CVar (gen_ident (local_name name)), ge rvalue), supply)
   | MInitialAssign (name, rvalue) ->
-     CAssign (CVar (gen_ident (local_name name)), ge rvalue)
+     (CAssign (CVar (gen_ident (local_name name)), ge rvalue), supply)
   | MLetTmp (name, ty, expr) ->
     let l = CLet (gen_ident name, gen_type ty, Some (ge expr)) in
-    l
+    (l, supply)
   | MAssignTmp (name, value) ->
-    CAssign (CVar (gen_ident name), ge value)
+    (CAssign (CVar (gen_ident name), ge value), supply)
   | MIf (c, tb, fb) ->
-     CIf (ge c, gs tb, gs fb)
+     let (fb, supply) = gs supply fb in
+     let (tb, supply) = gs supply tb in
+     (CIf (ge c, tb, fb), supply)
   | MCase (e, whens, case_ref) ->
-     gen_case mn e whens case_ref
+     gen_case mn supply e whens case_ref
   | MWhile (c, b) ->
-     CWhile (ge c, gs b)
+     let (b, supply) = gs supply b in
+     (CWhile (ge c, b), supply)
   | MFor (v, i, f, b) ->
-     CExplicitBlock [
+     let (b, supply) = gs supply b in
+     (CExplicitBlock [
          CLet (gen_ident v, CBuiltinType CSizeType, Some (ge i));
-         CFor (gen_ident v, ge f, gs b)
-       ]
+         CFor (gen_ident v, ge f, b)
+       ], supply)
   | MBorrow { original; rename; orig_type; body; mode; _ } ->
      let is_pointer =
        (match orig_type with
@@ -375,7 +385,8 @@ let rec gen_stmt (mn: module_name) (stmt: mstmt): c_stmt =
      in
      if is_pointer then
        let l = CLet (gen_ident rename, gen_type orig_type, Some (CVar (gen_ident original))) in
-       CBlock [l; gs body]
+       let (body, supply) = gs supply body in
+       (CBlock [l; body], supply)
      else
        let e = begin
            match mode with
@@ -398,22 +409,25 @@ let rec gen_stmt (mn: module_name) (stmt: mstmt): c_stmt =
          end
        in
        let l = CLet (gen_ident rename, ty, Some e) in
-       CBlock [l; gs body]
+       let (body, supply) = gs supply body in
+       (CBlock [l; body], supply)
   | MBlock (a, b) ->
-     CBlock [gs a; gs b]
+     let (b, supply) = gs supply b in
+     let (a, supply) = gs supply a in
+     (CBlock [a; b], supply)
   | MDiscarding e ->
-     CDiscarding (ge e)
+     (CDiscarding (ge e), supply)
   | MReturn e ->
-     CReturn (ge e)
+     (CReturn (ge e), supply)
 
-and gen_case (mn: module_name) (e: mexpr) (whens: mtyped_when list) (case_ref: case_ref): c_stmt =
+and gen_case (mn: module_name) (supply: Supply.t) (e: mexpr) (whens: mtyped_when list) (case_ref: case_ref): c_stmt * Supply.t =
   (* Code gen for a case statement: generate a variable, and assign the value
      being pattern-matched to that variable. Generate a switch statement over
      the tag enum. Each when statement that has bindings needs to generate some
      variable assignments for those bindings from the generated variable. *)
   let ty = get_type e
-  and var = new_variable () in
-  let cases = List.map (when_to_case mn ty var case_ref) whens in
+  and (var, supply) = new_variable supply in
+  let (cases, supply) = Supply.map (when_to_case mn ty var case_ref) supply whens in
   let accessor =
     match case_ref with
     | CasePlain ->
@@ -422,12 +436,12 @@ and gen_case (mn: module_name) (e: mexpr) (whens: mtyped_when list) (case_ref: c
        CPointerStructAccessor (CVar var, tag_slot)
   in
   let switch = CSwitch (accessor, cases) in
-  CBlock [
+  (CBlock [
       CLet (var, gen_type ty, Some (gen_exp mn e));
       switch
-    ]
+    ], supply)
 
-and when_to_case (mn: module_name) (ty: mono_ty) (var: CIdent.t) (case_ref: case_ref) (MTypedWhen (n, bindings, body)): c_switch_case =
+and when_to_case (mn: module_name) (ty: mono_ty) (var: CIdent.t) (case_ref: case_ref) (supply: Supply.t) (MTypedWhen (n, bindings, body)): c_switch_case * Supply.t =
   let case_name = gen_member n
   and tag_value = union_tag_value ty n
   in
@@ -449,8 +463,9 @@ and when_to_case (mn: module_name) (ty: mono_ty) (var: CIdent.t) (case_ref: case
     CLet (gen_ident rename, ty, Some (get_binding name))
   in
   let bindings' = List.map f bindings in
-  let body'' = CExplicitBlock (List.append bindings' [gen_stmt mn body]) in
-  CSwitchCase (tag_value, body'')
+  let (body, supply) = gen_stmt mn supply body in
+  let body'' = CExplicitBlock (List.append bindings' [body]) in
+  (CSwitchCase (tag_value, body''), supply)
 
 (* Declarations *)
 
@@ -464,9 +479,10 @@ let gen_slots (slots: mono_slot list) =
 let gen_cases (cases: mono_case list) =
   List.map (fun (MonoCase (n, ss)) -> CSlot (gen_member n, CStructType (gen_slots ss))) cases
 
-let gen_method (mn: module_name) (MConcreteMethod (id, _, params, rt, body)) =
+let gen_method (mn: module_name) (supply: Supply.t) (MConcreteMethod (id, _, params, rt, body)) =
   let d = Desc "Method" in
-  CFunctionDefinition (d, gen_ins_meth_id id, gen_params mn params, gen_type rt, gen_stmt mn body)
+  let (body, supply) = gen_stmt mn supply body in
+  (CFunctionDefinition (d, gen_ins_meth_id id, gen_params mn params, gen_type rt, body), supply)
 
 let get_original_module_name (env: env) (id: mono_id): module_name =
   match get_monomorph env id with
@@ -506,24 +522,24 @@ and tyargs_string (args: mono_type_bindings): string =
 and render_mono (env: env) (id: decl_id) (tyargs: mono_type_bindings): string =
   (get_decl_name_or_die env id) ^ (tyargs_string tyargs)
 
-let gen_decl (env: env) (mn: module_name) (decl: mdecl): c_decl list =
+let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_decl list * Supply.t =
   match decl with
   | MConstant (_, n, _, e) ->
      let d = Desc "Constant" in
-     [
+     ([
        CMacro (d, gen_sident mn n, gen_exp mn e)
-     ]
+     ], supply)
   | MRecord _ ->
-     []
+     ([], supply)
   | MRecordMonomorph (id, slots) ->
      let d = Desc ("Record monomorph: " ^ (mono_desc env id))
      and id = gen_mono_id id in
-     [
+     ([
        CStructForwardDeclaration (d, id);
        CNamedStructDefinition (d, id, gen_slots slots)
-     ]
+     ], supply)
   | MUnion _ ->
-     []
+     ([], supply)
   | MUnionMonomorph (id, cases) ->
      let mono_id = gen_mono_id id in
      let enum_d = Desc ("Union monomorph tag enum: " ^ (mono_desc env id)) in
@@ -542,24 +558,26 @@ let gen_decl (env: env) (mn: module_name) (decl: mdecl): c_decl list =
                          ]
                        )
      in
-     [
+     ([
        enum_def;
        CStructForwardDeclaration (union_d, mono_id);
        union_def
-     ]
+     ], supply)
   | MFunction (id, _, params, rt, body) ->
      let d = Desc "Function" in
-     [
-       CFunctionDefinition (d, gen_decl_id id, gen_params mn params, gen_type rt, gen_stmt mn body)
-     ]
+     let (body, supply) = gen_stmt mn supply body in
+     ([
+       CFunctionDefinition (d, gen_decl_id id, gen_params mn params, gen_type rt, body)
+     ], supply)
   | MFunctionMonomorph (id, params, rt, body) ->
      (* Load-bearing hack: prefix parameters not with the current module name,
         but with the name of the module the monomorph's declaration is from. *)
      let mn': module_name = get_original_module_name env id in
      let d = Desc ("Function monomorph: " ^ (mono_desc env id)) in
-     [
-       CFunctionDefinition (d, gen_mono_id id, gen_params mn' params, gen_type rt, gen_stmt mn body)
-     ]
+     let (body, supply) = gen_stmt mn supply body in
+     ([
+       CFunctionDefinition (d, gen_mono_id id, gen_params mn' params, gen_type rt, body)
+     ], supply)
   | MForeignFunction (id, _, params, rt, underlying) ->
      let def_d = Desc "Foreign function" in
      let param_type_to_c_type (t: mono_ty): c_ty =
@@ -626,14 +644,15 @@ let gen_decl (env: env) (mn: module_name) (decl: mdecl): c_decl list =
                     CReturn funcall
                   ] in
      let def = CFunctionDefinition (def_d, gen_decl_id id, gen_params mn params, gen_type rt, body) in
-     [def]
+     ([def], supply)
   | MConcreteInstance (_, _, _, methods) ->
-     List.map (gen_method mn) methods
+     Supply.map (gen_method mn) supply methods
   | MMethodMonomorph (id, params, rt, body) ->
      let d = Desc ("Method monomorph: " ^ (mono_desc env id)) in
-     [
-       CFunctionDefinition (d, gen_mono_id id, gen_params mn params, gen_type rt, gen_stmt mn body)
-     ]
+     let (body, supply) = gen_stmt mn supply body in
+     ([
+       CFunctionDefinition (d, gen_mono_id id, gen_params mn params, gen_type rt, body)
+     ], supply)
 
 (* Extract types into forward type declarations *)
 
@@ -737,11 +756,11 @@ let detail_compare decls a b =
 
 (* end declaration sorting code *)
 
-let gen_module (env: env) (MonoModule (name, decls)): c_unit Outcome.t =
+let gen_module (env: env) (supply: Supply.t) (MonoModule (name, decls)): (c_unit * Supply.t) Outcome.t =
   Outcome.catch (fun () ->
       let type_decls = gen_type_decls decls
       and fun_decls = List.concat (gen_fun_decls name decls)
-      and decls = List.concat (List.map (gen_decl env name) decls) in
-      let decls = List.concat [type_decls; fun_decls; decls] in
+      and (decls, supply) = Supply.map (gen_decl env name) supply decls in
+      let decls = List.concat [type_decls; fun_decls; List.concat decls] in
       let sorted_decls = List.sort (detail_compare decls) decls in
-      CUnit (mod_name_string name, sorted_decls))
+      (CUnit (mod_name_string name, sorted_decls), supply))

@@ -100,7 +100,7 @@ let compile_mod (c: compiler) (source: module_source): compiler Outcome.t =
      let* (checked: checked_module) = check_module_linearity typed in
      let* (env: env) = extract_bodies env checked in
      let* ((env, mono): env * mono_module) = monomorphize env checked in
-     let* (unit: c_unit) = gen_module env mono in
+     let* ((env, unit): env * c_unit) = with_supply env (fun supply -> gen_module env supply mono) in
      Ok (Compiler (env, units @ [unit])))
 
 let rec compile_multiple (c: compiler) (modules: module_source list): compiler Outcome.t =
@@ -118,7 +118,9 @@ let finish (compiler: compiler) (entrypoint: (module_name * identifier) option):
   let (Compiler (env, units)) = compiler in
   (* The wrapper functions. *)
   let* (env, decls) = monomorphize_wrappers env in
-  let* wrapper_unit = gen_module env (MonoModule (make_mod_name BuiltInNames.wrappers_module, decls)) in
+  let* (env, wrapper_unit) =
+    with_supply env (fun supply -> gen_module env supply (MonoModule (make_mod_name BuiltInNames.wrappers_module, decls)))
+  in
   let* wrappers = Outcome.map (fun decls -> CUnit (BuiltInNames.wrappers_unit_name, decls)) (all_wrappers env) in
   let* entrypoint =
     match entrypoint with
