@@ -71,6 +71,7 @@ type t =
   | TypeclassNoMethod of { typeclass: identifier; method_name: identifier }
   | TypeclassParamIsRegion of identifier
   | TypesAreNotRegions of { name: identifier; declaration: declaration_kind }
+  | RegionUsedAsType of identifier
   | UnknownTypeclass of identifier
   | TyparamNotInSignature of type_parameter
   | DoubleImport of identifier
@@ -253,6 +254,20 @@ let render (error: t): err_text =
        Text ", or ";
        Code "Free";
        Text " instead.";
+     ]
+  | RegionUsedAsType name ->
+     [
+       Text "The name ";
+       Code (ident_string name);
+       Text " is used as a type, but it is declared in the ";
+       Code "Region";
+       Text " universe, and regions are not types. Declare it in the ";
+       Code "Free";
+       Text ", ";
+       Code "Linear";
+       Text " or ";
+       Code "Type";
+       Text " universe."
      ]
   | UnknownTypeclass name ->
      [

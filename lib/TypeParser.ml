@@ -140,11 +140,10 @@ let rec effective_universe (place: place) name (typarams: typarams) declared_uni
   | LinearUniverse ->
      LinearUniverse
   | RegionUniverse ->
-     (* A program reaches this: a record with a slot whose type is declared
-        later in the module in the Region universe. The type parser reads that
-        signature before extraction rejects the declaration (TypesAreNotRegions).
-        No issue is open for it. *)
-     internal_err place "effective_universe called with a region type"
+     (* A type declared later in the module in the Region universe: the type
+        parser reads its signature before extraction rejects the declaration
+        with TypesAreNotRegions (#141). *)
+     declaration_error place (RegionUsedAsType (original_name name))
   | TypeUniverse ->
      assert ((typarams_size typarams) > 0);
      if any_arg_is_linear place args then

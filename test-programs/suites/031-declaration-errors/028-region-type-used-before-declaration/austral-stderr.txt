@@ -1,0 +1,36 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The name " },
+    { "type": "code", "content": "Marker" },
+    {
+      "type": "text",
+      "content": " is used as a type, but it is declared in the "
+    },
+    { "type": "code", "content": "Region" },
+    {
+      "type": "text",
+      "content": " universe, and regions are not types. Declare it in the "
+    },
+    { "type": "code", "content": "Free" },
+    { "type": "text", "content": ", " },
+    { "type": "code", "content": "Linear" },
+    { "type": "text", "content": " or " },
+    { "type": "code", "content": "Type" },
+    { "type": "text", "content": " universe." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/028-region-type-used-before-declaration/Test.aum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 4, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    record Holder: Free is" ],
+    [ 3, "        marker: Marker;" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    record Marker: Region is" ]
+  ]
+}
