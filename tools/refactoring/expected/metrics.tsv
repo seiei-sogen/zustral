@@ -43,7 +43,7 @@ lib/ImportResolution.ml	95	4	0	0	0	0	0	0	0	0
 lib/Imports.ml	56	1	0	0	0	0	0	0	0	0
 lib/InstanceIdSet.ml	15	0	0	0	0	0	0	0	0	0
 lib/LexEnv.ml	53	1	0	0	0	0	0	0	0	0
-lib/Lexer.mll	174	4	0	0	0	0	0	0	0	0
+lib/Lexer.mll	174	4	0	3	0	0	0	0	0	0
 lib/LiftControlPass.ml	227	0	0	0	0	0	0	0	0	0
 lib/LinearityCheck.ml	704	21	0	0	0	2	0	9	0	0
 lib/LinearityErrors.ml	159	0	0	0	0	0	0	0	0	0

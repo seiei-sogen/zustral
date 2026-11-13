@@ -1,0 +1,38 @@
+# One line of OCaml per row, after the verdict the pattern of the column state must give it.
+# count: the line creates or changes mutable state, whatever its scope. skip: it does not.
+# The lexer's lines count: its Buffer is made for one literal and its lexbuf for one
+# file, but both are mutable, as a local ref cell is.
+count	let counter = ref 0
+count	  let seen = ref [] in
+count	  ref (Some x)
+count	  let table = Hashtbl.create 16 in
+count	  Hashtbl.replace table key value;
+count	let string_acc: Buffer.t = Buffer.create 64
+count	  | '"' { read_string (Buffer.create 64) lexbuf }
+count	  let buf = Buffer.create 16 in
+count	  mutable count: int;
+count	  lexbuf.lex_curr_p <- pos'
+count	  record.count <- record.count + 1;
+count	  slots.(i) <- value;
+count	  Array.set slots i value;
+count	  Bytes.set bytes 0 'a';
+count	  Array.fill slots 0 n None;
+count	  Array.blit source 0 target 0 n;
+count	  Bytes.blit source 0 target 0 n;
+count	  incr counter;
+count	  decr (depth)
+count	  let body = lazy (expensive ()) in
+count	  Lazy.from_fun expensive
+count	  let pending = Queue.create () in
+count	  Stack.push frame stack;
+skip	  let x = !counter in
+skip	  Buffer.add_string buf s;
+skip	  let text = Buffer.contents buf in
+skip	  let refined = refine ty in
+skip	  | VarLocal Immutable ->
+skip	  let increment = n + 1 in
+skip	  let lazy_name = name in
+skip	  CallStack.push frame
+skip	  slots.(i)
+skip	  Code ("var mut_x: T := x;")
+skip	  Array.length slots

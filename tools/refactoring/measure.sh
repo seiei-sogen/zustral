@@ -8,7 +8,7 @@
 #                         equal expected/fragile-totals.txt and none is on a
 #                         type of lib/Type.ml or on MonoType.mono_ty
 #   measure.sh --self-test
-#                         check the patterns of the columns io and names against
+#                         check the patterns of the columns io, names and state against
 #                         the sample lines in samples/ (every other mode does
 #                         this first, and stops if a sample disagrees)
 #   measure.sh --tree DIR print the totals of the tree at DIR; nothing is compared
@@ -115,16 +115,27 @@ count_names() { # file
   name_lines < "$ROOT/$1" | wc -l
 }
 
+# Mutable state: creating a ref cell, a Hashtbl or a Buffer, declaring a
+# mutable field, assigning a field or an element (<-), changing an Array or
+# Bytes in place, incr and decr, a lazy value, a Queue or a Stack. Each counts
+# whatever its scope: a local cell is as mutable as a global one. Reading
+# state (!r, Buffer.contents) and assigning a ref cell (:=, after the ref
+# that made it counted) do not count.
+STATE_PATTERN='= *ref ([a-z0-9("\[]|\[\])|^\s*ref \(|Hashtbl\.(create|add|replace)|Buffer\.create|^\s*mutable [a-z_]+ *:|<-'
+STATE_PATTERN+='|(Array|Bytes)\.(unsafe_)?(set|fill|blit)|(^|[^_a-zA-Z0-9])(incr|decr|lazy)( |$|\()|Lazy\.'
+STATE_PATTERN+='|(^|[^_a-zA-Z0-9])(Queue|Stack)\.'
+
 # samples/COLUMN.tsv holds one line of OCaml per row, after the verdict the
 # column must give it: count or skip.
 self_test() {
   local column verdict line got bad=0 n=0
-  for column in io names; do
+  for column in io names state; do
     while IFS=$'\t' read -r verdict line; do
       [[ -z $verdict || $verdict == \#* ]] && continue
       case $column in
         io) got=$(grep -cE -- "$IO_PATTERN" <<< "$line") ;;
         names) got=$(name_lines <<< "$line" | wc -l) ;;
+        state) got=$(grep -cE -- "$STATE_PATTERN" <<< "$line") ;;
       esac
       if ((got)); then got=count; else got=skip; fi
       n=$((n + 1))
@@ -142,7 +153,7 @@ self_test() {
 #             value, Error (Internal ...)
 #   adhoc     errors with no name: err with a bare string. R11 removed err, so this stays at 0
 #   catch     places that catch or re-label: try, adorn_error_with_*, with_errors
-#   state     mutable state: creating a ref cell, a Hashtbl or a top-level Buffer, declaring a mutable field
+#   state     mutable state, created or changed (STATE_PATTERN above)
 #   io        input, output and process control: opening, closing and using channels, printing,
 #             anything in Sys, Unix or Filename, exit and at_exit, and the compiler's own file
 #             and process helpers
@@ -156,7 +167,7 @@ metrics() {
       "$(wc -l < "$ROOT/$f")" \
       "$(count 'raise_error|ok_or_raise|(^|[^_a-zA-Z])(parse|cli|type|linearity|declaration|entrypoint|generic)_error(_at)? |internal_err|failwith|(^|[^_a-zA-Z])raise |assert false' "$f")" \
       "$(count '(^|[^_a-zA-Z])try($|[^_a-zA-Z])|adorn_error_with_[a-z_]+|with_errors' "$f")" \
-      "$(count '= *ref ([a-z0-9("\[]|\[\])|^\s*ref \(|Hashtbl\.(create|add|replace)|^\s*mutable [a-z_]+ *:|^let [a-z_]+ *(: *[A-Za-z_.]+ *)?= *Buffer\.create' "$f")" \
+      "$(count "$STATE_PATTERN" "$f")" \
       "$(count "$IO_PATTERN" "$f")" \
       "$(count '^\s*\| _ ->' "$f")" \
       "$(count_type_strings "$f")" \
