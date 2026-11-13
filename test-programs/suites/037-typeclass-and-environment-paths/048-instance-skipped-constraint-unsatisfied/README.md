@@ -1,0 +1,1 @@
+Pins that the instance lookup skips a generic instance when the type argument does not satisfy the constraint of the instance's type parameter: the error is that no instance matches, not that the constraint is unsatisfied (lib/TypeMatch.ml, get_instance).

@@ -1,0 +1,18 @@
+module body Test is
+    record Triple[A: Free, B: Free, C: Free]: Free is
+        first: A;
+        second: B;
+        third: C;
+    end;
+
+    generic [T: Free]
+    function f(p: Triple[T, T, Unit]): Unit is
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        let p: Triple[Int32, Bool, Int32] := Triple(first => 1, second => true, third => 3);
+        f(p);
+        return ExitSuccess();
+    end;
+end module body.

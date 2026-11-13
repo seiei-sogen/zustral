@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "Pair[T, T]" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "Pair[Int32, Bool]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/035-cast-type-variable-bound-twice/Test.aum",
+    "startp": { "line": 10, "column": 8 },
+    "end": { "line": 10, "column": 51 }
+  },
+  "context": [
+    [ 8, "    function f(value: T): Unit is" ],
+    [
+      9,
+      "        let p: Pair[Int32, Bool] := Pair(first => 1, second => true);"
+    ],
+    [ 10, "        let q: Pair[Int32, Bool] := p : Pair[T, T];" ],
+    [ 11, "        return nil;" ],
+    [ 12, "    end;" ]
+  ]
+}

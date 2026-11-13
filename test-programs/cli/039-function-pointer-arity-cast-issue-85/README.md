@@ -1,0 +1,1 @@
+Pins a bug: a cast between function pointer types whose return type and common parameters match, and whose numbers of parameters differ, makes the compiler die with an OCaml exception. The type matcher walks the two parameter lists with `List.map2` (lib/TypeMatch.ml, issue #85).

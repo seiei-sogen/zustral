@@ -1,0 +1,15 @@
+module body Test is
+    record Foo: Free is
+    end;
+
+    generic [T: Free(Foo)]
+    function f(value: T): Unit is
+        let n: Int32 := 10;
+        let m: Int32 := n : T;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

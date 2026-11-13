@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The typeclass " },
+    { "type": "code", "content": "Outer" },
+    { "type": "text", "content": " has no instance which matches for " },
+    { "type": "type", "content": "Box[Int32]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/051-instance-skipped-constraint-unknown-typeclass/Test.aum",
+    "startp": { "line": 19, "column": 8 },
+    "end": { "line": 19, "column": 26 }
+  },
+  "context": [
+    [ 17, "    function main(): ExitCode is" ],
+    [ 18, "        let b: Box[Int32] := Box(value => 10);" ],
+    [ 19, "        printLn(outer(b));" ],
+    [ 20, "        return ExitSuccess();" ],
+    [ 21, "    end;" ]
+  ]
+}

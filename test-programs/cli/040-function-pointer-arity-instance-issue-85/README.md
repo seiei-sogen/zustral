@@ -1,0 +1,1 @@
+Pins a bug: looking up an instance for a function pointer type makes the compiler die with an OCaml exception when an instance is for function pointers with a different number of parameters. The exception is not an error of the compiler, so the lookup does not skip the instance (lib/TypeMatch.ml, get_instance, issue #85).

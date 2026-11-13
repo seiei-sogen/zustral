@@ -1,0 +1,1 @@
+Pins the error for a cast to a type that uses one type variable in two places, from a type that has different types in those places: the cast is invalid (lib/TypeCheckExpr.ml, augment_typecast; lib/TypeBindings.ml, merge_bindings).

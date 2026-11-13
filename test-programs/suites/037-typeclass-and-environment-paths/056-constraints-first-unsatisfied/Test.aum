@@ -1,0 +1,19 @@
+module body Test is
+    typeclass Alpha(T: Free) is
+        method alpha(value: T): Unit;
+    end;
+
+    typeclass Beta(T: Free) is
+        method beta(value: T): Unit;
+    end;
+
+    generic [T: Free(Beta, Alpha)]
+    function f(value: T): Unit is
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        f(10);
+        return ExitSuccess();
+    end;
+end module body.

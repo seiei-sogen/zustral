@@ -1,0 +1,23 @@
+module body Test is
+    typeclass Foo(T: Free) is
+        method foo(value: T): Unit;
+    end;
+
+    instance Foo(Int32) is
+        method foo(value: Int32): Unit is
+            return nil;
+        end;
+    end;
+
+    generic [T: Free(Foo)]
+    function f(value: T): Int32 is
+        let n: Int32 := 10;
+        let m: Int32 := n : T;
+        return m;
+    end;
+
+    function main(): ExitCode is
+        printLn(f(5));
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,1 @@
+Pins the error for a cast between function pointer types that differ in a parameter type and in the number of parameters: the type mismatch is found first and the cast is invalid. Without the mismatch the compiler dies (test-programs/cli/039).

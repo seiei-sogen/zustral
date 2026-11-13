@@ -1,0 +1,17 @@
+module body Test is
+    record Pair[A: Free, B: Free]: Free is
+        first: A;
+        second: B;
+    end;
+
+    generic [T: Free]
+    function f(p: Pair[T, T]): Unit is
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        let p: Pair[Int32, Bool] := Pair(first => 1, second => true);
+        f(p);
+        return ExitSuccess();
+    end;
+end module body.

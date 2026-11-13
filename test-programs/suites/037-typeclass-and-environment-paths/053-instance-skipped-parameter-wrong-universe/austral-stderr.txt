@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The typeclass " },
+    { "type": "code", "content": "Outer" },
+    { "type": "text", "content": " has no instance which matches for " },
+    { "type": "type", "content": "Box[Lin]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/053-instance-skipped-parameter-wrong-universe/Test.aum",
+    "startp": { "line": 24, "column": 8 },
+    "end": { "line": 24, "column": 27 }
+  },
+  "context": [
+    [ 22, "    function main(): ExitCode is" ],
+    [ 23, "        let b: Box[Lin] := Box(value => Lin());" ],
+    [ 24, "        printLn(outer(&b));" ],
+    [ 25, "        let { value: Lin } := b;" ],
+    [ 26, "        let {} := value;" ]
+  ]
+}

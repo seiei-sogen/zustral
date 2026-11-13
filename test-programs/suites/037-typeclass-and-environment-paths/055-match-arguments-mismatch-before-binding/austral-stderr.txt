@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "Unit" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/055-match-arguments-mismatch-before-binding/Test.aum",
+    "startp": { "line": 15, "column": 8 },
+    "end": { "line": 15, "column": 13 }
+  },
+  "context": [
+    [ 13, "    function main(): ExitCode is" ],
+    [
+      14,
+      "        let p: Triple[Int32, Bool, Int32] := Triple(first => 1, second => true, third => 3);"
+    ],
+    [ 15, "        f(p);" ],
+    [ 16, "        return ExitSuccess();" ],
+    [ 17, "    end;" ]
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "Fn[Bool, Int32]" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "Fn[Int32, Int32, Int32]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/036-cast-function-pointer-arity-after-mismatch/Test.aum",
+    "startp": { "line": 8, "column": 8 },
+    "end": { "line": 8, "column": 54 }
+  },
+  "context": [
+    [ 6, "    function main(): ExitCode is" ],
+    [ 7, "        let f: Fn[Int32, Int32, Int32] := add;" ],
+    [ 8, "        let g: Fn[Bool, Int32] := f : Fn[Bool, Int32];" ],
+    [ 9, "        return ExitSuccess();" ],
+    [ 10, "    end;" ]
+  ]
+}

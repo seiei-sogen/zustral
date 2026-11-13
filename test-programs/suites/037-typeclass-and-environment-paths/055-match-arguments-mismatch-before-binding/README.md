@@ -1,0 +1,1 @@
+Pins the order in which the type arguments of a named type are matched: every pair is matched before any bindings are merged, so a mismatch in the third argument is reported, not the two types bound to one parameter by the first two (lib/TypeMatch.ml, the list of types).

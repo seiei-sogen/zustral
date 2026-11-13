@@ -1,0 +1,27 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": " cannot be bound to both " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": " and " },
+    { "type": "type", "content": "Bool" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/054-match-arguments-bind-parameter-twice/Test.aum",
+    "startp": { "line": 14, "column": 8 },
+    "end": { "line": 14, "column": 13 }
+  },
+  "context": [
+    [ 12, "    function main(): ExitCode is" ],
+    [
+      13,
+      "        let p: Pair[Int32, Bool] := Pair(first => 1, second => true);"
+    ],
+    [ 14, "        f(p);" ],
+    [ 15, "        return ExitSuccess();" ],
+    [ 16, "    end;" ]
+  ]
+}

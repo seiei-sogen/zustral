@@ -1,0 +1,1 @@
+Pins that the instance lookup skips a generic instance when the type argument is linear and the instance's type parameter is free: the error is that no instance matches (lib/TypeMatch.ml, get_instance; lib/TypeBindings.ml, add_binding).

@@ -1,0 +1,22 @@
+module body Arity is
+    typeclass Kind(T: Type) is
+        method kind(value: T): Int32;
+    end;
+
+    generic [A: Type, B: Type]
+    instance Kind(Fn[A, B]) is
+        method kind(value: Fn[A, B]): Int32 is
+            return 7;
+        end;
+    end;
+
+    function add(x: Int32, y: Int32): Int32 is
+        return x + y;
+    end;
+
+    function main(): ExitCode is
+        let f: Fn[Int32, Int32, Int32] := add;
+        printLn(kind(f));
+        return ExitSuccess();
+    end;
+end module body.

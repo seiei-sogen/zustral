@@ -1,0 +1,30 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Type constraint not satisfied: the type " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": " does not implement the typeclass " },
+    { "type": "code", "content": "Alpha" },
+    { "type": "text", "content": "." },
+    { "type": "break" },
+    {
+      "type": "text",
+      "content": "This constraint is for the type variable "
+    },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/056-constraints-first-unsatisfied/Test.aum",
+    "startp": { "line": 16, "column": 8 },
+    "end": { "line": 16, "column": 14 }
+  },
+  "context": [
+    [ 14, "" ],
+    [ 15, "    function main(): ExitCode is" ],
+    [ 16, "        f(10);" ],
+    [ 17, "        return ExitSuccess();" ],
+    [ 18, "    end;" ]
+  ]
+}
