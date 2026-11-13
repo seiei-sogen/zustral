@@ -24,6 +24,16 @@ type env
 (** The empty compiler. *)
 val empty_env : env
 
+(** {1 The supply of numbers}
+
+    The environment holds the supply of the compilation. The IDs it makes when
+    something is registered come from there. *)
+
+(** Run a stage that takes numbers and registers nothing. The stage gets the
+    supply, and returns its result with the supply it has not used. The
+    environment that comes back holds that supply. *)
+val with_supply : env -> (Supply.t -> ('a * Supply.t) Outcome.t) -> (env * 'a) Outcome.t
+
 (** {1 The two kinds of lookup}
 
     A lookup by a name returns an option. The name comes from the program being

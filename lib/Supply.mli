@@ -30,3 +30,11 @@ val next_decl_id : t -> int * t
 val next_ins_meth_id : t -> int * t
 
 val next_mono_id : t -> int * t
+
+(** For the temporary that holds the value of an expression lifted out of a
+    statement ([_t<n>]). *)
+val next_temporary : t -> int * t
+
+(** Apply a function that takes numbers to the elements of a list, from the
+    first to the last, handing the supply on. *)
+val map : (t -> 'a -> 'b * t) -> t -> 'a list -> 'b list * t

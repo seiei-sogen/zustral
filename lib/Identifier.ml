@@ -56,10 +56,7 @@ let equal_qident { source; original; _ } { source=source'; original=original'; _
 let qident_to_sident { source; original; _ }: sident =
   (source, original)
 
-let counter = ref 0
-
-let fresh_ident _: identifier =
-  let id: int = !counter in
+let fresh_ident (supply: Supply.t): identifier * Supply.t =
+  let (id, supply): int * Supply.t = Supply.next_temporary supply in
   let ident: identifier = make_ident ("_t" ^ (string_of_int id)) in
-  counter := id + 1;
-  ident
+  (ident, supply)

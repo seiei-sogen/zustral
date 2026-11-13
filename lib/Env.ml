@@ -538,3 +538,9 @@ let add_exported_function (env: env) (id: decl_id) (export_name: string): env =
 let get_export_functions (env: env): (decl_id * string) list =
   let (Env { exports; _ }) = env in
   exports
+
+let with_supply (env: env) (stage: Supply.t -> ('a * Supply.t) Outcome.t): (env * 'a) Outcome.t =
+  let (Env { mods; methods; decls; monos; exports; supply }) = env in
+  Outcome.map
+    (fun (result, supply) -> (Env { mods; methods; decls; monos; exports; supply }, result))
+    (stage supply)
