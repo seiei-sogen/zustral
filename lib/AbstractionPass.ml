@@ -4,6 +4,11 @@
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
+
+(* A catch-all arm over a variant type is an error in this file: a new
+   constructor must stop the build at every match. *)
+[@@@warning "@4"]
+
 open Imports
 open Cst
 module Ast = Stages.Ast
@@ -31,7 +36,8 @@ let rec abs_stmt (place: place) im stmt =
             where we check all functions have a return value we need else-less
             whens. *)
          AWhen (span, c, t)
-      | _ ->
+      | ALet _ | ADestructure _ | AAssign _ | AInitialAssign _ | AIf _ | AWhen _
+      | ACase _ | AWhile _ | AFor _ | ABorrow _ | ABlock _ | ADiscarding _ | AReturn _ ->
          AIf (span, c, t, f))
   | CCase (span, e, cases) ->
      ACase (span, abs_expr place im e, List.map (abs_when place im) cases)

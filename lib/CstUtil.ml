@@ -4,6 +4,11 @@
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
+
+(* A catch-all arm over a variant type is an error in this file: a new
+   constructor must stop the build at every match. *)
+[@@@warning "@4"]
+
 open Identifier
 open Common
 open Cst
@@ -13,7 +18,7 @@ let make_module_body (name: module_name) (imports: concrete_import_list list) (p
   let is_unsafe_module p =
     match p with
     | UnsafeModulePragma -> true
-    | _ -> false
+    | ForeignImportPragma _ | ForeignExportPragma _ -> false
   in
   let kind_from_pragmas pragmas =
     if (List.exists is_unsafe_module pragmas) then
@@ -66,7 +71,8 @@ let has_instance_decl (ConcreteModuleInterface (_, _, _, decls)) (name: identifi
   let pred = function
     | ConcreteInstanceDecl (_, name', typarams', ty', _) ->
        (name = name') && (typarams = typarams') && (ty = ty')
-    | _ ->
+    | ConcreteConstantDecl _ | ConcreteOpaqueTypeDecl _ | ConcreteRecordDecl _
+    | ConcreteUnionDecl _ | ConcreteFunctionDecl _ | ConcreteTypeClassDecl _ ->
        false
   in
   List.exists pred decls
@@ -74,7 +80,8 @@ let has_instance_decl (ConcreteModuleInterface (_, _, _, decls)) (name: identifi
 let get_instance_def (ConcreteModuleBody (_, _, _, _, defs)) (name: identifier) (typarams: concrete_type_param list) (ty: typespec): concrete_instance option =
   let filter = function
     | ConcreteInstanceDef ci -> Some ci
-    | _ -> None
+    | ConcreteConstantDef _ | ConcreteRecordDef _ | ConcreteUnionDef _
+    | ConcreteFunctionDef _ | ConcreteTypeClassDef _ -> None
   and pred (ConcreteInstance (_, name', typarams', ty', _, _)) =
     (name = name') && (typarams = typarams') && (ty = ty')
   in
@@ -92,7 +99,11 @@ let make_pragma name args =
          ForeignImportPragma f
        else
          raise_err ()
-    | _ ->
+    | ConcretePositionalArgs _ | ConcreteNamedArgs ([] | [(_, (CNilConstant _
+        | CBoolConstant _ | CIntConstant _ | CFloatConstant _ | CVariable _ | CArith _
+        | CFuncall _ | CComparison _ | CConjunction _ | CDisjunction _ | CNegation _
+        | CIfExpression _ | CPath _ | CRefPath _ | CEmbed _ | CDeref _ | CTypecast _
+        | CSizeOf _ | CBorrowExpr _ | CReborrow _))] | _ :: _ :: _) ->
        raise_err ()
   else
     if s = BuiltInNames.foreign_export_pragma_name then
@@ -105,7 +116,11 @@ let make_pragma name args =
            ForeignExportPragma f
          else
            raise_err ()
-      | _ ->
+      | ConcretePositionalArgs _ | ConcreteNamedArgs ([] | [(_, (CNilConstant _
+          | CBoolConstant _ | CIntConstant _ | CFloatConstant _ | CVariable _
+          | CArith _ | CFuncall _ | CComparison _ | CConjunction _ | CDisjunction _
+          | CNegation _ | CIfExpression _ | CPath _ | CRefPath _ | CEmbed _ | CDeref _
+          | CTypecast _ | CSizeOf _ | CBorrowExpr _ | CReborrow _))] | _ :: _ :: _) ->
          raise_err ()
     else
       if s = BuiltInNames.unsafe_module_pragma_name then
@@ -115,7 +130,7 @@ let make_pragma name args =
         match args with
         | ConcretePositionalArgs [] ->
            UnsafeModulePragma
-        | _ ->
+        | ConcretePositionalArgs _ | ConcreteNamedArgs _ ->
            raise_err ()
       else
         declaration_error NoSpan (UnknownPragma name)

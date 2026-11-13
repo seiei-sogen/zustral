@@ -4,6 +4,11 @@
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
+
+(* A catch-all arm over a variant type is an error in this file: a new
+   constructor must stop the build at every match. *)
+[@@@warning "@4"]
+
 open Identifier
 open Imports
 open Qualifier
@@ -74,7 +79,8 @@ let match_decls (module_name: module_name) (ii: import_map) (bi: import_map) (de
               CConstant (defspan, VisPublic, name, qualify_typespec ii ty, abs_expr (AtSpan span) bi value, docstring)
             else
               declaration_error (AtSpan span) (DeclarationTypeMismatch name)
-         | _ ->
+         | ConcreteRecordDef _ | ConcreteUnionDef _ | ConcreteFunctionDef _
+         | ConcreteTypeClassDef _ | ConcreteInstanceDef _ ->
             declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = ConstantDeclaration }))
   | ConcreteOpaqueTypeDecl (span, name, typarams, universe, docstring) ->
      (match def with
@@ -108,7 +114,8 @@ let match_decls (module_name: module_name) (ii: import_map) (bi: import_map) (de
                 declaration_error (AtSpan span) (DeclarationUniverseMismatch name)
               else
                 declaration_error (AtSpan span) (DeclarationTypeMismatch name)
-         | _ ->
+         | ConcreteConstantDef _ | ConcreteFunctionDef _ | ConcreteTypeClassDef _
+         | ConcreteInstanceDef _ ->
             declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = TypeDeclaration }))
   | ConcreteFunctionDecl (span, name, typarams, params, rt, docstring) ->
      (match def with
@@ -136,7 +143,8 @@ let match_decls (module_name: module_name) (ii: import_map) (bi: import_map) (de
                   OtherDifference
               in
               declaration_error (AtSpan span) (FunctionMismatch { name; difference })
-         | _ ->
+         | ConcreteConstantDef _ | ConcreteRecordDef _ | ConcreteUnionDef _
+         | ConcreteTypeClassDef _ | ConcreteInstanceDef _ ->
             declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = FunctionDeclaration }))
   | ConcreteInstanceDecl (span, name, typarams, argument, docstring) ->
      (match def with
@@ -157,9 +165,10 @@ let match_decls (module_name: module_name) (ii: import_map) (bi: import_map) (de
                          docstring)
             else
               declaration_error (AtSpan span) (DeclarationTypeMismatch name)
-         | _ ->
+         | ConcreteConstantDef _ | ConcreteRecordDef _ | ConcreteUnionDef _
+         | ConcreteFunctionDef _ | ConcreteTypeClassDef _ ->
             declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = InstanceDeclaration }))
-  | _ ->
+  | ConcreteRecordDecl _ | ConcreteUnionDecl _ | ConcreteTypeClassDecl _ ->
      generic_error NoSpan InvalidDeclInContext
 
 let private_def module_name im def =
@@ -304,7 +313,8 @@ and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb
                      declaration_error NoSpan (MultiargTypeclass name)),
                      parse_method_decls module_name im methods,
                      docstring)
-      | _ ->
+      | ConcreteConstantDecl _ | ConcreteOpaqueTypeDecl _ | ConcreteFunctionDecl _
+      | ConcreteInstanceDecl _ ->
          (* Other declarations need to match a body *)
          (match get_concrete_def cmb name with
           | (Some def) ->
