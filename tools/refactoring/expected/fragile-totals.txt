@@ -1,5 +1,5 @@
 files 17
-fragile-matches 142
+fragile-matches 140
 type CRepr.c_decl 4
 type CliUtil.arg 10
 type Common.borrow_stmt_kind 2
@@ -22,6 +22,6 @@ type Stages.Ast.astmt 2
 type Stages.AstDB.aexpr 4
 type Stages.AstDB.astmt 2
 type Stages.Mtast.mdecl 2
-type Stages.Tast.texpr 10
+type Stages.Tast.texpr 8
 type Stages.Tast.typed_decl 4
 type-fragile 0

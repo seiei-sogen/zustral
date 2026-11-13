@@ -51,7 +51,6 @@ let check_expr (place: place) (module_name: module_name) (env: env) (rm: region_
   let ctx: TypeCheckExpr.expr_ctx = TypeCheckExpr.make_ctx place module_name env rm typarams lexenv in
   TypeCheckExpr.check ctx expr expected
 
-(** Copied from TypeCheckExpr *)
 let check_annotated_expr (place: place) (module_name: module_name) (env: env) (rm: region_map) (typarams: typarams) (lexenv: lexenv) (expr: aexpr) (annotation: ty): texpr =
   let ctx: TypeCheckExpr.expr_ctx = TypeCheckExpr.make_ctx place module_name env rm typarams lexenv in
   TypeCheckExpr.check_annotated ctx expr annotation
@@ -72,11 +71,8 @@ let is_boolean = function
   | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
   | MonoTy _ -> false
 
-let is_compatible_with_index_type (place: place) = function
-  | TIntConstant _ ->
-     true
-  | e ->
-     (get_type place e) = index_type
+let is_compatible_with_index_type (place: place) (e: texpr): bool =
+  (get_type place e) = index_type
 
 type case_mode =
   | NormalCaseMode
@@ -331,7 +327,6 @@ and augment_initial_assign (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (
   (* The type of the `let` annotates its value. *)
   let ty = parse_typespec place env rm typarams ty in
   let rvalue: texpr = check_annotated_expr place module_name env rm typarams lexenv rvalue ty in
-  let _ = match_type_with_value (env, module_name, place) ty rvalue in
   (TInitialAssign (name, rvalue), lexenv, supply)
 
 and augment_if (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (c: aexpr) (t: astmt) (f: astmt): tstmt * lexenv * Supply.t =
