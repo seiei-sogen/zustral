@@ -1,0 +1,10 @@
+module body Test is
+    constant c: Int32 := 1;
+
+    function main(): ExitCode is
+        borrow r: &![Int32, rho] := &!c do
+            skip;
+        end borrow;
+        return ExitSuccess();
+    end;
+end module body.

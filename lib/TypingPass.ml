@@ -296,8 +296,12 @@ and augment_assign_var (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span
   let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
   ((* Get the type of the lvalue. *)
       let lvalue_ty: ty = begin
+          (* A constant is not in the lexical environment: it is looked up as
+             an expression looks a name up, so that assigning to one is said
+             to be that, and not an unknown name. *)
+          let variable: (ty * var_source) option = get_variable place env lexenv name in
           let name: identifier = original_name name in
-        match get_var lexenv name with
+        match variable with
         | (Some (orig_ty, src)) -> begin
             let _ =
               match src with

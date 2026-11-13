@@ -1,0 +1,1 @@
+For lib/MtastUtil.ml, get_type, the arm for `MArrayIndex`: a reference path `&(r[0])` whose head is a reference to a span, passed as an argument of a call through a function pointer (the code generator asks for the type of each argument of such a call). The program compiles; nothing calls `test`.

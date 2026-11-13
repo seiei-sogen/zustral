@@ -1,4 +1,4 @@
-total-with-generated	80.07	10885/13595
+total-with-generated	80.12	10901/13605
 cli/Cli.ml	85.71	6/7
 cli/CliEngine.ml	96.88	93/96
 cli/CliParser.ml	66.36	71/107
@@ -16,7 +16,7 @@ lib/CombiningPass.ml	91.03	203/223
 lib/Compiler.ml	100.00	85/85
 lib/Cst.ml	100.00	19/19
 lib/CstUtil.ml	96.38	133/138
-lib/DeclarationErrors.ml	92.63	88/95
+lib/DeclarationErrors.ml	94.74	90/95
 lib/DesugarBorrows.ml	100.00	135/135
 lib/DesugarPaths.ml	100.00	112/112
 lib/DesugaringPass.ml	100.00	25/25
@@ -29,9 +29,9 @@ lib/Error.ml	97.03	98/101
 lib/ErrorText.ml	100.00	24/24
 lib/Escape.ml	95.45	42/44
 lib/ExportInstantiation.ml	100.00	13/13
-lib/ExtractionPass.ml	94.83	275/290
+lib/ExtractionPass.ml	95.32	285/299
 lib/ForeignType.ml	96.55	56/58
-lib/GenericErrors.ml	85.71	54/63
+lib/GenericErrors.ml	87.30	55/63
 lib/HtmlError.ml	98.08	51/52
 lib/Id.ml	84.91	45/53
 lib/Identifier.ml	100.00	36/36
@@ -48,7 +48,7 @@ lib/LiteralTyping.ml	85.38	216/253
 lib/MonoType.ml	100.00	30/30
 lib/MonoTypeBindings.ml	100.00	19/19
 lib/Monomorphize.ml	98.15	478/487
-lib/MtastUtil.ml	94.44	34/36
+lib/MtastUtil.ml	97.22	35/36
 lib/NumberLiteral.ml	82.00	41/50
 lib/Outcome.ml	100.00	17/17
 lib/ParseErrors.ml	87.50	7/8
@@ -75,7 +75,7 @@ lib/TypeReplace.ml	100.00	162/162
 lib/TypeStripping.ml	100.00	37/37
 lib/TypeSystem.ml	97.26	71/73
 lib/TypeVarSet.ml	100.00	0/0
-lib/TypingPass.ml	81.31	461/567
+lib/TypingPass.ml	81.51	463/568
 lib/Util.ml	100.00	82/82
 lib/Version.ml	100.00	3/3
-total-hand-written	94.22	8032/8525
+total-hand-written	94.29	8048/8535

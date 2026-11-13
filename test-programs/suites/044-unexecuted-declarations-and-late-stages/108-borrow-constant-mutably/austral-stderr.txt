@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "I can't find a " },
+    { "type": "text", "content": "variable" },
+    { "type": "text", "content": " named " },
+    { "type": "code", "content": "c" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/108-borrow-constant-mutably/Test.aum",
+    "startp": { "line": 5, "column": 8 },
+    "end": { "line": 7, "column": 19 }
+  },
+  "context": [
+    [ 3, "" ],
+    [ 4, "    function main(): ExitCode is" ],
+    [ 5, "        borrow r: &![Int32, rho] := &!c do" ],
+    [ 6, "            skip;" ],
+    [ 7, "        end borrow;" ],
+    [ 8, "        return ExitSuccess();" ],
+    [ 9, "    end;" ]
+  ]
+}

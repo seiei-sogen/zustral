@@ -1,0 +1,1 @@
+For lib/ExtractionPass.ml, reserve_definition, the check that a function is not both imported and exported: a function with a `Foreign_Import` pragma and an `Unsafe_Module` pragma. The check looks for an export pragma in the list and finds none; the type checker then rejects the list, because a function takes an import pragma or an export pragma and nothing else.

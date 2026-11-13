@@ -365,12 +365,20 @@ and reserve_definition (env: env) (mod_id: mod_id) (mn: module_name) (def: combi
                None)
          in
          let _ =
-           (* Check: if we have both an export name and an external name, raise an error. *)
-           match (external_name, export_name) with
-           | (Some _, Some _) ->
-              declaration_error place (ForeignImportExport name)
-           | _ ->
-              ()
+           (* Check: a function is imported or exported, not both. The two
+              names above are read only from a list of one pragma, so this
+              looks at the list itself. *)
+           let is_import = function
+             | ForeignImportPragma _ -> true
+             | ForeignExportPragma _ | UnsafeModulePragma -> false
+           and is_export = function
+             | ForeignExportPragma _ -> true
+             | ForeignImportPragma _ | UnsafeModulePragma -> false
+           in
+           if (List.exists is_import pragmas) && (List.exists is_export pragmas) then
+             declaration_error place (ForeignImportExport name)
+           else
+             ()
          in
          let _ =
            (* Check: if we have an export name the function can't be generic *)

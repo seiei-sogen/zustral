@@ -1,0 +1,10 @@
+module body Test is
+    function test(r: &[Span[Nat8, Static], Static], f: Fn[&[Nat8, Static], Unit]): Unit is
+        let u: Unit := f(&(r[0]));
+        return u;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

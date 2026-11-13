@@ -1,1 +1,1 @@
-For lib/Entrypoint.ml, the alternative `RegionTy _` of root_cap_type_id (the region `Static`). Shows the `WrongParameterType` error of an entrypoint whose parameter is `Static`.
+For lib/Entrypoint.ml, the alternative `RegionTy _` of root_cap_type_id (the region `Static`). Shows the `WrongParameterType` error of an entrypoint whose parameter is `Static`. The message prints the region `Static` as `Region<0>`, the compiler's number for it, not the name the program wrote: the output pins that, and it is not what a user should see.
