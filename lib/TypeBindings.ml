@@ -72,7 +72,7 @@ let show_type_bindings (TypeBindings m) =
 let get_binding (TypeBindings m) tp =
   BindingsMap.find_opt tp m
 
-let ( let* ) = Result.bind
+open Outcome.Syntax
 
 (* Add a binding to the map.
 

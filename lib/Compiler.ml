@@ -58,7 +58,7 @@ type module_source =
       body_code: string
     }
 
-let ( let* ) = Outcome.bind
+open Outcome.Syntax
 
 (* An error does not say which module it is in (issue #107). The driver knows,
    and puts the name in the errors of everything that runs once the name is

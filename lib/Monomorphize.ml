@@ -516,7 +516,7 @@ and monomorphize_method (env: env) (meth: typed_method_def): (env * concrete_met
 
 (* Monomorphize modules *)
 
-let ( let* ) = Outcome.bind
+open Outcome.Syntax
 
 let rec monomorphize (env: env) (m: LinearityCheck.checked_module): (env * mono_module) Outcome.t =
   (* Monomorphize what we can: concrete definitions. *)

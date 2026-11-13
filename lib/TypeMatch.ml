@@ -24,7 +24,7 @@ let ctx_env (env, _) = env
 
 let ctx_mn (_, mn) = mn
 
-let ( let* ) = Result.bind
+open Outcome.Syntax
 
 (* List.map2 for a function that returns its failure. It stops at the first
    failure. Lists of different lengths end in Invalid_argument as they do with

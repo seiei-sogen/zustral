@@ -237,7 +237,7 @@ let private_def module_name im def =
                 parse_method_defs module_name im methods,
                 docstring)
 
-let ( let* ) = Outcome.bind
+open Outcome.Syntax
 
 let rec combine (env: env) (cmi: concrete_module_interface) (cmb: concrete_module_body): combined_module Outcome.t =
   let (ConcreteModuleInterface (mn, interface_docstring, interface_imports, decls)) = cmi

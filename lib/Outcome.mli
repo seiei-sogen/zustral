@@ -18,9 +18,16 @@ type 'a t = ('a, austral_error list) result
     exceptions pass through. *)
 val catch : (unit -> 'a) -> 'a t
 
-(** Give the result to the next step, or stop at the failure. This is how
-    stages are chained: a stage needs the value the one before it returned. *)
-val bind : 'a t -> ('a -> 'b t) -> 'b t
+(** [let*] gives the result of a step to the next step, or stops at the
+    failure. This is how stages are chained: a stage needs the value the one
+    before it returned. Open this module where the operator is used.
+
+    The operator is [Result.bind] at its own type, not at {!t}: the matching
+    of types returns one error with no place in the source, not a list of
+    {!Error.austral_error}, and chains its steps with the same operator. *)
+module Syntax : sig
+  val ( let* ) : ('a, 'e) result -> ('a -> ('b, 'e) result) -> ('b, 'e) result
+end
 
 (** Apply a function that cannot fail to the result. *)
 val map : ('a -> 'b) -> 'a t -> 'b t

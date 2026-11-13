@@ -84,7 +84,7 @@ let report_and_exit (mode: error_reporting_mode) (error: austral_error): 'a =
   html_error_dump error;
   exit (-1)
 
-let ( let* ) = Outcome.bind
+open Outcome.Syntax
 
 let rec exec (cmd: cmd): unit =
   match cmd with

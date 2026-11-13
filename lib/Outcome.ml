@@ -14,7 +14,10 @@ let catch (f: unit -> 'a): 'a t =
   with Austral_error error ->
     Error [error]
 
-let bind: 'a t -> ('a -> 'b t) -> 'b t = Result.bind
+module Syntax = struct
+  let ( let* ) = Result.bind
+end
+open Syntax
 
 let map: ('a -> 'b) -> 'a t -> 'b t = Result.map
 
@@ -37,5 +40,5 @@ let rec traverse_with_context (f: ('c * 'a) -> ('c * 'b) t) (ctx: 'c) (list: 'a 
   | [] ->
      Ok (ctx, [])
   | first :: rest ->
-     bind (f (ctx, first)) (fun (ctx, first) ->
-         map (fun (ctx, rest) -> (ctx, first :: rest)) (traverse_with_context f ctx rest))
+     let* (ctx, first) = f (ctx, first) in
+     map (fun (ctx, rest) -> (ctx, first :: rest)) (traverse_with_context f ctx rest)

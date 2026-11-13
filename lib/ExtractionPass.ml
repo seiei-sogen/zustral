@@ -102,7 +102,7 @@ and extract_type_signatures' (def: combined_definition): type_signature option =
   | CInstance _ ->
      None
 
-let ( let* ) = Outcome.bind
+open Outcome.Syntax
 
 let rec extract (env: env) (cmodule: combined_module): (env * linked_module) Outcome.t =
   let (CombinedModule {
