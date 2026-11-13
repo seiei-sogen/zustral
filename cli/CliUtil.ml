@@ -4,6 +4,11 @@
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
+
+(* A catch-all arm over a variant type is an error in this file: a new
+   constructor must stop the build at every match. *)
+[@@@warning "@4"]
+
 open Austral_core
 open Error
 
@@ -87,7 +92,7 @@ let pop_bool_flag (arglist: arglist) (name: string): arglist option =
      (match flag with
       | BoolFlag _ ->
          Some arglist
-      | _ ->
+      | ValueFlag _ | PositionalArg _ ->
          cli_error NoSpan (ExpectedBoolFlag name))
   | None ->
      None
@@ -98,7 +103,7 @@ let pop_value_flag (arglist: arglist) (name: string): (arglist * string) option 
      (match flag with
       | ValueFlag (_, value) ->
          Some (arglist, value)
-      | _ ->
+      | BoolFlag _ | PositionalArg _ ->
          cli_error NoSpan (ExpectedValueFlag name))
   | None ->
      None

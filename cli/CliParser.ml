@@ -4,6 +4,11 @@
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
+
+(* A catch-all arm over a variant type is an error in this file: a new
+   constructor must stop the build at every match. *)
+[@@@warning "@4"]
+
 open Austral_core
 open Identifier
 open CliUtil
@@ -173,5 +178,5 @@ let parse (arglist: arglist): cmd =
      let (arglist, cmd) = parse_compile_command (arglist_from_list rest) in
      let _ = check_leftovers arglist in
      cmd
-  | _ ->
+  | [] | (BoolFlag _ | ValueFlag _ | PositionalArg _) :: _ ->
      HelpCommand
