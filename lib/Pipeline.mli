@@ -10,14 +10,16 @@
     Each stage module gives its entry point one of these types, so the type of
     a stage is written here. The two checks are the exception: see
     {!check_returns}. {!Compiler} runs the stages in
-    the order they are listed, once per module, and {!finish} once after all
-    modules.
+    the order they are listed, once per module ({!combine_body} takes the place
+    of {!combine} for a module that has only a body), and {!finish} once after
+    all modules.
 
     A stage that returns [Outcome.t] can fail. A stage that returns an [env]
     changes the environment. A stage that takes a [Supply.t] makes
     up names or regions: the driver takes the supply out of the environment
     with [Env.with_supply], and the stage returns the supply without the
-    numbers it took. *)
+    numbers it took. Extraction and monomorphization take no supply: they
+    get IDs from the supply inside the [env] they register in. *)
 
 open Identifier
 open Env

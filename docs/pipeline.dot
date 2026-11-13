@@ -4,8 +4,10 @@
 digraph G {
     node[style=filled]
 
-    aui[shape=rect fillcolor=coral label=".aui (module_source)"]
-    aum[shape=rect fillcolor=coral label=".aum (module_source)"]
+    // The two together (or the body alone), each with its file name, are one module_source.
+    aui[shape=rect fillcolor=coral label="interface text (.aui)"]
+    aum[shape=rect fillcolor=coral label="body text (.aum)"]
+    ep[shape=rect fillcolor=coral label="entrypoint option"]
 
     subgraph cluster_module {
         label="compile_mod: once per module"
@@ -23,6 +25,7 @@ digraph G {
 
         parse_int[label="parse_module_int"]
         parse_body[label="parse_module_body"]
+        pervasive[label="append the Austral.Pervasive import (Compiler.ml)"]
         combine[label="combine / body_as_combined"]
         check_returns[label="check_ends_in_return"]
         desugar[label="desugar"]
@@ -48,13 +51,15 @@ digraph G {
     env[label="env" fillcolor=forestgreen shape=cylinder]
     supply[label="Supply.t (in env)" fillcolor=palegreen shape=cylinder]
 
-    aui -> parse_int -> icst -> combine
-    aum -> parse_body -> bcst -> combine
+    aui -> parse_int -> icst -> pervasive
+    aum -> parse_body -> bcst -> pervasive
+    pervasive -> combine
     combine -> combined -> check_returns -> returning -> desugar -> small -> extract -> linked
     linked -> augment -> typed -> linearity -> checked
     checked -> bodies
     checked -> monomorphize -> mono -> gen -> unit
-    unit -> program
+    unit -> program [label="c_unit list, all modules"]
+    ep -> entry
     wrappers -> program
     entry -> program
     program -> render -> c
@@ -66,7 +71,8 @@ digraph G {
     env -> augment
     env -> bodies
     bodies -> env
-    env -> monomorphize
+    // extract_bodies runs before monomorphize, which reads the bodies from the env.
+    bodies -> monomorphize [label="env, with the bodies"]
     monomorphize -> env
     env -> gen
     env -> wrappers

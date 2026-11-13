@@ -58,7 +58,7 @@ lib/Outcome.ml	53	0	1	0	0	0	0	0	0	0
 lib/ParseErrors.ml	52	0	0	0	0	0	3	0	0	0
 lib/Parser.mly	570	0	0	0	0	0	0	0	0	0
 lib/ParserInterface.ml	27	1	1	0	0	0	0	0	0	0
-lib/Pipeline.mli	89	0	0	0	0	0	6	0	0	0
+lib/Pipeline.mli	91	0	0	0	0	0	6	0	0	0
 lib/Qualifier.ml	30	0	0	0	0	0	0	0	0	0
 lib/Region.ml	16	0	0	0	0	0	0	0	0	0
 lib/RegionMap.ml	24	1	0	0	0	0	0	0	0	0
