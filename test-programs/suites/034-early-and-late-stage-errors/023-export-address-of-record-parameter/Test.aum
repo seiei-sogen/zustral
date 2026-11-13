@@ -1,0 +1,20 @@
+pragma Unsafe_Module;
+
+import Austral.Memory (
+    Address
+);
+
+module body Test is
+    record R: Free is
+        x: Int32;
+    end;
+
+    pragma Foreign_Export(External_Name => "f");
+    function f(a: Address[R]): Int32 is
+        return 1;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

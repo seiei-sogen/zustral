@@ -1,0 +1,11 @@
+exit: 255
+files: error.html
+--- stdout
+--- stderr
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [ { "type": "text", "content": "Not allowed" } ],
+  "span": null,
+  "context": null
+}

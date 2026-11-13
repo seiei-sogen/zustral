@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "Bool" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/027-foreign-after-type-error/Test.aum",
+    "startp": { "line": 5, "column": 8 },
+    "end": { "line": 5, "column": 29 }
+  },
+  "context": [
+    [ 3, "module body Test is" ],
+    [ 4, "    function g(): Int32 is" ],
+    [ 5, "        let x: Int32 := true;" ],
+    [ 6, "        return x;" ],
+    [ 7, "    end;" ]
+  ]
+}

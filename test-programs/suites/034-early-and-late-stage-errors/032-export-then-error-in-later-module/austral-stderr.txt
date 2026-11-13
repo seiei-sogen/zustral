@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "Bool" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/032-export-then-error-in-later-module/Test.aum",
+    "startp": { "line": 3, "column": 8 },
+    "end": { "line": 3, "column": 29 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function g(): Int32 is" ],
+    [ 3, "        let x: Int32 := true;" ],
+    [ 4, "        return x;" ],
+    [ 5, "    end;" ]
+  ]
+}
