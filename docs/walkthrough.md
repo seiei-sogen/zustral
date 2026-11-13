@@ -85,7 +85,7 @@ type desugar = Supply.t -> ReturnCheck.returning_module -> (SmallCombined.combin
 type extract = env -> SmallCombined.combined_module -> (env * Linked.linked_module) Outcome.t
 ```
 
-`lib/ExtractionPass.ml` の `extract` が、宣言を環境に登録し、シグネチャの型を読む。関数とメソッドの本体は、まだ登録しない。出力の `Linked` では、宣言が、環境の中の id を持つ。
+`lib/ExtractionPass.ml` の `extract` が、宣言を環境に登録し、シグネチャの型を読む。最初に、モジュールのすべてのレコードと union の id を、環境から予約する。シグネチャの型は、宣言を登録する前に読むが、名前のある型は、予約した id を持てる。後の段は、その id で宣言を取り出す。関数とメソッドの本体は、まだ登録しない。出力の `Linked` では、宣言が、環境の中の id を持つ。
 
 ## 型検査
 
