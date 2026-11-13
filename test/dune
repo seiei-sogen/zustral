@@ -9,5 +9,6 @@
   EnvTest
   OutcomeTest
   BuiltInNamesTest
-  CompilerTest)
+  CompilerTest
+  TypeCheckExprTest)
  (libraries austral_core austral_cli ounit2))
