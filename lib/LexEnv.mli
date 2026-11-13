@@ -9,7 +9,9 @@ open Identifier
 open Common
 open Type
 
-(** A lexical environment. *)
+(** A lexical environment: the variables in scope at a point of a function
+    body. It is a value. Adding or removing a variable gives another
+    environment, and the one it was given stays as it was. *)
 type lexenv
 
 (** Where an identifier comes from: a constant, a function parameter, or a local
@@ -20,18 +22,20 @@ type var_source =
   | VarLocal of mutability
 
 (** The empty lexenv. *)
-val empty_lexenv : unit -> lexenv
+val empty_lexenv : lexenv
 
-(** Add a variable to the lexenv given its name, type, and source. *)
+(** The lexenv with one more variable, given its name, type, and source. If a
+    variable with that name is in it already, this raises the error that says
+    so: a program that declares a name twice in one scope gets here. *)
 val push_var : lexenv -> identifier -> ty -> var_source -> lexenv
 
 (** Add a list of variables. *)
 val push_vars : lexenv -> (identifier * ty * var_source) list -> lexenv
 
-(** Remove a variable. *)
-val remove_var : lexenv -> identifier -> unit
+(** The lexenv without the variable of that name. *)
+val remove_var : lexenv -> identifier -> lexenv
 
-val remove_vars : lexenv -> identifier list -> unit
+val remove_vars : lexenv -> identifier list -> lexenv
 
 (** Retrieve a variable by name. *)
 val get_var : lexenv -> identifier -> (ty * var_source) option

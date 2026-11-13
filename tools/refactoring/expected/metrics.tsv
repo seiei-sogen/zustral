@@ -42,7 +42,7 @@ lib/IdentifierMap.ml	24	0	0	0	0	0	0	0	0	0
 lib/IdentifierSet.ml	24	0	0	0	0	0	0	0	0	0
 lib/ImportResolution.ml	96	4	0	0	0	0	0	0	0	0
 lib/Imports.ml	63	1	0	0	0	0	0	0	0	0
-lib/LexEnv.ml	59	1	0	1	0	0	0	0	0	0
+lib/LexEnv.ml	53	1	0	0	0	0	0	0	0	0
 lib/Lexer.mll	174	4	0	0	0	0	0	0	0	0
 lib/LiftControlPass.ml	224	0	0	0	0	0	0	0	0	0
 lib/LinearityCheck.ml	715	21	11	0	0	2	0	9	0	0
@@ -83,6 +83,6 @@ lib/TypeSignature.ml	18	0	0	0	0	0	0	0	0	0
 lib/TypeStripping.ml	129	13	0	0	0	1	0	12	0	0
 lib/TypeSystem.ml	105	2	0	0	0	0	0	1	0	0
 lib/TypeVarSet.ml	15	0	0	0	0	0	0	0	0	0
-lib/TypingPass.ml	742	34	13	0	0	5	0	1	0	0
+lib/TypingPass.ml	758	34	13	0	0	5	0	1	0	0
 lib/Util.ml	136	5	0	0	0	3	1	2	0	0
 lib/Version.ml	18	0	0	0	0	0	0	0	0	0

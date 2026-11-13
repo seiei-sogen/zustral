@@ -54,7 +54,7 @@ let ctx: TypeCheckExpr.expr_ctx =
       })
   in
   let lexenv: LexEnv.lexenv =
-    LexEnv.push_vars (LexEnv.empty_lexenv ()) [
+    LexEnv.push_vars LexEnv.empty_lexenv [
         (make_ident "x", int32, LexEnv.VarLocal Immutable);
         (make_ident "isZero", FnPtr ([int32], Boolean), LexEnv.VarLocal Immutable)
       ]

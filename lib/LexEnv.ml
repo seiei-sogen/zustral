@@ -14,26 +14,22 @@ type var_source =
   | VarParam
   | VarLocal of mutability
 
-type lexenv_inner = LexEnv of (identifier * ty * var_source) list
+type lexenv = LexEnv of (identifier * ty * var_source) list
 
-type lexenv = lexenv_inner ref
-
-let empty_lexenv _ =
-  ref (LexEnv [])
+let empty_lexenv: lexenv =
+  LexEnv []
 
 let get_var (l: lexenv) (name: identifier): (ty * var_source) option =
-  let (LexEnv inner) = !l in
+  let (LexEnv inner) = l in
   Option.map (fun (_, t, s) -> (t, s)) (List.find_opt (fun (n, _, _) -> n = name) inner)
 
-let push_var l name ty source =
-  let (LexEnv inner) = !l in
+let push_var (l: lexenv) (name: identifier) (ty: ty) (source: var_source): lexenv =
+  let (LexEnv inner) = l in
   match get_var l name with
   | (Some _) ->
      generic_error (VariableAlreadyExists name)
   | None ->
-     let inner' = LexEnv ((name, ty, source) :: inner) in
-     l := inner';
-     l
+     LexEnv ((name, ty, source) :: inner)
 
 let rec push_vars env l =
   match l with
@@ -42,18 +38,16 @@ let rec push_vars env l =
   | [] ->
      env
 
-let remove_var (l: lexenv) (name: identifier): unit =
-  let (LexEnv inner) = !l in
+let remove_var (l: lexenv) (name: identifier): lexenv =
+  let (LexEnv inner) = l in
   let filtered =
     List.filter (fun (n, _, _) -> not (equal_identifier name n)) inner
   in
-  l := LexEnv filtered;
-  ()
+  LexEnv filtered
 
 let rec remove_vars l names =
   match names with
   | [] ->
-     ()
+     l
   | first::rest ->
-     let _ = remove_var l first in
-     remove_vars l rest
+     remove_vars (remove_var l first) rest
