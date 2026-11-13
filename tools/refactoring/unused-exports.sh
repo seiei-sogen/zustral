@@ -3,9 +3,10 @@
 # A value on this list is either dead or should not be exported.
 #   unused-exports.sh            compare with expected/unused-exports.txt
 #   unused-exports.sh --record   rewrite it
-# The search is by name, in the files that name the module. A value used only
-# through a module alias or an `include` is reported wrongly; a value whose
-# name another opened module also defines is missed. The list is a lower bound.
+# The search is by name, in the files that name the module, with comments
+# removed (a word in a comment is not a use). A value used only through a
+# module alias or an `include` is reported wrongly; a value whose name another
+# opened module also defines is missed. The list is a lower bound.
 set -uo pipefail
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -14,6 +15,46 @@ T=$(mktemp -d)
 trap 'rm -rf "$T"' EXIT
 
 cd "$ROOT"
+# Copies of the sources without their comments, at the same relative paths.
+python3 - "$T/src" lib/*.ml lib/*.mli lib/*.mll lib/*.mly cli/*.ml cli/*.mli bin/*.ml test/*.ml <<'PY' || exit 2
+import pathlib, sys
+
+def without_comments(s: str) -> str:
+    out, i, depth = [], 0, 0
+    while i < len(s):
+        if s.startswith("(*", i) and not s.startswith("(*)", i):
+            depth, i = depth + 1, i + 2
+        elif depth and s.startswith("*)", i):
+            depth, i = depth - 1, i + 2
+        elif s.startswith("'\"'", i) or s.startswith("'\\\"'", i):
+            # The character literal of a double quote does not open a string.
+            n = 3 if s[i + 1] == '"' else 4
+            if not depth:
+                out.append(s[i:i + n])
+            i += n
+        elif s[i] == '"':
+            # A string literal, also inside a comment: OCaml reads it as one there too.
+            j = i + 1
+            while j < len(s) and s[j] != '"':
+                j += 2 if s[j] == "\\" else 1
+            if not depth:
+                out.append(s[i:j + 1])
+            i = j + 1
+        else:
+            if not depth:
+                out.append(s[i])
+            elif s[i] == "\n":
+                out.append("\n")
+            i += 1
+    return "".join(out)
+
+root = pathlib.Path(sys.argv[1])
+for name in sys.argv[2:]:
+    target = root / name
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(without_comments(pathlib.Path(name).read_text()))
+PY
+cd "$T/src"
 others() { # module: every source file except the module's own pair and the generated one
   ls lib/*.ml lib/*.mli lib/*.mll lib/*.mly cli/*.ml cli/*.mli bin/*.ml test/*.ml | grep -v -e "^\(lib\|cli\)/$1\.mli\?$" -e '^lib/BuiltInModules\.ml$'
 }
