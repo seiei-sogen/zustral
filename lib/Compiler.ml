@@ -68,7 +68,7 @@ let parse_and_combine (env: env) (source: module_source): (module_name * Combine
          let cb: concrete_module_body = Outcome.or_raise (parse_module_body body_code body_filename) in
          let ci: concrete_module_interface = append_import_to_interface ci pervasive_imports
          and cb: concrete_module_body = append_import_to_body cb pervasive_imports in
-         let combined: Combined.combined_module = combine env ci cb in
+         let combined: Combined.combined_module = Outcome.or_raise (combine env ci cb) in
          (name, combined))
   | BodyModuleSource { body_filename; body_code } ->
      let cb: concrete_module_body = Outcome.or_raise (parse_module_body body_code body_filename) in
@@ -76,7 +76,7 @@ let parse_and_combine (env: env) (source: module_source): (module_name * Combine
      adorn_error_with_module_name name
        (fun _ ->
          let cb: concrete_module_body = append_import_to_body cb pervasive_imports in
-         let combined: Combined.combined_module = body_as_combined env cb in
+         let combined: Combined.combined_module = Outcome.or_raise (body_as_combined env cb) in
          (name, combined))
 
 let rec compile_mod (c: compiler) (source: module_source): compiler =
@@ -84,7 +84,7 @@ let rec compile_mod (c: compiler) (source: module_source): compiler =
   let (name, combined) = parse_and_combine env source in
   adorn_error_with_module_name name
     (fun _ ->
-      let _ = check_ends_in_return combined in
+      let _ = Outcome.or_raise (check_ends_in_return combined) in
       let combined: SmallCombined.combined_module = DesugaringPass.desugar combined in
       let (env, linked): (env * linked_module) = extract env combined in
       let typed: typed_module = augment_module env linked in

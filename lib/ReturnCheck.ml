@@ -54,42 +54,41 @@ let rec ends_in_return (stmt: astmt): bool =
   | AInitialAssign _ ->
      false
 
-let check_ends_in_return (CombinedModule { decls; _ }): unit =
-  let check_method_ends_in_return (span: span) (CMethodDef (name, _, _, _, _, body)): unit =
-    adorn_error_with_span span
-      (fun _ ->
-        if ends_in_return body then
-          ()
-        else
-          declaration_error (MissingReturn { name; declaration = MethodDeclaration }))
-  in
-  let check_decl_ends_in_return (decl: combined_definition): unit =
-    match decl with
-    | CConstant _ ->
-       ()
-    | CRecord _ ->
-       ()
-    | CUnion _ ->
-       ()
-    | CFunction (span, _, name, _, _, _, body, _, pragmas) ->
-       adorn_error_with_span span
-         (fun _ ->
-           match pragmas with
-           | [] ->
-              (* No pragmas: regular function. *)
-              if ends_in_return body then
-                ()
-              else
-                declaration_error (MissingReturn { name; declaration = FunctionDeclaration })
-           | _ ->
-              (* Yes pragmas: foreign function, ignore the body. *)
-              ())
-    | CTypeclass _ ->
-       ()
-    | CInstance (span, _, _, _, _, methods, _) ->
-       let _ = List.map (check_method_ends_in_return span) methods in
-       ()
-  in
-  let _ = List.map check_decl_ends_in_return decls
-  in
-  ()
+let check_method_ends_in_return (span: span) (CMethodDef (name, _, _, _, _, body)): unit =
+  adorn_error_with_span span
+    (fun _ ->
+      if ends_in_return body then
+        ()
+      else
+        declaration_error (MissingReturn { name; declaration = MethodDeclaration }))
+
+let check_decl_ends_in_return (decl: combined_definition): unit =
+  match decl with
+  | CConstant _ ->
+     ()
+  | CRecord _ ->
+     ()
+  | CUnion _ ->
+     ()
+  | CFunction (span, _, name, _, _, _, body, _, pragmas) ->
+     adorn_error_with_span span
+       (fun _ ->
+         match pragmas with
+         | [] ->
+            (* No pragmas: regular function. *)
+            if ends_in_return body then
+              ()
+            else
+              declaration_error (MissingReturn { name; declaration = FunctionDeclaration })
+         | _ ->
+            (* Yes pragmas: foreign function, ignore the body. *)
+            ())
+  | CTypeclass _ ->
+     ()
+  | CInstance (span, _, _, _, _, methods, _) ->
+     let _ = List.map (check_method_ends_in_return span) methods in
+     ()
+
+let check_ends_in_return (CombinedModule { decls; _ }): unit Outcome.t =
+  Outcome.map ignore
+    (Outcome.traverse (fun decl -> Outcome.catch (fun () -> check_decl_ends_in_return decl)) decls)

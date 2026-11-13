@@ -237,28 +237,33 @@ let private_def module_name im def =
                 parse_method_defs module_name im methods,
                 docstring)
 
-let rec combine (env: env) (cmi: concrete_module_interface) (cmb: concrete_module_body): combined_module =
+let ( let* ) = Outcome.bind
+
+let rec combine (env: env) (cmi: concrete_module_interface) (cmb: concrete_module_body): combined_module Outcome.t =
   let (ConcreteModuleInterface (mn, interface_docstring, interface_imports, decls)) = cmi
   and (ConcreteModuleBody (mn', kind, body_docstring, body_imports, defs)) = cmb
   in
-  if mn <> mn' then
-    declaration_error (ModuleNameMismatch { interface = mn; body = mn' })
-  else
-    let im = resolve mn kind env interface_imports
-    and bm = resolve mn kind env body_imports
-    in
-    let public_decls = List.map (parse_decl mn im bm cmb) decls
-    and private_decls = parse_defs mn cmi bm defs
-    in
-    CombinedModule {
-        name = mn;
-        kind = kind;
-        interface_docstring = interface_docstring;
-        interface_imports = im;
-        body_docstring = body_docstring;
-        body_imports = bm;
-        decls = List.concat [public_decls; private_decls];
-}
+  let* (im, bm) =
+    Outcome.catch (fun () ->
+        if mn <> mn' then
+          declaration_error (ModuleNameMismatch { interface = mn; body = mn' })
+        else
+          let im = resolve mn kind env interface_imports
+          and bm = resolve mn kind env body_imports
+          in
+          (im, bm))
+  in
+  let* public_decls = Outcome.traverse (fun decl -> Outcome.catch (fun () -> parse_decl mn im bm cmb decl)) decls in
+  let* private_decls = parse_defs mn cmi bm defs in
+  Ok (CombinedModule {
+          name = mn;
+          kind = kind;
+          interface_docstring = interface_docstring;
+          interface_imports = im;
+          body_docstring = body_docstring;
+          body_imports = bm;
+          decls = List.concat [public_decls; private_decls];
+    })
 
 and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb: concrete_module_body) (decl: concrete_decl): combined_definition =
   let make_qname n =
@@ -317,8 +322,9 @@ and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb
       | _ ->
          internal_err "Couldn't parse declaration declaration")
 
-and parse_defs (mn: module_name) (cmi: concrete_module_interface) (im: import_map) (defs: concrete_def list): combined_definition list =
-  List.filter_map (parse_def mn cmi im) defs
+and parse_defs (mn: module_name) (cmi: concrete_module_interface) (im: import_map) (defs: concrete_def list): combined_definition list Outcome.t =
+  Outcome.map (List.filter_map (fun def -> def))
+    (Outcome.traverse (fun def -> Outcome.catch (fun () -> parse_def mn cmi im def)) defs)
 
 and parse_def (module_name: module_name) (cmi: concrete_module_interface) (im: import_map) (def: concrete_def): combined_definition option =
   match def_name def with
@@ -357,20 +363,20 @@ let as_public (def: combined_definition): combined_definition =
   | CInstance (span, _, name, typarams, argument, methods, docstring) ->
      CInstance (span, VisPublic, name, typarams, argument, methods, docstring)
 
-let body_as_combined (env: env) (body: concrete_module_body): combined_module =
+let body_as_combined (env: env) (body: concrete_module_body): combined_module Outcome.t =
   let (ConcreteModuleBody (mn, kind, body_docstring, body_imports, defs)) = body in
   (* We fake an empty module interface. *)
   let cmi: concrete_module_interface = ConcreteModuleInterface (mn, Docstring "", [], []) in
-  let imports = resolve mn kind env body_imports in
-  let decls = parse_defs mn cmi imports defs in
+  let* imports = Outcome.catch (fun () -> resolve mn kind env body_imports) in
+  let* decls = parse_defs mn cmi imports defs in
   (* Go through the declarations and make them public. *)
   let decls = List.map as_public decls in
-  CombinedModule {
-      name = mn;
-      kind = kind;
-      interface_docstring = Docstring "";
-      interface_imports = empty_map mn;
-      body_docstring = body_docstring;
-      body_imports = imports;
-      decls = decls;
-}
+  Ok (CombinedModule {
+          name = mn;
+          kind = kind;
+          interface_docstring = Docstring "";
+          interface_imports = empty_map mn;
+          body_docstring = body_docstring;
+          body_imports = imports;
+          decls = decls;
+    })

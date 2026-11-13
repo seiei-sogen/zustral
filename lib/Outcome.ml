@@ -14,6 +14,24 @@ let catch (f: unit -> 'a): 'a t =
   with Austral_error error ->
     Error [error]
 
+let bind: 'a t -> ('a -> 'b t) -> 'b t = Result.bind
+
+let map: ('a -> 'b) -> 'a t -> 'b t = Result.map
+
+let rec traverse (f: 'a -> 'b t) (list: 'a list): 'b list t =
+  match list with
+  | [] ->
+     Ok []
+  | first :: rest ->
+     (match f first with
+      | Ok first ->
+         map (fun rest -> first :: rest) (traverse f rest)
+      | Error errors ->
+         (* To report the errors of every element (issue #57), go on with
+            [traverse f rest] here and put its errors after these. Only this
+            function changes: the callers already take a list of errors. *)
+         Error errors)
+
 let or_raise (outcome: 'a t): 'a =
   match outcome with
   | Ok value ->

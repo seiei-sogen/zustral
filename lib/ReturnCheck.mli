@@ -9,4 +9,4 @@
     either a return statement or a call to `Abort`. *)
 open Stages.Combined
 
-val check_ends_in_return : combined_module -> unit
+val check_ends_in_return : combined_module -> unit Outcome.t

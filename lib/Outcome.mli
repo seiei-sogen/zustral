@@ -18,6 +18,18 @@ type 'a t = ('a, austral_error list) result
     exceptions pass through. *)
 val catch : (unit -> 'a) -> 'a t
 
+(** Give the result to the next step, or stop at the failure. This is how
+    stages are chained: a stage needs the value the one before it returned. *)
+val bind : 'a t -> ('a -> 'b t) -> 'b t
+
+(** Apply a function that cannot fail to the result. *)
+val map : ('a -> 'b) -> 'a t -> 'b t
+
+(** Apply a function to the elements of a list, in order, and return the
+    results. This is how the declarations of a module are gone through. It
+    stops at the first failure: the elements after it are not looked at. *)
+val traverse : ('a -> 'b t) -> 'a list -> 'b list t
+
 (** The result, or the first error raised again. For the driver, until it
     chains the stages by their values. *)
 val or_raise : 'a t -> 'a

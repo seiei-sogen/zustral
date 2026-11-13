@@ -12,7 +12,7 @@ open Env
 
 (** Combine a concrete module interface and a concrete module body into a
     combined module. *)
-val combine : env -> concrete_module_interface -> concrete_module_body -> combined_module
+val combine : env -> concrete_module_interface -> concrete_module_body -> combined_module Outcome.t
 
 (** Make a combined module out of a module body, with all declarations being public. *)
-val body_as_combined : env -> concrete_module_body -> combined_module
+val body_as_combined : env -> concrete_module_body -> combined_module Outcome.t
