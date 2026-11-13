@@ -4,7 +4,7 @@ cli/CliEngine.ml	198	0	0	0	39	0	0	0	0	0
 cli/CliParser.ml	177	11	0	0	0	5	4	0	0	0
 cli/CliUtil.ml	120	6	0	0	0	5	3	1	0	0
 cli/Os.ml	73	2	2	0	13	1	1	0	0	0
-lib/AbstractionPass.ml	180	2	0	0	0	2	0	0	0	0
+lib/AbstractionPass.ml	144	2	0	0	0	1	0	0	0	0
 lib/BodyExtractionPass.ml	25	0	0	0	0	1	0	0	0	0
 lib/BuiltIn.ml	36	0	0	0	0	0	0	0	0	0
 lib/BuiltInNames.ml	184	0	0	0	0	0	0	0	0	0
@@ -47,6 +47,7 @@ lib/Lexer.mll	174	4	0	0	0	0	0	0	0	0
 lib/LiftControlPass.ml	224	0	0	0	0	0	0	0	0	0
 lib/LinearityCheck.ml	715	21	11	0	0	2	0	9	0	0
 lib/LinearityErrors.ml	159	0	0	0	0	0	0	0	0	0
+lib/LiteralTyping.ml	133	1	0	0	0	5	0	0	0	0
 lib/ModIdSet.ml	15	0	0	0	0	0	0	0	0	0
 lib/ModuleNameSet.ml	15	0	0	0	0	0	0	0	0	0
 lib/MonoType.ml	37	0	0	0	0	0	0	0	0	0
@@ -70,10 +71,10 @@ lib/Supply.ml	68	0	0	0	0	0	0	0	0	0
 lib/TastUtil.ml	111	2	0	0	0	0	0	1	0	0
 lib/Type.ml	267	0	0	0	0	1	0	0	0	0
 lib/TypeBindings.ml	179	2	0	0	0	0	0	0	0	0
-lib/TypeCheckExpr.ml	973	51	0	0	0	10	0	7	0	0
+lib/TypeCheckExpr.ml	933	51	0	0	0	6	0	7	0	0
 lib/TypeClasses.ml	262	13	0	0	0	1	0	0	0	0
 lib/TypeErrors.ml	467	0	0	0	0	0	0	0	0	0
-lib/TypeMatch.ml	363	4	0	0	0	4	0	3	0	0
+lib/TypeMatch.ml	315	3	0	0	0	1	0	3	0	0
 lib/TypeParameter.ml	35	0	0	0	0	0	0	0	0	0
 lib/TypeParameters.ml	61	2	0	0	0	0	0	0	0	0
 lib/TypeParser.ml	305	8	0	0	0	3	0	1	0	0

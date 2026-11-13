@@ -95,22 +95,6 @@ let is_bool (e: texpr): bool =
   | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
   | MonoTy _ -> false
 
-(** Is this expression an integer constant? *)
-let is_int_constant (e: aexpr): bool =
-  match e with
-  | IntConstant _ -> true
-  | _ -> false
-
-(** Is this expression a float constant? *)
-let is_float_constant (e: aexpr): bool =
-  match e with
-  | FloatConstant _ -> true
-  | _ -> false
-
-(** Is this expression a numeric literal? *)
-let is_numeric_literal (e: aexpr): bool =
-  (is_int_constant e) || (is_float_constant e)
-
 (* Since the extraction pass has already happened, we can simplify the call to
    `parse_type` by passing an empty list of local type signatures. *)
 let parse_typespec (ctx: expr_ctx) (ty: qtypespec): ty =
@@ -625,7 +609,7 @@ and augment_comparison ctx op lhs rhs =
   and rhs' = infer ctx rhs in
   let _ =
     (* A lone literal on the left takes the type of the right operand. *)
-    if (is_numeric_literal lhs) && not (is_numeric_literal rhs) then
+    if (LiteralTyping.is_numeric_literal lhs) && not (LiteralTyping.is_numeric_literal rhs) then
       match_type_with_value_ctx ctx (get_type rhs') lhs'
     else
       match_type_with_value_ctx ctx (get_type lhs') rhs'
@@ -848,70 +832,46 @@ and augment_typecast (ctx: expr_ctx) (expr: aexpr) (ty: qtypespec): texpr =
      3. Clarifying the type of return type polymorphic functions.
 
    *)
-  let is_int_expr = function
-    | TIntConstant _ -> true
-    | _ -> false
-  and is_float_expr = function
-    | TFloatConstant _ -> true
-    | _ -> false
-
-  and is_int_type = function
-    | Integer _ -> true
-    | Unit | Boolean | SingleFloat | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
-    | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
-    | MonoTy _ -> false
-
-  and is_float_type = function
-    | SingleFloat -> true
-    | DoubleFloat -> true
-    | Unit | Boolean | Integer _ | NamedType _ | RegionTy _ | ReadRef _ | WriteRef _
-    | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ -> false
-  in
   let target_type = parse_typespec ctx ty in
   (* By giving target_type as the expected type we're doing point 3. *)
   let expr' = infer_with_expected ctx expr target_type in
   (* For 1: if the expression is an int literal and the target type is an
      int type, do the conversion. Similarly, if the expression is a float
      constant and the target type is a float, do the conversion. *)
-  if (is_int_expr expr') && (is_int_type target_type) then
-    (* The literal has to fit the type it is given. *)
-    let _ = match_type_with_value_ctx ctx target_type expr' in
+  if LiteralTyping.annotation_types_literal target_type expr' then
     TCast (expr', target_type)
   else
-    if (is_float_expr expr') && (is_float_type target_type) then
-      TCast (expr', target_type)
-    else
-      (* Otherwise, if the expression has a mutable reference type and the
-         target type is a read reference, and they point to the same underlying
-         type and underlying region, just convert it to a read ref. This does
-         point 2. *)
-      (match (get_type expr') with
-       | WriteRef (underlying_ty, region) ->
-          (match target_type with
-           | ReadRef (underlying_ty', region') ->
-              (match (equal_ty underlying_ty underlying_ty', equal_ty region region') with
-               | (true, true) ->
-                  TCast (expr', target_type)
-               | (false, true) ->
-                  type_error (CastDifferentReferences DifferentUnderlyingType)
-               | (true, false) ->
-                  type_error (CastDifferentReferences DifferentUnderlyingRegion)
-               | (false, false) ->
-                  type_error (CastDifferentReferences DifferentTypeAndRegion))
-           | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
-           | RegionTy _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
-           | Pointer _ | FnPtr _ | MonoTy _ ->
-              type_error CastWriteRefToNonRef)
-       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
-       | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
-       | FnPtr _ | MonoTy _ ->
-          (match try_match_type (ctx_env ctx, ctx_module_name ctx) target_type (get_type expr') with
-           | Ok _ ->
-              expr'
-           | Error _ ->
-              (* Every failure becomes this error, also an internal error from
-                 checking a constraint of a type variable in the target type. *)
-              type_error (CastInvalid { target = target_type; source = get_type expr' })))
+    (* Otherwise, if the expression has a mutable reference type and the
+       target type is a read reference, and they point to the same underlying
+       type and underlying region, just convert it to a read ref. This does
+       point 2. *)
+    (match (get_type expr') with
+     | WriteRef (underlying_ty, region) ->
+        (match target_type with
+         | ReadRef (underlying_ty', region') ->
+            (match (equal_ty underlying_ty underlying_ty', equal_ty region region') with
+             | (true, true) ->
+                TCast (expr', target_type)
+             | (false, true) ->
+                type_error (CastDifferentReferences DifferentUnderlyingType)
+             | (true, false) ->
+                type_error (CastDifferentReferences DifferentUnderlyingRegion)
+             | (false, false) ->
+                type_error (CastDifferentReferences DifferentTypeAndRegion))
+         | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+         | RegionTy _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
+         | Pointer _ | FnPtr _ | MonoTy _ ->
+            type_error CastWriteRefToNonRef)
+     | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+     | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+     | FnPtr _ | MonoTy _ ->
+        (match try_match_type (ctx_env ctx, ctx_module_name ctx) target_type (get_type expr') with
+         | Ok _ ->
+            expr'
+         | Error _ ->
+            (* Every failure becomes this error, also an internal error from
+               checking a constraint of a type variable in the target type. *)
+            type_error (CastInvalid { target = target_type; source = get_type expr' })))
 
 and augment_arglist (ctx: expr_ctx) (args: abstract_arglist): typed_arglist =
   match args with
@@ -931,7 +891,7 @@ and augment_arithmetic (ctx: expr_ctx) (op: arithmetic_operator) (lhs: aexpr) (r
   (* A lone literal takes the type of the other operand, and has to fit it like
      the initial value of a `let`. Otherwise the left operand decides. *)
   let operand_ty =
-    match (is_numeric_literal lhs, is_numeric_literal rhs) with
+    match (LiteralTyping.is_numeric_literal lhs, LiteralTyping.is_numeric_literal rhs) with
     | (true, false) ->
        let _ = match_type_with_value_ctx ctx rhs_ty lhs' in
        rhs_ty
@@ -965,7 +925,7 @@ and augment_arithmetic (ctx: expr_ctx) (op: arithmetic_operator) (lhs: aexpr) (r
       type_error (ArithmeticNotNumeric lhs_ty)
   else
     (* If the types are different, check if at least one operator is a constant.*)
-    if (is_numeric_literal lhs) <> (is_numeric_literal rhs) then
+    if (LiteralTyping.is_numeric_literal lhs) <> (LiteralTyping.is_numeric_literal rhs) then
       (* A lone literal was checked when choosing `operand_ty`. Two literals of
          different types are an integer and a float, and neither decides. *)
       augment_arithmetic_call ()

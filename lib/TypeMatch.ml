@@ -306,58 +306,10 @@ let match_typarams (ctx: ctx) (typarams: typarams) (args: ty list): type_binding
   let typarams' = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams) in
   ok_or_raise (try_match_type_list ctx typarams' args)
 
-(* Check the given value fits in the given type. *)
-let fits (signed : signedness) (width : integer_width) (n : Z.t) : bool =
-  let min_bound, max_bound = match signed, width with
-    | Unsigned, Width8        -> (Z.zero, Z.of_string "255")
-    | Unsigned, Width16       -> (Z.zero, Z.of_string "65535")
-    | Unsigned, Width32       -> (Z.zero, Z.of_string "4294967295")
-    | Unsigned, Width64       -> (Z.zero, Z.of_string "18446744073709551615")
-    | Unsigned, WidthByteSize -> (Z.zero, Z.of_string "255")
-    | Unsigned, WidthIndex    -> (Z.zero, Z.of_string "18446744073709551615") (* TODO: Assuming 64-bit size_t *)
-    | Signed, Width8          -> (Z.of_string "-128", Z.of_string "127")
-    | Signed, Width16         -> (Z.of_string "-32768", Z.of_string "32767")
-    | Signed, Width32         -> (Z.of_string "-2147483648", Z.of_string "2147483647")
-    | Signed, Width64         -> (Z.of_string "-9223372036854775808", Z.of_string "9223372036854775807")
-    | Signed, WidthByteSize   -> (Z.of_string "-128", Z.of_string "127")
-    | Signed, WidthIndex      -> (Z.of_string "-9223372036854775808", Z.of_string "9223372036854775807") (* TODO: Assuming 64-bit ssize_t *)
-  in
-  Z.compare min_bound n <= 0 && Z.compare n max_bound <= 0
-
-let match_int_type_with_value (signedness: signedness) (width: integer_width) (literal: NumberLiteral.int_literal): type_bindings =
-   (* Check that it fits *)
-   if fits signedness width literal.value then
-      empty_bindings
-   else
-      type_error (IntegerDoesNotFit { literal; ty = Integer (signedness, width) })
-
 let match_type_with_value (ctx: ctx) (ty: ty) (expr: texpr): type_bindings =
-  (* Like type_match, but gentler with integer constants. *)
-  match ty with
-  | Integer (signedness, width) ->
-     (match expr with
-      | TIntConstant value ->
-         match_int_type_with_value signedness width value
-      | TCast (TIntConstant value, _) ->
-         match_int_type_with_value signedness width value
-      | _ ->
-         match_type ctx ty (get_type expr))
-  | SingleFloat ->
-     (match expr with
-      | TFloatConstant _ ->
-         empty_bindings
-      | TCast (TFloatConstant _, _) ->
-         empty_bindings
-      | _ ->
-         match_type ctx ty (get_type expr))
-  | DoubleFloat ->
-     (match expr with
-      | TFloatConstant _ ->
-         empty_bindings
-      | TCast (TFloatConstant _, _) ->
-         empty_bindings
-      | _ ->
-         match_type ctx ty (get_type expr))
-  | Unit | Boolean | NamedType _ | RegionTy _ | ReadRef _ | WriteRef _ | Span _
-  | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
-     match_type ctx ty (get_type expr)
+  (* Like match_type, but a literal that the rules for literals accept does not
+     have to have the type. *)
+  if LiteralTyping.literal_matches ty expr then
+    empty_bindings
+  else
+    match_type ctx ty (get_type expr)
