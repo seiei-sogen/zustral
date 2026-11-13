@@ -117,11 +117,11 @@ let fake_mod_source (is: string) (bs: string): module_source =
 let finish (compiler: compiler) (entrypoint: (module_name * identifier) option): c_program Outcome.t =
   let (Compiler (env, units)) = compiler in
   (* The wrapper functions. *)
-  let* (env, decls) = monomorphize_wrappers env in
+  let* (env, decls, exported) = monomorphize_wrappers env in
   let* (env, wrapper_unit) =
     with_supply env (fun supply -> gen_module env supply (MonoModule (make_mod_name BuiltInNames.wrappers_module, decls)))
   in
-  let* wrappers = Outcome.map (fun decls -> CUnit (BuiltInNames.wrappers_unit_name, decls)) (all_wrappers env) in
+  let* wrappers = Outcome.map (fun decls -> CUnit (BuiltInNames.wrappers_unit_name, decls)) (all_wrappers env exported) in
   let* entrypoint =
     match entrypoint with
     | Some (mn, i) ->

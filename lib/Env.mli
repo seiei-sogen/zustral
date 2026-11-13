@@ -42,7 +42,11 @@ val with_supply : env -> (Supply.t -> ('a * Supply.t) Outcome.t) -> (env * 'a) O
     A lookup by an ID returns what the ID stands for. This module makes an ID
     when something is registered, so the thing exists. An ID given to an
     environment older than the one that made it is a bug in the compiler: it
-    raises an internal error here, and callers do not handle it. *)
+    raises an internal error here, and callers do not handle it.
+
+    A monomorph has an ID, and also a key: what it is a monomorph of, and the
+    type arguments. A lookup by the key returns an option, because a key can
+    name a monomorph that no pass has registered. *)
 
 (** {1 Module Functions} *)
 
@@ -150,16 +154,9 @@ val store_function_monomorph_definition : env -> mono_id -> mstmt -> env
 val store_instance_method_monomorph_definition : env -> mono_id -> mstmt -> env
 
 (** Given the ID of a type declaration and a set of monomorphic type arguments,
-   return the ID of the corresponding monomorph.
-
-   The monomorph must be registered: call this after monomorphization. If it
-   is not, that is a bug in the compiler, and raises an internal error here. *)
-val get_type_monomorph : env -> decl_id -> mono_type_bindings -> mono_id
-
-(** Given the ID of a function and a set of monomorphic type arguments, return
-   the ID of the corresponding monomorph. Like {!get_type_monomorph}, the
-   monomorph must be registered. *)
-val get_function_monomorph : env -> function_id -> mono_type_bindings -> mono_id
+   return the ID of the corresponding monomorph, or {!None} if no pass has
+   registered it. *)
+val get_type_monomorph : env -> decl_id -> mono_type_bindings -> mono_id option
 
 (** Get all uninstantiated monomorphs. *)
 val get_uninstantiated_monomorphs : env -> monomorph list

@@ -5,6 +5,7 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 
+open Id
 open Env
 open Stages.Mtast
 
@@ -33,5 +34,7 @@ open Stages.Mtast
 val monomorphize : env -> LinearityCheck.checked_module -> (env * mono_module) Outcome.t
 
 (** Instantiate the functions the program exports, and everything they use.
-    Called once, after all modules. *)
-val monomorphize_wrappers : env -> (env * mdecl list) Outcome.t
+    Called once, after all modules. Returns the declarations, and for each
+    exported function, in the order the environment lists them, its ID, its
+    export name and the ID of the monomorph that its wrapper calls. *)
+val monomorphize_wrappers : env -> (env * mdecl list * (function_id * string * mono_id) list) Outcome.t

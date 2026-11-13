@@ -7,7 +7,6 @@
 open Id
 open Env
 open Type
-open MonoTypeBindings
 open Error
 open CodeGen
 open CRepr
@@ -50,9 +49,8 @@ let rec transform_ty (ty: ty): c_ty =
 let transform_param (ValueParameter (name, ty)): c_param =
   CValueParam (gen_ident name, transform_ty ty)
 
-let make_wrapper (env: env) (function_id: function_id) (export_name: string): c_decl =
-  let mono_id: mono_id = get_function_monomorph env function_id empty_mono_bindings
-  and { value_params = params; rt; _ }: EnvTypes.function_decl = get_function env function_id in
+let make_wrapper (env: env) ((function_id, export_name, mono_id): function_id * string * mono_id): c_decl =
+  let { value_params = params; rt; _ }: EnvTypes.function_decl = get_function env function_id in
   CFunctionDefinition (
       Desc "Wrapper function",
       (* The name the user asked for gets the reserved-word escape (issue #92). *)
@@ -64,6 +62,5 @@ let make_wrapper (env: env) (function_id: function_id) (export_name: string): c_
       ]
     )
 
-let all_wrappers (env: env): c_decl list Outcome.t =
-  Outcome.catch (fun () ->
-      List.map (fun (id, name) -> make_wrapper env id name) (get_export_functions env))
+let all_wrappers (env: env) (exported: (function_id * string * mono_id) list): c_decl list Outcome.t =
+  Outcome.catch (fun () -> List.map (make_wrapper env) exported)

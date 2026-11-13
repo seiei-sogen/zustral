@@ -777,14 +777,17 @@ and mono_to_ty (ty: mono_ty): ty =
   | MonoRegionTyVar (name, source) ->
      TyVar (TypeVariable (name, RegionUniverse, source, []))
 
-let monomorphize_wrappers (env: env): (env * mdecl list) Outcome.t =
+let monomorphize_wrappers (env: env): (env * mdecl list * (function_id * string * mono_id) list) Outcome.t =
   Outcome.catch (fun () ->
-      (* Get the IDs of all the wrapper functions. *)
-      let ids: function_id list = List.map (fun (id, _) -> id) (get_export_functions env) in
-      (* Monomorphize wrappers. *)
-      let env: env =
-        Util.iter_with_context (fun env id -> fst (add_or_get_function_monomorph env id empty_mono_bindings)) env ids
+      (* Register the monomorph of each exported function. *)
+      let (env, exported): (env * (function_id * string * mono_id) list) =
+        Util.map_with_context
+          (fun (env, (function_id, export_name)) ->
+            let (env, mono_id) = add_or_get_function_monomorph env function_id empty_mono_bindings in
+            (env, (function_id, export_name, mono_id)))
+          env
+          (get_export_functions env)
       in
       (* Instantiate monomorphs *)
       let (env, decls): (env * mdecl list) = instantiate_monomorphs_until_exhausted env in
-      (env, decls))
+      (env, decls, exported))

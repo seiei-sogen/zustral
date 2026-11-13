@@ -44,13 +44,14 @@ type env = Env of {
 let empty_env: env =
   Env { mods = []; methods = []; decls = []; monos = []; exports = []; supply = Supply.initial; }
 
-(* The lookups whose key the compiler made itself return what they find, not an
-   option. This is the one place that reports a miss.
+(* The lookups by an ID return what they find, not an option. This is the one
+   place that reports a miss.
 
-   An ID is made only when something is registered in an environment, and
-   nothing is ever taken out of one. So when a lookup by ID misses, the ID was
-   made by a later environment than the one asked, which is a bug in the
-   compiler. *)
+   An ID is made only when something is registered in an environment, and what
+   is registered stays. One function takes something out, `pop_monomorph`, and
+   its callers put the monomorph back, with its definition, before they
+   return. So when a lookup by ID misses, the ID was made by a later
+   environment than the one asked, which is a bug in the compiler. *)
 let registered (what: unit -> string) (found: 'a option): 'a =
   match found with
   | Some thing ->
@@ -383,7 +384,11 @@ let get_monomorph (env: env) (id: mono_id): monomorph =
   registered (fun () -> "monomorph with ID `" ^ (show_mono_id id) ^ "`")
     (List.find_opt (fun mono -> equal_mono_id id (monomorph_id mono)) monos)
 
-let find_type_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): mono_id option =
+(* A monomorph is also found by its key: what it is a monomorph of, and the
+   type arguments. A key is not an ID. It can name a monomorph that no pass has
+   registered yet, so these lookups return an option. `add_or_get_*` register
+   the monomorph the first time its key is asked for. *)
+let get_type_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): mono_id option =
   let (Env { monos; _ }) = env in
   let pred (mono: monomorph): bool =
     match mono with
@@ -401,13 +406,13 @@ let find_type_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings)
   | None -> None
 
 let add_or_get_record_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): (env * mono_id) =
-  match find_type_monomorph env decl_id args with
+  match get_type_monomorph env decl_id args with
   | Some mono_id -> (env, mono_id)
   | None ->
     add_record_monomorph env decl_id args
 
 let add_or_get_union_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): (env * mono_id) =
-  match find_type_monomorph env decl_id args with
+  match get_type_monomorph env decl_id args with
   | Some mono_id -> (env, mono_id)
   | None ->
     add_union_monomorph env decl_id args
@@ -431,19 +436,6 @@ let add_or_get_function_monomorph (env: env) (decl_id: function_id) (args: mono_
   | Some mono_id -> (env, mono_id)
   | None ->
     add_function_monomorph env decl_id args
-
-(* Unlike an ID, a declaration and its type arguments can name a monomorph that
-   is not registered yet: `add_or_get_*` register it the first time. The stages
-   that call the next two functions (the entrypoint, and the wrappers of
-   exported functions) run after monomorphization has registered what they ask
-   for. *)
-let get_type_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): mono_id =
-  registered (fun () -> "monomorph of the type with ID `" ^ (show_decl_id decl_id) ^ "` and these type arguments")
-    (find_type_monomorph env decl_id args)
-
-let get_function_monomorph (env: env) (decl_id: function_id) (args: mono_type_bindings): mono_id =
-  registered (fun () -> "monomorph of the function with ID `" ^ (show_function_id decl_id) ^ "` and these type arguments")
-    (find_function_monomorph env decl_id args)
 
 let find_instance_method_monomorph (env: env) (id: ins_meth_id) (args: mono_type_bindings): mono_id option =
   let (Env { monos; _ }) = env in

@@ -118,7 +118,14 @@ let get_root_capability_monomorph (env: env): mono_id =
   let sn: sident = make_sident mn n in
   match get_decl_by_name env sn with
   | Some (Record { id; _ }) ->
-     get_type_monomorph env id empty_mono_bindings
+     (match get_type_monomorph env id empty_mono_bindings with
+      | Some id ->
+         id
+      | None ->
+         (* No type rules this out. The pass that monomorphized the signature
+            of the entrypoint registered the monomorph under its key, and did
+            not hand its ID over. *)
+         internal_err "No monomorph of RootCapability.")
   | _ ->
      internal_err "Can't find the RootCapability type in the environment."
 
@@ -128,7 +135,12 @@ let get_exit_code_monomorph (env: env): mono_id =
   let sn: sident = make_sident mn n in
   match get_decl_by_name env sn with
   | Some (Union { id; _ }) ->
-     get_type_monomorph env id empty_mono_bindings
+     (match get_type_monomorph env id empty_mono_bindings with
+      | Some id ->
+         id
+      | None ->
+         (* As for RootCapability: registered by key, by an earlier pass. *)
+         internal_err "No monomorph of ExitCode.")
   | _ ->
      internal_err "Can't find the ExitCode type in the environment."
 
