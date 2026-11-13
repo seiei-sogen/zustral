@@ -12,7 +12,7 @@ lib/CIdent.ml	41	0	0	0	0	0	1	0	0	0
 lib/CRenderer.ml	305	0	0	0	0	0	1	0	0	0
 lib/CRepr.ml	107	0	0	0	0	0	5	0	0	0
 lib/CliErrors.ml	142	0	1	0	0	0	10	0	0	0
-lib/CodeGen.ml	687	1	0	0	0	1	0	1	0	0
+lib/CodeGen.ml	685	0	0	0	0	1	0	0	0	0
 lib/CombiningPass.ml	376	17	0	0	0	2	0	0	0	0
 lib/Common.ml	69	0	0	0	0	0	3	0	0	0
 lib/Compiler.ml	145	0	0	0	0	0	0	0	0	0

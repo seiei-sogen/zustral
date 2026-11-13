@@ -155,7 +155,12 @@ let rec gen_type (ty: mono_ty): c_ty =
      CBuiltinType CDoubleType
   | MonoNamedType id ->
      CNamedType (gen_mono_id id)
-  | MonoRegionTy _ ->
+  | MonoRegionTy _ | MonoRegionTyVar _ ->
+     (* Every region has the same C type, so a region type variable has it too:
+        it stands for a region that this code is not told. No program reaches
+        the second case today. A value's type is a region type variable only in
+        a method of an instance without type parameters, and ExtractionPass
+        rejects those (RegionParameterUsedAsType). *)
      CBuiltinType CRegionType
   | MonoReadRef (t, _) ->
      CPointer (gen_type t)
@@ -171,13 +176,6 @@ let rec gen_type (ty: mono_ty): c_ty =
      CPointer (gen_type t)
   | MonoFnPtr _ ->
      fn_type
-  | MonoRegionTyVar _ ->
-     (* A value whose type is a region type variable reaches C only from a
-        method of an instance without type parameters, and ExtractionPass
-        rejects those (RegionParameterUsedAsType). mono_ty keeps the variable for
-        span elements, function pointers and type arguments, none of which this
-        function is called on. *)
-     internal_err NoSpan "Invalid C type"
 
 (* The C type of a type that crosses the C boundary. For every type a rule of
    ForeignType accepts, this is the C type of the Austral type, except a span,
