@@ -47,9 +47,14 @@ val with_supply : env -> (Supply.t -> ('a * Supply.t) Outcome.t) -> (env * 'a) O
     compiled, and the caller knows which error to report when nothing has it.
 
     A lookup by an ID returns what the ID stands for. This module makes an ID
-    when something is registered, so the thing exists. An ID given to an
-    environment older than the one that made it is a bug in the compiler: it
-    raises an internal error here, and callers do not handle it.
+    when something is registered, so the thing exists. The one exception is
+    the ID of a record or a union: it is reserved first ([reserve_record_id]),
+    so that the types of its module can hold it, and the record is registered
+    under it later in the extraction of the same module. A stage after
+    extraction never sees an ID that is reserved and not registered: extraction
+    stops at its first error. An ID given to an environment older than the one
+    that made it is a bug in the compiler: it raises an internal error here,
+    and callers do not handle it.
 
     A monomorph has an ID, and also a key: what it is a monomorph of, and the
     type arguments. A key can name a monomorph that no pass has registered, so

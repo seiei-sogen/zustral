@@ -27,8 +27,6 @@ lib/GenericErrors.ml	| SymbolImportedTwice ->
 lib/GenericErrors.ml	Text "Cannot add symbol to the import map twice."
 lib/GenericErrors.ml	| ParameterNotFound ->
 lib/GenericErrors.ml	Text "Parameter not found."
-lib/GenericErrors.ml	| NoRecordWithName name ->
-lib/GenericErrors.ml	Text ("No record with this name: " ^ (ident_string name))
 lib/GenericErrors.ml	| BindingUniverseMismatch { expected; actual } ->
 lib/GenericErrors.ml	Text ("Mismatched universes: expected "
 lib/GenericErrors.ml	^ (show_universe expected)

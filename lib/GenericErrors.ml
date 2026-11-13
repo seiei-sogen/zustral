@@ -44,7 +44,6 @@ type t =
   | ParameterArgumentLengthMismatch of { parameters: type_parameter list; arguments: mono_ty list }
   | TypeOfStringConstant
   | RegionAlreadyExists
-  | NoRecordWithName of identifier
   | BindingUniverseMismatch of { expected: universe; actual: universe }
   | NoBindingForParameter of identifier
   | ConstructorUniverseMismatch
@@ -178,10 +177,6 @@ let render (error: t): err_text =
   | RegionAlreadyExists ->
      [
        Text "Region map already has a region with this name"
-     ]
-  | NoRecordWithName name ->
-     [
-       Text ("No record with this name: " ^ (ident_string name))
      ]
   | BindingUniverseMismatch { expected; actual } ->
      [

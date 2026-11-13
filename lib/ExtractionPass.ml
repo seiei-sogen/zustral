@@ -114,7 +114,7 @@ let rec region_held_by_value (place: place) (env: env) (seen: ty list) (ty: ty):
       | FreeUniverse | LinearUniverse | TypeUniverse -> None)
   | ReadRef (ty, _) | WriteRef (ty, _) | Address ty | Pointer ty ->
      region_held_by_value place env seen ty
-  | NamedType (name, _, args, _) ->
+  | NamedType (_, id, args, _) ->
      if List.exists (equal_ty ty) seen then
        None
      else
@@ -125,13 +125,13 @@ let rec region_held_by_value (place: place) (env: env) (seen: ty list) (ty: ty):
            (fun (TypedSlot (_, slot_ty)) -> region_held_by_value place env seen (TypeBindings.replace_variables bindings slot_ty))
            slots
        in
-       (match get_decl_by_name place env (qident_to_sident name) with
-        | Some (Record { typarams; slots; _ }) ->
+       (match id with
+        | RecordTypeId id ->
+           let { typarams; slots; _ }: record_decl = get_record env id in
            in_slots typarams slots
-        | Some (Union { id; typarams; _ }) ->
-           List.find_map (fun ({ slots; _ }: union_case_decl) -> in_slots typarams slots) (get_union_cases env id)
-        | Some (Constant _ | UnionCase _ | Function _ | TypeClass _ | TypeClassMethod _ | Instance _) | None ->
-           None)
+        | UnionTypeId id ->
+           let { typarams; _ }: union_decl = get_union place env id in
+           List.find_map (fun ({ slots; _ }: union_case_decl) -> in_slots typarams slots) (get_union_cases env id))
   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _
   | Span _ | SpanMut _ | FnPtr _ ->
      None

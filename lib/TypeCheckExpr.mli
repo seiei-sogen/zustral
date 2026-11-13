@@ -50,3 +50,8 @@ val check : expr_ctx -> aexpr -> ty -> texpr
 val check_annotated : expr_ctx -> aexpr -> ty -> texpr
 
 val cast_arguments : type_bindings -> value_parameter list -> texpr list -> texpr list
+
+(** The record a named type stands for, given the ID the type holds: the module
+    that declares it, its visibility, type parameters and slots. For a union,
+    the error that a path cannot be taken of the given type. *)
+val get_record_definition : Error.place -> env -> Id.type_decl_id -> ty -> (module_name * Common.type_vis * typarams * typed_slot list)

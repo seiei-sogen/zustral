@@ -125,9 +125,10 @@ let empty_entrypoint_code (entrypoint_id: function_id) (exit_code_id: mono_id): 
 
 (* The monomorphs of the types the signature names are asked for as every
    use of a type asks. The monomorphization of the entrypoint's module
-   registered them, so in a program the environment has them and nothing is
-   instantiated here; the declarations of any it did not have come back to be
-   generated. *)
+   registered them, so in a program the environment has them, nothing is
+   pending, and no declaration comes back. The declarations of whatever was
+   pending come back to be generated (`Compiler.finish` generates them with
+   the wrappers). *)
 let entrypoint_code (env: env) (name: qident): (env * mdecl list * CRepr.c_source) Outcome.t =
   Outcome.catch (fun () ->
       let (entrypoint_id, kind): function_id * entrypoint_kind = check_entrypoint_validity env name in

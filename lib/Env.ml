@@ -47,18 +47,21 @@ let empty_env: env =
 (* The lookups by an ID return what they find, not an option. This is the one
    place that reports a miss.
 
-   An ID is made only when something is registered in an environment, and what
-   is registered stays: `define_monomorph` replaces a monomorph by the same
-   monomorph with its definition. So when a lookup by ID misses, the ID was
-   made by a later environment than the one asked, which is a bug in the
+   An ID is made when something is registered in an environment, and what is
+   registered stays: `define_monomorph` replaces a monomorph by the same
+   monomorph with its definition. The ID of a record or a union is made
+   earlier, when it is reserved, and the extraction that reserved it registers
+   it or stops at an error. So when a lookup by ID misses, the ID was made by a
+   later environment than the one asked, or it was reserved and asked for
+   before its record or union was registered. Either is a bug in the
    compiler. *)
 let registered (place: place) (what: unit -> string) (found: 'a option): 'a =
   match found with
   | Some thing ->
      thing
   | None ->
-     (* An ID from a later environment, as above. The type of an ID does not say
-        which environment made it. *)
+     (* As above. The type of an ID does not say which environment made it, or
+        whether what it was reserved for is registered yet. *)
      internal_err place ("No " ^ (what ()) ^ " in this environment.")
 
 let get_module_by_id (place: place) (env: env) (mod_id: mod_id): mod_rec =
@@ -145,8 +148,13 @@ let register (type id) (place: place) (env: env) (registration: id registration)
      declaration takes, and leaves it unused, so that the declarations after it
      have the numbers they had before its ID was reserved: a function's number
      is in the name the generated C gives it. *)
-  let add_reserved (type kind_id) (id: kind_id) (make: kind_id -> decl): (env * kind_id) =
-    add_decl (fun supply -> (id, snd (Supply.next_decl_id supply))) make
+  let add_reserved (type kind_id) (has_id: decl -> bool) (id: kind_id) (make: kind_id -> decl): (env * kind_id) =
+    if List.exists has_id decls then
+      (* A reserved ID stands for one declaration. Nothing in its type says
+         that it was not used yet. *)
+      internal_err place "A record or a union is already registered under this reserved ID."
+    else
+      add_decl (fun supply -> (id, snd (Supply.next_decl_id supply))) make
   in
   match registration with
   | NewConstant { mod_id; vis; name; ty; docstring } ->
@@ -154,10 +162,20 @@ let register (type id) (place: place) (env: env) (registration: id registration)
      add_decl fresh_constant_id (fun id -> Constant { id; mod_id; vis; name; ty; docstring })
   | NewRecord { id; mod_id; vis; name; docstring; typarams; universe; slots } ->
      name_must_be_free mod_id name;
-     add_reserved id (fun id -> Record { id; mod_id; vis; name; docstring; typarams; universe; slots })
+     let has_id (decl: decl): bool =
+       match decl with
+       | Record record -> equal_record_id record.id id
+       | Constant _ | Union _ | UnionCase _ | Function _ | TypeClass _ | TypeClassMethod _ | Instance _ -> false
+     in
+     add_reserved has_id id (fun id -> Record { id; mod_id; vis; name; docstring; typarams; universe; slots })
   | NewUnion { id; mod_id; vis; name; docstring; typarams; universe } ->
      name_must_be_free mod_id name;
-     add_reserved id (fun id -> Union { id; mod_id; vis; name; docstring; typarams; universe })
+     let has_id (decl: decl): bool =
+       match decl with
+       | Union union -> equal_union_id union.id id
+       | Constant _ | Record _ | UnionCase _ | Function _ | TypeClass _ | TypeClassMethod _ | Instance _ -> false
+     in
+     add_reserved has_id id (fun id -> Union { id; mod_id; vis; name; docstring; typarams; universe })
   | NewUnionCase { mod_id; vis; union_id; name; docstring; slots } ->
      (* Not checked (#86): a case can take the name of another case, or of any
         other declaration of the module. *)

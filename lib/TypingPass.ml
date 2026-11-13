@@ -55,17 +55,6 @@ let check_annotated_expr (place: place) (module_name: module_name) (env: env) (r
   let ctx: TypeCheckExpr.expr_ctx = TypeCheckExpr.make_ctx place module_name env rm typarams lexenv in
   TypeCheckExpr.check_annotated ctx expr annotation
 
-let get_record_definition (place: place) (env: env) (name: qident) (ty: ty): (module_name * type_vis * typarams * typed_slot list) =
-  match get_decl_by_name place env (qident_to_sident name) with
-  | (Some (Record { mod_id; vis; typarams; slots; _ })) ->
-     let mod_name: module_name = module_name_from_id place env mod_id in
-     (mod_name, vis, typarams, slots)
-  | Some (Constant _ | Union _ | UnionCase _ | Function _ | TypeClass _
-      | TypeClassMethod _ | Instance _) ->
-     type_error place (PathNotRecord ty)
-  | None ->
-     generic_error place (NoRecordWithName (original_name name))
-
 let is_boolean = function
   | Boolean -> true
   | Unit | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
@@ -220,7 +209,7 @@ and augment_destructure (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (spa
       let rec_ty = get_type place value' in
       (match rec_ty with
        | (NamedType (name, id, _, u)) ->
-          let (source_module, vis, record_typarams, slots) = get_record_definition place env name rec_ty in
+          let (source_module, vis, record_typarams, slots) = TypeCheckExpr.get_record_definition place env id rec_ty in
           let orig_type = NamedType (
                               make_qident (source_module, original_name name, original_name name),
                               id,

@@ -112,29 +112,24 @@ let fake_mod_source (is: string) (bs: string): module_source =
 let finish: Pipeline.finish = fun (env: env) (units: c_unit list) (entrypoint: entrypoint option) ->
   (* The wrapper functions. *)
   let* (env, decls, exported) = monomorphize_wrappers env in
-  let* (env, wrapper_unit) =
-    with_supply env (fun supply -> gen_module env supply (MonoModule (make_mod_name BuiltInNames.wrappers_module, decls)))
-  in
   let* wrappers = Outcome.map (fun decls -> CUnit (BuiltInNames.wrappers_unit_name, decls)) (all_wrappers exported) in
-  let* (entrypoint, entrypoint_units) =
+  (* The entrypoint asks for the monomorphs of the types its signature names,
+     as every use of a type does. The module of the entrypoint registered them,
+     so in a program there is nothing left to instantiate and `entrypoint_decls`
+     is empty. Declarations it did return are generated with those of the
+     wrappers. *)
+  let* (env, entrypoint_decls, entrypoint) =
     match entrypoint with
     | Some (mn, i) ->
        let* (env, decls, code) = entrypoint_code env (make_qident (mn, i, i)) in
-       (* The monomorphs of the entrypoint's signature that no module had
-          registered. The module of the entrypoint registers them, so there are
-          none in a program, and no unit. *)
-       (match decls with
-        | [] ->
-           Ok (Some code, [])
-        | _ :: _ ->
-           let* (_, unit) =
-             with_supply env (fun supply -> gen_module env supply (MonoModule (make_mod_name BuiltInNames.wrappers_module, decls)))
-           in
-           Ok (Some code, [unit]))
+       Ok (env, decls, Some code)
     | None ->
-       Ok (None, [])
+       Ok (env, [], None)
   in
-  Ok (CProgram { prelude = CSource prelude_c; units = units @ [wrapper_unit; wrappers] @ entrypoint_units; entrypoint })
+  let* (_, wrapper_unit) =
+    with_supply env (fun supply -> gen_module env supply (MonoModule (make_mod_name BuiltInNames.wrappers_module, decls @ entrypoint_decls)))
+  in
+  Ok (CProgram { prelude = CSource prelude_c; units = units @ [wrapper_unit; wrappers]; entrypoint })
 
 let empty_compiler (): compiler Outcome.t =
   (* We have to compile the Austral.Pervasive module, followed by

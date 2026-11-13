@@ -104,16 +104,13 @@ let is_bool (place: place) (e: texpr): bool =
 let parse_typespec (ctx: expr_ctx) (ty: qtypespec): ty =
   parse_type (ctx_place ctx) (ctx_env ctx) [] (ctx_region_map ctx) (ctx_typarams ctx) ty
 
-let get_record_definition (place: place) (env: env) (name: qident) (ty: ty): (module_name * type_vis * typarams * typed_slot list) =
-  match get_decl_by_name place env (qident_to_sident name) with
-  | (Some (Record { mod_id; vis; typarams; slots; _ })) ->
-     let mod_name: module_name = module_name_from_id place env mod_id in
-     (mod_name, vis, typarams, slots)
-  | Some (Constant _ | Union _ | UnionCase _ | Function _ | TypeClass _
-      | TypeClassMethod _ | Instance _) ->
+let get_record_definition (place: place) (env: env) (id: type_decl_id) (ty: ty): (module_name * type_vis * typarams * typed_slot list) =
+  match id with
+  | RecordTypeId id ->
+     let { mod_id; vis; typarams; slots; _ }: record_decl = get_record env id in
+     (module_name_from_id place env mod_id, vis, typarams, slots)
+  | UnionTypeId _ ->
      type_error place (PathNotRecord ty)
-  | None ->
-     generic_error place (NoRecordWithName (original_name name))
 
 let get_slot_with_name (place: place) type_name slots slot_name =
   match List.find_opt (fun (TypedSlot (n, _)) -> n = slot_name) slots with
@@ -671,16 +668,16 @@ and augment_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identifier): t
        generic_error (ctx_place ctx) (RefTransformNeedsRef (get_type (ctx_place ctx) expr))
   in
   (* The pointed-to type is a record. *)
-  let (type_name, type_args): qident * ty list = begin
+  let (type_name, type_id, type_args): qident * type_decl_id * ty list = begin
       match ty with
-      | NamedType (name, _, args, _) ->
-         (name, args)
+      | NamedType (name, id, args, _) ->
+         (name, id, args)
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
       | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
          type_error (ctx_place ctx) (CantAccessSlotNotRecord { slot_name; ty })
     end
   in
-  let (source_module, vis, typarams, slots) = get_record_definition (ctx_place ctx) (ctx_env ctx) type_name ty in
+  let (source_module, vis, typarams, slots) = get_record_definition (ctx_place ctx) (ctx_env ctx) type_id ty in
   (* We can access that record. *)
   let _ =
     let public: bool =
@@ -734,16 +731,16 @@ and augment_pointer_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identi
        type_error (ctx_place ctx) (PointerAccessNotReference ty2)
   in
   (* ... to a record. *)
-  let (type_name, type_args): qident * ty list = begin
+  let (type_name, type_id, type_args): qident * type_decl_id * ty list = begin
       match ty3 with
-      | NamedType (name, _, args, _) ->
-         (name, args)
+      | NamedType (name, id, args, _) ->
+         (name, id, args)
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
       | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
          type_error (ctx_place ctx) (CantAccessSlotNotRecord { slot_name; ty = ty3 })
     end
   in
-  let (source_module, vis, typarams, slots) = get_record_definition (ctx_place ctx) (ctx_env ctx) type_name ty3 in
+  let (source_module, vis, typarams, slots) = get_record_definition (ctx_place ctx) (ctx_env ctx) type_id ty3 in
   (* We can access that record. *)
   let _ =
     let public: bool =
