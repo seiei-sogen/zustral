@@ -11,35 +11,23 @@ open Span
 open SourceContext
 open ErrorText
 
-(** Represents a category of errors. *)
-type error_kind =
-  | GenericError
-  (** A generic error. This should be gradually phased out. *)
-  | ParseError
-  (** A parse error. *)
-  | CliError
-  (** An error with the user's command line arguments. *)
-  | TypeError
-  (** A type error. *)
-  | LinearityError
-  (** Signalled when code breaks the linearity rules. *)
-  | DeclarationError
-  (** An error in the structure of a declaration. *)
-  | EntrypointError
-  (** An error with the definition of the program entrypoint. *)
-  | InternalError
-  (** An internal error in the compiler. *)
-
 (** What went wrong. Each category has its own type, with one constructor per
     error; the wording is in the [render] function of the category's module. *)
 type error =
   | Parse of ParseErrors.t
+  (** A parse error. *)
   | Cli of CliErrors.t
+  (** An error with the user's command line arguments. *)
   | Type of TypeErrors.t
+  (** A type error. *)
   | Linearity of LinearityErrors.t
+  (** Signalled when code breaks the linearity rules. *)
   | Declaration of DeclarationErrors.t
+  (** An error in the structure of a declaration. *)
   | Entrypoint of EntrypointErrors.t
+  (** An error with the definition of the program entrypoint. *)
   | Generic of GenericErrors.t
+  (** A generic error. This should be gradually phased out. *)
   | Internal of string
   (** A state the compiler believes cannot happen. The string says which. *)
 
@@ -59,9 +47,6 @@ type austral_error = AustralError of {
 
 (** The exception that carries Austral errors. *)
 exception Austral_error of austral_error
-
-(** The category of an error. *)
-val error_kind : error -> error_kind
 
 (** The wording of an error. *)
 val error_text : error -> err_text
@@ -109,8 +94,8 @@ val add_module_name : austral_error -> module_name -> austral_error
     the given span in the error and rethrow it. *)
 val adorn_error_with_span : span -> (unit -> 'a) -> 'a
 
-(** Render an error kind to a title. *)
-val error_title : error_kind -> string
+(** The title of an error: the name of its category. *)
+val error_title : error -> string
 
 (** Render an error to plain text, for display to the terminal. *)
 val render_error_to_plain : austral_error -> string

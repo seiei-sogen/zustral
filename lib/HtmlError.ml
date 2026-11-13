@@ -270,7 +270,7 @@ let render_error_to_html (error: austral_error): string =
         <h1>Error Report</h1>
         <div id='split'>
             <div id='left'>
-                <h3><code>" ^  sanatize_string (error_title (error_kind cause)) ^ "</code>
+                <h3><code>" ^  sanatize_string (error_title cause) ^ "</code>
                      in module <code>" 
                         ^ sanatize_string (module_name_to_text module_name) 
                         ^ "</code></h3>

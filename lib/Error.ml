@@ -11,16 +11,6 @@ open ErrorText
 
 (* Types *)
 
-type error_kind =
-  | GenericError
-  | ParseError
-  | CliError
-  | TypeError
-  | LinearityError
-  | DeclarationError
-  | EntrypointError
-  | InternalError
-
 type error =
   | Parse of ParseErrors.t
   | Cli of CliErrors.t
@@ -39,17 +29,6 @@ type austral_error = AustralError of {
     }
 
 exception Austral_error of austral_error
-
-let error_kind (error: error): error_kind =
-  match error with
-  | Parse _ -> ParseError
-  | Cli _ -> CliError
-  | Type _ -> TypeError
-  | Linearity _ -> LinearityError
-  | Declaration _ -> DeclarationError
-  | Entrypoint _ -> EntrypointError
-  | Generic _ -> GenericError
-  | Internal _ -> InternalError
 
 let error_text (error: error): err_text =
   match error with
@@ -138,16 +117,16 @@ let adorn_error_with_span (new_span: span) (f: unit -> 'a): 'a =
 
 (* Error rendering to plain text *)
 
-let error_title (kind: error_kind): string =
-  match kind with
-  | GenericError -> "Generic Error"
-  | ParseError -> "Parse Error"
-  | CliError -> "Command Line Arguments Error"
-  | TypeError -> "Type Error"
-  | LinearityError -> "Linearity Error"
-  | DeclarationError -> "Declaration Error"
-  | EntrypointError -> "Entrypoint Definition Error"
-  | InternalError -> "Internal Error"
+let error_title (error: error): string =
+  match error with
+  | Generic _ -> "Generic Error"
+  | Parse _ -> "Parse Error"
+  | Cli _ -> "Command Line Arguments Error"
+  | Type _ -> "Type Error"
+  | Linearity _ -> "Linearity Error"
+  | Declaration _ -> "Declaration Error"
+  | Entrypoint _ -> "Entrypoint Definition Error"
+  | Internal _ -> "Internal Error"
 
 let indent_text (text: string) (indent: int): string =
   let lines = String.split_on_char '\n' text in
@@ -172,7 +151,7 @@ let render_error_to_plain (error: austral_error): string =
        "  Module:\n"
        ^ "    [unknown]\n"
   in
-  let title: string = error_title (error_kind cause) in
+  let title: string = error_title cause in
   let span_text =
     match span with
     | Some (Span { filename; startp; endp }) ->
@@ -245,7 +224,7 @@ let render_error_to_json (error: austral_error): Yojson.Basic.t =
   (* Put it together. *)
   `Assoc [
       ("module", module_name);
-      ("kind", `String (error_title (error_kind cause)));
+      ("kind", `String (error_title cause));
       ("text", error_text_to_json (error_text cause));
       ("span", span);
       ("context", source_ctx)
