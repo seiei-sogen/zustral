@@ -89,8 +89,8 @@ let compile_mod (c: compiler) (source: module_source): compiler Outcome.t =
   let (Compiler (env, units)) = c in
   let* (name, combined) = parse_and_combine env source in
   in_module name
-    (let* () = check_ends_in_return combined in
-     let* (combined: SmallCombined.combined_module) = DesugaringPass.desugar combined in
+    (let* (returning: returning_module) = check_ends_in_return combined in
+     let* (combined: SmallCombined.combined_module) = DesugaringPass.desugar returning in
      let* ((env, linked): env * linked_module) = extract env combined in
      let* (typed: typed_module) = augment_module env linked in
      let* () = check_module_linearity typed in

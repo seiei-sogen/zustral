@@ -89,6 +89,12 @@ let check_decl_ends_in_return (decl: combined_definition): unit =
      let _ = List.map (check_method_ends_in_return span) methods in
      ()
 
-let check_ends_in_return (CombinedModule { decls; _ }): unit Outcome.t =
-  Outcome.map ignore
+type returning_module = ReturningModule of combined_module
+
+let check_ends_in_return (md: combined_module): returning_module Outcome.t =
+  let (CombinedModule { decls; _ }) = md in
+  Outcome.map (fun (_: unit list) -> ReturningModule md)
     (Outcome.traverse (fun decl -> Outcome.catch (fun () -> check_decl_ends_in_return decl)) decls)
+
+let as_combined_module (ReturningModule md): combined_module =
+  md

@@ -27,8 +27,8 @@ let desugar_decl (decl: C.combined_definition): SC.combined_definition =
   | C.CTypeclass (s, v, id, tp, methods, ds) -> SC.CTypeclass (s, v, id, tp, methods, ds)
   | C.CInstance (s, v, qi, tp, qt, cmd, ds) -> SC.CInstance (s, v, qi, tp, qt, List.map copy_combined_method_def cmd, ds)
 
-let desugar (md: C.combined_module): SC.combined_module Outcome.t =
-  let (C.CombinedModule { name; kind; interface_docstring; interface_imports; body_docstring; body_imports; decls }) = md in
+let desugar (md: ReturnCheck.returning_module): SC.combined_module Outcome.t =
+  let (C.CombinedModule { name; kind; interface_docstring; interface_imports; body_docstring; body_imports; decls }) = ReturnCheck.as_combined_module md in
   Outcome.map
     (fun decls -> SC.CombinedModule { name; kind; interface_docstring; interface_imports; body_docstring; body_imports; decls })
     (Outcome.traverse (fun decl -> Outcome.catch (fun () -> desugar_decl decl)) decls)
