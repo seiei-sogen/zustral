@@ -124,7 +124,12 @@ let remove_entry (place: place) (tbl: state_tbl) (name: identifier): state_tbl =
        | ReadRef _ | Span _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
           false
      in
-     if (state = Consumed) || is_write_ref then
+     let consumed: bool =
+       match state with
+       | Consumed -> true
+       | Unconsumed | BorrowedRead | BorrowedWrite -> false
+     in
+     if consumed || is_write_ref then
        let (StateTable (rows, pending)) = tbl in
        let others = List.filter (fun (n, _, _, _) -> not (equal_identifier name n)) rows in
        StateTable (others, pending)
@@ -571,7 +576,12 @@ let rec check_stmt (place: place) (tbl: state_tbl) (depth: loop_depth) (stmt: ts
      else
        (* If we're read-borrowing, and the variable is already read-borrowed, that's also allowed. *)
        let state: var_state = get_state place tbl original in
-       if (mode = Read) && (state = BorrowedRead) then
+       let read_borrowed_again: bool =
+         match (mode, state) with
+         | (Read, BorrowedRead) -> true
+         | (Read, (Unconsumed | BorrowedWrite | Consumed)) | ((Write | Reborrow), (Unconsumed | BorrowedRead | BorrowedWrite | Consumed)) -> false
+       in
+       if read_borrowed_again then
          (* Add the rename. *)
          let tbl: state_tbl = add_entry place tbl rename ref_type depth in
          (* Traverse the body. *)
@@ -597,7 +607,12 @@ let rec check_stmt (place: place) (tbl: state_tbl) (depth: loop_depth) (stmt: ts
      (* Ensure that all variables are Consumed. *)
      let _ =
        List.map (fun (name, ty, _, state) ->
-           if state = Consumed then
+           let consumed: bool =
+             match state with
+             | Consumed -> true
+             | Unconsumed | BorrowedRead | BorrowedWrite -> false
+           in
+           if consumed then
              ()
            else
              (* Is the type of this variable a write reference? *)

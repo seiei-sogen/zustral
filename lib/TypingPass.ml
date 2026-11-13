@@ -238,7 +238,12 @@ and augment_destructure (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (spa
                             )
           in
           let typebindings = match_type (env, module_name, place) orig_type rec_ty in
-          if (vis = TypeVisPublic) || (module_name = source_module) then
+          let public: bool =
+            match vis with
+            | TypeVisPublic -> true
+            | TypeVisOpaque | TypeVisPrivate -> false
+          in
+          if public || (module_name = source_module) then
             (* Find the set of slot names and the set of binding names, and compare them *)
             let binding_names = List.map (fun (Stages.Ast.QBinding { name; _}) -> name) bindings
             and slot_names = List.map (fun (TypedSlot (n, _)) -> n) slots in
@@ -297,10 +302,11 @@ and augment_assign (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
       let _ = match_type_with_value (env, module_name, place) pointed_ty rvalue in
       (* The pointed-to type must be in the free universe. *)
       let _ =
-        if (type_universe place pointed_ty) = FreeUniverse then
-          ()
-        else
-          linearity_error place (AssignToNonFreePath pointed_ty)
+        match type_universe place pointed_ty with
+        | FreeUniverse ->
+           ()
+        | LinearUniverse | TypeUniverse | RegionUniverse ->
+           linearity_error place (AssignToNonFreePath pointed_ty)
       in
       (* Construct the assignment. *)
       (TAssign (span, lvalue, rvalue), lexenv, supply))
@@ -481,10 +487,11 @@ and augment_discarding (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span
   let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
   (let e' = infer_expr place module_name env rm typarams lexenv e in
       let u = type_universe place (get_type place e') in
-      if ((u = LinearUniverse) || (u = TypeUniverse)) then
-        type_error place (DiscardLinear u)
-      else
-        (TDiscarding (span, e'), lexenv, supply))
+      match u with
+      | LinearUniverse | TypeUniverse ->
+         type_error place (DiscardLinear u)
+      | FreeUniverse | RegionUniverse ->
+         (TDiscarding (span, e'), lexenv, supply))
 
 and augment_return (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (e: aexpr): tstmt * lexenv * Supply.t =
   let ctx = stmt_at ctx span in
@@ -545,7 +552,12 @@ and get_union_type_definition (place: place) (importing_module: module_name) (en
   match get_decl_by_name place env (qident_to_sident name) with
   | Some (Union { id; vis; name; mod_id; typarams; universe; _ }) ->
      let module_name = module_name_from_id place env mod_id in
-     if (vis = TypeVisPublic) || (importing_module = module_name) then
+     let public: bool =
+       match vis with
+       | TypeVisPublic -> true
+       | TypeVisOpaque | TypeVisPrivate -> false
+     in
+     if public || (importing_module = module_name) then
        let n = make_qident (module_name, name, name)
        and args = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams)
        in
@@ -716,10 +728,11 @@ let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (
      let { impl; _ }: function_decl = get_function env decl_id in
      (match impl with
       | Foreign (s, signature) ->
-         if kind = UnsafeModule then
-           (TForeignFunction (decl_id, vis, name, params, rt, s, signature, doc), supply)
-         else
-           declaration_error NoSpan ForeignInSafeModule
+         (match kind with
+          | UnsafeModule ->
+             (TForeignFunction (decl_id, vis, name, params, rt, s, signature, doc), supply)
+          | SafeModule ->
+             declaration_error NoSpan ForeignInSafeModule)
       | ForeignGeneric ->
          declaration_error NoSpan ForeignTypeParameters
       | BodyNotAttached | Body _ ->

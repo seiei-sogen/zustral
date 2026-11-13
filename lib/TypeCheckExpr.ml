@@ -174,14 +174,15 @@ and match_parameter (ctx: expr_ctx) (param: value_parameter) (arg: texpr): type_
 
 let make_substs (place: place) (bindings: type_bindings) (typarams: typarams): type_bindings =
   let f (tp: type_parameter): (type_parameter * ty) option =
-    if (typaram_universe tp) = RegionUniverse then
-      Some (tp, RegionTy static_region)
-    else
-      match get_binding bindings tp with
-      | Some ty ->
-         Some (tp, ty)
-      | None ->
-         None
+    match typaram_universe tp with
+    | RegionUniverse ->
+       Some (tp, RegionTy static_region)
+    | FreeUniverse | LinearUniverse | TypeUniverse ->
+       (match get_binding bindings tp with
+        | Some ty ->
+           Some (tp, ty)
+        | None ->
+           None)
   in
   bindings_from_list place (List.filter_map f (typarams_as_list typarams))
 
@@ -645,15 +646,17 @@ and augment_deref (ctx: expr_ctx) (expr: aexpr): texpr =
   let ty = get_type (ctx_place ctx) expr' in
   (match ty with
    | ReadRef (ty', _) ->
-      if type_universe (ctx_place ctx) ty' = FreeUniverse then
-        TDeref expr'
-      else
-        linearity_error (ctx_place ctx) (DereferenceNonFree ty')
+      (match type_universe (ctx_place ctx) ty' with
+       | FreeUniverse ->
+          TDeref expr'
+       | LinearUniverse | TypeUniverse | RegionUniverse ->
+          linearity_error (ctx_place ctx) (DereferenceNonFree ty'))
    | WriteRef (ty', _) ->
-      if type_universe (ctx_place ctx) ty' = FreeUniverse then
-        TDeref expr'
-      else
-        linearity_error (ctx_place ctx) (DereferenceNonFree ty')
+      (match type_universe (ctx_place ctx) ty' with
+       | FreeUniverse ->
+          TDeref expr'
+       | LinearUniverse | TypeUniverse | RegionUniverse ->
+          linearity_error (ctx_place ctx) (DereferenceNonFree ty'))
    | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
    | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
       type_error (ctx_place ctx) (DereferenceNonReference ty))
@@ -685,7 +688,12 @@ and augment_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identifier): t
   let (source_module, vis, typarams, slots) = get_record_definition (ctx_place ctx) (ctx_env ctx) type_name ty in
   (* We can access that record. *)
   let _ =
-    if (vis = TypeVisPublic) || ((ctx_module_name ctx) = source_module) then
+    let public: bool =
+      match vis with
+      | TypeVisPublic -> true
+      | TypeVisOpaque | TypeVisPrivate -> false
+    in
+    if public || ((ctx_module_name ctx) = source_module) then
       (* The record is public, or it is defined in the same module as we are. *)
       ()
     else
@@ -744,7 +752,12 @@ and augment_pointer_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identi
   let (source_module, vis, typarams, slots) = get_record_definition (ctx_place ctx) (ctx_env ctx) type_name ty3 in
   (* We can access that record. *)
   let _ =
-    if (vis = TypeVisPublic) || ((ctx_module_name ctx) = source_module) then
+    let public: bool =
+      match vis with
+      | TypeVisPublic -> true
+      | TypeVisOpaque | TypeVisPrivate -> false
+    in
+    if public || ((ctx_module_name ctx) = source_module) then
       (* The record is public, or it is defined in the same module as we are. *)
       ()
     else

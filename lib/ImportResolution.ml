@@ -50,7 +50,12 @@ let resolve_import (env: env) (kind: module_kind) (imports: import_map) (idecl: 
        match get_symbol imports nickname with
        | Some _ -> declaration_error NoSpan (DoubleImport name)
        | None ->
-          if (equal_module_name module_name memory_module_name) && (kind = SafeModule) then
+          let safe: bool =
+            match kind with
+            | SafeModule -> true
+            | UnsafeModule -> false
+          in
+          if (equal_module_name module_name memory_module_name) && safe then
             declaration_error NoSpan ImportMemoryInSafeModule
           else
             add_symbol imports (make_qident (module_name, name, nickname))

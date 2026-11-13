@@ -29,7 +29,12 @@ let rec check_entrypoint_validity (env: env) (name: qident): function_id * entry
   | Some decl ->
      (match decl with
       | Function { id; vis; typarams; value_params; rt; _ } ->
-         if vis = VisPublic then
+         let public: bool =
+           match vis with
+           | VisPublic -> true
+           | VisPrivate -> false
+         in
+         if public then
            if (typarams_size typarams) = 0 then
              match value_params with
              | [] ->

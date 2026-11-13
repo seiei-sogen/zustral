@@ -28,14 +28,15 @@ open Error
 
 let make_substs2 (bindings: type_bindings) (typarams: typarams): type_bindings =
   let f (tp: type_parameter): (type_parameter * ty) option =
-    if (typaram_universe tp) = RegionUniverse then
-      Some (tp, RegionTy static_region)
-    else
-      match get_binding bindings tp with
-      | Some ty ->
-         Some (tp, ty)
-      | None ->
-         None
+    match typaram_universe tp with
+    | RegionUniverse ->
+       Some (tp, RegionTy static_region)
+    | FreeUniverse | LinearUniverse | TypeUniverse ->
+       (match get_binding bindings tp with
+        | Some ty ->
+           Some (tp, ty)
+        | None ->
+           None)
   in
   bindings_from_list NoSpan (List.filter_map f (typarams_as_list typarams))
 

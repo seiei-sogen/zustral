@@ -80,7 +80,7 @@ let check_decl_ends_in_return (decl: combined_definition): unit =
            ()
          else
            declaration_error (AtSpan span) (MissingReturn { name; declaration = FunctionDeclaration })
-      | _ ->
+      | [Common.ForeignImportPragma _] | [Common.ForeignExportPragma _] | [Common.UnsafeModulePragma] | _ :: _ :: _ ->
          (* Yes pragmas: foreign function, ignore the body. *)
          ())
   | CTypeclass _ ->

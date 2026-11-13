@@ -22,13 +22,21 @@ let universe_compatible param arg =
    *)
   match param with
   | FreeUniverse ->
-     arg = FreeUniverse
+     (match arg with
+      | FreeUniverse -> true
+      | LinearUniverse | TypeUniverse | RegionUniverse -> false)
   | LinearUniverse ->
-     arg = LinearUniverse
+     (match arg with
+      | LinearUniverse -> true
+      | FreeUniverse | TypeUniverse | RegionUniverse -> false)
   | TypeUniverse ->
-     (arg = FreeUniverse) || (arg = LinearUniverse) || (arg = TypeUniverse)
+     (match arg with
+      | FreeUniverse | LinearUniverse | TypeUniverse -> true
+      | RegionUniverse -> false)
   | RegionUniverse ->
-     arg = RegionUniverse
+     (match arg with
+      | RegionUniverse -> true
+      | FreeUniverse | LinearUniverse | TypeUniverse -> false)
 
 (* I don't know why OCaml requires map elements to be totally ordered as opposed
    to just comparable for equality. Anyways, we get around this by basically
@@ -124,18 +132,19 @@ let rec replace_variables bindings ty =
      let a' = List.map (replace_variables bindings) a in
      (* The universe of an argument is unknown only for a MonoTy, which exists
         only during monomorphization, where errors have no span. *)
-     if u = TypeUniverse then
-       let u' = if any_arg_is_linear NoSpan a' then
-                  LinearUniverse
-                else
-                  if any_arg_is_type NoSpan a' then
-                    TypeUniverse
+     (match u with
+      | TypeUniverse ->
+         let u' = if any_arg_is_linear NoSpan a' then
+                    LinearUniverse
                   else
-                    FreeUniverse
-       in
-       NamedType (n, a', u')
-     else
-       NamedType (n, a', u)
+                    if any_arg_is_type NoSpan a' then
+                      TypeUniverse
+                    else
+                      FreeUniverse
+         in
+         NamedType (n, a', u')
+      | FreeUniverse | LinearUniverse | RegionUniverse ->
+         NamedType (n, a', u))
   | TyVar tv ->
      (match get_binding bindings (tyvar_to_typaram tv) with
       | Some ty -> ty

@@ -294,10 +294,18 @@ and universe_compatible param arg =
    *)
   match param with
   | FreeUniverse ->
-     arg = FreeUniverse
+     (match arg with
+      | FreeUniverse -> true
+      | LinearUniverse | TypeUniverse | RegionUniverse -> false)
   | LinearUniverse ->
-     arg = LinearUniverse
+     (match arg with
+      | LinearUniverse -> true
+      | FreeUniverse | TypeUniverse | RegionUniverse -> false)
   | TypeUniverse ->
-     (arg = FreeUniverse) || (arg = LinearUniverse) || (arg = TypeUniverse)
+     (match arg with
+      | FreeUniverse | LinearUniverse | TypeUniverse -> true
+      | RegionUniverse -> false)
   | RegionUniverse ->
-     arg = RegionUniverse
+     (match arg with
+      | RegionUniverse -> true
+      | FreeUniverse | LinearUniverse | TypeUniverse -> false)

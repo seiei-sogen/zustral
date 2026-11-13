@@ -64,15 +64,16 @@ let rec strip_type (ty: ty): stripped_ty =
      let r = strip_type (ty_of_ref_region r) in
      SSpanMut (ty, r)
   | TyVar (TypeVariable (name, u, source, _)) ->
-     if u = RegionUniverse then
-       SRegionTyVar (name, source)
-     else
-       (* Why? Because when instantiating a monomorph, we do search and replace
-          of type variables with their substitutions. So if there are variables
-          left over by stripping time, that's an error. Anyways, the
-          search-and-replace step should *also* have signalled an error if a
-          type variable has no replacement. *)
-       generic_error NoSpan (TypeVariableNotReplaced name)
+     (match u with
+      | RegionUniverse ->
+         SRegionTyVar (name, source)
+      | FreeUniverse | LinearUniverse | TypeUniverse ->
+         (* Why? Because when instantiating a monomorph, we do search and replace
+            of type variables with their substitutions. So if there are variables
+            left over by stripping time, that's an error. Anyways, the
+            search-and-replace step should *also* have signalled an error if a
+            type variable has no replacement. *)
+         generic_error NoSpan (TypeVariableNotReplaced name))
   | Address ty ->
      SAddress (strip_type ty)
   | Pointer ty ->

@@ -180,30 +180,33 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
          let slots = List.map (parse_slot place typarams) slots in
          (* If the universe is `Free`, check that there are no slots with types in the `Type` or `Linear` universes. *)
          let _ =
-           if universe = FreeUniverse then
-             check_slots_are_free place name slots
-           else
-             ()
+           match universe with
+           | FreeUniverse ->
+              check_slots_are_free place name slots
+           | LinearUniverse | TypeUniverse | RegionUniverse ->
+              ()
          in
          (* If the universe is `Free`, check that there are no type parameters in
             the `Linear` or `Type` universes. *)
          let _ =
-           if universe = FreeUniverse then
-             (* Unless it is `Address` or `Pointer` *)
-             let qname = make_qident (mn, name, name) in
-             if (is_address_type qname) || (is_pointer_type qname) then
-               ()
-             else
-               check_typarams_are_free place name typarams
-           else
-             ()
+           match universe with
+           | FreeUniverse ->
+              (* Unless it is `Address` or `Pointer` *)
+              let qname = make_qident (mn, name, name) in
+              if (is_address_type qname) || (is_pointer_type qname) then
+                ()
+              else
+                check_typarams_are_free place name typarams
+           | LinearUniverse | TypeUniverse | RegionUniverse ->
+              ()
          in
          (* If the universe is `Region`, fail. *)
          let _ =
-           if universe = RegionUniverse then
-             declaration_error place (TypesAreNotRegions { name; declaration = RecordDeclaration })
-           else
-             ()
+           match universe with
+           | RegionUniverse ->
+              declaration_error place (TypesAreNotRegions { name; declaration = RecordDeclaration })
+           | FreeUniverse | LinearUniverse | TypeUniverse ->
+              ()
          in
          let (env, decl_id) = register place env (NewRecord { mod_id; vis; name; docstring; typarams; universe; slots }) in
          let decl = LRecord (decl_id, vis, name, typarams, universe, slots, docstring) in
@@ -212,27 +215,30 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
      (let place: place = AtSpan span in
          (* If the universe is `Free`, check that there are no cases with slots with types in the `Type` or `Linear` universes. *)
          let _ =
-           if universe = FreeUniverse then
-             let cases = List.map (fun (Combined.QualifiedCase (n, slots)) -> TypedCase (n, List.map (parse_slot place typarams) slots)) cases
-             in
-             check_cases_are_free place cases
-           else
-             ()
+           match universe with
+           | FreeUniverse ->
+              let cases = List.map (fun (Combined.QualifiedCase (n, slots)) -> TypedCase (n, List.map (parse_slot place typarams) slots)) cases
+              in
+              check_cases_are_free place cases
+           | LinearUniverse | TypeUniverse | RegionUniverse ->
+              ()
          in
          (* If the universe is `Free`, check that there are no type parameters in
             the `Linear` or `Type` universes. *)
          let _ =
-           if universe = FreeUniverse then
-             check_typarams_are_free place name typarams
-           else
-             ()
+           match universe with
+           | FreeUniverse ->
+              check_typarams_are_free place name typarams
+           | LinearUniverse | TypeUniverse | RegionUniverse ->
+              ()
          in
          (* If the universe is `Region`, fail. *)
          let _ =
-           if universe = RegionUniverse then
-             declaration_error place (TypesAreNotRegions { name; declaration = UnionDeclaration })
-           else
-             ()
+           match universe with
+           | RegionUniverse ->
+              declaration_error place (TypesAreNotRegions { name; declaration = UnionDeclaration })
+           | FreeUniverse | LinearUniverse | TypeUniverse ->
+              ()
          in
          (* Add the union itself to the env *)
          let (env, union_id) = register place env (NewUnion { mod_id; vis; name; docstring; typarams; universe }) in

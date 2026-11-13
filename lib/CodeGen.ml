@@ -626,21 +626,6 @@ let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_de
        CFunctionDefinition (d, gen_mono_id id, gen_params mn params, gen_type rt, body)
      ], supply)
 
-(* Extract types into forward type declarations *)
-
-let rec gen_type_decls decls =
-  List.filter_map gen_type_decl decls
-
-and gen_type_decl decl =
-  (*let d n = Some (CStructForwardDeclaration (gen_decl_id n)) in*)
-  match decl with
-  (*| MRecord (id, _, _) ->
-     d id*)
-  (*| MUnion (id, _, _) ->
-     d id*)
-  | _ ->
-     None
-
 (* Extract functions into forward function declarations *)
 
 let rec gen_fun_decls mn decls =
@@ -734,9 +719,8 @@ let detail_compare decls a b =
 
 let gen_module (env: env) (supply: Supply.t) (MonoModule (name, decls)): (c_unit * Supply.t) Outcome.t =
   Outcome.catch (fun () ->
-      let type_decls = gen_type_decls decls
-      and fun_decls = List.concat (gen_fun_decls name decls)
+      let fun_decls = List.concat (gen_fun_decls name decls)
       and (decls, supply) = Supply.map (gen_decl env name) supply decls in
-      let decls = List.concat [type_decls; fun_decls; List.concat decls] in
+      let decls = List.concat [fun_decls; List.concat decls] in
       let sorted_decls = List.sort (detail_compare decls) decls in
       (CUnit (mod_name_string name, sorted_decls), supply))
