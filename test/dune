@@ -8,5 +8,6 @@
   CRendererTest
   EnvTest
   OutcomeTest
-  BuiltInNamesTest)
+  BuiltInNamesTest
+  CompilerTest)
  (libraries austral_core austral_cli ounit2))

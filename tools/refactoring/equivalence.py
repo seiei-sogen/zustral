@@ -19,8 +19,8 @@ in its working directory.
 A refactoring step must leave the snapshot unchanged. `compare` exits 1 when
 any program differs, and prints a diff of the first few.
 
-The compiler numbers the names it generates (decl_286, mono_13, _t127, tmp4) from
-global counters, in the order it allocates them. A step that only changes that
+The compiler numbers the names it generates (decl_286, mono_13, _t127, tmp4),
+each kind on its own, in the order it allocates them. A step that only changes that
 order changes the numbers and nothing else. `--normalize-ids` renumbers each
 kind of generated name by first appearance in the file before comparing. The
 renumbering is one-to-one per kind of name, so two files that use the names
@@ -47,7 +47,7 @@ EXAMPLES = ROOT / "examples"
 CLI_TESTS = ROOT / "test-programs" / "cli"
 CLI_NOT_INPUTS = {"args.txt", "expected.txt", "README.md"}
 FILES = ("exit", "out.c", "stdout", "stderr", "error.html", "files")
-# Generated names: a fixed prefix or a suffix, then the counter's value.
+# Generated names: a fixed prefix or a suffix, then the number.
 GENERATED = re.compile(r"\b(?:(decl_|mono_|meth_|_t|tmp)|([A-Za-z_][A-Za-z0-9_]*?_tmp_ref))(\d+)\b")
 
 
