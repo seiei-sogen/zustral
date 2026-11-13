@@ -73,6 +73,7 @@ type t =
   | TypeclassParamIsRegion of identifier
   | TypesAreNotRegions of { name: identifier; declaration: declaration_kind }
   | RegionUsedAsType of identifier
+  | TypeUniverseWithoutParameters of identifier
   | RegionParameterUsedAsType of identifier
   | UnknownTypeclass of identifier
   | TyparamNotInSignature of type_parameter
@@ -273,6 +274,18 @@ let render (error: t): err_text =
        Text " universe, and regions are not types.";
      ]
      @ use_another_universe
+  | TypeUniverseWithoutParameters name ->
+     [
+       Text "The type ";
+       Code (ident_string name);
+       Text " is declared in the ";
+       Code "Type";
+       Text " universe, but it has no type parameters. A type in that universe takes its universe from its type arguments. Declare it in the ";
+       Code "Free";
+       Text " or the ";
+       Code "Linear";
+       Text " universe.";
+     ]
   | RegionParameterUsedAsType name ->
      [
        Text "The type parameter ";

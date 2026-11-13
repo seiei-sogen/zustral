@@ -123,8 +123,9 @@ let rec effective_universe (place: place) name (typarams: typarams) declared_uni
         RegionUsedAsType: a region is not a type.
 
      4. Finally, if the universe is Type:
-         4.1. First, assert that there is at least one type parameter. This should have been checked by the
-              compiler when declarations are processed.
+         4.1. First, there has to be at least one type parameter: the universe comes from the
+              arguments. A type declared without any is the declaration error
+              TypeUniverseWithoutParameters.
 
          4.2. If any argument's universe is Linear, the effective universe is Linear.
 
@@ -147,14 +148,16 @@ let rec effective_universe (place: place) name (typarams: typarams) declared_uni
         with TypesAreNotRegions (#141). *)
      declaration_error place (RegionUsedAsType (original_name name))
   | TypeUniverse ->
-     assert ((typarams_size typarams) > 0);
-     if any_arg_is_linear args then
+     if (typarams_size typarams) = 0 then
+       (* Nothing rejects the declaration of such a type, so the mistake is
+          reported where the type is used. *)
+       declaration_error place (TypeUniverseWithoutParameters (original_name name))
+     else if any_arg_is_linear args then
        LinearUniverse
+     else if any_arg_is_type args then
+       TypeUniverse
      else
-       if any_arg_is_type args then
-         TypeUniverse
-       else
-         FreeUniverse
+       FreeUniverse
 
 (** Given a list of types, check that all of them are either in the Free or
     Region universes. *)
