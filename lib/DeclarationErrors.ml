@@ -88,6 +88,20 @@ type t =
   | InstanceArgumentRegion
   | InstanceShadowsTypeclassParam of identifier
 
+(* The advice of the errors for a type declared in the Region universe, whether
+   the type is used before or after its declaration. *)
+let use_another_universe: err_text =
+  [
+    Break;
+    Text "Consider using one of ";
+    Code "Type";
+    Text ", ";
+    Code "Linear";
+    Text ", or ";
+    Code "Free";
+    Text " instead.";
+  ]
+
 let render (error: t): err_text =
   match error with
   | ForeignInSafeModule ->
@@ -254,29 +268,17 @@ let render (error: t): err_text =
        Text " was declared to belong to the ";
        Code "Region";
        Text " universe, but regions are distinct from types.";
-       Break;
-       Text "Consider using one of ";
-       Code "Type";
-       Text ", ";
-       Code "Linear";
-       Text ", or ";
-       Code "Free";
-       Text " instead.";
      ]
+     @ use_another_universe
   | RegionUsedAsType name ->
      [
        Text "The name ";
        Code (ident_string name);
        Text " is used as a type, but it is declared in the ";
        Code "Region";
-       Text " universe, and regions are not types. Declare it in the ";
-       Code "Free";
-       Text ", ";
-       Code "Linear";
-       Text " or ";
-       Code "Type";
-       Text " universe."
+       Text " universe, and regions are not types.";
      ]
+     @ use_another_universe
   | RegionParameterUsedAsType name ->
      [
        Text "The type parameter ";
