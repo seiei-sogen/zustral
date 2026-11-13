@@ -42,7 +42,6 @@ lib/TypeCheckExpr.ml	Stages.Tast.texpr	4
 lib/TypeCheckExpr.ml	Type.ty	34
 lib/TypeCheckExpr.ml	Type.type_var	2
 lib/TypeClasses.ml	EnvTypes.decl	2
-lib/TypeClasses.ml	Type.ty	28
 lib/TypeMatch.ml	EnvTypes.decl	4
 lib/TypeMatch.ml	Stages.Tast.texpr	6
 lib/TypingPass.ml	Common.borrow_stmt_kind	2

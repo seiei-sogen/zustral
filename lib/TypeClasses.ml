@@ -33,7 +33,9 @@ let check_instance_argument_has_right_shape (typarams: typarams) (arg: ty): unit
     match ty with
     | TyVar tv ->
        tv
-    | _ ->
+    | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+    | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _
+    | MonoTy _ ->
        declaration_error (InstanceArgumentNotATyvar { ty; universe = type_universe ty })
   and all_distinct (tyvars: type_var list): unit =
     let names: identifier list = List.map (fun (TypeVariable (name, _, _, _)) -> name) tyvars in
@@ -100,64 +102,93 @@ let overlapping_instances (a: ty) (b: ty): bool =
   | Unit ->
      (match b with
       | Unit -> true
-      | _ -> false)
+      | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+      | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ | MonoTy _ -> false)
   | Boolean ->
      (match b with
       | Boolean -> true
-      | _ -> false)
+      | Unit | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+      | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ | MonoTy _ -> false)
   | Integer (s, w) ->
      (match b with
       | Integer (s', w') ->
          (equal_signedness s s')
          && (equal_integer_width w w')
-      | _ ->
+      | Unit | Boolean | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+      | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ | MonoTy _ ->
          false)
   | SingleFloat ->
      (match b with
       | SingleFloat -> true
-      | _ -> false)
+      | Unit | Boolean | Integer _ | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
+      | MonoTy _ -> false)
   | DoubleFloat ->
      (match b with
       | DoubleFloat -> true
-      | _ -> false)
+      | Unit | Boolean | Integer _ | SingleFloat | NamedType _ | RegionTy _ | ReadRef _
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
+      | MonoTy _ -> false)
   | NamedType (name, _, _) ->
      (match b with
       | NamedType (name', _, _) ->
          equal_qident name name'
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
+      | MonoTy _ ->
          false)
   | RegionTy _ ->
      generic_error InstanceOverlapTypeNotAllowed
   | ReadRef _ ->
      (match b with
       | ReadRef _ -> true
-      | _ -> false)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ | MonoTy _ -> false)
   | WriteRef _ ->
      (match b with
       | WriteRef _ -> true
-      | _ -> false)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ | MonoTy _ -> false)
   | Span _ ->
      (match b with
       | Span _ -> true
-      | _ -> false)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | SpanMut _ | TyVar _ | Address _
+      | Pointer _ | FnPtr _ | MonoTy _ -> false)
   | SpanMut _ ->
      (match b with
       | SpanMut _ -> true
-      | _ -> false)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ | MonoTy _ -> false)
   | TyVar _ ->
      generic_error InstanceOverlapTypeNotAllowed
   | Address _ ->
      (match b with
       | Address _ -> true
-      | _ -> false)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Pointer _
+      | FnPtr _ | MonoTy _ -> false)
   | Pointer _ ->
      (match b with
       | Pointer _ -> true
-      | _ -> true)
+      (* Issue #122: a Pointer instance overlaps an instance for any other
+         type. These should be false; they stay true until the issue is fixed
+         (pinned by 037-typeclass-and-environment-paths/013). *)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
+      | FnPtr _ | MonoTy _ -> true)
   | FnPtr _ ->
      (match b with
       | FnPtr _ -> true
-      | _ -> false)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
+      | Pointer _ | MonoTy _ -> false)
   | MonoTy _ ->
      generic_error InstanceOverlapTypeNotAllowed
 
