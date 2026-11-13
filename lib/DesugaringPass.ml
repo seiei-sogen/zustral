@@ -9,12 +9,12 @@ open Stages
 module C = Combined
 module SC = SmallCombined
 
-let te (expr: Ast.aexpr): AstDB.aexpr =
-  DesugarBorrows.transform_expr (DesugarPaths.transform_expr (LiftControlPass.transform expr))
+let te (supply: Supply.t) (expr: Ast.aexpr): AstDB.aexpr =
+  DesugarBorrows.transform_expr supply (DesugarPaths.transform_expr (LiftControlPass.transform expr))
 
 let ts (supply: Supply.t) (stmt: Ast.astmt): AstDB.astmt * Supply.t =
   let (stmt, supply) = LiftControlPass.lift supply stmt in
-  (DesugarBorrows.transform_stmt (DesugarPaths.transform_stmt stmt), supply)
+  DesugarBorrows.transform_stmt supply (DesugarPaths.transform_stmt stmt)
 
 let copy_combined_method_def (supply: Supply.t) (C.CMethodDef (id, tp, qp, qt, ds, ast)) =
   let (ast, supply) = ts supply ast in
@@ -22,7 +22,7 @@ let copy_combined_method_def (supply: Supply.t) (C.CMethodDef (id, tp, qp, qt, d
 
 let desugar_decl (supply: Supply.t) (decl: C.combined_definition): SC.combined_definition * Supply.t =
   match decl with
-  | C.CConstant (s, v, id, qt, ae, ds) -> (SC.CConstant (s, v, id, qt, te ae, ds), supply)
+  | C.CConstant (s, v, id, qt, ae, ds) -> (SC.CConstant (s, v, id, qt, te supply ae, ds), supply)
   | C.CRecord (s, tv, id, tp, u, ql, ds) -> (SC.CRecord (s, tv, id, tp, u, ql, ds), supply)
   | C.CUnion (s, tv, id, tp, u, qc, ds) -> (SC.CUnion (s, tv, id, tp, u, qc, ds), supply)
   | C.CFunction (s, v, id, tp, qp, qt, ast, ds, pl) ->

@@ -11,6 +11,8 @@ type t = {
     ins_meth_ids: int;
     mono_ids: int;
     temporaries: int;
+    borrow_renames: int;
+    borrow_regions: int;
   }
 
 (* Where a kind starts is visible in the generated C and in messages, like the
@@ -21,6 +23,8 @@ let initial: t = {
     ins_meth_ids = 1;
     mono_ids = 1;
     temporaries = 0;
+    borrow_renames = 0;
+    borrow_regions = 0;
   }
 
 let next_mod_id (supply: t): int * t =
@@ -37,6 +41,12 @@ let next_mono_id (supply: t): int * t =
 
 let next_temporary (supply: t): int * t =
   (supply.temporaries, { supply with temporaries = supply.temporaries + 1 })
+
+let next_borrow_rename (supply: t): int * t =
+  (supply.borrow_renames, { supply with borrow_renames = supply.borrow_renames + 1 })
+
+let next_borrow_region (supply: t): int * t =
+  (supply.borrow_regions, { supply with borrow_regions = supply.borrow_regions + 1 })
 
 let rec map (f: t -> 'a -> 'b * t) (supply: t) (list: 'a list): 'b list * t =
   match list with

@@ -35,6 +35,13 @@ val next_mono_id : t -> int * t
     statement ([_t<n>]). *)
 val next_temporary : t -> int * t
 
+(** For the reference an anonymous borrow is given as a name
+    ([<variable>_tmp_ref<n>]). *)
+val next_borrow_rename : t -> int * t
+
+(** For the region of an anonymous borrow ([_tmp_region_<n>]). *)
+val next_borrow_region : t -> int * t
+
 (** Apply a function that takes numbers to the elements of a list, from the
     first to the last, handing the supply on. *)
 val map : (t -> 'a -> 'b * t) -> t -> 'a list -> 'b list * t
