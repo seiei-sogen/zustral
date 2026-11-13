@@ -35,6 +35,20 @@ type ins_meth_id = InsMethId of int
 type mono_id = MonoId of int
 [@@deriving (eq, show)]
 
+(* As with the kinds of declaration ID: one sequence, types that differ only
+   outside this module. *)
+type record_mono_id = mono_id
+[@@deriving eq]
+
+type union_mono_id = mono_id
+[@@deriving eq]
+
+type function_mono_id = mono_id
+[@@deriving eq]
+
+type method_mono_id = mono_id
+[@@deriving eq]
+
 (* ID utilities *)
 
 let fresh_mod_id (supply: Supply.t): mod_id * Supply.t =
@@ -67,6 +81,30 @@ let fresh_ins_meth_id (supply: Supply.t): ins_meth_id * Supply.t =
 let fresh_mono_id (supply: Supply.t): mono_id * Supply.t =
   let (number, supply) = Supply.next_mono_id supply in
   (MonoId number, supply)
+
+let fresh_record_mono_id: Supply.t -> record_mono_id * Supply.t =
+  fresh_mono_id
+
+let fresh_union_mono_id: Supply.t -> union_mono_id * Supply.t =
+  fresh_mono_id
+
+let fresh_function_mono_id: Supply.t -> function_mono_id * Supply.t =
+  fresh_mono_id
+
+let fresh_method_mono_id: Supply.t -> method_mono_id * Supply.t =
+  fresh_mono_id
+
+let mono_id_of_record (id: record_mono_id): mono_id =
+  id
+
+let mono_id_of_union (id: union_mono_id): mono_id =
+  id
+
+let mono_id_of_function (id: function_mono_id): mono_id =
+  id
+
+let mono_id_of_method (id: method_mono_id): mono_id =
+  id
 
 let compare_instance_id (DeclId a: instance_id) (DeclId b: instance_id): int =
   compare a b

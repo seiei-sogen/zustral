@@ -48,10 +48,10 @@ let empty_env: env =
    place that reports a miss.
 
    An ID is made only when something is registered in an environment, and what
-   is registered stays. One function takes something out, `pop_monomorph`, and
-   its callers put the monomorph back, with its definition, before they
-   return. So when a lookup by ID misses, the ID was made by a later
-   environment than the one asked, which is a bug in the compiler. *)
+   is registered stays: `define_monomorph` replaces a monomorph by the same
+   monomorph with its definition. So when a lookup by ID misses, the ID was
+   made by a later environment than the one asked, which is a bug in the
+   compiler. *)
 let registered (place: place) (what: unit -> string) (found: 'a option): 'a =
   match found with
   | Some thing ->
@@ -369,40 +369,40 @@ let get_instance_method_from_instance_id_and_method_name (env: env) (instance_id
   in
   List.find_opt pred methods
 
-let add_record_monomorph (env: env) (type_id: record_id) (tyargs: mono_type_bindings): (env * mono_id) =
+let add_record_monomorph (env: env) (type_id: record_id) (tyargs: mono_type_bindings): (env * record_mono_id) =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
-  let (id, supply) = fresh_mono_id supply in
+  let (id, supply) = fresh_record_mono_id supply in
   let mono = MonoRecordDefinition { id; type_id; tyargs; slots = None } in
   let env = Env { mods; methods; decls; monos = mono :: monos; exports; supply } in
   (env, id)
 
-let add_union_monomorph (env: env) (type_id: union_id) (tyargs: mono_type_bindings): (env * mono_id) =
+let add_union_monomorph (env: env) (type_id: union_id) (tyargs: mono_type_bindings): (env * union_mono_id) =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
-  let (id, supply) = fresh_mono_id supply in
+  let (id, supply) = fresh_union_mono_id supply in
   let mono = MonoUnionDefinition { id; type_id; tyargs; cases = None } in
   let env = Env { mods; methods; decls; monos = mono :: monos; exports; supply } in
   (env, id)
 
-let add_function_monomorph (env: env) (function_id: function_id) (tyargs: mono_type_bindings): (env * mono_id) =
+let add_function_monomorph (env: env) (function_id: function_id) (tyargs: mono_type_bindings): (env * function_mono_id) =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
-  let (id, supply) = fresh_mono_id supply in
+  let (id, supply) = fresh_function_mono_id supply in
   let mono = MonoFunction { id; function_id; tyargs; body = None } in
   let env = Env { mods; methods; decls; monos = mono :: monos; exports; supply } in
   (env, id)
 
-let add_instance_method_monomorph (env: env) (method_id: ins_meth_id) (tyargs: mono_type_bindings): (env * mono_id) =
+let add_instance_method_monomorph (env: env) (method_id: ins_meth_id) (tyargs: mono_type_bindings): (env * method_mono_id) =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
-  let (id, supply) = fresh_mono_id supply in
+  let (id, supply) = fresh_method_mono_id supply in
   let mono = MonoInstanceMethod { id; method_id; tyargs; body = None } in
   let env = Env { mods; methods; decls; monos = mono :: monos; exports; supply } in
   (env, id)
 
 let monomorph_id (mono: monomorph): mono_id =
   match mono with
-  | MonoRecordDefinition { id; _ } -> id
-  | MonoUnionDefinition { id; _ } -> id
-  | MonoFunction { id; _ } -> id
-  | MonoInstanceMethod { id; _ } -> id
+  | MonoRecordDefinition { id; _ } -> mono_id_of_record id
+  | MonoUnionDefinition { id; _ } -> mono_id_of_union id
+  | MonoFunction { id; _ } -> mono_id_of_function id
+  | MonoInstanceMethod { id; _ } -> mono_id_of_method id
 
 let get_monomorph (env: env) (id: mono_id): monomorph =
   let (Env { monos; _ }) = env in
@@ -413,81 +413,81 @@ let get_monomorph (env: env) (id: mono_id): monomorph =
    type arguments. A key is not an ID. It can name a monomorph that no pass has
    registered yet, so these lookups return an option. `add_or_get_*` register
    the monomorph the first time its key is asked for. *)
-let get_record_monomorph (env: env) (record_id: record_id) (args: mono_type_bindings): mono_id option =
+let get_record_monomorph (env: env) (record_id: record_id) (args: mono_type_bindings): record_mono_id option =
   let (Env { monos; _ }) = env in
-  let pred (mono: monomorph): bool =
+  let pick (mono: monomorph): record_mono_id option =
     match mono with
-    | MonoRecordDefinition { type_id; tyargs; _ } ->
-      (equal_record_id type_id record_id)
-      && (equal_mono_bindings tyargs args)
+    | MonoRecordDefinition { id; type_id; tyargs; _ } ->
+      if (equal_record_id type_id record_id) && (equal_mono_bindings tyargs args) then
+        Some id
+      else
+        None
     | MonoUnionDefinition _ | MonoFunction _ | MonoInstanceMethod _ ->
-      false
+      None
   in
-  match List.find_opt pred monos with
-  | Some m -> Some (monomorph_id m)
-  | None -> None
+  List.find_map pick monos
 
-let get_union_monomorph (env: env) (union_id: union_id) (args: mono_type_bindings): mono_id option =
+let get_union_monomorph (env: env) (union_id: union_id) (args: mono_type_bindings): union_mono_id option =
   let (Env { monos; _ }) = env in
-  let pred (mono: monomorph): bool =
+  let pick (mono: monomorph): union_mono_id option =
     match mono with
-    | MonoUnionDefinition { type_id; tyargs; _ } ->
-      (equal_union_id type_id union_id)
-      && (equal_mono_bindings tyargs args)
+    | MonoUnionDefinition { id; type_id; tyargs; _ } ->
+      if (equal_union_id type_id union_id) && (equal_mono_bindings tyargs args) then
+        Some id
+      else
+        None
     | MonoRecordDefinition _ | MonoFunction _ | MonoInstanceMethod _ ->
-      false
+      None
   in
-  match List.find_opt pred monos with
-  | Some m -> Some (monomorph_id m)
-  | None -> None
+  List.find_map pick monos
 
-let add_or_get_record_monomorph (env: env) (record_id: record_id) (args: mono_type_bindings): (env * mono_id) =
+let add_or_get_record_monomorph (env: env) (record_id: record_id) (args: mono_type_bindings): (env * record_mono_id) =
   match get_record_monomorph env record_id args with
   | Some mono_id -> (env, mono_id)
   | None ->
     add_record_monomorph env record_id args
 
-let add_or_get_union_monomorph (env: env) (union_id: union_id) (args: mono_type_bindings): (env * mono_id) =
+let add_or_get_union_monomorph (env: env) (union_id: union_id) (args: mono_type_bindings): (env * union_mono_id) =
   match get_union_monomorph env union_id args with
   | Some mono_id -> (env, mono_id)
   | None ->
     add_union_monomorph env union_id args
 
-let find_function_monomorph (env: env) (decl_id: function_id) (args: mono_type_bindings): mono_id option =
+let find_function_monomorph (env: env) (decl_id: function_id) (args: mono_type_bindings): function_mono_id option =
   let (Env { monos; _ }) = env in
-  let pred (mono: monomorph): bool =
+  let pick (mono: monomorph): function_mono_id option =
     match mono with
-    | MonoFunction { function_id; tyargs; _ } ->
-      (equal_function_id function_id decl_id)
-      && (equal_mono_bindings tyargs args)
-    | _ ->
-      false
+    | MonoFunction { id; function_id; tyargs; _ } ->
+      if (equal_function_id function_id decl_id) && (equal_mono_bindings tyargs args) then
+        Some id
+      else
+        None
+    | MonoRecordDefinition _ | MonoUnionDefinition _ | MonoInstanceMethod _ ->
+      None
   in
-  match List.find_opt pred monos with
-  | Some m -> Some (monomorph_id m)
-  | None -> None
+  List.find_map pick monos
 
-let add_or_get_function_monomorph (env: env) (decl_id: function_id) (args: mono_type_bindings): (env * mono_id) =
+let add_or_get_function_monomorph (env: env) (decl_id: function_id) (args: mono_type_bindings): (env * function_mono_id) =
   match find_function_monomorph env decl_id args with
   | Some mono_id -> (env, mono_id)
   | None ->
     add_function_monomorph env decl_id args
 
-let find_instance_method_monomorph (env: env) (id: ins_meth_id) (args: mono_type_bindings): mono_id option =
+let find_instance_method_monomorph (env: env) (method_id: ins_meth_id) (args: mono_type_bindings): method_mono_id option =
   let (Env { monos; _ }) = env in
-  let pred (mono: monomorph): bool =
+  let pick (mono: monomorph): method_mono_id option =
     match mono with
-    | MonoInstanceMethod { method_id; tyargs; _ } ->
-      (equal_ins_meth_id method_id id)
-      && (equal_mono_bindings tyargs args)
-    | _ ->
-      false
+    | MonoInstanceMethod { id; method_id = target; tyargs; _ } ->
+      if (equal_ins_meth_id target method_id) && (equal_mono_bindings tyargs args) then
+        Some id
+      else
+        None
+    | MonoRecordDefinition _ | MonoUnionDefinition _ | MonoFunction _ ->
+      None
   in
-  match List.find_opt pred monos with
-  | Some m -> Some (monomorph_id m)
-  | None -> None
+  List.find_map pick monos
 
-let add_or_get_instance_method_monomorph (env: env) (method_id: ins_meth_id) (args: mono_type_bindings): (env * mono_id) =
+let add_or_get_instance_method_monomorph (env: env) (method_id: ins_meth_id) (args: mono_type_bindings): (env * method_mono_id) =
   match find_instance_method_monomorph env method_id args with
   | Some mono_id -> (env, mono_id)
   | None ->
@@ -511,62 +511,62 @@ let get_uninstantiated_monomorphs (env: env): monomorph list =
   in
   List.rev (List.filter pred monos)
 
-(** Find a monomorph by ID and return it, removing it from the
-   environment. *)
-let pop_monomorph (env: env) (id: mono_id): (env * monomorph) =
-  let mono: monomorph = get_monomorph env id in
+(* Give a monomorph its definition. `define` returns the defined monomorph for
+   the one with the ID, and None for every other. The defined monomorph goes to
+   the front of the list: the order of the list decides the order in which
+   later monomorphs are instantiated, and so their IDs. *)
+let define_monomorph (env: env) (id: mono_id) (define: monomorph -> monomorph option): env =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
+  let defined: monomorph =
+    registered NoSpan (fun () -> "monomorph with ID `" ^ (show_mono_id id) ^ "`")
+      (List.find_map define monos)
+  in
   let other_monos = List.filter (fun m -> not (equal_mono_id (monomorph_id m) id)) monos in
-  let env = Env { mods; methods; decls; monos = other_monos; exports; supply } in
-  (env, mono)
+  Env { mods; methods; decls; monos = defined :: other_monos; exports; supply }
 
-let store_record_monomorph_definition (env: env) (id: mono_id) (new_slots: mono_slot list): env =
-  let (env, mono) = pop_monomorph env id in
-  match mono with
-  | MonoRecordDefinition { id; type_id; tyargs; slots; } ->
-    let _ = slots in
-    let new_mono = MonoRecordDefinition { id; type_id; tyargs; slots = Some new_slots; } in
-    let (Env { mods; methods; decls; monos; exports; supply }) = env in
-    let env = Env { mods; methods; decls; monos = new_mono :: monos; exports; supply } in
-    env
-  | _ ->
-    internal_err NoSpan ("Couldn't find monomorph record definition with ID: " ^ (show_mono_id id))
+let store_record_monomorph_definition (env: env) (id: record_mono_id) (new_slots: mono_slot list): env =
+  define_monomorph env (mono_id_of_record id) (fun (mono: monomorph) ->
+      match mono with
+      | MonoRecordDefinition { id = target; type_id; tyargs; _ } ->
+        if equal_record_mono_id target id then
+          Some (MonoRecordDefinition { id; type_id; tyargs; slots = Some new_slots; })
+        else
+          None
+      | MonoUnionDefinition _ | MonoFunction _ | MonoInstanceMethod _ ->
+        None)
 
-let store_union_monomorph_definition (env: env) (id: mono_id) (new_cases: mono_case list): env =
-  let (env, mono) = pop_monomorph env id in
-  match mono with
-  | MonoUnionDefinition { id; type_id; tyargs; cases; } ->
-    let _ = cases in
-    let new_mono = MonoUnionDefinition { id; type_id; tyargs; cases = Some new_cases; } in
-    let (Env { mods; methods; decls; monos; exports; supply }) = env in
-    let env = Env { mods; methods; decls; monos = new_mono :: monos; exports; supply } in
-    env
-  | _ ->
-    internal_err NoSpan ("Couldn't find monomorph union definition with ID: " ^ (show_mono_id id))
+let store_union_monomorph_definition (env: env) (id: union_mono_id) (new_cases: mono_case list): env =
+  define_monomorph env (mono_id_of_union id) (fun (mono: monomorph) ->
+      match mono with
+      | MonoUnionDefinition { id = target; type_id; tyargs; _ } ->
+        if equal_union_mono_id target id then
+          Some (MonoUnionDefinition { id; type_id; tyargs; cases = Some new_cases; })
+        else
+          None
+      | MonoRecordDefinition _ | MonoFunction _ | MonoInstanceMethod _ ->
+        None)
 
-let store_function_monomorph_definition (env: env) (id: mono_id) (new_body: mstmt): env =
-  let (env, mono) = pop_monomorph env id in
-  match mono with
-  | MonoFunction { id; function_id; tyargs; body; } ->
-    let _ = body in
-    let new_mono = MonoFunction { id; function_id; tyargs; body = Some new_body; } in
-    let (Env { mods; methods; decls; monos; exports; supply }) = env in
-    let env = Env { mods; methods; decls; monos = new_mono :: monos; exports; supply } in
-    env
-  | _ ->
-    internal_err NoSpan ("Couldn't find monomorph function definition with ID: " ^ (show_mono_id id))
+let store_function_monomorph_definition (env: env) (id: function_mono_id) (new_body: mstmt): env =
+  define_monomorph env (mono_id_of_function id) (fun (mono: monomorph) ->
+      match mono with
+      | MonoFunction { id = target; function_id; tyargs; _ } ->
+        if equal_function_mono_id target id then
+          Some (MonoFunction { id; function_id; tyargs; body = Some new_body; })
+        else
+          None
+      | MonoRecordDefinition _ | MonoUnionDefinition _ | MonoInstanceMethod _ ->
+        None)
 
-let store_instance_method_monomorph_definition (env: env) (id: mono_id) (new_body: mstmt): env =
-  let (env, mono) = pop_monomorph env id in
-  match mono with
-  | MonoInstanceMethod { id; method_id; tyargs; body; } ->
-    let _ = body in
-    let new_mono = MonoInstanceMethod { id; method_id; tyargs; body = Some new_body; } in
-    let (Env { mods; methods; decls; monos; exports; supply }) = env in
-    let env = Env { mods; methods; decls; monos = new_mono :: monos; exports; supply } in
-    env
-  | _ ->
-    internal_err NoSpan ("Couldn't find monomorph instance method definition with ID: " ^ (show_mono_id id))
+let store_instance_method_monomorph_definition (env: env) (id: method_mono_id) (new_body: mstmt): env =
+  define_monomorph env (mono_id_of_method id) (fun (mono: monomorph) ->
+      match mono with
+      | MonoInstanceMethod { id = target; method_id; tyargs; _ } ->
+        if equal_method_mono_id target id then
+          Some (MonoInstanceMethod { id; method_id; tyargs; body = Some new_body; })
+        else
+          None
+      | MonoRecordDefinition _ | MonoUnionDefinition _ | MonoFunction _ ->
+        None)
 
 let add_exported_function (env: env) (id: function_id) (export_name: string): env =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in

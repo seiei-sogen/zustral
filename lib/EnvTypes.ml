@@ -178,28 +178,28 @@ type callable =
 (** Represents a monomorph. *)
 type monomorph =
   | MonoRecordDefinition of {
-      id: mono_id;
+      id: record_mono_id;
       type_id: record_id;
       tyargs: mono_type_bindings;
       slots: (mono_slot list) option;
       (** The list of slots, if instantiated. *)
     }
   | MonoUnionDefinition of {
-      id: mono_id;
+      id: union_mono_id;
       type_id: union_id;
       tyargs: mono_type_bindings;
       cases: (mono_case list) option;
       (** The list of cases, if instantiated. *)
     }
   | MonoFunction of {
-      id: mono_id;
+      id: function_mono_id;
       function_id: function_id;
       tyargs: mono_type_bindings;
       body: mstmt option;
       (** The function body, if instantiated. *)
     }
   | MonoInstanceMethod of {
-      id: mono_id;
+      id: method_mono_id;
       method_id: ins_meth_id;
       tyargs: mono_type_bindings;
       body: mstmt option;

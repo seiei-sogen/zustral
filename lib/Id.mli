@@ -61,6 +61,30 @@ type union_id
 type instance_id
 [@@deriving (eq, show)]
 
+(** {1 Monomorph IDs that say what kind of monomorph they stand for}
+
+    Each of these takes the next number of the monomorphs, so the four kinds
+    share one sequence and the names in the generated C do not depend on the
+    kind. A type of a monomorph (a record or a union) and the C code name a
+    monomorph by its {!mono_id}; the functions below give it. *)
+
+type record_mono_id
+[@@deriving eq]
+
+type union_mono_id
+[@@deriving eq]
+
+type function_mono_id
+[@@deriving eq]
+
+type method_mono_id
+[@@deriving eq]
+
+val mono_id_of_record : record_mono_id -> mono_id
+val mono_id_of_union : union_mono_id -> mono_id
+val mono_id_of_function : function_mono_id -> mono_id
+val mono_id_of_method : method_mono_id -> mono_id
+
 (** The next ID of each kind, and the supply to take the one after it from. *)
 
 val fresh_mod_id : Supply.t -> mod_id * Supply.t
@@ -71,7 +95,10 @@ val fresh_record_id : Supply.t -> record_id * Supply.t
 val fresh_union_id : Supply.t -> union_id * Supply.t
 val fresh_instance_id : Supply.t -> instance_id * Supply.t
 val fresh_ins_meth_id : Supply.t -> ins_meth_id * Supply.t
-val fresh_mono_id : Supply.t -> mono_id * Supply.t
+val fresh_record_mono_id : Supply.t -> record_mono_id * Supply.t
+val fresh_union_mono_id : Supply.t -> union_mono_id * Supply.t
+val fresh_function_mono_id : Supply.t -> function_mono_id * Supply.t
+val fresh_method_mono_id : Supply.t -> method_mono_id * Supply.t
 
 (** The order IDs were made in. A set of IDs keeps its elements in it. *)
 

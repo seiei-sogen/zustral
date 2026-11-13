@@ -120,7 +120,7 @@ let get_root_capability_monomorph (env: env): mono_id =
   | Some (Record { id; _ }) ->
      (match get_record_monomorph env id empty_mono_bindings with
       | Some id ->
-         id
+         mono_id_of_record id
       | None ->
          (* No type rules this out. The pass that monomorphized the signature
             of the entrypoint registered the monomorph under its key, and did
@@ -139,7 +139,7 @@ let get_exit_code_monomorph (env: env): mono_id =
   | Some (Union { id; _ }) ->
      (match get_union_monomorph env id empty_mono_bindings with
       | Some id ->
-         id
+         mono_id_of_union id
       | None ->
          (* As for RootCapability: registered by key, by an earlier pass. *)
          internal_err NoSpan "No monomorph of ExitCode.")

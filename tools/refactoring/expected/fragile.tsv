@@ -17,7 +17,6 @@ lib/CstUtil.ml	Cst.concrete_decl	2
 lib/CstUtil.ml	Cst.concrete_def	2
 lib/Entrypoint.ml	EnvTypes.decl	6
 lib/Env.ml	EnvTypes.decl	6
-lib/Env.ml	EnvTypes.monomorph	12
 lib/ExtractionPass.ml	Common.pragma	4
 lib/ExtractionPass.ml	EnvTypes.decl	4
 lib/LinearityCheck.ml	LinearityCheck.var_state	2
