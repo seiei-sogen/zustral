@@ -661,11 +661,11 @@ and instantiate_monomorph (env: env) (mono: monomorph): (env * mdecl) =
 
 
 and get_function_definition (env: env) (id: function_id): (typarams * value_parameter list * ty * tstmt) =
-  let { name; typarams; value_params; rt; body; _ }: function_decl = get_function env id in
-  match body with
-  | Some body ->
+  let { name; typarams; value_params; rt; impl; _ }: function_decl = get_function env id in
+  match impl with
+  | Body body ->
      (typarams, value_params, rt, body)
-  | None ->
+  | BodyNotAttached | Foreign _ ->
      internal_err ("function `" ^ (ident_string name) ^ "` has no body")
 
 and get_method_definition (env: env) (id: ins_meth_id): (typarams * value_parameter list * ty * tstmt) =

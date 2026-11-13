@@ -48,8 +48,7 @@ let ctx: TypeCheckExpr.expr_ctx =
         typarams = TypeParameters.typarams_from_list [t];
         value_params = [];
         rt = TyVar (TypeParameter.typaram_to_tyvar t);
-        external_name = None;
-        body = None
+        impl = BodyNotAttached
       })
   in
   let lexenv: LexEnv.lexenv =

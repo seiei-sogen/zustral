@@ -312,8 +312,9 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
              typarams = typarams;
              value_params = value_params;
              rt = rt;
-             external_name = external_name;
-             body = None
+             impl = (match external_name with
+                     | Some s -> Foreign s
+                     | None -> BodyNotAttached)
            }
          in
          let (env, decl_id) = register env (NewFunction fn_input) in

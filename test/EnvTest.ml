@@ -38,8 +38,7 @@ let test_id_from_a_later_environment _ =
         typarams = Austral_core.TypeParameters.empty_typarams;
         value_params = [];
         rt = Austral_core.Type.Unit;
-        external_name = None;
-        body = None
+        impl = BodyNotAttached
       })
   in
   assert_bool "the environment that made the ID has the function"
@@ -82,8 +81,7 @@ let test_monomorph_key_not_registered _ =
         typarams = Austral_core.TypeParameters.empty_typarams;
         value_params = [];
         rt = Austral_core.Type.NamedType (make_qident (pervasive, exit_code, exit_code), [], Austral_core.Type.FreeUniverse);
-        external_name = None;
-        body = None
+        impl = BodyNotAttached
       })
   in
   assert_equal

@@ -65,6 +65,15 @@ type union_case_decl = {
     slots: typed_slot list;
   }
 
+(** What a function has besides its signature. *)
+type function_impl =
+  | BodyNotAttached
+  (** A function written in Austral, until its body is stored after type
+      checking ({!Env.store_function_body}). *)
+  | Body of tstmt
+  | Foreign of string
+  (** A foreign function: the name of the underlying function it calls. *)
+
 (** A function, as the environment holds it. *)
 type function_decl = {
     id: function_id;
@@ -75,10 +84,7 @@ type function_decl = {
     typarams: typarams;
     value_params: value_parameter list;
     rt: ty;
-    external_name: string option;
-    (** If this function is foreign, this is the name of the underlying function
-        that will be called. *)
-    body: tstmt option;
+    impl: function_impl;
   }
 
 (** A typeclass, as the environment holds it. *)
@@ -243,8 +249,7 @@ type function_input = {
     typarams: typarams;
     value_params: value_parameter list;
     rt: ty;
-    external_name: string option;
-    body: tstmt option;
+    impl: function_impl;
   }
 
 type type_class_input = {

@@ -150,9 +150,9 @@ let register (type id) (env: env) (registration: id registration): (env * id) =
      (* Not checked (#86): a case can take the name of another case, or of any
         other declaration of the module. *)
      add_decl fresh_decl_id (fun id -> UnionCase { id; vis; mod_id; union_id; name; docstring; slots })
-  | NewFunction { mod_id; vis; name; docstring; typarams; value_params; rt; external_name; body } ->
+  | NewFunction { mod_id; vis; name; docstring; typarams; value_params; rt; impl } ->
      name_must_be_free mod_id name;
-     add_decl fresh_function_id (fun id -> Function { id; mod_id; vis; name; docstring; typarams; value_params; rt; external_name; body })
+     add_decl fresh_function_id (fun id -> Function { id; mod_id; vis; name; docstring; typarams; value_params; rt; impl })
   | NewTypeClass { mod_id; vis; name; docstring; param } ->
      name_must_be_free mod_id name;
      add_decl fresh_typeclass_id (fun id -> TypeClass { id; mod_id; vis; name; docstring; param })
@@ -328,11 +328,13 @@ let store_function_body (env: env) (fn_id: function_id) (body: tstmt): env =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
   let fn: function_decl = get_function env fn_id in
   let new_decl: decl =
-    match fn.body with
-    | Some _ ->
+    match fn.impl with
+    (* A foreign function is typed as TForeignFunction, which has no body to
+       store. *)
+    | Body _ | Foreign _ ->
        internal_err ("function `" ^ (ident_string fn.name) ^ "` already has a body")
-    | None ->
-       Function { fn with body = Some body }
+    | BodyNotAttached ->
+       Function { fn with impl = Body body }
   in
   let is_existing_one (d: decl): bool =
     match function_of d with
