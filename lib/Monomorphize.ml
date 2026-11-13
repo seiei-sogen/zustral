@@ -97,9 +97,10 @@ let rec monomorphize_ty (env: env) (ty: stripped_ty): (mono_ty * env) =
              (MonoNamedType (mono_id_of_union mono_id), env)
           | Constant _ | UnionCase _ | Function _ | TypeClass _ | TypeClassMethod _
           | Instance _ ->
-             (* A program reaches this: a union case declared after a record or
-                union of the same name is the one a lookup by name finds (#86). *)
-             internal_err NoSpan ("named type `" ^ (qident_debug_name name) ^ "`points to something that isn't a type"))
+             (* A union case declared after a record or union of the same name
+                is registered without the check that rejects a second
+                declaration of a name (#86), and a lookup by name finds it. *)
+             declaration_error NoSpan (DeclarationAlreadyExists { name = original_name name; module_name = source_module_name name }))
       | None ->
          (* No type rules this out. A named type holds the name of its
             declaration, not an ID: the type parser resolves a type of the

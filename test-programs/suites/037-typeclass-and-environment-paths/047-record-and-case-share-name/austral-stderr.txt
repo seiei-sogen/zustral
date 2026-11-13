@@ -1,21 +1,12 @@
 {
   "module": "Test",
-  "kind": "Internal Error",
+  "kind": "Declaration Error",
   "text": [
-    { "type": "text", "content": "Internal compiler error: " },
-    {
-      "type": "text",
-      "content": "named type `Test::Circle`points to something that isn't a type"
-    },
-    { "type": "break" },
-    {
-      "type": "text",
-      "content": "This is a bug in the compiler, please open an issue here: "
-    },
-    {
-      "type": "code",
-      "content": "https://github.com/austral/austral/issues"
-    }
+    { "type": "text", "content": "A declaration with the name " },
+    { "type": "code", "content": "Circle" },
+    { "type": "text", "content": " already exists in the module " },
+    { "type": "code", "content": "Test" },
+    { "type": "text", "content": "." }
   ],
   "span": null,
   "context": null
