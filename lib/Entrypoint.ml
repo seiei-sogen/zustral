@@ -118,7 +118,7 @@ let get_root_capability_monomorph (env: env): mono_id =
   let sn: sident = make_sident mn n in
   match get_decl_by_name env sn with
   | Some (Record { id; _ }) ->
-     (match get_type_monomorph env id empty_mono_bindings with
+     (match get_record_monomorph env id empty_mono_bindings with
       | Some id ->
          id
       | None ->
@@ -135,7 +135,7 @@ let get_exit_code_monomorph (env: env): mono_id =
   let sn: sident = make_sident mn n in
   match get_decl_by_name env sn with
   | Some (Union { id; _ }) ->
-     (match get_type_monomorph env id empty_mono_bindings with
+     (match get_union_monomorph env id empty_mono_bindings with
       | Some id ->
          id
       | None ->

@@ -530,7 +530,7 @@ and augment_case (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span
       else
         type_error CaseNonExhaustive)
 
-and get_union_type_definition (importing_module: module_name) (env: env) (ty: ty): (ty * decl list) =
+and get_union_type_definition (importing_module: module_name) (env: env) (ty: ty): (ty * union_case_decl list) =
   let name: qident = (match ty with
                       | NamedType (n, _, _) ->
                          n
@@ -553,7 +553,7 @@ and get_union_type_definition (importing_module: module_name) (env: env) (ty: ty
   | _ ->
      type_error (CaseNonUnion ty)
 
-and group_cases_whens (cases: decl list) (whens: abstract_when list): (typed_case * abstract_when) list =
+and group_cases_whens (cases: union_case_decl list) (whens: abstract_when list): (typed_case * abstract_when) list =
   List.map (fun (TypedCase (n, s)) -> (TypedCase (n, s), List.find (fun (AbstractWhen (n', _, _)) -> n = n') whens))
     (List.map union_case_to_typed_case cases)
 

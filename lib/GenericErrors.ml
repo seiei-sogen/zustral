@@ -39,7 +39,6 @@ type t =
   | InvalidDeclInContext
   | BorrowExpressionNotAllowed
   | InvalidLvalue
-  | NoUnionWithId
   | BadWhitespaceEscape
   | SymbolImportedTwice
   | VariableAlreadyExists of identifier
@@ -163,10 +162,6 @@ let render (error: t): err_text =
   | InvalidLvalue ->
      [
        Text "Invalid lvalue."
-     ]
-  | NoUnionWithId ->
-     [
-       Text "No union with ID"
      ]
   | BadWhitespaceEscape ->
      [

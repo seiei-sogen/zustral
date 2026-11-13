@@ -22,4 +22,4 @@ val decl_name : decl -> identifier option
 (** Return whether a declaration is importable by a foreign module. *)
 val is_importable: decl -> bool
 
-val union_case_to_typed_case : decl -> typed_case
+val union_case_to_typed_case : union_case_decl -> typed_case

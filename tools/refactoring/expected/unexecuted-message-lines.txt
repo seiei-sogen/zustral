@@ -29,8 +29,6 @@ lib/GenericErrors.ml	| InvalidDeclInContext ->
 lib/GenericErrors.ml	Text "Invalid decl in this context"
 lib/GenericErrors.ml	| InvalidLvalue ->
 lib/GenericErrors.ml	Text "Invalid lvalue."
-lib/GenericErrors.ml	| NoUnionWithId ->
-lib/GenericErrors.ml	Text "No union with ID"
 lib/GenericErrors.ml	| SymbolImportedTwice ->
 lib/GenericErrors.ml	Text "Cannot add symbol to the import map twice."
 lib/GenericErrors.ml	| ParameterNotFound ->

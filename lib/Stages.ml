@@ -429,8 +429,8 @@ module Linked = struct
 
   and linked_definition =
     | LConstant of decl_id * vis * identifier * ty * aexpr * docstring
-    | LRecord of decl_id * type_vis * identifier * typarams * universe * typed_slot list * docstring
-    | LUnion of decl_id * type_vis * identifier * typarams * universe * linked_case list * docstring
+    | LRecord of record_id * type_vis * identifier * typarams * universe * typed_slot list * docstring
+    | LUnion of union_id * type_vis * identifier * typarams * universe * linked_case list * docstring
     | LFunction of function_id * vis * identifier * typarams * value_parameter list * ty * astmt * docstring * pragma list
     | LTypeclass of typeclass_id * vis * identifier * type_parameter * linked_method_decl list * docstring
     | LInstance of decl_id * vis * qident * typarams * ty * linked_method_def list * docstring
@@ -564,8 +564,8 @@ module Tast = struct
 
   type typed_decl =
     | TConstant of decl_id * vis * identifier * ty * texpr * docstring
-    | TRecord of decl_id * type_vis * identifier * typarams * universe * typed_slot list * docstring
-    | TUnion of decl_id * type_vis * identifier * typarams * universe * linked_case list * docstring
+    | TRecord of record_id * type_vis * identifier * typarams * universe * typed_slot list * docstring
+    | TUnion of union_id * type_vis * identifier * typarams * universe * linked_case list * docstring
     | TFunction of function_id * vis * identifier * typarams * value_parameter list * ty * tstmt * docstring
     | TForeignFunction of function_id * vis * identifier * value_parameter list * ty * string * docstring
     | TTypeClass of typeclass_id * vis * identifier * type_parameter * typed_method_decl list * docstring
@@ -593,9 +593,9 @@ module Mtast = struct
 
   and mdecl =
     | MConstant of decl_id * identifier * mono_ty * mexpr
-    | MRecord of decl_id * identifier * mono_slot list
+    | MRecord of record_id * identifier * mono_slot list
     | MRecordMonomorph of mono_id * mono_slot list
-    | MUnion of decl_id * identifier * mono_case list
+    | MUnion of union_id * identifier * mono_case list
     | MUnionMonomorph of mono_id * mono_case list
     | MFunction of function_id * identifier * mvalue_parameter list * mono_ty * mstmt
     | MFunctionMonomorph of mono_id * function_id * mvalue_parameter list * mono_ty * mstmt

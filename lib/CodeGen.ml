@@ -9,7 +9,6 @@ open Identifier
 open Type
 open EnvTypes
 open Env
-open EnvUtils
 open MonoType
 open MonoTypeBindings
 open Stages.Tast
@@ -488,28 +487,18 @@ let rec mono_desc (env: env) (id: mono_id): string =
   let mono = get_monomorph env id in
   match mono with
   | MonoRecordDefinition { type_id; tyargs; _ } ->
-     render_mono env type_id tyargs
+     (ident_string (get_record env type_id).name) ^ (tyargs_string tyargs)
   | MonoUnionDefinition { type_id; tyargs; _ } ->
-     render_mono env type_id tyargs
+     (ident_string (get_union env type_id).name) ^ (tyargs_string tyargs)
   | MonoFunction { function_id; tyargs; _ } ->
      (ident_string (get_function env function_id).name) ^ (tyargs_string tyargs)
   | MonoInstanceMethod _ ->
      ""
 
-and get_decl_name_or_die (env: env) (id: decl_id): string =
-  match decl_name (get_decl_by_id env id) with
-  | Some name ->
-     (ident_string name)
-  | None ->
-     internal_err "decl has no name"
-
 and tyargs_string (args: mono_type_bindings): string =
   "["
   ^ (String.concat ", " (List.map (fun (_, ty) -> show_mono_ty ty) (mono_bindings_as_list args)))
   ^ "]"
-
-and render_mono (env: env) (id: decl_id) (tyargs: mono_type_bindings): string =
-  (get_decl_name_or_die env id) ^ (tyargs_string tyargs)
 
 let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_decl list * Supply.t =
   match decl with

@@ -263,12 +263,9 @@ and augment_callable (ctx: expr_ctx) (name: qident) (callable: callable) (from_c
   | RecordConstructor (_, typarams, universe, slots) ->
      augment_record_constructor ctx name typarams universe slots from_context args
   | UnionConstructor { union_id; type_params; universe; case } ->
-     let type_name: qident = (match get_decl_by_id (ctx_env ctx) union_id with
-                              | Union { name; mod_id; _ } ->
+     let type_name: qident = (let { name; mod_id; _ }: union_decl = get_union (ctx_env ctx) union_id in
                                  (* TODO: constructing a fake qident *)
-                                 make_qident (module_name_from_id (ctx_env ctx) mod_id, name, name)
-                              | _ ->
-                                 internal_err ("no type name found for ID `" ^ (show_decl_id union_id) ^ "`"))
+                                 make_qident (module_name_from_id (ctx_env ctx) mod_id, name, name))
      in
      augment_union_constructor ctx type_name type_params universe case from_context args
   | MethodCallable { typeclass_id; value_parameters; return_type; _ } ->

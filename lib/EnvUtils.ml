@@ -9,13 +9,12 @@ open Common
 open Id
 open EnvTypes
 open Type
-open Error
 
 let decl_id (decl: decl): decl_id =
   match decl with
   | Constant { id; _ } -> id
-  | Record { id; _ } -> id
-  | Union { id; _ } -> id
+  | Record { id; _ } -> record_decl_id id
+  | Union { id; _ } -> union_decl_id id
   | UnionCase { id; _ } -> id
   | Function { id; _ } -> function_decl_id id
   | TypeClass { id; _ } -> typeclass_decl_id id
@@ -63,9 +62,5 @@ let is_importable (decl: decl): bool =
   | TypeClassMethod { vis; _ } -> importable_vis vis
   | Instance _ -> true
 
-let union_case_to_typed_case (decl: decl): typed_case =
-  match decl with
-  | UnionCase { name; slots; _ } ->
-     TypedCase (name, slots)
-  | _ ->
-     internal_err "Declaration is not a union case"
+let union_case_to_typed_case (case: union_case_decl): typed_case =
+  TypedCase (case.name, case.slots)

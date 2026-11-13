@@ -555,7 +555,7 @@ and instantiate_monomorph (env: env) (mono: monomorph): (env * mdecl) =
   | MonoRecordDefinition { id; type_id; tyargs; _ } ->
      ((* Find the record definition and extract the type parameters and the slot
          list. *)
-      let (typarams, slots) = get_record_definition env type_id in
+      let { typarams; slots; _ }: record_decl = get_record env type_id in
       (* Search/replace the type variables in the slot list with the type
          arguments from this monomorph. *)
       let slots: typed_slot list =
@@ -575,9 +575,9 @@ and instantiate_monomorph (env: env) (mono: monomorph): (env * mdecl) =
       (env, decl))
   | MonoUnionDefinition { id; type_id; tyargs; _ } ->
      (* Find the list of type parameters from the union definition. *)
-     let typarams = get_union_typarams env type_id in
+     let { typarams; _ }: union_decl = get_union env type_id in
      (* Find the list of cases from the env. *)
-     let cases: typed_case list = get_union_typed_cases env type_id in
+     let cases: typed_case list = List.map union_case_to_typed_case (get_union_cases env type_id) in
      (* Search/replace the type variables in the case list with the type
         arguments from this monomorph. *)
      let cases: typed_case list =
@@ -663,31 +663,6 @@ and instantiate_monomorph (env: env) (mono: monomorph): (env * mdecl) =
 
 (* Utils *)
 
-
-and get_record_definition (env: env) (id: decl_id): (typarams * typed_slot list) =
-  match get_decl_by_id env id with
-  | Record { typarams; slots; _ } ->
-     (typarams, slots)
-  | _ ->
-     internal_err ("couldn't get record definition for ID `" ^ (show_decl_id id) ^ "`.")
-
-and get_union_typarams (env: env) (id: decl_id): typarams =
-  match get_decl_by_id env id with
-  | Union { typarams; _ } ->
-     typarams
-  | _ ->
-     internal_err ("couldn't get union typeparams for ID `" ^ (show_decl_id id) ^ "`.")
-
-and get_union_typed_cases (env: env) (union_id: decl_id): typed_case list =
-  let cases: decl list = get_union_cases env union_id in
-  let mapper (decl: decl): typed_case =
-    match decl with
-    | UnionCase { name; slots; _ } ->
-       TypedCase (name, slots)
-    | _ ->
-       internal_err ("ID `" ^ (show_decl_id union_id) ^ "` is not a union")
-  in
-  List.map mapper cases
 
 and get_function_definition (env: env) (id: function_id): (typarams * value_parameter list * ty * tstmt) =
   let { name; typarams; value_params; rt; body; _ }: function_decl = get_function env id in

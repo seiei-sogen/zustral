@@ -45,12 +45,22 @@ type function_id
 type typeclass_id
 [@@deriving (eq, show)]
 
+(** The type of record IDs. *)
+type record_id
+[@@deriving (eq, show)]
+
+(** The type of union IDs. *)
+type union_id
+[@@deriving (eq, show)]
+
 (** The next ID of each kind, and the supply to take the one after it from. *)
 
 val fresh_mod_id : Supply.t -> mod_id * Supply.t
 val fresh_decl_id : Supply.t -> decl_id * Supply.t
 val fresh_function_id : Supply.t -> function_id * Supply.t
 val fresh_typeclass_id : Supply.t -> typeclass_id * Supply.t
+val fresh_record_id : Supply.t -> record_id * Supply.t
+val fresh_union_id : Supply.t -> union_id * Supply.t
 val fresh_ins_meth_id : Supply.t -> ins_meth_id * Supply.t
 val fresh_mono_id : Supply.t -> mono_id * Supply.t
 
@@ -63,6 +73,8 @@ val compare_decl_id : decl_id -> decl_id -> int
 
 val function_decl_id : function_id -> decl_id
 val typeclass_decl_id : typeclass_id -> decl_id
+val record_decl_id : record_id -> decl_id
+val union_decl_id : union_id -> decl_id
 
 (** The number of an ID. It is for the name that the generated C gives to what
     the ID identifies, and for nothing else. *)

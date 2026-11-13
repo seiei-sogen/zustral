@@ -143,10 +143,10 @@ let register (type id) (env: env) (registration: id registration): (env * id) =
      add_decl fresh_decl_id (fun id -> Constant { id; mod_id; vis; name; ty; docstring })
   | NewRecord { mod_id; vis; name; docstring; typarams; universe; slots } ->
      name_must_be_free mod_id name;
-     add_decl fresh_decl_id (fun id -> Record { id; mod_id; vis; name; docstring; typarams; universe; slots })
+     add_decl fresh_record_id (fun id -> Record { id; mod_id; vis; name; docstring; typarams; universe; slots })
   | NewUnion { mod_id; vis; name; docstring; typarams; universe } ->
      name_must_be_free mod_id name;
-     add_decl fresh_decl_id (fun id -> Union { id; mod_id; vis; name; docstring; typarams; universe })
+     add_decl fresh_union_id (fun id -> Union { id; mod_id; vis; name; docstring; typarams; universe })
   | NewUnionCase { mod_id; vis; union_id; name; docstring; slots } ->
      (* Not checked (#86): a case can take the name of another case, or of any
         other declaration of the module. *)
@@ -206,6 +206,33 @@ let get_typeclass (env: env) (id: typeclass_id): typeclass_decl =
   registered (fun () -> "typeclass with ID `" ^ (show_typeclass_id id) ^ "`")
     (List.find_opt has_id (List.filter_map typeclass_of decls))
 
+let record_of (decl: decl): record_decl option =
+  match decl with
+  | Record record -> Some record
+  | Constant _ | Union _ | UnionCase _ | Function _ | TypeClass _ | TypeClassMethod _ | Instance _ -> None
+
+let get_record (env: env) (id: record_id): record_decl =
+  let (Env { decls; _ }) = env in
+  let has_id (record: record_decl): bool = equal_record_id record.id id in
+  registered (fun () -> "record with ID `" ^ (show_record_id id) ^ "`")
+    (List.find_opt has_id (List.filter_map record_of decls))
+
+let union_of (decl: decl): union_decl option =
+  match decl with
+  | Union union -> Some union
+  | Constant _ | Record _ | UnionCase _ | Function _ | TypeClass _ | TypeClassMethod _ | Instance _ -> None
+
+let get_union (env: env) (id: union_id): union_decl =
+  let (Env { decls; _ }) = env in
+  let has_id (union: union_decl): bool = equal_union_id union.id id in
+  registered (fun () -> "union with ID `" ^ (show_union_id id) ^ "`")
+    (List.find_opt has_id (List.filter_map union_of decls))
+
+let union_case_of (decl: decl): union_case_decl option =
+  match decl with
+  | UnionCase case -> Some case
+  | Constant _ | Record _ | Union _ | Function _ | TypeClass _ | TypeClassMethod _ | Instance _ -> None
+
 let get_instance_method (env: env) (ins_meth_id: ins_meth_id): ins_meth_rec =
   let (Env { methods; _ }) = env in
   registered (fun () -> "instance method with ID `" ^ (show_ins_meth_id ins_meth_id) ^ "`")
@@ -243,14 +270,9 @@ let module_public_instances (env: env) (id: mod_id): decl list =
   in
   List.filter pred decls
 
-let get_union_cases (env: env) (id: decl_id): decl list =
-  let (Env { decls; _ }) = env
-  and pred = function
-    | UnionCase { union_id; _ } ->
-       equal_decl_id union_id id
-    | _ -> false
-  in
-  List.filter pred decls
+let get_union_cases (env: env) (id: union_id): union_case_decl list =
+  let (Env { decls; _ }) = env in
+  List.filter (fun (case: union_case_decl) -> equal_union_id case.union_id id) (List.filter_map union_case_of decls)
 
 let get_callable (env: env) (importing_module_name: module_name) (name: sident): callable option =
   let _ = importing_module_name in
@@ -260,11 +282,7 @@ let get_callable (env: env) (importing_module_name: module_name) (name: sident):
       | Record { id; typarams; universe; slots; _ } ->
          Some (RecordConstructor (id, typarams, universe, slots))
       | UnionCase { name; union_id; slots; _ } ->
-         let (typarams, universe) =
-           (match get_decl_by_id env union_id with
-            | Union { typarams; universe; _} -> (typarams, universe)
-            | _ -> generic_error NoUnionWithId)
-         in
+         let { typarams; universe; _ }: union_decl = get_union env union_id in
          Some (
              UnionConstructor {
                  union_id = union_id;
@@ -355,14 +373,14 @@ let get_instance_method_from_instance_id_and_method_name (env: env) (instance_id
   in
   List.find_opt pred methods
 
-let add_record_monomorph (env: env) (type_id: decl_id) (tyargs: mono_type_bindings): (env * mono_id) =
+let add_record_monomorph (env: env) (type_id: record_id) (tyargs: mono_type_bindings): (env * mono_id) =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
   let (id, supply) = fresh_mono_id supply in
   let mono = MonoRecordDefinition { id; type_id; tyargs; slots = None } in
   let env = Env { mods; methods; decls; monos = mono :: monos; exports; supply } in
   (env, id)
 
-let add_union_monomorph (env: env) (type_id: decl_id) (tyargs: mono_type_bindings): (env * mono_id) =
+let add_union_monomorph (env: env) (type_id: union_id) (tyargs: mono_type_bindings): (env * mono_id) =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
   let (id, supply) = fresh_mono_id supply in
   let mono = MonoUnionDefinition { id; type_id; tyargs; cases = None } in
@@ -399,34 +417,45 @@ let get_monomorph (env: env) (id: mono_id): monomorph =
    type arguments. A key is not an ID. It can name a monomorph that no pass has
    registered yet, so these lookups return an option. `add_or_get_*` register
    the monomorph the first time its key is asked for. *)
-let get_type_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): mono_id option =
+let get_record_monomorph (env: env) (record_id: record_id) (args: mono_type_bindings): mono_id option =
   let (Env { monos; _ }) = env in
   let pred (mono: monomorph): bool =
     match mono with
     | MonoRecordDefinition { type_id; tyargs; _ } ->
-      (equal_decl_id type_id decl_id)
+      (equal_record_id type_id record_id)
       && (equal_mono_bindings tyargs args)
-    | MonoUnionDefinition { type_id; tyargs; _ } ->
-      (equal_decl_id type_id decl_id)
-      && (equal_mono_bindings tyargs args)
-    | _ ->
+    | MonoUnionDefinition _ | MonoFunction _ | MonoInstanceMethod _ ->
       false
   in
   match List.find_opt pred monos with
   | Some m -> Some (monomorph_id m)
   | None -> None
 
-let add_or_get_record_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): (env * mono_id) =
-  match get_type_monomorph env decl_id args with
-  | Some mono_id -> (env, mono_id)
-  | None ->
-    add_record_monomorph env decl_id args
+let get_union_monomorph (env: env) (union_id: union_id) (args: mono_type_bindings): mono_id option =
+  let (Env { monos; _ }) = env in
+  let pred (mono: monomorph): bool =
+    match mono with
+    | MonoUnionDefinition { type_id; tyargs; _ } ->
+      (equal_union_id type_id union_id)
+      && (equal_mono_bindings tyargs args)
+    | MonoRecordDefinition _ | MonoFunction _ | MonoInstanceMethod _ ->
+      false
+  in
+  match List.find_opt pred monos with
+  | Some m -> Some (monomorph_id m)
+  | None -> None
 
-let add_or_get_union_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): (env * mono_id) =
-  match get_type_monomorph env decl_id args with
+let add_or_get_record_monomorph (env: env) (record_id: record_id) (args: mono_type_bindings): (env * mono_id) =
+  match get_record_monomorph env record_id args with
   | Some mono_id -> (env, mono_id)
   | None ->
-    add_union_monomorph env decl_id args
+    add_record_monomorph env record_id args
+
+let add_or_get_union_monomorph (env: env) (union_id: union_id) (args: mono_type_bindings): (env * mono_id) =
+  match get_union_monomorph env union_id args with
+  | Some mono_id -> (env, mono_id)
+  | None ->
+    add_union_monomorph env union_id args
 
 let find_function_monomorph (env: env) (decl_id: function_id) (args: mono_type_bindings): mono_id option =
   let (Env { monos; _ }) = env in

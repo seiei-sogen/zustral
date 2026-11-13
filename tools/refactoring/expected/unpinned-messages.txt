@@ -15,7 +15,6 @@ lib/GenericErrors.ml	LetOutsideStatementList	"Let statement not in a list contex
 lib/GenericErrors.ml	MatchTypeOnMonoTy	"match_type called with MonoTy argument"
 lib/GenericErrors.ml	MinOfEmptyList	"empty list passed to min_list"
 lib/GenericErrors.ml	NoRecordWithName	"No record with this name: "
-lib/GenericErrors.ml	NoUnionWithId	"No union with ID"
 lib/GenericErrors.ml	ParameterNotFound	"Parameter not found."
 lib/GenericErrors.ml	SplitReturnedEmpty	"split_on_char returned empty"
 lib/GenericErrors.ml	SymbolImportedTwice	"Cannot add symbol to the import map twice."

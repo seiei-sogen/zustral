@@ -86,6 +86,12 @@ val get_function : env -> function_id -> function_decl
 (** Retrieve a typeclass by its ID. *)
 val get_typeclass : env -> typeclass_id -> typeclass_decl
 
+(** Retrieve a record by its ID. *)
+val get_record : env -> record_id -> record_decl
+
+(** Retrieve a union by its ID. *)
+val get_union : env -> union_id -> union_decl
+
 (** Retrieve a declaration by its sourced name, returning {!None} if it doesn't exist.
 
     If a module with the given name doesn't exist, raises an error. *)
@@ -102,7 +108,7 @@ val module_instances: env -> mod_id -> decl list
 val module_public_instances: env -> mod_id -> decl list
 
 (** Return the list of cases of a union. *)
-val get_union_cases : env -> decl_id -> decl list
+val get_union_cases : env -> union_id -> union_case_decl list
 
 (** Get method from the instance ID and name, returning {!None} if the instance
     does not define a method of that name. *)
@@ -134,11 +140,11 @@ val get_callable : env -> module_name -> sident -> callable option
 
 (** Given a record's ID and a list of arguments, register a monomorph and return
    its ID, or return the ID if it exists. *)
-val add_or_get_record_monomorph : env -> decl_id -> mono_type_bindings -> (env * mono_id)
+val add_or_get_record_monomorph : env -> record_id -> mono_type_bindings -> (env * mono_id)
 
 (** Given a union's ID and a list of arguments, register a monomorph and return
    its ID, or return the ID if it exists. *)
-val add_or_get_union_monomorph : env -> decl_id -> mono_type_bindings -> (env * mono_id)
+val add_or_get_union_monomorph : env -> union_id -> mono_type_bindings -> (env * mono_id)
 
 (** Given a function's ID and a list of type arguments, register a monomorph and
    return its ID, or return the ID if it exists. *)
@@ -156,10 +162,13 @@ val store_function_monomorph_definition : env -> mono_id -> mstmt -> env
 
 val store_instance_method_monomorph_definition : env -> mono_id -> mstmt -> env
 
-(** Given the ID of a type declaration and a set of monomorphic type arguments,
-   return the ID of the corresponding monomorph, or {!None} if no pass has
-   registered it. *)
-val get_type_monomorph : env -> decl_id -> mono_type_bindings -> mono_id option
+(** Given the ID of a record and a set of monomorphic type arguments, return
+   the ID of the corresponding monomorph, or {!None} if no pass has registered
+   it. *)
+val get_record_monomorph : env -> record_id -> mono_type_bindings -> mono_id option
+
+(** {!get_record_monomorph} for a union. *)
+val get_union_monomorph : env -> union_id -> mono_type_bindings -> mono_id option
 
 (** Get all uninstantiated monomorphs. *)
 val get_uninstantiated_monomorphs : env -> monomorph list

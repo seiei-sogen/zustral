@@ -32,6 +32,42 @@ type mod_input = {
     imports_from: ModIdSet.t;
   }
 
+(** A record, as the environment holds it. *)
+type record_decl = {
+    id: record_id;
+    mod_id: mod_id;
+    vis: type_vis;
+    name: identifier;
+    docstring: docstring;
+    typarams: typarams;
+    universe: universe;
+    slots: typed_slot list;
+  }
+
+(** A union, as the environment holds it. Its cases are declarations of their
+    own. *)
+type union_decl = {
+    id: union_id;
+    mod_id: mod_id;
+    vis: type_vis;
+    name: identifier;
+    docstring: docstring;
+    typarams: typarams;
+    universe: universe;
+  }
+
+(** A case of a union, as the environment holds it. *)
+type union_case_decl = {
+    id: decl_id;
+    mod_id: mod_id;
+    vis: vis;
+    (** This is {!VisPublic} if the parent union is public, {!VisPrivate} otherwise. *)
+    union_id: union_id;
+    name: identifier;
+    docstring: docstring;
+    slots: typed_slot list;
+  }
+
 (** A function, as the environment holds it. *)
 type function_decl = {
     id: function_id;
@@ -76,35 +112,9 @@ type decl =
       ty: ty;
       docstring: docstring;
     }
-  | Record of {
-      id: decl_id;
-      mod_id: mod_id;
-      vis: type_vis;
-      name: identifier;
-      docstring: docstring;
-      typarams: typarams;
-      universe: universe;
-      slots: typed_slot list;
-    }
-  | Union of {
-      id: decl_id;
-      mod_id: mod_id;
-      vis: type_vis;
-      name: identifier;
-      docstring: docstring;
-      typarams: typarams;
-      universe: universe;
-    }
-  | UnionCase of {
-      id: decl_id;
-      mod_id: mod_id;
-      vis: vis;
-      (** This is {!VisPublic} if the parent union is public, {!VisPrivate} otherwise. *)
-      union_id: decl_id;
-      name: identifier;
-      docstring: docstring;
-      slots: typed_slot list;
-    }
+  | Record of record_decl
+  | Union of union_decl
+  | UnionCase of union_case_decl
   | Function of function_decl
   | TypeClass of typeclass_decl
   | TypeClassMethod of {
@@ -145,9 +155,9 @@ type ins_meth_rec = InsMethRec of {
 (** Callable things. *)
 type callable =
   | FunctionCallable of function_id * typarams * value_parameter list * ty
-  | RecordConstructor of decl_id * typarams * universe * typed_slot list
+  | RecordConstructor of record_id * typarams * universe * typed_slot list
   | UnionConstructor of {
-      union_id: decl_id;
+      union_id: union_id;
       type_params: typarams;
       universe: universe;
       case: typed_case;
@@ -162,14 +172,14 @@ type callable =
 type monomorph =
   | MonoRecordDefinition of {
       id: mono_id;
-      type_id: decl_id;
+      type_id: record_id;
       tyargs: mono_type_bindings;
       slots: (mono_slot list) option;
       (** The list of slots, if instantiated. *)
     }
   | MonoUnionDefinition of {
       id: mono_id;
-      type_id: decl_id;
+      type_id: union_id;
       tyargs: mono_type_bindings;
       cases: (mono_case list) option;
       (** The list of cases, if instantiated. *)
@@ -218,7 +228,7 @@ type union_input = {
 type union_case_input = {
     mod_id: mod_id;
     vis: vis;
-    union_id: decl_id;
+    union_id: union_id;
     name: identifier;
     docstring: docstring;
     slots: typed_slot list;
@@ -279,8 +289,8 @@ type instance_method_input = {
     instance. The parameter is the type of the ID that registering it returns. *)
 type _ registration =
   | NewConstant : const_input -> decl_id registration
-  | NewRecord : record_input -> decl_id registration
-  | NewUnion : union_input -> decl_id registration
+  | NewRecord : record_input -> record_id registration
+  | NewUnion : union_input -> union_id registration
   | NewUnionCase : union_case_input -> decl_id registration
   | NewFunction : function_input -> function_id registration
   | NewTypeClass : type_class_input -> typeclass_id registration
