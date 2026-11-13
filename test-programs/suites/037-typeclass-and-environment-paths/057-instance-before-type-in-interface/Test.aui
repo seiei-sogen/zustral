@@ -1,0 +1,13 @@
+module Test is
+    typeclass Shape(T: Free) is
+        method area(x: T): Int32;
+    end;
+
+    instance Shape(Square);
+
+    record Square: Free is
+        side: Int32;
+    end;
+
+    function main(): ExitCode;
+end module.

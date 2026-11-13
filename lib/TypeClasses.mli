@@ -48,8 +48,11 @@ val check_instance_locally_unique : Error.place -> instance_decl list -> ty -> u
         2. Local typeclass and foreign type = ok
         3. Foreign typeclass and local type = ok
         4. Foreign typeclass and foreign type = bad
+
+    The second place is the instance's declaration, which an instance declared
+    before its type is reported at.
 *)
-val check_instance_orphan_rules : Error.place -> env -> mod_id -> mod_id -> ty -> unit
+val check_instance_orphan_rules : Error.place -> Error.place -> env -> mod_id -> mod_id -> ty -> unit
 
 (** We don't allow any of the type parameters of a generic instance to have the
     same name as the type parameter of the corresponding typeclass.

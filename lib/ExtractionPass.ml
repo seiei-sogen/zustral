@@ -138,7 +138,7 @@ let rec region_held_by_value (place: place) (env: env) (seen: ty list) (ty: ty):
 let definition_span (def: combined_definition): Span.span =
   match def with
   | CConstant (span, _, _, _, _, _) | CRecord (span, _, _, _, _, _, _) | CUnion (span, _, _, _, _, _, _)
-  | CFunction (span, _, _, _, _, _, _, _, _) | CTypeclass (span, _, _, _, _, _) | CInstance (span, _, _, _, _, _, _) ->
+  | CFunction (span, _, _, _, _, _, _, _, _) | CTypeclass (span, _, _, _, _, _) | CInstance (span, _, _, _, _, _, _, _) ->
      span
 
 (* The methods of an instance without type parameters are compiled as they are
@@ -447,7 +447,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
          (* Construct the decl *)
          let decl = LTypeclass (typeclass_id, vis, name, typaram, linked_methods, docstring) in
          (env, decl))
-  | CInstance (span, vis, name, typarams, argument, methods, docstring) ->
+  | CInstance (span, decl_span, vis, name, typarams, argument, methods, docstring) ->
      (let place: place = AtSpan span in
          let typeclass_name = qident_to_sident name |> sident_name in
          (* First add the instance to the env, then the methods. *)
@@ -481,7 +481,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
            check_instance_locally_unique place other_instances argument
          in
          (* Global uniqueness: check orphan rules. *)
-         let _ = check_instance_orphan_rules place env mod_id typeclass_mod_id argument in
+         let _ = check_instance_orphan_rules place (AtSpan decl_span) env mod_id typeclass_mod_id argument in
          (* Add the instance to the env *)
          let input: instance_input = { mod_id; vis; typeclass_id; docstring; typarams; argument } in
          let (env, instance_id) = register place env (NewInstance input) in

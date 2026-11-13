@@ -200,16 +200,16 @@ let check_instance_locally_unique (place: place) (instances: instance_decl list)
   else
     ()
 
-let rec check_instance_orphan_rules (place: place) (env: env) (mod_id: mod_id) (typeclass_mod_id: mod_id) (ty: ty): unit =
+let rec check_instance_orphan_rules (place: place) (decl_place: place) (env: env) (mod_id: mod_id) (typeclass_mod_id: mod_id) (ty: ty): unit =
   let tc_local: bool = equal_mod_id mod_id typeclass_mod_id
-  and ty_local: bool = is_type_local place env mod_id ty
+  and ty_local: bool = is_type_local place decl_place env mod_id ty
   in
   if (not tc_local) && (not ty_local) then
     generic_error place BrokenOrphanRule
   else
     ()
 
-and is_type_local (place: place) (env: env) (mod_id: mod_id) (ty: ty): bool =
+and is_type_local (place: place) (decl_place: place) (env: env) (mod_id: mod_id) (ty: ty): bool =
   match ty with
   | Unit ->
      true
@@ -228,8 +228,9 @@ and is_type_local (place: place) (env: env) (mod_id: mod_id) (ty: ty): bool =
       | None ->
          (* The type parser found the type among the signatures of this module,
             but the declarations are registered in order, and the type's comes
-            after the instance's. *)
-         declaration_error place (InstanceBeforeType (original_name name)))
+            after the instance's. The interface's declarations come first, in
+            its order, so the error is where the instance is declared. *)
+         declaration_error decl_place (InstanceBeforeType (original_name name)))
   | RegionTy _ ->
      (* Not applicable. *)
      false

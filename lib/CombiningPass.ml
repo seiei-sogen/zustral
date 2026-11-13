@@ -153,6 +153,7 @@ let match_decls (module_name: module_name) (ii: import_map) (bi: import_map) (de
                  qualification. *)
               let qname = qualify_identifier ii name in
               CInstance (defspan,
+                         span,
                          VisPublic,
                          qname,
                          name_typarams (AtSpan span) bi typarams qname,
@@ -227,6 +228,7 @@ let private_def module_name im def =
         we can use the body imports for qualification. *)
      let qname = qualify_identifier im name in
      CInstance (span,
+                span,
                 VisPrivate,
                 qname,
                 name_typarams NoSpan im typarams qname,
@@ -354,8 +356,8 @@ let as_public (def: combined_definition): combined_definition =
      CFunction (span, VisPublic, name, typarams, params, rt, body, docstring, pragmas)
   | CTypeclass (span, _, name, typaram, methods, docstring) ->
      CTypeclass (span, VisPublic, name, typaram, methods, docstring)
-  | CInstance (span, _, name, typarams, argument, methods, docstring) ->
-     CInstance (span, VisPublic, name, typarams, argument, methods, docstring)
+  | CInstance (span, decl_span, _, name, typarams, argument, methods, docstring) ->
+     CInstance (span, decl_span, VisPublic, name, typarams, argument, methods, docstring)
 
 let body_as_combined (env: env) (body: concrete_module_body): combined_module Outcome.t =
   let (ConcreteModuleBody (mn, kind, body_docstring, body_imports, defs)) = body in

@@ -1,0 +1,11 @@
+module body Test is
+    instance Shape(Square) is
+        method area(x: Square): Int32 is
+            return x.side;
+        end;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

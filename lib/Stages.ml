@@ -125,7 +125,10 @@ module Combined = struct
     | CUnion of span * type_vis * identifier * typarams * universe * qcase list * docstring
     | CFunction of span * vis * identifier * typarams * qparam list * qtypespec * astmt * docstring * pragma list
     | CTypeclass of span * vis * identifier * type_parameter * combined_method_decl list * docstring
-    | CInstance of span * vis * qident * typarams * qtypespec * combined_method_def list * docstring
+    | CInstance of span * span * vis * qident * typarams * qtypespec * combined_method_def list * docstring
+    (** The first span is the definition's. The second is the declaration's
+        whose place decides when the instance is registered: the interface's,
+        for an instance the interface declares; the definition's, otherwise. *)
 
   and qslot = QualifiedSlot of identifier * qtypespec
 
@@ -404,7 +407,10 @@ module SmallCombined = struct
     | CUnion of span * type_vis * identifier * typarams * universe * qcase list * docstring
     | CFunction of span * vis * identifier * typarams * qparam list * qtypespec * astmt * docstring * pragma list
     | CTypeclass of span * vis * identifier * type_parameter * Combined.combined_method_decl list * docstring
-    | CInstance of span * vis * qident * typarams * qtypespec * combined_method_def list * docstring
+    | CInstance of span * span * vis * qident * typarams * qtypespec * combined_method_def list * docstring
+    (** The first span is the definition's. The second is the declaration's
+        whose place decides when the instance is registered: the interface's,
+        for an instance the interface declares; the definition's, otherwise. *)
 
   and combined_method_def = CMethodDef of identifier * typarams * qparam list * qtypespec * docstring * astmt
 end

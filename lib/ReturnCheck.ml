@@ -85,7 +85,7 @@ let check_decl_ends_in_return (decl: combined_definition): unit =
          ())
   | CTypeclass _ ->
      ()
-  | CInstance (span, _, _, _, _, methods, _) ->
+  | CInstance (span, _, _, _, _, _, methods, _) ->
      let _ = List.map (check_method_ends_in_return span) methods in
      ()
 

@@ -29,9 +29,9 @@ let desugar_decl (supply: Supply.t) (decl: C.combined_definition): SC.combined_d
      let (ast, supply) = ts supply ast in
      (SC.CFunction (s, v, id, tp, qp, qt, ast, ds, pl), supply)
   | C.CTypeclass (s, v, id, tp, methods, ds) -> (SC.CTypeclass (s, v, id, tp, methods, ds), supply)
-  | C.CInstance (s, v, qi, tp, qt, cmd, ds) ->
+  | C.CInstance (s, s', v, qi, tp, qt, cmd, ds) ->
      let (cmd, supply) = Supply.map copy_combined_method_def supply cmd in
-     (SC.CInstance (s, v, qi, tp, qt, cmd, ds), supply)
+     (SC.CInstance (s, s', v, qi, tp, qt, cmd, ds), supply)
 
 let desugar (supply: Supply.t) (md: ReturnCheck.returning_module): (SC.combined_module * Supply.t) Outcome.t =
   let (C.CombinedModule { name; kind; interface_docstring; interface_imports; body_docstring; body_imports; decls }) = ReturnCheck.as_combined_module md in
