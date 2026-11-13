@@ -44,10 +44,6 @@ val map_with_context : (('c * 'a) -> ('c * 'b)) -> 'c -> 'a list -> ('c * ('b li
 
 val iter_with_context : ('c -> 'a -> 'c) -> 'c -> 'a list -> 'c
 
-(** Get the last element of a list. Error for an empty list, reported at the
-    given place. *)
-val last : Error.place -> 'a list -> 'a
-
-(** Get all elements but the last one of a list. Error for an empty list,
-    reported at the given place. *)
-val butlast : Error.place -> 'a list -> 'a list
+(** Split the list of [first] and [rest] into all its elements but the last,
+    and the last. The list has a first element, so it has a last. *)
+val split_last : 'a -> 'a list -> 'a list * 'a

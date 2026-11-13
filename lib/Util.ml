@@ -61,45 +61,46 @@ let rec count_leading_whitespace (s: string): int =
   | _ ->
      0
 
-let min_list (l: int list): int =
-  match l with
-  | first::rest ->
-     List.fold_left min first rest
-  | [] ->
-     (* Its one caller passes one number per line of a result of
-        String.split_on_char, which is never empty. *)
-     internal_err NoSpan "empty list passed to min_list"
+(* The lines of a string, as `String.split_on_char '\n'` gives them, as the
+   first line and the others. A string has at least one line, and the type
+   says so. *)
+let split_lines (s: string): string * string list =
+  let rec from (start: int): string * string list =
+    match String.index_from_opt s start '\n' with
+    | Some i ->
+       let (next, rest) = from (i + 1) in
+       (String.sub s start (i - start), next :: rest)
+    | None ->
+       (String.sub s start ((String.length s) - start), [])
+  in
+  from 0
 
 let trim_common_whitespace (s: string): string =
-  let lines = String.split_on_char '\n' s in
-  let lines = List.map (fun s -> (count_leading_whitespace s, s)) lines in
-  let min_whitespace: int = min_list (List.map (fun (w, _) -> w) lines) in
-  let lines: string list = List.map (fun (_, s) -> remove_leading s min_whitespace) lines in
+  let (first, rest) = split_lines s in
+  let min_whitespace: int =
+    List.fold_left (fun m line -> min m (count_leading_whitespace line)) (count_leading_whitespace first) rest
+  in
+  let lines: string list = List.map (fun s -> remove_leading s min_whitespace) (first :: rest) in
   String.concat "\n" lines
 
 let process_triple_string (s: string): string =
-  let lines = String.split_on_char '\n' s in
-  match lines with
-  | first::rest ->
-     let first = if (String.equal (String.trim first) "") then
-                   ""
-                 else
-                   first
+  let (first, rest) = split_lines s in
+  let first = if (String.equal (String.trim first) "") then
+                ""
+              else
+                first
+  in
+  match (List.rev rest) with
+  | last::body ->
+     let last = if (String.equal (String.trim last) "") then
+                  ""
+                else
+                  last
      in
-     (match (List.rev rest) with
-      | last::body ->
-         let last = if (String.equal (String.trim last) "") then
-                      ""
-                    else
-                      last
-         in
-         let s = first ^ (String.concat "\n" (List.rev body)) ^ last in
-         trim_common_whitespace s
-      | [] ->
-         first)
+     let s = first ^ (String.concat "\n" (List.rev body)) ^ last in
+     trim_common_whitespace s
   | [] ->
-     (* String.split_on_char never returns an empty list. *)
-     internal_err NoSpan "split_on_char returned empty"
+     first
 
 let ident_set_eq a b =
   let sorter a b = compare (ident_string a) (ident_string b) in
@@ -122,18 +123,10 @@ let rec iter_with_context (f: ('c -> 'a -> 'c)) (ctx: 'c) (list: 'a list): 'c =
   | [] ->
      ctx
 
-let last (place: place) (lst: 'a list): 'a =
-  let lst: 'a list = List.rev lst in
-  match lst with
-  | first::_ ->
-     first
+let rec split_last (first: 'a) (rest: 'a list): 'a list * 'a =
+  match rest with
+  | second::rest ->
+     let (init, last) = split_last second rest in
+     (first :: init, last)
   | [] ->
-     internal_err place "Util.last called with an empty list."
-
-let butlast (place: place) (lst: 'a list): 'a list =
-  let lst: 'a list = List.rev lst in
-  match lst with
-  | _::rest ->
-     rest
-  | [] ->
-     internal_err place "Util.butlast called with an empty list."
+     ([], first)
