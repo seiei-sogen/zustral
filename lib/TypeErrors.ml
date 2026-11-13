@@ -67,6 +67,7 @@ type t =
   | LogicalOperandsNotBoolean of logical_operands
   | NoSuchSlot of { type_name: identifier; slot_name: identifier }
   | NoSuitableInstance of { typeclass: identifier; ty: ty }
+  | OverlappingInstancesMatch of { typeclass: identifier; ty: ty; modules: module_name list }
   | PathNotPublic of { type_name: identifier; slot_name: identifier }
   | PathNotRecord of ty
   | SlotWrongType of { name: identifier; expected: ty; actual: ty }
@@ -88,6 +89,10 @@ type t =
   | PointerAccessNotReference of ty
   | ArrayIndexNotReference of ty
   | CaseNotUnionOrReference of ty
+
+(* Names in code, separated by commas. *)
+let code_list (names: string list): err_text =
+  List.concat (List.mapi (fun i name -> if i = 0 then [Code name] else [Text ", "; Code name]) names)
 
 let render (error: t): err_text =
   match error with
@@ -292,6 +297,18 @@ let render (error: t): err_text =
        Code (ident_string typeclass);
        Text " has no instance which matches for ";
        Type ty
+     ]
+  | OverlappingInstancesMatch { typeclass; ty; modules } ->
+     [
+       Text "More than one instance of the typeclass ";
+       Code (ident_string typeclass);
+       Text " matches the type ";
+       Type ty;
+       Text ". The instances are declared in the modules ";
+     ]
+     @ code_list (List.map mod_name_string modules)
+     @ [
+       Text ". Instances of a typeclass must not overlap: remove all but one of them."
      ]
   | PathNotPublic { type_name; slot_name } ->
      [

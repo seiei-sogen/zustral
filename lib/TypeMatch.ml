@@ -290,7 +290,18 @@ and try_get_instance (place: place) (env: env) (source_module_name: module_name)
   | [a] ->
      Ok (Some a)
   | _::_ ->
-     Error (Internal "Multiple instances satisfy this call. The compiler should validate that there are no overlapping instances.")
+     (* The declarations of overlapping instances are not all rejected where
+        they are declared (#72, #122), so the call reports them. *)
+     let { name; _ }: typeclass_decl = get_typeclass place env typeclass in
+     let modules: module_name list =
+       List.fold_left
+         (fun (names: module_name list) (({ mod_id; _ }: instance_decl), _) ->
+           let mn: module_name = module_name_from_id place env mod_id in
+           if List.mem mn names then names else names @ [mn])
+         []
+         filtered
+     in
+     Error (Type (OverlappingInstancesMatch { typeclass = name; ty = dispatch_ty; modules }))
   | [] ->
      Ok None
 

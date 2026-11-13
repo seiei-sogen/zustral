@@ -1,1 +1,1 @@
-Covers the internal error when an imported instance and a local instance both match a method call (lib/TypeMatch.ml, get_instance).
+An imported instance and a local instance that both match a method call are reported as a type error at the call, naming both modules (lib/TypeMatch.ml, try_get_instance). The overlapping declarations are not rejected where they are declared (issues #72, #122).

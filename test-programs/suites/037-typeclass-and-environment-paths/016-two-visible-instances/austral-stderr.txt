@@ -1,20 +1,21 @@
 {
   "module": "Test",
-  "kind": "Internal Error",
+  "kind": "Type Error",
   "text": [
-    { "type": "text", "content": "Internal compiler error: " },
+    { "type": "text", "content": "More than one instance of the typeclass " },
+    { "type": "code", "content": "Describe" },
+    { "type": "text", "content": " matches the type " },
+    { "type": "type", "content": "Int32" },
     {
       "type": "text",
-      "content": "Multiple instances satisfy this call. The compiler should validate that there are no overlapping instances."
+      "content": ". The instances are declared in the modules "
     },
-    { "type": "break" },
+    { "type": "code", "content": "Test" },
+    { "type": "text", "content": ", " },
+    { "type": "code", "content": "Test_TC" },
     {
       "type": "text",
-      "content": "This is a bug in the compiler, please open an issue here: "
-    },
-    {
-      "type": "code",
-      "content": "https://github.com/austral/austral/issues"
+      "content": ". Instances of a typeclass must not overlap: remove all but one of them."
     }
   ],
   "span": {
