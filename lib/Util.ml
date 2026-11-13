@@ -66,7 +66,9 @@ let min_list (l: int list): int =
   | first::rest ->
      List.fold_left min first rest
   | [] ->
-     generic_error MinOfEmptyList
+     (* Its one caller passes one number per line of a result of
+        String.split_on_char, which is never empty. *)
+     internal_err "empty list passed to min_list"
 
 let trim_common_whitespace (s: string): string =
   let lines = String.split_on_char '\n' s in
@@ -96,7 +98,8 @@ let process_triple_string (s: string): string =
       | [] ->
          first)
   | [] ->
-     generic_error SplitReturnedEmpty
+     (* String.split_on_char never returns an empty list. *)
+     internal_err "split_on_char returned empty"
 
 let ident_set_eq a b =
   let sorter a b = compare (ident_string a) (ident_string b) in

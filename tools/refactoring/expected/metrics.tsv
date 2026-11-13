@@ -33,7 +33,7 @@ lib/ErrorText.ml	57	0	0	0	0	0	2	0	0	0
 lib/Escape.ml	53	1	0	0	0	1	1	0	0	0
 lib/ExportInstantiation.ml	66	10	0	0	0	0	0	0	0	0
 lib/ExtractionPass.ml	470	14	6	0	0	5	0	0	0	0
-lib/GenericErrors.ml	264	0	0	0	0	0	0	0	0	0
+lib/GenericErrors.ml	254	0	0	0	0	0	0	0	0	0
 lib/HtmlError.ml	301	0	0	0	0	0	0	0	0	0
 lib/Id.ml	81	0	0	0	0	0	0	0	0	0
 lib/Identifier.ml	62	0	0	0	0	0	2	0	0	0
@@ -82,5 +82,5 @@ lib/TypeStripping.ml	129	13	0	0	0	1	0	12	0	0
 lib/TypeSystem.ml	105	2	0	0	0	0	0	1	0	0
 lib/TypeVarSet.ml	15	0	0	0	0	0	0	0	0	0
 lib/TypingPass.ml	758	34	13	0	0	5	0	1	0	0
-lib/Util.ml	136	5	0	0	0	3	1	2	0	0
+lib/Util.ml	139	5	0	0	0	3	1	4	0	0
 lib/Version.ml	18	0	0	0	0	0	0	0	0	0

@@ -59,8 +59,6 @@ type t =
   | IsNumericOnMonoTy
   | AssignToNonMutableReference of ty
   | ReborrowOfNonMutableReference of ty
-  | MinOfEmptyList
-  | SplitReturnedEmpty
   | LeftoverArguments
 
 let render (error: t): err_text =
@@ -249,14 +247,6 @@ let render (error: t): err_text =
   | ReborrowOfNonMutableReference ty ->
      [
        Text ("Cannot reborrow something that is not a mutable reference: " ^ (type_string ty))
-     ]
-  | MinOfEmptyList ->
-     [
-       Text "empty list passed to min_list"
-     ]
-  | SplitReturnedEmpty ->
-     [
-       Text "split_on_char returned empty"
      ]
   | LeftoverArguments ->
      [

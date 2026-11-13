@@ -50,10 +50,6 @@ lib/GenericErrors.ml	| MatchTypeOnMonoTy ->
 lib/GenericErrors.ml	Text "match_type called with MonoTy argument"
 lib/GenericErrors.ml	| IsNumericOnMonoTy ->
 lib/GenericErrors.ml	Text "is_numeric called with MonoTy argument"
-lib/GenericErrors.ml	| MinOfEmptyList ->
-lib/GenericErrors.ml	Text "empty list passed to min_list"
-lib/GenericErrors.ml	| SplitReturnedEmpty ->
-lib/GenericErrors.ml	Text "split_on_char returned empty"
 lib/ParseErrors.ml	| StringInvalidCharacter lexeme ->
 lib/ParseErrors.ml	Text "Character not allowed in string literal: ";
 lib/ParseErrors.ml	Code lexeme
