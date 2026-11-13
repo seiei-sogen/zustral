@@ -91,7 +91,7 @@ type t =
   | UnsatisfiedConstraint of { tyvar: type_var; ty: ty; typeclass: sident }
   | TypeArgumentWrongUniverse of { param: type_parameter; expected: universe; actual: universe }
   | UnresolvedType of identifier
-  | IntegerDoesNotFit of { value: string; ty: ty }
+  | IntegerDoesNotFit of { literal: NumberLiteral.int_literal; ty: ty }
   | PointerAccessNotReference of ty
   | ArrayIndexNotReference of ty
   | CaseNotUnionOrReference of ty
@@ -434,10 +434,12 @@ let render (error: t): err_text =
        Break;
        Text "Consider importing it, if it is defined in another module."
      ]
-  | IntegerDoesNotFit { value; ty } ->
+  | IntegerDoesNotFit { literal; ty } ->
+     (* The message shows the literal's text, not its value: a decimal literal
+        appears as it was written. *)
      [
        Text "The integer ";
-       Code value;
+       Code (NumberLiteral.int_text literal);
        Text" does not fit the type ";
        Type ty;
        Text "."
