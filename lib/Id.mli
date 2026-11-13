@@ -71,7 +71,6 @@ val fresh_mono_id : Supply.t -> mono_id * Supply.t
 
 (** The order IDs were made in. A set of IDs keeps its elements in it. *)
 
-val compare_mod_id : mod_id -> mod_id -> int
 val compare_instance_id : instance_id -> instance_id -> int
 
 (** The number of an ID. It is for the name that the generated C gives to what

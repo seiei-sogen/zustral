@@ -80,7 +80,7 @@ let module_name_from_id (env: env) (mod_id: mod_id): module_name =
   name
 
 let add_module (env: env) (input: mod_input): (env * mod_id) =
-  let { name; imported_instances; imports_from } = input in
+  let { name; imported_instances } = input in
   let _ = ensure_no_mod_with_name env name in
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
   let (id, supply) = fresh_mod_id supply in
@@ -88,7 +88,6 @@ let add_module (env: env) (input: mod_input): (env * mod_id) =
                id;
                name;
                imported_instances;
-               imports_from;
              }
   in
   let env = Env { mods = md :: mods; methods; decls; monos; exports; supply } in

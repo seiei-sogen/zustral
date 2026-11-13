@@ -98,6 +98,10 @@ let rec monomorphize_ty (env: env) (ty: stripped_ty): (mono_ty * env) =
                 union of the same name is the one a lookup by name finds (#86). *)
              internal_err ("named type `" ^ (qident_debug_name name) ^ "`points to something that isn't a type"))
       | None ->
+         (* No type rules this out. A named type holds the name of its
+            declaration, not an ID: the type parser resolves a type of the
+            module being extracted from the signatures of that module, before
+            the declaration is registered and has an ID. *)
          internal_err ("Couldn't get declaration for named type `" ^ (qident_debug_name name) ^ "`."))
   | SFnPtr (args, rt) ->
      let (args, env) = monomorphize_ty_list env args in

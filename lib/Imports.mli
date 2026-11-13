@@ -6,7 +6,6 @@
 *)
 open Identifier
 open Id
-open ModuleNameSet
 
 (** Represents the set of all imports into a module. *)
 type import_map
@@ -29,6 +28,3 @@ val get_symbol : import_map -> identifier -> qident option
 
 (** The list of imported typeclass instances. *)
 val imported_instances : import_map -> instance_id list
-
-(** Return the set of module names we're importing from. *)
-val modules_imported_from : import_map -> ModuleNameSet.t

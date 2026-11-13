@@ -7,7 +7,6 @@
 (** Types used in the various environments. *)
 open Id
 open InstanceIdSet
-open ModIdSet
 open Identifier
 open Common
 open Type
@@ -18,18 +17,16 @@ open MonoType
 open MonoTypeBindings
 open Stages.Mtast
 
-(** A module record contains a module's name and what it imports. *)
+(** A module record contains a module's name and the instances it imports. *)
 type mod_rec = ModRec of {
       id: mod_id;
       name: module_name;
       imported_instances: InstanceIdSet.t;
-      imports_from: ModIdSet.t;
     }
 
 type mod_input = {
     name: module_name;
     imported_instances: InstanceIdSet.t;
-    imports_from: ModIdSet.t;
   }
 
 (** A record, as the environment holds it. *)

@@ -21,7 +21,7 @@ type entrypoint_kind =
   | RootCapEntrypoint
   (** Single-parameter entrypoint function with a root capability argument. *)
 
-(** Check the entrypoint function is valid, return the decl_id of the function
+(** Check the entrypoint function is valid, return the ID of the function
     and the entrypoint kind. *)
 let rec check_entrypoint_validity (env: env) (name: qident): function_id * entrypoint_kind =
   match get_decl_by_name env (qident_to_sident name) with
@@ -127,6 +127,8 @@ let get_root_capability_monomorph (env: env): mono_id =
             not hand its ID over. *)
          internal_err "No monomorph of RootCapability.")
   | _ ->
+     (* No type rules this out. The compiler knows this type by the name the
+        built-in module declares it under, and by nothing else. *)
      internal_err "Can't find the RootCapability type in the environment."
 
 let get_exit_code_monomorph (env: env): mono_id =
@@ -142,6 +144,7 @@ let get_exit_code_monomorph (env: env): mono_id =
          (* As for RootCapability: registered by key, by an earlier pass. *)
          internal_err "No monomorph of ExitCode.")
   | _ ->
+     (* As for RootCapability: known by its name only. *)
      internal_err "Can't find the ExitCode type in the environment."
 
 let entrypoint_code (env: env) (name: qident): CRepr.c_source Outcome.t =

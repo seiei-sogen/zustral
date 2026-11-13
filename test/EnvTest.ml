@@ -12,7 +12,6 @@ open Austral_core.Error
 module Env = Austral_core.Env
 module Id = Austral_core.Id
 module InstanceIdSet = Austral_core.InstanceIdSet.InstanceIdSet
-module ModIdSet = Austral_core.ModIdSet.ModIdSet
 
 (* The message of the internal error the function raises, if it raises one. *)
 let internal_error_of (f: unit -> 'a): string option =
@@ -27,8 +26,7 @@ let test_id_from_a_later_environment _ =
   let (before, mod_id) =
     Env.add_module Env.empty_env {
         name = make_mod_name "Example";
-        imported_instances = InstanceIdSet.empty;
-        imports_from = ModIdSet.empty
+        imported_instances = InstanceIdSet.empty
       }
   in
   let (after, id) =
@@ -62,8 +60,7 @@ let test_monomorph_key_not_registered _ =
   let (env, mod_id) =
     Env.add_module Env.empty_env {
         name = pervasive;
-        imported_instances = InstanceIdSet.empty;
-        imports_from = ModIdSet.empty
+        imported_instances = InstanceIdSet.empty
       }
   in
   let (env, _) =

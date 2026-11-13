@@ -68,9 +68,6 @@ let fresh_mono_id (supply: Supply.t): mono_id * Supply.t =
   let (number, supply) = Supply.next_mono_id supply in
   (MonoId number, supply)
 
-let compare_mod_id (ModId a) (ModId b): int =
-  compare a b
-
 let compare_instance_id (DeclId a: instance_id) (DeclId b: instance_id): int =
   compare a b
 

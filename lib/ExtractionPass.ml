@@ -5,7 +5,6 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 open Identifier
-open ModuleNameSet
 open Common
 open Type
 open TypeSystem
@@ -15,7 +14,6 @@ open Linked
 open Stages.AstDB
 open Id
 open InstanceIdSet
-open ModIdSet
 open Env
 open EnvTypes
 open Imports
@@ -117,20 +115,6 @@ let rec extract (env: env) (cmodule: combined_module): (env * linked_module) Out
       }) = cmodule in
   let* (env, mod_id) =
     Outcome.catch (fun () ->
-        (* Find the set of modules we're importing from. *)
-        let imports_from: ModIdSet.t =
-          let module_names: ModuleNameSet.t =
-            ModuleNameSet.union
-              (modules_imported_from interface_imports)
-              (modules_imported_from body_imports)
-          in
-          ModIdSet.of_list
-            (List.map (fun mn ->
-                 match get_module_by_name env mn with
-                 | Some (ModRec { id; _ }) -> id
-                 | None -> internal_err ("Couldn't find module `" ^ (mod_name_string mn) ^ "`."))
-               (List.of_seq (ModuleNameSet.to_seq module_names)))
-        in
         (* Add the module to the environment. *)
         let imported_instances: InstanceIdSet.t =
           InstanceIdSet.union
@@ -140,7 +124,6 @@ let rec extract (env: env) (cmodule: combined_module): (env * linked_module) Out
         let input: mod_input = {
             name;
             imported_instances;
-            imports_from;
           }
         in
         add_module env input)
