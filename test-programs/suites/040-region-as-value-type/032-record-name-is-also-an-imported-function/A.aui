@@ -1,0 +1,3 @@
+module A is
+    function make(): Int32;
+end module.

@@ -1,0 +1,1 @@
+The program of 013 with a function imported under the name of the record `Outer` (`import A (make as Outer)`, issue #28: a module can import a name and declare a type of that name). As in 031, the check reads the slots of the record the type names (lib/ExtractionPass.ml, region_held_by_value).

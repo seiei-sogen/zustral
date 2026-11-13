@@ -1,0 +1,5 @@
+module body A is
+    function make(): Int32 is
+        return 7;
+    end;
+end module body.
