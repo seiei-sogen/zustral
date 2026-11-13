@@ -1,0 +1,35 @@
+{
+  "module": "Test",
+  "kind": "Internal Error",
+  "text": [
+    { "type": "text", "content": "Internal compiler error: " },
+    { "type": "text", "content": "No declaration with name `Square`." },
+    { "type": "break" },
+    {
+      "type": "text",
+      "content": "This is a bug in the compiler, please open an issue here: "
+    },
+    {
+      "type": "code",
+      "content": "https://github.com/austral/austral/issues"
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/046-instance-before-argument-type/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 10, "column": 8 }
+  },
+  "context": [
+    [ 2, "    typeclass Shape(T: Free) is" ],
+    [ 3, "        method area(x: T): Int32;" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    instance Shape(Square) is" ],
+    [ 7, "        method area(x: Square): Int32 is" ],
+    [ 8, "            return x.side;" ],
+    [ 9, "        end;" ],
+    [ 10, "    end;" ],
+    [ 11, "" ],
+    [ 12, "    record Square: Free is" ]
+  ]
+}

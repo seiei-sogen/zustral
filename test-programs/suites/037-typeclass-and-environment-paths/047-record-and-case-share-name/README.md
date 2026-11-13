@@ -1,0 +1,1 @@
+Covers the internal error for a type name that a later union case also has (lib/Monomorphize.ml, the SNamedType case of monomorphize_ty). The case is registered without a check (issue #86), and the lookup by name finds it instead of the record.
