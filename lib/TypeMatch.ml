@@ -277,8 +277,9 @@ and try_get_instance (place: place) (env: env) (source_module_name: module_name)
              Some (decl, bindings)
           | Error _ ->
              (* Does not match, just skip to the next instance. Every failure
-                skips it, also an internal error from checking a constraint of
-                the instance's type parameters. *)
+                skips it, also a type error from checking a constraint of the
+                instance's type parameters: a constraint that names no
+                typeclass, or several overlapping instances that match. *)
              None)
        else
          None

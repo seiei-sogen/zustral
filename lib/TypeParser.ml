@@ -118,7 +118,8 @@ let rec effective_universe (place: place) name (typarams: typarams) declared_uni
      2. If the declared universe is Linear, then no type parameter can change this. Therefore, the effective
         universe is Linear.
 
-     3. If the declared universe is Region, that's an internal error: this function should not be called with a Region type.
+     3. If the declared universe is Region, that's the declaration error
+        RegionUsedAsType: a region is not a type.
 
      4. Finally, if the universe is Type:
          4.1. First, assert that there is at least one type parameter. This should have been checked by the

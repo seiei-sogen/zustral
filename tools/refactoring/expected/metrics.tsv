@@ -71,13 +71,13 @@ lib/Supply.ml	68	0	0	0	0	0	0	0	0	0
 lib/TastUtil.ml	103	1	0	0	0	0	0	0	0	0
 lib/Type.ml	293	0	0	0	0	1	0	0	0	0
 lib/TypeBindings.ml	184	2	0	0	0	0	0	0	0	0
-lib/TypeCheckExpr.ml	935	46	0	0	0	1	0	1	0	0
+lib/TypeCheckExpr.ml	937	46	0	0	0	1	0	1	0	0
 lib/TypeClasses.ml	263	14	0	0	0	0	0	0	0	0
 lib/TypeErrors.ml	498	0	0	0	0	0	0	0	0	0
-lib/TypeMatch.ml	336	3	0	0	0	0	0	0	0	0
+lib/TypeMatch.ml	337	3	0	0	0	0	0	0	0	0
 lib/TypeParameter.ml	35	0	0	0	0	0	0	0	0	0
 lib/TypeParameters.ml	61	2	0	0	0	0	0	0	0	0
-lib/TypeParser.ml	310	8	0	0	0	2	0	0	0	0
+lib/TypeParser.ml	311	8	0	0	0	2	0	0	0	0
 lib/TypeReplace.ml	207	0	0	0	0	0	0	0	0	0
 lib/TypeSignature.ml	18	0	0	0	0	0	0	0	0	0
 lib/TypeStripping.ml	85	1	0	0	0	0	0	0	0	0

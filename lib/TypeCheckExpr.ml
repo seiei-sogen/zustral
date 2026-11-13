@@ -871,8 +871,10 @@ and check_annotated (ctx: expr_ctx) (expr: aexpr) (target_type: ty): texpr =
          | Ok _ ->
             expr'
          | Error _ ->
-            (* Every failure becomes this error, also an internal error from
-               checking a constraint of a type variable in the target type. *)
+            (* Every failure becomes this error, also a type error from
+               checking a constraint of a type variable in the target type: a
+               constraint that names no typeclass, or several overlapping
+               instances that match. *)
             type_error (ctx_place ctx) (CastInvalid { target = target_type; source = get_type (ctx_place ctx) expr' })))
 
 and augment_arglist (ctx: expr_ctx) (args: abstract_arglist): typed_arglist =
