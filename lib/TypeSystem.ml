@@ -29,6 +29,8 @@ let type_universe (place: place) = function
   | Address _ -> FreeUniverse
   | Pointer _ -> FreeUniverse
   | FnPtr _ -> FreeUniverse
+  (* Needs MonoTy removed from Type.ty (#128). A program reaches this: 037/040
+     pins it. *)
   | MonoTy _ -> internal_err place "You shouldn't be asking for the type_universe of a MonoTy"
 
 let is_numeric (place: place) = function

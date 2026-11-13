@@ -261,8 +261,17 @@ and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb
   let make_qname n =
     make_qident (module_name, n, n)
   in
-  match concrete_decl_name decl with
-  | (Some name) ->
+  match decl with
+  | ConcreteInstanceDecl (_, name, typarams, argument, _) ->
+     (* It's an instance declaration. Find the corresponding instance in the body. *)
+     (match get_instance_def cmb name typarams argument with
+      | (Some def) ->
+         match_decls module_name im bm decl (ConcreteInstanceDef def)
+      | None ->
+         declaration_error NoSpan (MissingInstanceBodyDefinition { name; ty = WrittenType (typespec_string argument) }))
+  | ConcreteConstantDecl (_, name, _, _) | ConcreteOpaqueTypeDecl (_, name, _, _, _)
+  | ConcreteRecordDecl (ConcreteRecord (_, name, _, _, _, _)) | ConcreteUnionDecl (ConcreteUnion (_, name, _, _, _, _))
+  | ConcreteFunctionDecl (_, name, _, _, _, _) | ConcreteTypeClassDecl (ConcreteTypeClass (_, name, _, _, _)) ->
      (match decl with
       (* Some declarations don't need to have a matching body *)
       | ConcreteRecordDecl (ConcreteRecord (span, name, typarams, universe, slots, docstring)) ->
@@ -302,43 +311,30 @@ and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb
              match_decls module_name im bm decl def
           | None ->
              declaration_error NoSpan (MissingBodyDefinition name)))
-  | None ->
-     (match decl with
-      | ConcreteInstanceDecl (_, name, typarams, argument, _) ->
-         (* It's an instance declaration. Find the corresponding instance in the body. *)
-         (match get_instance_def cmb name typarams argument with
-          | (Some def) ->
-             match_decls module_name im bm decl (ConcreteInstanceDef def)
-          | None ->
-             declaration_error NoSpan (MissingInstanceBodyDefinition { name; ty = WrittenType (typespec_string argument) }))
-      | _ ->
-         internal_err NoSpan "Couldn't parse declaration declaration")
 
 and parse_defs (mn: module_name) (cmi: concrete_module_interface) (im: import_map) (defs: concrete_def list): combined_definition list Outcome.t =
   Outcome.map (List.filter_map (fun def -> def))
     (Outcome.traverse (fun def -> Outcome.catch (fun () -> parse_def mn cmi im def)) defs)
 
 and parse_def (module_name: module_name) (cmi: concrete_module_interface) (im: import_map) (def: concrete_def): combined_definition option =
-  match def_name def with
-  | (Some name) ->
+  match def with
+  | ConcreteConstantDef (_, name, _, _, _) | ConcreteRecordDef (ConcreteRecord (_, name, _, _, _, _))
+  | ConcreteUnionDef (ConcreteUnion (_, name, _, _, _, _)) | ConcreteFunctionDef (_, name, _, _, _, _, _, _)
+  | ConcreteTypeClassDef (ConcreteTypeClass (_, name, _, _, _)) ->
      (* If this def exists in the interface, skip it *)
      (match get_concrete_decl cmi name with
       | (Some _) ->
          None
       | None ->
          Some (private_def module_name im def))
-  | None ->
-     (match def with
-      | ConcreteInstanceDef (ConcreteInstance (_, name, typarams, argument, _, _)) ->
-      (* It's an instance declaration. If the interface file declares it, ignore
-         it: it's already been processed. Otherwise, process it as a private
-         instance declaration. *)
-         if has_instance_decl cmi name typarams argument then
-           None
-         else
-           Some (private_def module_name im def)
-      | _ ->
-         internal_err NoSpan "Couldn't parse definition")
+  | ConcreteInstanceDef (ConcreteInstance (_, name, typarams, argument, _, _)) ->
+     (* It's an instance declaration. If the interface file declares it, ignore
+        it: it's already been processed. Otherwise, process it as a private
+        instance declaration. *)
+     if has_instance_decl cmi name typarams argument then
+       None
+     else
+       Some (private_def module_name im def)
 
 let as_public (def: combined_definition): combined_definition =
   match def with

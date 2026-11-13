@@ -200,6 +200,7 @@ and augment_assign_tmp (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (name
        let _ = match_type (env, module_name, place) ty (get_type place value) in
        (TAssignTmp (name, value), lexenv, supply)
     | None ->
+       (* As in TypeCheckExpr.augment_temporary: depends on the stage. *)
        internal_err place "Unknown temporary."
   end
 

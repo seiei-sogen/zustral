@@ -666,6 +666,9 @@ and get_function_definition (env: env) (id: function_id): (typarams * value_para
   | Body body ->
      (typarams, value_params, rt, body)
   | BodyNotAttached | Foreign _ ->
+     (* Depends on the stage: the body extraction pass stores the body of every
+        function written in Austral. A foreign function cannot have type
+        parameters (030/055) or be exported, so no monomorph of one is made. *)
      internal_err NoSpan ("function `" ^ (ident_string name) ^ "` has no body")
 
 and get_method_definition (env: env) (id: ins_meth_id): (typarams * value_parameter list * ty * tstmt) =
@@ -675,6 +678,8 @@ and get_method_definition (env: env) (id: ins_meth_id): (typarams * value_parame
   | Some body ->
      (typarams, value_params, rt, body)
   | None ->
+     (* Depends on the stage: the body extraction pass stores the body of every
+        instance method. *)
      internal_err NoSpan ("method with ID `" ^ (show_instance_id instance_id) ^ "` has no body")
 
 and monomorphize_slot_list (env: env) (slots: typed_slot list): (env * mono_slot list) =

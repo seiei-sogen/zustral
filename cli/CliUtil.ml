@@ -103,18 +103,13 @@ let pop_value_flag (arglist: arglist) (name: string): (arglist * string) option 
   | None ->
      None
 
-let is_pos (arg: arg): bool =
-  match arg with
-  | PositionalArg _ -> true
-  | _ -> false
-
-let pos_name (arg: arg): string =
-  match arg with
-  | PositionalArg value -> value
-  | _ -> internal_err NoSpan "pos_name called with non-positional argument."
-
 let pop_positional (arglist: arglist): (arglist * string list) =
   let (ArgList l) = arglist in
-  let pos: arg list = List.filter is_pos l
-  and nonpos: arg list = List.filter (fun a -> not (is_pos a)) l in
-  (ArgList nonpos, List.map pos_name pos)
+  let (pos, nonpos): string list * arg list =
+    List.partition_map (fun (arg: arg) ->
+        match arg with
+        | PositionalArg value -> Either.Left value
+        | BoolFlag _ | ValueFlag _ -> Either.Right arg)
+      l
+  in
+  (ArgList nonpos, pos)

@@ -102,6 +102,9 @@ let rec get_type (place: place) = function
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
       | MonoTy _ ->
+         (* The type checker makes a dereference only of an expression it has
+            found to be a reference. The stage tree does not keep the parts of
+            that type apart. *)
          internal_err place ("a dereference expression was constructed whose argument is not a reference type."))
   | TSizeOf _ ->
      Integer (Unsigned, WidthByteSize)

@@ -143,42 +143,29 @@ and check_bindings (place: place) (typarams: typarams) (bindings: type_bindings)
 
 (* Argument List Checking *)
 
+(* Each parameter with its argument, or None when there are not as many
+   arguments as parameters. *)
+let rec pair_arguments (params: value_parameter list) (args: texpr list): (value_parameter * texpr) list option =
+  match (params, args) with
+  | ((first_param::rest_params), (first_arg::rest_args)) ->
+     Option.map (fun rest -> (first_param, first_arg) :: rest) (pair_arguments rest_params rest_args)
+  | ([], []) ->
+     Some []
+  | ((_::_), []) | ([], (_::_)) ->
+     None
+
 (* Given a list of type parameters, and a list of arguments, check that the
    lists have the same length and each argument satisfies each corresponding
    parameter. Return the resulting set of type bindings. *)
 let rec check_argument_list (ctx: expr_ctx) (name: identifier) (params: value_parameter list) (args: texpr list): type_bindings =
-  (* Check that the number of parameters is the same as the number of
-     arguments. *)
-  check_arity (ctx_place ctx) name params args;
-  (* Check arguments against parameters *)
-  check_argument_list' ctx empty_bindings params args
-
-and check_arity (place: place) (name: identifier) (params: value_parameter list) (args: texpr list): unit =
-  let nparams = List.length params
-  and nargs = List.length args in
-  if nparams = nargs then
-    ()
-  else
-    type_error place (CallWrongArity { name; expected = nparams; actual = nargs })
-
-(* Precondition: both lists have the same length. *)
-and check_argument_list' (ctx: expr_ctx) (bindings: type_bindings) (params: value_parameter list) (args: texpr list): type_bindings =
-  match (params, args) with
-  | ((first_param::rest_params), (first_arg::rest_args)) ->
-     let bindings' = merge_bindings (ctx_place ctx) bindings (match_parameter ctx first_param first_arg) in
-     check_argument_list' ctx bindings' rest_params rest_args
-  | ([], []) ->
-     bindings
-  | _ ->
-     internal_err (ctx_place ctx) ("couldn't check argument list in module `"
-                   ^ (mod_name_string (ctx_module_name ctx))
-                   ^ "` with bindings: "
-                   ^ (show_type_bindings bindings)
-                   ^ ",\n params: `{ "
-                   ^ (String.concat ", " (List.map show_value_parameter params))
-                   ^ " }`,\n and args: `{ "
-                   ^ (String.concat ", " (List.map show_texpr args))
-                   ^ "}`")
+  match pair_arguments params args with
+  | Some pairs ->
+     List.fold_left
+       (fun bindings (param, arg) -> merge_bindings (ctx_place ctx) bindings (match_parameter ctx param arg))
+       empty_bindings
+       pairs
+  | None ->
+     type_error (ctx_place ctx) (CallWrongArity { name; expected = List.length params; actual = List.length args })
 
 and match_parameter (ctx: expr_ctx) (param: value_parameter) (arg: texpr): type_bindings =
   let (ValueParameter (_, ty)) = param in
@@ -433,6 +420,8 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
          let substs = make_substs (ctx_place ctx) instance_bindings typarams in
          TMethodCall (meth_id, callable_name, typarams, arguments', rt'', substs))
   | None ->
+     (* check_bindings above has found that the bindings bind exactly the
+        parameter of the typeclass. The lookup still returns an option. *)
      internal_err (ctx_place ctx) "couldn't extract dispatch type."
 
 and cast_arguments (bindings: type_bindings) (params: value_parameter list) (arguments: texpr list): texpr list =
@@ -595,6 +584,9 @@ and augment_temporary (ctx: expr_ctx) (name: identifier): texpr =
   | Some (ty, _) ->
      TTemporary (name, ty)
   | None ->
+     (* Depends on the stage: the desugaring passes that make a temporary
+        declare it before they use it, in the same block. The lexical environment
+        does not tell temporaries from other variables. *)
      internal_err (ctx_place ctx) ("Temporary variable does not exist in lexenv: " ^ (ident_string name))
 
 and augment_comparison ctx op lhs rhs =

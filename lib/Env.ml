@@ -57,6 +57,8 @@ let registered (place: place) (what: unit -> string) (found: 'a option): 'a =
   | Some thing ->
      thing
   | None ->
+     (* An ID from a later environment, as above. The type of an ID does not say
+        which environment made it. *)
      internal_err place ("No " ^ (what ()) ^ " in this environment.")
 
 let get_module_by_id (place: place) (env: env) (mod_id: mod_id): mod_rec =
@@ -334,6 +336,8 @@ let store_function_body (env: env) (fn_id: function_id) (body: tstmt): env =
     (* A foreign function is typed as TForeignFunction, which has no body to
        store. *)
     | Body _ | Foreign _ ->
+       (* Depends on the stage: the body extraction pass stores each body once.
+          The type of a declaration does not say whether that pass has run. *)
        internal_err NoSpan ("function `" ^ (ident_string fn.name) ^ "` already has a body")
     | BodyNotAttached ->
        Function { fn with impl = Body body }
@@ -359,6 +363,7 @@ and replace_method_body (meth: ins_meth_rec) (new_body: tstmt): ins_meth_rec =
   let (InsMethRec { id; instance_id; method_id; docstring; name; typarams; value_params; rt; body }) = meth in
   (match body with
    | Some _ ->
+      (* As in store_function_body: depends on the stage. *)
       internal_err NoSpan ("function `" ^ (ident_string name) ^ "` already has a body")
    | None ->
       InsMethRec { id; instance_id; method_id; docstring; name; typarams; value_params; rt; body=(Some new_body) })

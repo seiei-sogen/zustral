@@ -61,6 +61,9 @@ let get_entry_or_fail (place: place) (tbl: state_tbl) (name: identifier): (ty * 
   match get_entry tbl name with
   | Some p -> p
   | None ->
+     (* Depends on the stage: the type checker has rejected a use of an
+        undeclared variable, and this pass adds each variable to the table where
+        it is declared. *)
      internal_err place ("variable `"
           ^ (ident_string name)
           ^ "` not in state table. Table contents: \n\n"
@@ -152,17 +155,18 @@ let is_pending (tbl: state_tbl) (name: identifier): bool =
 let mark_pending (place: place) (tbl: state_tbl) (name: identifier): state_tbl =
   let (StateTable (rows, pending)) = tbl in
   if is_pending tbl name then
+    (* Depends on the order of the checks: a variable is marked pending when it
+       is consumed inside a loop, consuming it again is reported first
+       (error_already_consumed), and assigning to it removes the mark. *)
     internal_err place "Identifier twice marked pending."
   else
     StateTable (rows, name :: pending)
 
-let remove_pending (place: place) (tbl: state_tbl) (name: identifier): state_tbl =
-  if not (is_pending tbl name) then
-    internal_err place "Tried to remove_pending place an identifier not on the list of pending variables."
-  else
-    let (StateTable (rows, pending)) = tbl in
-    let pending' = List.filter (fun elem -> not (equal_identifier name elem)) pending in
-    StateTable (rows, pending')
+(* The variable is no longer pending, if it was. *)
+let remove_pending (tbl: state_tbl) (name: identifier): state_tbl =
+  let (StateTable (rows, pending)) = tbl in
+  let pending' = List.filter (fun elem -> not (equal_identifier name elem)) pending in
+  StateTable (rows, pending')
 
 let subtract (a: identifier list) (b: identifier list): identifier list =
   (* elements that are in a and not in b *)
@@ -287,6 +291,8 @@ let partition (place: place) (n: int): partitions =
       if n = 0 then
         Zero
       else
+        (* The argument counts appearances, so it is not negative. OCaml has no
+           type of natural numbers. *)
         internal_err place "Impossible"
 
 (* Table consistency *)
@@ -294,34 +300,14 @@ let partition (place: place) (n: int): partitions =
 let tables_are_consistent (place: place) (statement: LinearityErrors.branching) (a: state_tbl) (b: state_tbl): unit =
   let a: state_tbl = trim_free place a
   and b: state_tbl = trim_free place b in
-  (* Find common variables. *)
-  let names: identifier list =
-    List.filter_map (fun (name, _, _, _) ->
+  (* The variables both tables have, each with its state in A and its state
+     in B. *)
+  let common: (identifier * var_state * var_state) list =
+    List.filter_map (fun (name, _, _, state_a) ->
         match get_entry b name with
-        | Some _ -> Some name
+        | Some (_, _, state_b) -> Some (name, state_a, state_b)
         | None -> None)
       (tbl_to_list a)
-  in
-  (* Make a list of triples with the variable name, its state in A, and its
-     state in B. *)
-  let common: (identifier * var_state * var_state) list =
-    List.map (fun name ->
-        let state_a =
-          match get_entry a name with
-          | Some (_, _, state_a) ->
-             state_a
-          | None ->
-             internal_err place "bad state table"
-        in
-        let state_b =
-          match get_entry b name with
-          | Some (_, _, state_b) ->
-             state_b
-          | None ->
-             internal_err place "bad state table"
-        in
-        (name, state_a, state_b))
-      names
   in
   (* Ensure the states are the same. *)
   List.iter (fun (name, state_a, state_b) ->
@@ -462,10 +448,7 @@ let rec check_stmt (place: place) (tbl: state_tbl) (depth: loop_depth) (stmt: ts
                 tbl
            | Consumed ->
               let tbl: state_tbl = update_tbl place tbl name Unconsumed in
-              if is_pending tbl name then
-                remove_pending place tbl name
-              else
-                tbl
+              remove_pending tbl name
          end
       | None ->
          tbl
@@ -511,10 +494,7 @@ let rec check_stmt (place: place) (tbl: state_tbl) (depth: loop_depth) (stmt: ts
             tbl
        | Consumed ->
           let tbl: state_tbl = update_tbl place tbl name Unconsumed in
-          if is_pending tbl name then
-            remove_pending place tbl name
-          else
-            tbl
+          remove_pending tbl name
      end
   | TInitialAssign (_, rvalue) ->
      let tbl: state_tbl = check_expr place tbl depth rvalue in

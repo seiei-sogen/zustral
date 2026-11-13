@@ -12,10 +12,6 @@ open Common
 (** Used by the parser to easily create a module body from its components and a list of pragmas. *)
 val make_module_body : module_name -> concrete_import_list list -> pragma list -> concrete_def list -> docstring -> concrete_module_body
 
-val concrete_decl_name : concrete_decl -> identifier option
-
-val def_name : concrete_def -> identifier option
-
 val get_concrete_decl : concrete_module_interface -> identifier -> concrete_decl option
 
 val get_concrete_def : concrete_module_body -> identifier -> concrete_def option

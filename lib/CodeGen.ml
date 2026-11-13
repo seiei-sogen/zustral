@@ -170,6 +170,9 @@ let rec gen_type (ty: mono_ty): c_ty =
   | MonoFnPtr _ ->
      fn_type
   | MonoRegionTyVar _ ->
+     (* No expression has a type in the Region universe, so no value has a
+        region type variable as its type: one is only the region of a reference,
+        which this function drops. mono_ty is one type for both places. *)
      internal_err NoSpan "Invalid C type"
 
 (* Expressions *)
@@ -184,6 +187,9 @@ let union_type_id = function
   | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
   | MonoRegionTy _ | MonoReadRef _ | MonoWriteRef _ | MonoSpan _ | MonoSpanMut _
   | MonoAddress _ | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
+     (* The stage tree keeps the type of a union value, or of a reference to
+        one, as a mono_ty, not as the ID of the union's monomorph. The type
+        checker made that type from a union declaration. *)
      internal_err NoSpan "Union is not a named type?"
 
 (* Given the ID of a union type, returns the name of the
@@ -290,6 +296,9 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
          | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
          | MonoNamedType _ | MonoRegionTy _ | MonoSpan _ | MonoSpanMut _
          | MonoAddress _ | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
+            (* The type checker gives an index expression the type of a
+               reference to the element. The stage tree keeps that type, not the
+               element type it was made from. *)
             internal_err NoSpan "Internal error"
        end
      in
@@ -310,6 +319,9 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
          | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
          | MonoNamedType _ | MonoRegionTy _ | MonoSpan _ | MonoSpanMut _
          | MonoAddress _ | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
+            (* The type checker gives an index expression the type of a
+               reference to the element. The stage tree keeps that type, not the
+               element type it was made from. *)
             internal_err NoSpan "Internal error"
        end
      in

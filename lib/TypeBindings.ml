@@ -63,12 +63,6 @@ let bindings_list (TypeBindings m) =
 
 let empty_bindings = TypeBindings BindingsMap.empty
 
-let show_type_bindings (TypeBindings m) =
-  let show_binding (tp, t) =
-    (show_type_parameter tp) ^ " => " ^ (show_ty t)
-  in
-  "TypeBindings {" ^ (String.concat ", " (List.map show_binding (BindingsMap.bindings m))) ^ "}"
-
 let get_binding (TypeBindings m) tp =
   BindingsMap.find_opt tp m
 
