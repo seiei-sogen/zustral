@@ -585,14 +585,7 @@ and augment_variable (ctx: expr_ctx) (name: qident) (from_context: context_bindi
          generic_error (ctx_place ctx) (UnknownName { kind = VariableName; name = original_name name }))
 
 and augment_temporary (ctx: expr_ctx) (name: identifier): texpr =
-  match get_var (ctx_lexenv ctx) name with
-  | Some (ty, _) ->
-     TTemporary (name, ty)
-  | None ->
-     (* Depends on the stage: the desugaring passes that make a temporary
-        declare it before they use it, in the same block. The lexical environment
-        does not tell temporaries from other variables. *)
-     internal_err (ctx_place ctx) ("Temporary variable does not exist in lexenv: " ^ (ident_string name))
+  TTemporary (name, get_temporary_type (ctx_place ctx) (ctx_lexenv ctx) name)
 
 and augment_comparison ctx op lhs rhs =
   let lhs' = infer ctx lhs

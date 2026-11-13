@@ -209,15 +209,9 @@ and augment_let_tmp (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (name: i
 and augment_assign_tmp (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (name: identifier) (value: aexpr): tstmt * lexenv * Supply.t =
   let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
   let value = infer_expr place module_name env rm typarams lexenv value in
-  begin
-    match get_var lexenv name with
-    | Some (ty, _) ->
-       let _ = match_type (env, module_name, place) ty (get_type place value) in
-       (TAssignTmp (name, value), lexenv, supply)
-    | None ->
-       (* As in TypeCheckExpr.augment_temporary: depends on the stage. *)
-       internal_err place "Unknown temporary."
-  end
+  let ty = get_temporary_type place lexenv name in
+  let _ = match_type (env, module_name, place) ty (get_type place value) in
+  (TAssignTmp (name, value), lexenv, supply)
 
 and augment_destructure (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (mut: mutability) (bindings: qbinding list) (value: aexpr) (body: astmt): tstmt * lexenv * Supply.t =
   let ctx = stmt_at ctx span in

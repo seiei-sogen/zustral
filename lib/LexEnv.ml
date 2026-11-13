@@ -23,6 +23,16 @@ let get_var (l: lexenv) (name: identifier): (ty * var_source) option =
   let (LexEnv inner) = l in
   Option.map (fun (_, t, s) -> (t, s)) (List.find_opt (fun (n, _, _) -> n = name) inner)
 
+let get_temporary_type (place: place) (l: lexenv) (name: identifier): ty =
+  match get_var l name with
+  | Some (ty, _) ->
+     ty
+  | None ->
+     (* Depends on the stage: the desugaring passes that make a temporary
+        declare it before they use it, in the same block. The lexical
+        environment does not tell temporaries from other variables. *)
+     internal_err place ("Temporary variable does not exist in lexenv: " ^ (ident_string name))
+
 let push_var (place: place) (l: lexenv) (name: identifier) (ty: ty) (source: var_source): lexenv =
   let (LexEnv inner) = l in
   match get_var l name with

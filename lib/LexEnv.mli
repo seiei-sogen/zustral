@@ -39,3 +39,7 @@ val remove_vars : lexenv -> identifier list -> lexenv
 
 (** Retrieve a variable by name. *)
 val get_var : lexenv -> identifier -> (ty * var_source) option
+
+(** The type of a temporary, given its name. The temporary must be in the
+    lexenv: the passes that make temporaries declare each before they use it. *)
+val get_temporary_type : Error.place -> lexenv -> identifier -> ty
