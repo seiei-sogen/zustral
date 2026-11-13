@@ -20,12 +20,11 @@
 #      return their errors as values (escape-check.py)
 #   9. only the environment makes IDs: no file but lib/Env.ml names
 #      Supply.initial or a fresh_<kind>_id (id-makers.py)
-#  10. the fragile matches (a catch-all arm over a variant type): the counts of
-#      expected/fragile-totals.txt, and none on the types of lib/Type.ml or on
-#      MonoType.mono_ty. This builds the compiler once more, with warning 4 on
 # Each step prints one line that starts with ok or FAIL.
 # Exits 1 if a step fails, 2 if a compiler could not be built or run.
-# --quick skips steps 1, 2, 3 and 10.
+# --quick skips steps 1, 2 and 3.
+# A catch-all arm over a variant type is not a step: it stops the build
+# (warning 4 is an error in lib/dune and cli/dune).
 #
 # One check is not here, because it needs a second, instrumented build of the
 # compiler: `coverage.sh --messages`, which fails when a line of error wording
@@ -68,7 +67,10 @@ in_shell() {
 # The base compiler is built with the packages its own commit asks for. They
 # can differ from the working tree's (a commit may add or drop a dependency).
 in_base_shell() { # directory command
-  if [[ -n ${IN_NIX_SHELL:-} ]]; then
+  # CI runs under nix-shell with network access and no flags. Where the flake
+  # inputs are given by hand (ZUSTRAL_NIX_FLAGS, for a machine without network
+  # access), they are used also when this script is called from inside a shell.
+  if [[ -n ${IN_NIX_SHELL:-} && ${#NIX_FLAGS[@]} -eq 0 ]]; then
     nix-shell "$1/shell.nix" --run "$2"
   else
     nix develop "path:$1" "${NIX_FLAGS[@]}" --command bash -c "$2"
@@ -117,8 +119,5 @@ step "unused exports" "$HERE/unused-exports.sh"
 step "error messages have tests" python3 "$HERE/unpinned-messages.py"
 step "no error escapes a stage" python3 "$HERE/escape-check.py"
 step "only the environment makes IDs" python3 "$HERE/id-makers.py"
-if ((!QUICK)); then
-  step "fragile matches" "$HERE/measure.sh" --check-fragile
-fi
 
 exit "$failed"

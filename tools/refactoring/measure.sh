@@ -3,10 +3,6 @@
 # wants to shrink. See docs/research/functional-domain-refactoring/README.md.
 #   measure.sh            compare with expected/
 #   measure.sh --record   rewrite expected/ from the current tree
-#   measure.sh --fragile  also count fragile matches (needs a compiler build)
-#   measure.sh --check-fragile  only the fragile matches: fail unless the totals
-#                         equal expected/fragile-totals.txt and none is on a
-#                         type of lib/Type.ml or on MonoType.mono_ty
 #   measure.sh --self-test
 #                         check the patterns of the columns io, names and state against
 #                         the sample lines in samples/ (every other mode does
@@ -20,19 +16,17 @@
 #   git archive befc0ad lib bin | tar -x -C "$D"
 #   mkdir "$D/cli" && mv "$D"/lib/Cli*.ml "$D/cli/"
 #   measure.sh --tree "$D"
-# Environment for --fragile:
-#   ZUSTRAL_NIX_FLAGS      extra flags for `nix develop`
-#   ZUSTRAL_BUILD_TIMEOUT  seconds allowed for the build (default 900)
+# Fragile matches (a catch-all arm over a variant type) are not counted here any
+# more: they are an error of the build (warning 4 in lib/dune and cli/dune). The
+# number of the time the plan was made is in baseline/fragile-totals.txt.
 set -uo pipefail
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT=$(cd "$HERE/../.." && pwd)
-RECORD=0 FRAGILE=0 CHECK_FRAGILE=0 SELF_TEST=0 TREE=
+RECORD=0 SELF_TEST=0 TREE=
 while (($#)); do
   case $1 in
     --record) RECORD=1 ;;
-    --fragile) FRAGILE=1 ;;
-    --check-fragile) CHECK_FRAGILE=1 ;;
     --self-test) SELF_TEST=1 ;;
     --tree) TREE=${2:?usage: measure.sh --tree DIR}; shift ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
@@ -183,43 +177,6 @@ totals() { # metrics-file
     END { printf "files %d\nlines %d\nraise %d\ncatch %d\nstate %d\nio %d\nwildcard %d\nstrings %d\ninternal %d\nadhoc %d\ncoreio %d\nnames %d\n", n, s[2], s[3], s[4], s[5], s[6], s[7], s[8], s[9], s[10], coreio, s[11] }' "$1"
 }
 
-# Fragile matches: a match that a new constructor would fall into without a
-# compile error. The OCaml compiler reports each one as warning 4.
-fragile() {
-  local w="$T/tree"
-  mkdir -p "$w"
-  # Untracked files are copied too: the gate runs before a new file is committed.
-  (cd "$ROOT" && git ls-files -z --cached --others --exclude-standard lib cli bin dune-project concat_builtins.py austral.opam | xargs -0 tar -cf - ) | tar -xf - -C "$w"
-  read -r -a nix_flags <<< "${ZUSTRAL_NIX_FLAGS:-}"
-  local build='python3 concat_builtins.py && dune build --root . --profile release ./lib ./cli 2>&1'
-  if [[ -n ${IN_NIX_SHELL:-} ]]; then
-    (cd "$w" && OCAMLPARAM="_,w=+4,warn-error=-a" timeout "${ZUSTRAL_BUILD_TIMEOUT:-900}" bash -c "$build") > "$T/build.log"
-  else
-    (cd "$w" && OCAMLPARAM="_,w=+4,warn-error=-a" timeout "${ZUSTRAL_BUILD_TIMEOUT:-900}" \
-      nix develop "$ROOT" "${nix_flags[@]}" --command bash -c "$build") > "$T/build.log"
-  fi
-  local rc=$?
-  ((rc == 0)) || { echo "build failed ($rc): $(tail -n 3 "$T/build.log")" >&2; return 1; }
-  awk '
-    /^File "/ { split($0, a, "\""); file = a[2]; next }
-    /^Warning 4 / { want = 1; next }
-    want && /constructors are added to type/ {
-      t = $0; sub(/.*to type /, "", t); sub(/\.$/, "", t); sub(/^Austral_(core|cli)__/, "", t)
-      want = 0
-      # A type named without its module is defined in the file being compiled.
-      if (t !~ /\./) { m = file; sub(/.*\//, "", m); sub(/\.ml$/, "", m); t = m "." t }
-      print file "\t" t
-    }' "$T/build.log" | LC_ALL=C sort | uniq -c | awk '{ print $2 "\t" $3 "\t" $1 }'
-}
-
-# type-fragile is the part on the types of lib/Type.ml and on
-# MonoType.mono_ty. R20 brought it to 0; a new type constructor must stop
-# the build at every match on these types, so it stays at 0.
-fragile_totals() { # fragile-file
-  awk -F'\t' '{ s += $3; f[$1] = 1; t[$2] += $3; if ($2 ~ /^(Type|MonoType)\./) ty += $3 }
-    END { print "fragile-matches " s + 0; print "files " length(f); print "type-fragile " ty + 0; for (k in t) print "type " k " " t[k] }' "$1" | LC_ALL=C sort
-}
-
 check() { # name
   if ((RECORD)); then
     cp "$T/$1" "$HERE/expected/$1"; echo "recorded $1"
@@ -233,36 +190,10 @@ check() { # name
 if ((SELF_TEST)); then self_test; exit $?; fi
 # A count means what the samples say it means. Every run checks that first.
 self_test > "$T/self-test.log" || { cat "$T/self-test.log"; echo "the patterns disagree with samples/"; exit 1; }
-if ((CHECK_FRAGILE)); then
-  fragile > "$T/fragile.tsv" || exit 1
-  fragile_totals "$T/fragile.tsv" > "$T/fragile-totals.txt"
-  # Recording a larger number must not hide a new catch-all on these types.
-  if ! grep -qx 'type-fragile 0' "$T/fragile-totals.txt"; then
-    echo "a match on a type of lib/Type.ml or on MonoType.mono_ty has a catch-all arm:"
-    awk -F'\t' '$2 ~ /^(Type|MonoType)\./' "$T/fragile.tsv"
-    exit 1
-  fi
-  if ! diff -u "$HERE/expected/fragile-totals.txt" "$T/fragile-totals.txt"; then
-    echo "MISMATCH fragile-totals.txt (if the counts went down: measure.sh --fragile --record)"
-    exit 1
-  fi
-  echo "match fragile-totals.txt: $(grep -E '^(fragile-matches|type-fragile) ' "$T/fragile-totals.txt" | paste -sd, - | sed 's/,/, /')"
-  exit 0
-fi
-
 failed=0
 metrics > "$T/metrics.tsv"
 totals "$T/metrics.tsv" > "$T/totals.txt"
 if [[ -n $TREE ]]; then cat "$T/totals.txt"; exit 0; fi
 check metrics.tsv
 check totals.txt
-if ((FRAGILE)); then
-  if fragile > "$T/fragile.tsv"; then
-    fragile_totals "$T/fragile.tsv" > "$T/fragile-totals.txt"
-    check fragile.tsv
-    check fragile-totals.txt
-  else
-    failed=1
-  fi
-fi
 exit "$failed"

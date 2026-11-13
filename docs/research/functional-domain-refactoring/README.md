@@ -109,9 +109,9 @@ python3 equivalence.py compare OUT_A OUT_B
 関数の名前を、ファイルをまたいで単語として探した。同じ名前の関数が別のモジュールにあると、区別できない。414 は上限の見積もりである。
 計画の R12 が、この数を使う。失敗しうる関数のすべてに `result` を返させると、およそ半分の関数の型が変わる。
 
-### 壊れやすい match（`measure.sh --fragile`）
+### 壊れやすい match
 
-OCaml のコンパイラは、何でも受ける枝を持つ match のうち、型に構成子を足すと黙って飲み込むものを、警告 4 で報告する。コンパイラ全体をこの警告を有効にしてビルドし、数えた。sexp の導出が生成したコードの分は除いた。
+OCaml のコンパイラは、何でも受ける枝を持つ match のうち、型に構成子を足すと黙って飲み込むものを、警告 4 で報告する。コンパイラ全体をこの警告を有効にしてビルドし、数えた（`OCAMLPARAM="_,w=+4,warn-error=-a"` を付けて `dune build` し、`Warning 4` の数を数える）。R25 の後は、数える道具はない。警告 4 は、`lib/dune` と `cli/dune` でエラーにしてあり、壊れやすい match を1つ書くとビルドが止まる。計画の時点の数は、`tools/refactoring/baseline/fragile-totals.txt` に残してある。sexp の導出が生成したコードの分は除いた。
 
 | 型 | 数 |
 |---|---|
@@ -133,7 +133,6 @@ sexp の導出が生成したコードには、別に 52 個ある。11 ファ�
 
 ```
 measure.sh                 # 数を expected/ と比べる
-measure.sh --fragile       # 壊れやすい match も数える。ビルドが要る
 unused-exports.sh          # 外から使われていない公開関数を、expected/ と比べる
 coverage.sh                # カバレッジを expected/ と比べる。ビルドが要る
 ```

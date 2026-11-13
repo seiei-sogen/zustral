@@ -269,13 +269,13 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
            (match pragmas with
             | [ForeignImportPragma s] ->
                Some s
-            | _ ->
+            | [] | [ForeignExportPragma _] | [UnsafeModulePragma] | _ :: _ :: _ ->
                None)
          and export_name: string option =
            (match pragmas with
             | [ForeignExportPragma name] ->
                Some name
-            | _ ->
+            | [] | [ForeignImportPragma _] | [UnsafeModulePragma] | _ :: _ :: _ ->
                None)
          in
          let _ =

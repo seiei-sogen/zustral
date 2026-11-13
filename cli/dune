@@ -4,4 +4,7 @@
  (synopsis "The command line of the Austral compiler: files, processes and exit codes.")
  (libraries austral_core unix yojson)
  (instrumentation (backend bisect_ppx))
- (preprocess (pps ppx_deriving.eq ppx_deriving.show)))
+ (preprocess (pps ppx_deriving.eq ppx_deriving.show))
+ (flags
+  ; A catch-all arm over a variant type (warning 4) is an error, as in lib/.
+  (:standard -w @4)))

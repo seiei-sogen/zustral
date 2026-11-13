@@ -10,8 +10,9 @@
  (instrumentation (backend bisect_ppx))
  (preprocess (pps ppx_deriving.eq ppx_deriving.show))
  (flags
-  ;menhir generates instances of the "unused rec flag"
-  ; warning
-  (:standard -w -39)))
+  ; Menhir generates instances of the "unused rec flag" warning (39).
+  ; A catch-all arm over a variant type (warning 4) is an error: a new
+  ; constructor must stop the build at every match that looks at its type.
+  (:standard -w -39 -w @4)))
 
 (documentation)
