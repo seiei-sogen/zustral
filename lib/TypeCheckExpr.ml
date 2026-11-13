@@ -421,16 +421,8 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
          in
          let params' = List.map (fun (ValueParameter (n, t)) -> ValueParameter (n, replace_variables instance_bindings t)) params in
          let arguments' = cast_arguments instance_bindings params' arguments in
-         let { typarams; id = instance_id; argument; _ }: instance_decl = instance in
-         let meth_id: ins_meth_id =
-           (match get_instance_method_from_instance_id_and_method_name (ctx_env ctx) instance_id (original_name callable_name) with
-            | Some (InsMethRec { id; _ }) -> id
-            (* An instance that leaves out a method of its typeclass is
-               accepted where it is declared (#91), so the call reports it. *)
-            | None ->
-               let tc_name: sident = get_decl_sident_or_die (ctx_place ctx) (ctx_env ctx) typeclass_id in
-               type_error (ctx_place ctx) (InstanceMissingMethod { typeclass = sident_name tc_name; ty = argument; method_name = original_name callable_name }))
-         in
+         let { typarams; _ }: instance_decl = instance in
+         let meth_id: ins_meth_id = get_method_of_instance (ctx_place ctx) (ctx_env ctx) instance (original_name callable_name) in
          let substs = make_substs (ctx_place ctx) instance_bindings typarams in
          TMethodCall (meth_id, callable_name, typarams, arguments', rt'', substs))
   | None ->

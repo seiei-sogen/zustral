@@ -4,9 +4,11 @@
   "text": [
     { "type": "text", "content": "The instance of the typeclass " },
     { "type": "code", "content": "Foo" },
-    { "type": "text", "content": " for the type " },
+    { "type": "text", "content": " for " },
     { "type": "type", "content": "Int32" },
-    { "type": "text", "content": " does not define the method " },
+    { "type": "text", "content": ", declared in the module " },
+    { "type": "code", "content": "Test" },
+    { "type": "text", "content": ", does not define the method " },
     { "type": "code", "content": "bar" },
     {
       "type": "text",

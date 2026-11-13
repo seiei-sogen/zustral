@@ -324,6 +324,23 @@ let match_type (ctx: ctx) (a: ty) (b: ty): type_bindings =
 let get_instance (place: place) (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: typeclass_id): (instance_decl * type_bindings) option =
   ok_or_raise place (try_get_instance place env source_module_name dispatch_ty typeclass)
 
+let get_method_of_instance (place: place) (env: env) (instance: instance_decl) (method_name: identifier): ins_meth_id =
+  let { id; typeclass_id; argument; mod_id; _ }: instance_decl = instance in
+  match get_instance_method_from_instance_id_and_method_name env id method_name with
+  | Some (InsMethRec { id; _ }) ->
+     id
+  | None ->
+     (* An instance that leaves out a method of its typeclass is accepted where
+        it is declared (#91), so the call reports it. The instance has no span:
+        the error names its module. *)
+     let { name; _ }: typeclass_decl = get_typeclass place env typeclass_id in
+     type_error place (InstanceMissingMethod {
+         typeclass = name;
+         ty = argument;
+         module_name = module_name_from_id place env mod_id;
+         method_name;
+       })
+
 let match_typarams (ctx: ctx) (typarams: typarams) (args: ty list): type_bindings =
   let typarams' = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams) in
   ok_or_raise (ctx_place ctx) (try_match_type_list ctx typarams' args)

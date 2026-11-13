@@ -35,3 +35,7 @@ val match_typarams : ctx -> typarams -> ty list -> type_bindings
 Parameters are: environment, source module name, dispatch type, and ID of the
 typeclass. *)
 val get_instance : Error.place -> env -> module_name -> ty -> typeclass_id -> (instance_decl * type_bindings) option
+
+(** The method of the given name of an instance found by {!get_instance}: a
+    type error if the instance does not define it. *)
+val get_method_of_instance : Error.place -> env -> instance_decl -> identifier -> ins_meth_id

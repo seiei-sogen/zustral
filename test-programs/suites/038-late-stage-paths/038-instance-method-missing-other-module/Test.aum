@@ -1,0 +1,8 @@
+import Lib (Foo, foo, bar, callBar);
+
+module body Test is
+    function main(): ExitCode is
+        printLn(callBar(10));
+        return ExitSuccess();
+    end;
+end module body.
