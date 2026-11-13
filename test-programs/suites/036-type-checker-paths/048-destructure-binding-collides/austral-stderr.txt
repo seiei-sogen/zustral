@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "push_var: var with the name b already exists"
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/048-destructure-binding-collides/Test.aum",
+    "startp": { "line": 9, "column": 8 },
+    "end": { "line": 9, "column": 59 }
+  },
+  "context": [
+    [ 7, "    function main(): ExitCode is" ],
+    [ 8, "        let b: Int32 := 1;" ],
+    [ 9, "        let { a: Int32, b: Int32 } := Pair(a => 2, b => 3);" ],
+    [ 10, "        return ExitSuccess();" ],
+    [ 11, "    end;" ]
+  ]
+}

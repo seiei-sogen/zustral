@@ -1,0 +1,6 @@
+module body Test is
+    function main(): ExitCode is
+        let x: Int32 := if condMissing then thenMissing else elseMissing;
+        return ExitSuccess();
+    end;
+end module body.

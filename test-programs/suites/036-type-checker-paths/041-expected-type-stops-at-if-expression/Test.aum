@@ -1,0 +1,7 @@
+module body Test is
+    function main(): ExitCode is
+        let c: Bool := true;
+        let x: Option[Int32] := if c then None() else None();
+        return ExitSuccess();
+    end;
+end module body.

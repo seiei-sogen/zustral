@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "push_var: var with the name i already exists"
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/045-for-variable-collides/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 6, "column": 16 }
+  },
+  "context": [
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        let i: Int32 := 1;" ],
+    [ 4, "        for i from 0 to 3 do" ],
+    [ 5, "            skip;" ],
+    [ 6, "        end for;" ],
+    [ 7, "        return ExitSuccess();" ],
+    [ 8, "    end;" ]
+  ]
+}

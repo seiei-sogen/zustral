@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "I can't find a " },
+    { "type": "text", "content": "variable" },
+    { "type": "text", "content": " named " },
+    { "type": "code", "content": "inSecond" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/054-case-branches-checked-last-declared-first/Test.aum",
+    "startp": { "line": 13, "column": 16 },
+    "end": { "line": 13, "column": 34 }
+  },
+  "context": [
+    [ 11, "                printLn(inFirst);" ],
+    [ 12, "            when Second do" ],
+    [ 13, "                printLn(inSecond);" ],
+    [ 14, "        end case;" ],
+    [ 15, "        return ExitSuccess();" ]
+  ]
+}

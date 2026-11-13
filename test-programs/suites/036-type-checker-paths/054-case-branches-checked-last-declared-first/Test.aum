@@ -1,0 +1,17 @@
+module body Test is
+    union Choice: Free is
+        case First;
+        case Second;
+    end;
+
+    function main(): ExitCode is
+        let c: Choice := First();
+        case c of
+            when First do
+                printLn(inFirst);
+            when Second do
+                printLn(inSecond);
+        end case;
+        return ExitSuccess();
+    end;
+end module body.

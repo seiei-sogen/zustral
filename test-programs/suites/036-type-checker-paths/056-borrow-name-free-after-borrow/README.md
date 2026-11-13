@@ -1,0 +1,1 @@
+Pins that the name of a `borrow` is free again after it: the type checker accepts the second `borrow` and the `let`, and reports the error of the last `let`. The program cannot be one that compiles, because the generated C declares `a` three times in one block (lib/TypingPass.ml, augment_stmt; lib/LexEnv.ml, remove_var).

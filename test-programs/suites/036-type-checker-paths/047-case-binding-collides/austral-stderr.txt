@@ -1,0 +1,27 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "push_var: var with the name value already exists"
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/047-case-binding-collides/Test.aum",
+    "startp": { "line": 5, "column": 8 },
+    "end": { "line": 10, "column": 17 }
+  },
+  "context": [
+    [ 3, "        let value: Int32 := 1;" ],
+    [ 4, "        let o: Option[Int32] := Some(value => 2);" ],
+    [ 5, "        case o of" ],
+    [ 6, "            when Some(value: Int32) do" ],
+    [ 7, "                skip;" ],
+    [ 8, "            when None do" ],
+    [ 9, "                skip;" ],
+    [ 10, "        end case;" ],
+    [ 11, "        return ExitSuccess();" ],
+    [ 12, "    end;" ]
+  ]
+}

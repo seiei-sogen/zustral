@@ -1,0 +1,10 @@
+module body Test is
+    function add(a: Int32, b: Int32): Int32 is
+        return a + b;
+    end;
+
+    function main(): ExitCode is
+        printLn(add(firstMissing, secondMissing));
+        return ExitSuccess();
+    end;
+end module body.

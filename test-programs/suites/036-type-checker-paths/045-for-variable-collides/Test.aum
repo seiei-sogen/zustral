@@ -1,0 +1,9 @@
+module body Test is
+    function main(): ExitCode is
+        let i: Int32 := 1;
+        for i from 0 to 3 do
+            skip;
+        end for;
+        return ExitSuccess();
+    end;
+end module body.

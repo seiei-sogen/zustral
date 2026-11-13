@@ -1,0 +1,15 @@
+module body Test is
+    generic [T: Free]
+    function identity(x: T): T is
+        return x;
+    end;
+
+    constant IntIdentity: Fn[Int32, Int32] := identity;
+
+    function main(): ExitCode is
+        let f: Fn[Int32, Int32] := IntIdentity;
+        let y: Int32 := f(7);
+        printLn(y);
+        return ExitSuccess();
+    end;
+end module body.

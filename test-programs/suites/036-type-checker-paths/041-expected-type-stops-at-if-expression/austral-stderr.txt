@@ -1,0 +1,28 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "code", "content": "None" },
+    {
+      "type": "text",
+      "content": " is generic but unconstrained, so its type is ambiguous."
+    },
+    { "type": "break" },
+    {
+      "type": "text",
+      "content": "Consider clarifying its type using a cast."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/041-expected-type-stops-at-if-expression/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 61 }
+  },
+  "context": [
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        let c: Bool := true;" ],
+    [ 4, "        let x: Option[Int32] := if c then None() else None();" ],
+    [ 5, "        return ExitSuccess();" ],
+    [ 6, "    end;" ]
+  ]
+}
