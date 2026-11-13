@@ -26,28 +26,44 @@ let test_parse_bool_constant _ =
   let s = "false" in
   peq s (CBoolConstant (simplespan s, false))
 
+(* Only NumberLiteral builds a literal's record, so these two tests read the
+   fields of the one the parser returns. *)
 let test_parse_int_constant _ =
-  let literal (written: string) (radix: radix) (value: int) =
-    CIntConstant (simplespan written, { written; radix; value = Z.of_int value })
+  let check (written: string) (radix: radix) (value: int) =
+    match p written with
+    | CIntConstant (span, literal) ->
+       eq (simplespan written) span;
+       eq written literal.written;
+       eq radix literal.radix;
+       eq ~cmp:Z.equal (Z.of_int value) literal.value
+    | _ ->
+       assert_failure (written ^ " did not parse as an integer constant")
   in
-  peq "0" (literal "0" Decimal 0);
-  peq "123" (literal "123" Decimal 123);
-  peq "1'000" (literal "1'000" Decimal 1000);
-  peq "010" (literal "010" Decimal 10);
-  peq "#xFF'FF" (literal "#xFF'FF" Hexadecimal 65535);
-  peq "#b11000" (literal "#b11000" Binary 24);
-  peq "#o30" (literal "#o30" Octal 24);
-  peq "'a'" (literal "'a'" Character 97)
+  check "0" Decimal 0;
+  check "123" Decimal 123;
+  check "1'000" Decimal 1000;
+  check "010" Decimal 10;
+  check "#xFF'FF" Hexadecimal 65535;
+  check "#b11000" Binary 24;
+  check "#o30" Octal 24;
+  check "'a'" Character 97
 
 let test_parse_float_constant _ =
-  let literal (written: string) (fraction_digits: int) (has_exponent: bool) =
-    CFloatConstant (simplespan written, { written; fraction_digits; has_exponent })
+  let check (written: string) (fraction_digits: int) (has_exponent: bool) =
+    match p written with
+    | CFloatConstant (span, literal) ->
+       eq (simplespan written) span;
+       eq written literal.written;
+       eq fraction_digits literal.fraction_digits;
+       eq has_exponent literal.has_exponent
+    | _ ->
+       assert_failure (written ^ " did not parse as a float constant")
   in
-  peq "0.0" (literal "0.0" 1 false);
-  peq "123.3" (literal "123.3" 1 false);
-  peq "1." (literal "1." 0 false);
-  peq "1'000.0e12" (literal "1'000.0e12" 1 true);
-  peq "1'000.000'1E-3" (literal "1'000.000'1E-3" 4 true)
+  check "0.0" 1 false;
+  check "123.3" 1 false;
+  check "1." 0 false;
+  check "1'000.0e12" 1 true;
+  check "1'000.000'1E-3" 4 true
 
 let test_number_literal_text _ =
   eq "1000" (int_text (of_decimal "1'000"));

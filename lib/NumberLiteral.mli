@@ -17,7 +17,7 @@ type radix =
   | Character
 [@@deriving show]
 
-type int_literal = {
+type int_literal = private {
   written: string;
   (** The text as the lexer saw it, with its prefix, sign and digit
       separators. *)
@@ -26,7 +26,7 @@ type int_literal = {
 }
 [@@deriving show]
 
-type float_literal = {
+type float_literal = private {
   written: string;
   (** The text as the lexer saw it, with its sign and digit separators. *)
   fraction_digits: int;
