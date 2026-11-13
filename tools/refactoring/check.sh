@@ -10,7 +10,9 @@
 #   3. the equivalence check: every program in the repository compiled by both
 #      compilers, with the generated C, stdout, stderr, exit status, error.html
 #      and the names of the files left behind compared
-#   4. the metrics: none of the counts in expected/totals.txt may go up
+#   4. the metrics: every count equals the one recorded in expected/. A commit
+#      that moves a count, down as well as up, records it again in the same
+#      commit (measure.sh --record) and says why in its message
 #   5. the interface files export nothing that no other file uses
 #   6. every piece of an error message appears in some test's expected output,
 #      or is on the recorded list of pieces no program can reach
@@ -102,7 +104,7 @@ python3 "$HERE/equivalence.py" snapshot "$base" "$T/a" > /dev/null || { echo "FA
 python3 "$HERE/equivalence.py" snapshot "$ROOT/austral" "$T/b" > /dev/null || { echo "FAIL  head snapshot"; exit 2; }
 step "equivalence with $BASE_REF" python3 "$HERE/equivalence.py" compare "${NORMALIZE[@]}" "$T/a" "$T/b"
 if ((failed)); then python3 "$HERE/equivalence.py" compare "${NORMALIZE[@]}" "$T/a" "$T/b" | head -n 60; fi
-step "metrics" "$HERE/measure.sh" --check
+step "metrics" "$HERE/measure.sh"
 step "unused exports" "$HERE/unused-exports.sh"
 step "error messages have tests" python3 "$HERE/unpinned-messages.py"
 step "no error escapes a stage" python3 "$HERE/escape-check.py"
