@@ -97,8 +97,7 @@ let is_bool (place: place) (e: texpr): bool =
   match get_type place e with
   | Boolean -> true
   | Unit | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
-  | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
-  | MonoTy _ -> false
+  | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ -> false
 
 (* Since the extraction pass has already happened, we can simplify the call to
    `parse_type` by passing an empty list of local type signatures. *)
@@ -131,10 +130,10 @@ and check_bindings (place: place) (typarams: typarams) (bindings: type_bindings)
     in
     (match get_binding bindings tp with
      | Some ty ->
-        if universe_compatible u (type_universe place ty) then
+        if universe_compatible u (type_universe ty) then
           ()
         else
-          generic_error place (BindingUniverseMismatch { expected = u; actual = type_universe place ty })
+          generic_error place (BindingUniverseMismatch { expected = u; actual = type_universe ty })
      | None ->
         generic_error place (NoBindingForParameter n))
   in
@@ -235,8 +234,8 @@ and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (from_c
     match fn_ptr_ty with
     | FnPtr (paramtys, rt) -> (paramtys, rt)
     | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
-    | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
-    | MonoTy _ -> type_error (ctx_place ctx) (CallNonCallable fn_ptr_ty)
+    | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ ->
+       type_error (ctx_place ctx) (CallNonCallable fn_ptr_ty)
   in
   (* Then, we synthesize a parameter list from the function pointer type. The
      parameter names are fake, but this is so we can reuse the arity-checking,
@@ -314,7 +313,7 @@ and augment_record_constructor (ctx: expr_ctx) (name: qident) (typarams: typaram
     (* Check: the set of bindings equals the set of type parameters *)
     check_bindings (ctx_place ctx) typarams (merge_bindings (ctx_place ctx) bindings bindings');
     (* Check the resulting type is in the correct universe *)
-    if universe_compatible universe (type_universe (ctx_place ctx) rt'') then
+    if universe_compatible universe (type_universe rt'') then
       TRecordConstructor (rt'', List.map2 (fun a b -> (a, b)) slot_names arguments)
     else
       generic_error (ctx_place ctx) ConstructorUniverseMismatch
@@ -353,7 +352,7 @@ and augment_union_constructor (ctx: expr_ctx) (union_id: union_id) (type_name: q
        of rt'' is not the declared one when that is `Type`: each replacement
        computed it again from the arguments. *)
     let tyargs = List.map (fun a -> replace_variables bindings'' (replace_variables bindings a)) tyargs in
-    let rt_universe = type_universe (ctx_place ctx) rt'' in
+    let rt_universe = type_universe rt'' in
     (* Check the resulting type is in the correct universe *)
     if universe_compatible universe rt_universe then
       TUnionConstructor {
@@ -410,7 +409,7 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
            type_error (ctx_place ctx) (UnconstrainedTypeParameter { typeclass = sident_name tc_name; typaram })
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _
-      | Pointer _ | FnPtr _ | MonoTy _ ->
+      | Pointer _ | FnPtr _ ->
          (* If it's not a type variable, continue normal instance resolution. *)
          let (instance, instance_bindings): instance_decl * type_bindings =
            (match get_instance (ctx_place ctx) (ctx_env ctx) (ctx_module_name ctx) dispatch_ty typeclass_id with
@@ -438,8 +437,7 @@ and cast_arguments (bindings: type_bindings) (params: value_parameter list) (arg
        (* Cast integer types *)
        TImplicitCast (value, expected')
     | Unit | Boolean | SingleFloat | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
-    | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
-    | MonoTy _ ->
+    | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
        value
   in
   List.map2 f params arguments
@@ -643,19 +641,19 @@ and augment_deref (ctx: expr_ctx) (expr: aexpr): texpr =
   let ty = get_type (ctx_place ctx) expr' in
   (match ty with
    | ReadRef (ty', _) ->
-      (match type_universe (ctx_place ctx) ty' with
+      (match type_universe ty' with
        | FreeUniverse ->
           TDeref (expr', ty')
        | LinearUniverse | TypeUniverse | RegionUniverse ->
           linearity_error (ctx_place ctx) (DereferenceNonFree ty'))
    | WriteRef (ty', _) ->
-      (match type_universe (ctx_place ctx) ty' with
+      (match type_universe ty' with
        | FreeUniverse ->
           TDeref (expr', ty')
        | LinearUniverse | TypeUniverse | RegionUniverse ->
           linearity_error (ctx_place ctx) (DereferenceNonFree ty'))
    | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
-   | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
+   | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
       type_error (ctx_place ctx) (DereferenceNonReference ty))
 
 and augment_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identifier): texpr =
@@ -668,7 +666,7 @@ and augment_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identifier): t
     | WriteRef (ty, reg) ->
        (ty, reg, WriteBorrow)
     | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
-    | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
+    | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
        generic_error (ctx_place ctx) (RefTransformNeedsRef (get_type (ctx_place ctx) expr))
   in
   (* The pointed-to type is a record. *)
@@ -677,8 +675,7 @@ and augment_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identifier): t
       | NamedType (name, args, _) ->
          (name, args)
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
-      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
-      | MonoTy _ ->
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
          type_error (ctx_place ctx) (CantAccessSlotNotRecord { slot_name; ty })
     end
   in
@@ -721,7 +718,7 @@ and augment_pointer_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identi
     | WriteRef (ty2, reg) ->
        (ty2, reg)
     | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
-    | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
+    | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
        generic_error (ctx_place ctx) (RefTransformNeedsRef (get_type (ctx_place ctx) expr))
   in
   (* ... to a reference... *)
@@ -732,7 +729,7 @@ and augment_pointer_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identi
     | WriteRef (ty3, _) ->
        (ty3, WriteBorrow)
     | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
-    | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
+    | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
        type_error (ctx_place ctx) (PointerAccessNotReference ty2)
   in
   (* ... to a record. *)
@@ -741,8 +738,7 @@ and augment_pointer_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identi
       | NamedType (name, args, _) ->
          (name, args)
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
-      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
-      | MonoTy _ ->
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
          type_error (ctx_place ctx) (CantAccessSlotNotRecord { slot_name; ty = ty3 })
     end
   in
@@ -789,7 +785,7 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
            ty
         | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
         | RegionTy _ | ReadRef _ | WriteRef _ | TyVar _ | Address _ | Pointer _
-        | FnPtr _ | MonoTy _ ->
+        | FnPtr _ ->
            type_error (ctx_place ctx) (CantIndexNotSpan ty)
       in
       TArrayIndex (expr, index_expr, elem_ty, reg, ReadBorrow)
@@ -803,7 +799,7 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
            ty
         | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
         | RegionTy _ | ReadRef _ | WriteRef _ | TyVar _ | Address _ | Pointer _
-        | FnPtr _ | MonoTy _ ->
+        | FnPtr _ ->
            type_error (ctx_place ctx) (CantIndexNotSpan ty)
       in
       TArrayIndex (expr, index_expr, elem_ty, reg, WriteBorrow)
@@ -813,7 +809,7 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
   | SpanMut (ty, reg) ->
      TSpanIndex (expr, index_expr, ty, reg, WriteBorrow)
   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
-  | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
+  | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
      type_error (ctx_place ctx) (ArrayIndexNotReference (get_type (ctx_place ctx) expr))
 
 
@@ -854,11 +850,11 @@ and check_annotated (ctx: expr_ctx) (expr: aexpr) (target_type: ty): texpr =
                 type_error (ctx_place ctx) (CastDifferentReferences DifferentTypeAndRegion))
          | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
          | RegionTy _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
-         | Pointer _ | FnPtr _ | MonoTy _ ->
+         | Pointer _ | FnPtr _ ->
             type_error (ctx_place ctx) CastWriteRefToNonRef)
      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
      | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
-     | FnPtr _ | MonoTy _ ->
+     | FnPtr _ ->
         (match try_match_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) target_type (get_type (ctx_place ctx) expr') with
          | Ok _ ->
             expr'
@@ -915,7 +911,7 @@ and augment_arithmetic (ctx: expr_ctx) (op: arithmetic_operator) (lhs: aexpr) (r
   (* Are the types the same? *)
   if lhs_ty = rhs_ty then
     (* If the types are the same type, check it is a numeric type. *)
-    if (is_numeric (ctx_place ctx) lhs_ty) then
+    if (is_numeric lhs_ty) then
       augment_arithmetic_call ()
     else
       type_error (ctx_place ctx) (ArithmeticNotNumeric lhs_ty)

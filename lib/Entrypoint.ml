@@ -75,8 +75,7 @@ and is_root_cap_type = function
   | NamedType (_, [], (FreeUniverse | TypeUniverse | RegionUniverse))
   | NamedType (_, _ :: _, _)
   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
-  | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
-  | MonoTy _ ->
+  | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
      false
 
 and is_exit_code_type = function
@@ -87,8 +86,7 @@ and is_exit_code_type = function
   | NamedType (_, [], (LinearUniverse | TypeUniverse | RegionUniverse))
   | NamedType (_, _ :: _, _)
   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
-  | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
-  | MonoTy _ ->
+  | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
      false
 
 let entrypoint_code root_cap_mono_id exit_code_mono_id id =

@@ -32,7 +32,7 @@ open ForeignType
 let check_slots_are_free (place: place) (name: identifier) (slots: typed_slot list): unit =
   let check_slot_is_free (slot: typed_slot): unit =
     let (TypedSlot (_, ty)) = slot in
-    match type_universe place ty with
+    match type_universe ty with
     | FreeUniverse ->
        ()
     | RegionUniverse ->
@@ -132,7 +132,7 @@ let rec region_held_by_value (place: place) (env: env) (seen: ty list) (ty: ty):
         | Some (Constant _ | UnionCase _ | Function _ | TypeClass _ | TypeClassMethod _ | Instance _) | None ->
            None)
   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _
-  | Span _ | SpanMut _ | FnPtr _ | MonoTy _ ->
+  | Span _ | SpanMut _ | FnPtr _ ->
      None
 
 let definition_span (def: combined_definition): Span.span =

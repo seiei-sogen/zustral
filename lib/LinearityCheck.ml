@@ -80,11 +80,11 @@ let add_entry (place: place) (tbl: state_tbl) (name: identifier) (ty: ty) (depth
         should already have caught a duplicate variable. *)
      internal_err place ("An entry exists in the state table with this name: " ^ (ident_string name))
 
-let trim_free (place: place) (tbl: state_tbl): state_tbl =
+let trim_free (tbl: state_tbl): state_tbl =
   let (StateTable (entries, pending)) = tbl in
   let trim tuple =
     let (_, ty, _, _) = tuple in
-    if universe_linear_ish (type_universe place ty) then
+    if universe_linear_ish (type_universe ty) then
       Some tuple
     else
       None
@@ -121,7 +121,7 @@ let remove_entry (place: place) (tbl: state_tbl) (name: identifier): state_tbl =
        | WriteRef _ -> true
        | SpanMut _ -> true
        | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
-       | ReadRef _ | Span _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
+       | ReadRef _ | Span _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
           false
      in
      let consumed: bool =
@@ -134,7 +134,7 @@ let remove_entry (place: place) (tbl: state_tbl) (name: identifier): state_tbl =
        let others = List.filter (fun (n, _, _, _) -> not (equal_identifier name n)) rows in
        StateTable (others, pending)
      else
-       if universe_linear_ish (type_universe place ty) then
+       if universe_linear_ish (type_universe ty) then
          linearity_error place (ForgotToConsume name)
        else
          let (StateTable (rows, pending)) = tbl in
@@ -302,8 +302,8 @@ let partition (n: int): partitions =
 (* Table consistency *)
 
 let tables_are_consistent (place: place) (statement: LinearityErrors.branching) (a: state_tbl) (b: state_tbl): unit =
-  let a: state_tbl = trim_free place a
-  and b: state_tbl = trim_free place b in
+  let a: state_tbl = trim_free a
+  and b: state_tbl = trim_free b in
   (* The variables both tables have, each with its state in A and its state
      in B. *)
   let common: (identifier * var_state * var_state) list =
@@ -371,14 +371,14 @@ let rec check_var_in_expr (place: place) (tbl: state_tbl) (depth: loop_depth) (n
 
 and consume_once (place: place) (tbl: state_tbl) (depth: loop_depth) (name: identifier) (ty: ty): state_tbl =
   let tbl: state_tbl =
-    if universe_linear_ish (type_universe place ty) then
+    if universe_linear_ish (type_universe ty) then
       update_tbl place tbl name Consumed
     else
       tbl
   in
     if depth <> get_loop_depth place tbl name then
     (* Consumed inside a loop, so mark it as pending. *)
-    if universe_linear_ish (type_universe place ty) then
+    if universe_linear_ish (type_universe ty) then
       mark_pending place tbl name
     else
       tbl
@@ -387,25 +387,25 @@ and consume_once (place: place) (tbl: state_tbl) (depth: loop_depth) (name: iden
     tbl
 
 and error_consumed_more_than_once (place: place) (name: identifier) (ty: ty) =
-  if universe_linear_ish (type_universe place ty) then
+  if universe_linear_ish (type_universe ty) then
     linearity_error place (ConsumedMoreThanOnce name)
   else
     ()
 
 and error_read_borrowed_and_consumed (place: place) (name: identifier) (ty: ty) =
-  if universe_linear_ish (type_universe place ty) then
+  if universe_linear_ish (type_universe ty) then
     linearity_error place (ConsumedWhileBorrowedRead name)
   else
     ()
 
 and error_write_borrowed_and_consumed (place: place) (name: identifier) (ty: ty) =
-  if universe_linear_ish (type_universe place ty) then
+  if universe_linear_ish (type_universe ty) then
     linearity_error place (ConsumedWhileBorrowedWrite name)
   else
     ()
 
 and error_already_consumed (place: place) (name: identifier) (ty: ty) =
-  if universe_linear_ish (type_universe place ty) then
+  if universe_linear_ish (type_universe ty) then
     linearity_error place (AlreadyConsumed name)
   else
     ()
@@ -446,7 +446,7 @@ let rec check_stmt (place: place) (tbl: state_tbl) (depth: loop_depth) (stmt: ts
          begin
            match state with
            | Unconsumed | BorrowedRead | BorrowedWrite ->
-              if universe_linear_ish (type_universe place ty) then
+              if universe_linear_ish (type_universe ty) then
                 linearity_error place (AssignToUnconsumed name)
               else
                 tbl
@@ -492,7 +492,7 @@ let rec check_stmt (place: place) (tbl: state_tbl) (depth: loop_depth) (stmt: ts
      begin
        match state with
        | Unconsumed | BorrowedRead | BorrowedWrite ->
-          if universe_linear_ish (type_universe place ty) then
+          if universe_linear_ish (type_universe ty) then
             linearity_error place (AssignToUnconsumed name)
           else
             tbl
@@ -623,8 +623,8 @@ let rec check_stmt (place: place) (tbl: state_tbl) (depth: loop_depth) (stmt: ts
                  ()
               | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat
               | NamedType _ | RegionTy _ | ReadRef _ | Span _ | TyVar _ | Address _
-              | Pointer _ | FnPtr _ | MonoTy _ ->
-                 if universe_linear_ish (type_universe place ty) then
+              | Pointer _ | FnPtr _ ->
+                 if universe_linear_ish (type_universe ty) then
                    linearity_error place (NotConsumedAtReturn name)
                  else
                    ()))

@@ -5,7 +5,6 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 
-open Id
 open Identifier
 open Region
 
@@ -49,7 +48,6 @@ type ty =
   | Address of ty
   | Pointer of ty
   | FnPtr of ty list * ty
-  | MonoTy of mono_id
 (* The region of a reference or span type. *)
 and ref_region =
   | RefRegion of region
@@ -86,7 +84,7 @@ let ref_region_of_ty (ty: ty): ref_region =
       | FreeUniverse | LinearUniverse | TypeUniverse ->
          NotARegion ty)
   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | ReadRef _
-  | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
+  | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ ->
      NotARegion ty
 
 let universe_string = function
@@ -147,8 +145,6 @@ let rec type_string = function
          (* Some arguments case. *)
          let args': string = String.concat ", " (List.map type_string args) in
          (BuiltInNames.type_name BuiltInNames.Fn ^ "[" ^ args' ^ ", " ^ (type_string rt) ^ "]"))
-  | MonoTy _ ->
-     "MonoTy)"
 
 and args_string = function
   | (first::rest) -> "[" ^ (String.concat ", " (List.map type_string (first::rest))) ^ "]"
@@ -166,7 +162,7 @@ let rec equal_ty a b =
          true
       | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
       | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
-      | FnPtr _ | MonoTy _ ->
+      | FnPtr _ ->
          false)
   | Boolean ->
      (match b with
@@ -174,7 +170,7 @@ let rec equal_ty a b =
          true
       | Unit | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
       | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
-      | FnPtr _ | MonoTy _ ->
+      | FnPtr _ ->
          false)
   | Integer (s, w) ->
      (match b with
@@ -182,23 +178,21 @@ let rec equal_ty a b =
          (equal_signedness s s') && (equal_integer_width w w')
       | Unit | Boolean | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
       | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
-      | FnPtr _ | MonoTy _ ->
+      | FnPtr _ ->
          false)
   | SingleFloat ->
      (match b with
       | SingleFloat ->
          true
       | Unit | Boolean | Integer _ | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
-      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
-      | MonoTy _ ->
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
          false)
   | DoubleFloat ->
      (match b with
       | DoubleFloat ->
          true
       | Unit | Boolean | Integer _ | SingleFloat | NamedType _ | RegionTy _ | ReadRef _
-      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
-      | MonoTy _ ->
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
          false)
   | NamedType (n, args, u) ->
      (match b with
@@ -207,8 +201,7 @@ let rec equal_ty a b =
          && (List.for_all (fun (a', b') -> equal_ty a' b') (List.map2 (fun a' b' -> (a',b')) args args'))
          && (equal_universe u u')
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
-      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
-      | MonoTy _ ->
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
          false)
   | RegionTy r ->
      (match b with
@@ -216,7 +209,7 @@ let rec equal_ty a b =
          equal_region r r'
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
-      | FnPtr _ | MonoTy _ ->
+      | FnPtr _ ->
          false)
   | ReadRef (ty, r) ->
      (match b with
@@ -224,7 +217,7 @@ let rec equal_ty a b =
          (equal_ty ty ty') && (equal_ty (ty_of_ref_region r) (ty_of_ref_region r'))
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
-      | FnPtr _ | MonoTy _ ->
+      | FnPtr _ ->
          false)
   | WriteRef (ty, r) ->
      (match b with
@@ -232,7 +225,7 @@ let rec equal_ty a b =
          (equal_ty ty ty') && (equal_ty (ty_of_ref_region r) (ty_of_ref_region r'))
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
-      | FnPtr _ | MonoTy _ ->
+      | FnPtr _ ->
          false)
     | Span (ty, r) ->
      (match b with
@@ -240,7 +233,7 @@ let rec equal_ty a b =
          (equal_ty ty ty') && (equal_ty (ty_of_ref_region r) (ty_of_ref_region r'))
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | SpanMut _ | TyVar _ | Address _
-      | Pointer _ | FnPtr _ | MonoTy _ ->
+      | Pointer _ | FnPtr _ ->
          false)
   | SpanMut (ty, r) ->
      (match b with
@@ -248,7 +241,7 @@ let rec equal_ty a b =
          (equal_ty ty ty') && (equal_ty (ty_of_ref_region r) (ty_of_ref_region r'))
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | TyVar _ | Address _ | Pointer _
-      | FnPtr _ | MonoTy _ ->
+      | FnPtr _ ->
          false)
   | TyVar v ->
      (match b with
@@ -256,7 +249,7 @@ let rec equal_ty a b =
          equal_type_var v v'
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _
-      | Pointer _ | FnPtr _ | MonoTy _ ->
+      | Pointer _ | FnPtr _ ->
          false)
   | Address ty ->
      (match b with
@@ -264,7 +257,7 @@ let rec equal_ty a b =
          equal_ty ty ty'
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Pointer _
-      | FnPtr _ | MonoTy _ ->
+      | FnPtr _ ->
         false)
   | Pointer ty ->
      (match b with
@@ -272,7 +265,7 @@ let rec equal_ty a b =
          equal_ty ty ty'
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
-      | FnPtr _ | MonoTy _ ->
+      | FnPtr _ ->
          false)
   | FnPtr (args, rt) ->
      (match b with
@@ -281,13 +274,5 @@ let rec equal_ty a b =
          && (equal_ty rt rt')
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
-      | Pointer _ | MonoTy _ ->
+      | Pointer _ ->
         false)
-  | MonoTy a ->
-    (match b with
-     | MonoTy b ->
-       equal_mono_id a b
-     | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
-     | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
-     | Pointer _ | FnPtr _ ->
-       false)

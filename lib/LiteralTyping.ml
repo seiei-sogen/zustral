@@ -122,7 +122,7 @@ let literal_matches (place: place) (ty: ty) (expr: texpr): bool =
       | TSizeOf _ ->
          false)
   | Unit | Boolean | NamedType _ | RegionTy _ | ReadRef _ | WriteRef _ | Span _
-  | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
+  | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
      false
 
 let annotation_types_literal (place: place) (ty: ty) (expr: texpr): bool =
@@ -153,5 +153,5 @@ let annotation_types_literal (place: place) (ty: ty) (expr: texpr): bool =
       | TSizeOf _ ->
          false)
   | Unit | Boolean | NamedType _ | RegionTy _ | ReadRef _ | WriteRef _ | Span _
-  | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
+  | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
      false

@@ -69,8 +69,7 @@ let get_record_definition (place: place) (env: env) (name: qident) (ty: ty): (mo
 let is_boolean = function
   | Boolean -> true
   | Unit | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
-  | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
-  | MonoTy _ -> false
+  | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ -> false
 
 type case_mode =
   | NormalCaseMode
@@ -266,7 +265,7 @@ and augment_destructure (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (spa
             type_error place (DestructureNotPublic rec_ty)
        | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _
        | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
-       | Pointer _ | FnPtr _ | MonoTy _ ->
+       | Pointer _ | FnPtr _ ->
           type_error place (DestructureNonRecord rec_ty)))
 
 and augment_assign (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (lvalue: aexpr) (rvalue: aexpr): tstmt * lexenv * Supply.t =
@@ -282,7 +281,7 @@ and augment_assign (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
              ty
           | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
           | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _
-          | Pointer _ | FnPtr _ | MonoTy _ ->
+          | Pointer _ | FnPtr _ ->
              generic_error place (AssignToNonMutableReference lvalue_ty)
         end
       in
@@ -293,7 +292,7 @@ and augment_assign (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
       let _ = match_type_with_value (env, module_name, place) pointed_ty rvalue in
       (* The pointed-to type must be in the free universe. *)
       let _ =
-        match type_universe place pointed_ty with
+        match type_universe pointed_ty with
         | FreeUniverse ->
            ()
         | LinearUniverse | TypeUniverse | RegionUniverse ->
@@ -407,7 +406,7 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
                  | WriteRef _ -> true
                  | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat
                  | NamedType _ | RegionTy _ | ReadRef _ | Span _ | SpanMut _
-                 | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ -> false
+                 | TyVar _ | Address _ | Pointer _ | FnPtr _ -> false
                end
                in
                if is_mut then
@@ -432,7 +431,7 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
                        pointed_ty
                     | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat
                     | NamedType _ | RegionTy _ | ReadRef _ | Span _ | SpanMut _
-                    | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
+                    | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
                        generic_error place (ReborrowOfNonMutableReference orig_ty)
                   end
                 in
@@ -474,7 +473,7 @@ and augment_discarding (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span
   let ctx = stmt_at ctx span in
   let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
   (let e' = infer_expr place module_name env rm typarams lexenv e in
-      let u = type_universe place (get_type place e') in
+      let u = type_universe (get_type place e') in
       match u with
       | LinearUniverse | TypeUniverse ->
          type_error place (DiscardLinear u)
@@ -508,7 +507,7 @@ and augment_case (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span
          | WriteRef (ty, r) ->
             (ty, WriteRefCaseMode r)
          | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | Span _
-         | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
+         | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
             type_error place (CaseNotUnionOrReference ty))
       in
       let case_ref: case_ref =
@@ -535,7 +534,7 @@ and get_union_type_definition (place: place) (importing_module: module_name) (en
                          (n, a)
                       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat
                       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _
-                      | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
+                      | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
                          type_error place (CaseNonUnion ty)) in
   match get_decl_by_name place env (qident_to_sident name) with
   | Some (Union { id; vis; name; mod_id; typarams; universe; _ }) ->

@@ -18,13 +18,13 @@ open EnvUtils
 open Error
 
 let check_instance_argument_has_right_universe (place: place) (universe: universe) (arg: ty): unit =
-  if universe_compatible universe (type_universe place arg) then
+  if universe_compatible universe (type_universe arg) then
     ()
   else
     type_error place (InstanceArgumentWrongUniverse {
         ty = arg;
         expected = universe;
-        actual = type_universe place arg;
+        actual = type_universe arg;
       })
 
 let check_instance_argument_has_right_shape (place: place) (typarams: typarams) (arg: ty): unit =
@@ -33,9 +33,8 @@ let check_instance_argument_has_right_shape (place: place) (typarams: typarams) 
     | TyVar tv ->
        tv
     | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
-    | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _
-    | MonoTy _ ->
-       declaration_error place (InstanceArgumentNotATyvar { ty; universe = type_universe place ty })
+    | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ ->
+       declaration_error place (InstanceArgumentNotATyvar { ty; universe = type_universe ty })
   and all_distinct (tyvars: type_var list): unit =
     let names: identifier list = List.map (fun (TypeVariable (name, _, _, _)) -> name) tyvars in
     let set: IdentifierSet.t = IdentifierSet.of_list names in
@@ -93,8 +92,6 @@ let check_instance_argument_has_right_shape (place: place) (typarams: typarams) 
      let _ = all_distinct (List.map is_tyvar args') in
      let _ = no_leftovers (List.length args') in
      ()
-  | MonoTy _ ->
-     generic_error place InstanceArgumentShapeNotAllowed
 
 let overlapping_instances (place: place) (a: ty) (b: ty): bool =
   match a with
@@ -103,13 +100,13 @@ let overlapping_instances (place: place) (a: ty) (b: ty): bool =
       | Unit -> true
       | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
       | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
-      | FnPtr _ | MonoTy _ -> false)
+      | FnPtr _ -> false)
   | Boolean ->
      (match b with
       | Boolean -> true
       | Unit | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
       | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
-      | FnPtr _ | MonoTy _ -> false)
+      | FnPtr _ -> false)
   | Integer (s, w) ->
      (match b with
       | Integer (s', w') ->
@@ -117,27 +114,24 @@ let overlapping_instances (place: place) (a: ty) (b: ty): bool =
          && (equal_integer_width w w')
       | Unit | Boolean | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
       | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
-      | FnPtr _ | MonoTy _ ->
+      | FnPtr _ ->
          false)
   | SingleFloat ->
      (match b with
       | SingleFloat -> true
       | Unit | Boolean | Integer _ | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
-      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
-      | MonoTy _ -> false)
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ -> false)
   | DoubleFloat ->
      (match b with
       | DoubleFloat -> true
       | Unit | Boolean | Integer _ | SingleFloat | NamedType _ | RegionTy _ | ReadRef _
-      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
-      | MonoTy _ -> false)
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ -> false)
   | NamedType (name, _, _) ->
      (match b with
       | NamedType (name', _, _) ->
          equal_qident name name'
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
-      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
-      | MonoTy _ ->
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
          false)
   | RegionTy _ ->
      generic_error place InstanceOverlapTypeNotAllowed
@@ -146,25 +140,25 @@ let overlapping_instances (place: place) (a: ty) (b: ty): bool =
       | ReadRef _ -> true
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
-      | FnPtr _ | MonoTy _ -> false)
+      | FnPtr _ -> false)
   | WriteRef _ ->
      (match b with
       | WriteRef _ -> true
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
-      | FnPtr _ | MonoTy _ -> false)
+      | FnPtr _ -> false)
   | Span _ ->
      (match b with
       | Span _ -> true
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | SpanMut _ | TyVar _ | Address _
-      | Pointer _ | FnPtr _ | MonoTy _ -> false)
+      | Pointer _ | FnPtr _ -> false)
   | SpanMut _ ->
      (match b with
       | SpanMut _ -> true
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | TyVar _ | Address _ | Pointer _
-      | FnPtr _ | MonoTy _ -> false)
+      | FnPtr _ -> false)
   | TyVar _ ->
      generic_error place InstanceOverlapTypeNotAllowed
   | Address _ ->
@@ -172,7 +166,7 @@ let overlapping_instances (place: place) (a: ty) (b: ty): bool =
       | Address _ -> true
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Pointer _
-      | FnPtr _ | MonoTy _ -> false)
+      | FnPtr _ -> false)
   | Pointer _ ->
      (match b with
       | Pointer _ -> true
@@ -181,15 +175,13 @@ let overlapping_instances (place: place) (a: ty) (b: ty): bool =
          (pinned by 037-typeclass-and-environment-paths/013). *)
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
-      | FnPtr _ | MonoTy _ -> true)
+      | FnPtr _ -> true)
   | FnPtr _ ->
      (match b with
       | FnPtr _ -> true
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
-      | Pointer _ | MonoTy _ -> false)
-  | MonoTy _ ->
-     generic_error place InstanceOverlapTypeNotAllowed
+      | Pointer _ -> false)
 
 let check_instance_locally_unique (place: place) (instances: instance_decl list) (argument: ty): unit =
   let pred (instance: instance_decl): bool =
@@ -251,9 +243,6 @@ and is_type_local (place: place) (decl_place: place) (env: env) (mod_id: mod_id)
      true
   | FnPtr _ ->
      true
-  | MonoTy _ ->
-     (* Not applicable. *)
-     false
 
 let check_disjoint_typarams (place: place) (name: identifier) (typarams: typarams): unit =
   match get_typaram typarams name with

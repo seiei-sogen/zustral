@@ -6,7 +6,6 @@
 *)
 
 open Type
-open Id
 open Identifier
 open Region
 open Error
@@ -26,7 +25,6 @@ type stripped_ty =
   | SAddress of stripped_ty
   | SPointer of stripped_ty
   | SFnPtr of stripped_ty list * stripped_ty
-  | SMonoTy of mono_id
   | SRegionTyVar of identifier * qident
 
 (* The arguments are stripped from left to right: stripping a type variable
@@ -81,5 +79,3 @@ let rec strip_type (ty: ty): stripped_ty =
   | FnPtr (args, rt) ->
      let rt = strip_type rt in
      SFnPtr (List.map strip_type args, rt)
-  | MonoTy id ->
-     SMonoTy id

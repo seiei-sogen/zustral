@@ -55,7 +55,7 @@ let rec check_ty (place: place) (direction: direction) (ty: ty): ty foreign_ty =
       (* Only a generic signature has type variables, and generic imports are
          not checked here (EnvTypes.ForeignGeneric). In code generation, a
          region variable was rejected. *)
-      | Unit | NamedType _ | MonoTy _ | RegionTy _ | ReadRef _ | WriteRef _ | TyVar _ ->
+      | Unit | NamedType _ | RegionTy _ | ReadRef _ | WriteRef _ | TyVar _ ->
          not_allowed ())
   | Export ->
      let not_allowed () = type_error place (ExportDisallowedType ty) in
@@ -72,7 +72,7 @@ let rec check_ty (place: place) (direction: direction) (ty: ty): ty foreign_ty =
          ForeignAddress (check_ty place Export t)
       | FnPtr _ ->
          ForeignFnPtr
-      | Unit | NamedType _ | MonoTy _ | RegionTy _ | ReadRef _ | WriteRef _
+      | Unit | NamedType _ | RegionTy _ | ReadRef _ | WriteRef _
       | Span _ | SpanMut _ | Pointer _ | TyVar _ ->
          not_allowed ())
 

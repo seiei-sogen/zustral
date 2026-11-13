@@ -111,8 +111,6 @@ let rec monomorphize_ty (env: env) (ty: stripped_ty): (mono_ty * env) =
      let (args, env) = monomorphize_ty_list env args in
      let (rt, env) = monomorphize_ty env rt in
      (MonoFnPtr (args, rt), env)
-  | SMonoTy id ->
-     (MonoNamedType id, env)
   | SRegionTyVar (name, source) ->
      (MonoRegionTyVar (name, source), env)
 

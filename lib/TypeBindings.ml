@@ -85,20 +85,17 @@ let try_add_binding (TypeBindings m) (tp: type_parameter) (ty: ty): (type_bindin
        Error (Type (TyparamRedefinition { param = tp; was = ty'; redef = ty }))
   | None ->
      match ty with
-     | MonoTy _ ->
-       (* Special case! Allow `MonoTy`. See #399. *)
-       Ok (TypeBindings (BindingsMap.add tp ty m))
      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
      | Pointer _ | FnPtr _ ->
-      if universe_compatible (typaram_universe tp) (type_universe NoSpan ty) then
+      if universe_compatible (typaram_universe tp) (type_universe ty) then
         Ok (TypeBindings (BindingsMap.add tp ty m))
       else
         Error (Type (TyparamBindingWrongUniverse {
             param = tp;
             ty;
             expected = typaram_universe tp;
-            actual = type_universe NoSpan ty;
+            actual = type_universe ty;
           }))
 
 (* Add multiple bindings to a bindings map. *)
@@ -121,10 +118,10 @@ let replaced_universe (u: universe) (args: ty list): universe =
   | TypeUniverse ->
      (* The universe of an argument is unknown only for a MonoTy, which exists
         only during monomorphization, where errors have no span. *)
-     if any_arg_is_linear NoSpan args then
+     if any_arg_is_linear args then
        LinearUniverse
      else
-       if any_arg_is_type NoSpan args then
+       if any_arg_is_type args then
          TypeUniverse
        else
          FreeUniverse
@@ -166,8 +163,6 @@ let rec replace_variables bindings ty =
      Pointer (replace_variables bindings ty)
   | FnPtr (args, rt) ->
      FnPtr (List.map (replace_variables bindings) args, replace_variables bindings rt)
-  | MonoTy id ->
-     MonoTy id
 
 and replace_region_variables bindings (region: ref_region): ref_region =
   ref_region_of_ty (replace_variables bindings (ty_of_ref_region region))

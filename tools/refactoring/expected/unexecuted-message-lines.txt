@@ -36,14 +36,8 @@ lib/GenericErrors.ml	^ " and got "
 lib/GenericErrors.ml	^ (show_universe actual))
 lib/GenericErrors.ml	| ConstructorUniverseMismatch ->
 lib/GenericErrors.ml	Text "Universe mismatch"
-lib/GenericErrors.ml	| InstanceArgumentShapeNotAllowed ->
-lib/GenericErrors.ml	Text "Not allowed"
 lib/GenericErrors.ml	| InstanceOverlapTypeNotAllowed ->
 lib/GenericErrors.ml	Text "Not allowed"
-lib/GenericErrors.ml	| MatchTypeOnMonoTy ->
-lib/GenericErrors.ml	Text "match_type called with MonoTy argument"
-lib/GenericErrors.ml	| IsNumericOnMonoTy ->
-lib/GenericErrors.ml	Text "is_numeric called with MonoTy argument"
 lib/ParseErrors.ml	| StringInvalidCharacter lexeme ->
 lib/ParseErrors.ml	Text "Character not allowed in string literal: ";
 lib/ParseErrors.ml	Code lexeme

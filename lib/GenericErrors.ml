@@ -48,12 +48,9 @@ type t =
   | BindingUniverseMismatch of { expected: universe; actual: universe }
   | NoBindingForParameter of identifier
   | ConstructorUniverseMismatch
-  | InstanceArgumentShapeNotAllowed
   | InstanceOverlapTypeNotAllowed
-  | MatchTypeOnMonoTy
   | FreeTypeWithNonFreeArgument of qident
   | TypeVariableNotReplaced of identifier
-  | IsNumericOnMonoTy
   | AssignToNonMutableReference of ty
   | ReborrowOfNonMutableReference of ty
   | LeftoverArguments
@@ -201,17 +198,9 @@ let render (error: t): err_text =
      [
        Text "Universe mismatch"
      ]
-  | InstanceArgumentShapeNotAllowed ->
-     [
-       Text "Not allowed"
-     ]
   | InstanceOverlapTypeNotAllowed ->
      [
        Text "Not allowed"
-     ]
-  | MatchTypeOnMonoTy ->
-     [
-       Text "match_type called with MonoTy argument"
      ]
   | FreeTypeWithNonFreeArgument name ->
      [
@@ -220,10 +209,6 @@ let render (error: t): err_text =
   | TypeVariableNotReplaced name ->
      [
        Text ("strip_type': Variable not replaced: '" ^ (ident_string name) ^ "'")
-     ]
-  | IsNumericOnMonoTy ->
-     [
-       Text "is_numeric called with MonoTy argument"
      ]
   | AssignToNonMutableReference ty ->
      [

@@ -7,9 +7,8 @@
 
 open Type
 open TypeVarSet
-open Error
 
-let type_universe (place: place) = function
+let type_universe = function
     Unit -> FreeUniverse
   | Boolean -> FreeUniverse
   | Integer _ -> FreeUniverse
@@ -25,11 +24,8 @@ let type_universe (place: place) = function
   | Address _ -> FreeUniverse
   | Pointer _ -> FreeUniverse
   | FnPtr _ -> FreeUniverse
-  (* Needs MonoTy removed from Type.ty (#128). A program reaches this: 037/040
-     pins it. *)
-  | MonoTy _ -> internal_err place "You shouldn't be asking for the type_universe of a MonoTy"
 
-let is_numeric (place: place) = function
+let is_numeric = function
   | Unit -> false
   | Boolean -> false
   | Integer _ -> true
@@ -45,7 +41,6 @@ let is_numeric (place: place) = function
   | Address _ -> false
   | Pointer _ -> false
   | FnPtr _ -> false
-  | MonoTy _ -> generic_error place IsNumericOnMonoTy
 
 let rec type_variables = function
   | Unit ->
@@ -81,23 +76,21 @@ let rec type_variables = function
      and rt' = type_variables rt
      in
      TypeVarSet.union args' rt'
-  | MonoTy _ ->
-    TypeVarSet.empty
 
 (** Given a list of types, return whether any of them are in the Linear
     universe. *)
-and any_arg_is_linear (place: place) (args: ty list) =
+and any_arg_is_linear (args: ty list) =
   let is_linear = function
     | LinearUniverse -> true
     | FreeUniverse | TypeUniverse | RegionUniverse -> false
   in
-  List.exists is_linear (List.map (type_universe place) args)
+  List.exists is_linear (List.map type_universe args)
 
 (** Given a list of types, return whether any of them are in the Type
     universe. *)
-and any_arg_is_type (place: place) (args: ty list) =
+and any_arg_is_type (args: ty list) =
   let is_type = function
     | TypeUniverse -> true
     | FreeUniverse | LinearUniverse | RegionUniverse -> false
   in
-  List.exists is_type (List.map (type_universe place) args)
+  List.exists is_type (List.map type_universe args)
