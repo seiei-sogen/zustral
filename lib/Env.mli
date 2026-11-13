@@ -31,7 +31,14 @@ val empty_env : env
 
 (** Run a stage that takes numbers and registers nothing. The stage gets the
     supply, and returns its result with the supply it has not used. The
-    environment that comes back holds that supply. *)
+    environment that comes back holds that supply.
+
+    The stage often gets [env] as well, and that [env] still holds the supply
+    the stage was given. So a stage must not call [add_module], [register] or
+    an [add_or_get_*_monomorph]. Each takes the next number from that same
+    supply, which the stage takes too, so one number is given out twice. And
+    the environment it returns is dropped here, with everything else the stage
+    changed in [env] ([add_exported_function], the [store_*] functions). *)
 val with_supply : env -> (Supply.t -> ('a * Supply.t) Outcome.t) -> (env * 'a) Outcome.t
 
 (** {1 The two kinds of lookup}

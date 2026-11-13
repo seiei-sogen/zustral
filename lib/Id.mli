@@ -9,9 +9,13 @@
 The reason this is defined outside the `Env` module is to avoid a cyclic
 dependency (`Env` depends on `Tast` and `Tast` depends on IDs).
 
-An ID is a number that nothing outside this module can see or choose. The only
-way to get an ID is to take the next one from a supply. The environment has
-the supply, and makes an ID when something is registered in it. *)
+The type of an ID hides its number: nothing outside this module can see it or
+choose it. The [fresh_*] functions below make an ID from the next number of a
+supply. Any module of the library could call them, with any supply, also
+[Supply.initial], and get a number the compilation has already given out. Only
+the environment does: it holds the supply of the compilation, and makes an ID
+when something is registered in it. No type can say that, so a check does
+(tools/refactoring/id-makers.py). *)
 
 (** The type of module IDs. *)
 type mod_id

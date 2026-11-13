@@ -18,12 +18,14 @@
 #      or is on the recorded list of pieces no program can reach
 #   8. no error leaves a stage as an exception: the functions the driver calls
 #      return their errors as values (escape-check.py)
-#   9. the fragile matches (a catch-all arm over a variant type): the counts of
+#   9. only the environment makes IDs: no file but lib/Env.ml names
+#      Supply.initial or a fresh_<kind>_id (id-makers.py)
+#  10. the fragile matches (a catch-all arm over a variant type): the counts of
 #      expected/fragile-totals.txt, and none on the types of lib/Type.ml or on
 #      MonoType.mono_ty. This builds the compiler once more, with warning 4 on
 # Each step prints one line that starts with ok or FAIL.
 # Exits 1 if a step fails, 2 if a compiler could not be built or run.
-# --quick skips steps 1, 2, 3 and 9.
+# --quick skips steps 1, 2, 3 and 10.
 #
 # One check is not here, because it needs a second, instrumented build of the
 # compiler: `coverage.sh --messages`, which fails when a line of error wording
@@ -114,6 +116,7 @@ step "metrics" "$HERE/measure.sh"
 step "unused exports" "$HERE/unused-exports.sh"
 step "error messages have tests" python3 "$HERE/unpinned-messages.py"
 step "no error escapes a stage" python3 "$HERE/escape-check.py"
+step "only the environment makes IDs" python3 "$HERE/id-makers.py"
 if ((!QUICK)); then
   step "fragile matches" "$HERE/measure.sh" --check-fragile
 fi
