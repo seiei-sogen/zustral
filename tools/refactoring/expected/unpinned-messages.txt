@@ -7,7 +7,6 @@ lib/DeclarationErrors.ml	MultiargTypeclass	" has multiple type parameters, which
 lib/GenericErrors.ml	BindingUniverseMismatch	"Mismatched universes: expected "
 lib/GenericErrors.ml	CannotAssignToConstant	"Cannot assign a value to a constant."
 lib/GenericErrors.ml	ConstructorUniverseMismatch	"Universe mismatch"
-lib/GenericErrors.ml	DeclHasNoName	"decl has no name"
 lib/GenericErrors.ml	DestructureOutsideStatementList	"Destructure statement not in a list context"
 lib/GenericErrors.ml	InvalidDeclInContext	"Invalid decl in this context"
 lib/GenericErrors.ml	InvalidLvalue	"Invalid lvalue."

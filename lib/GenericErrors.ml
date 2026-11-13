@@ -40,7 +40,6 @@ type t =
   | BorrowExpressionNotAllowed
   | InvalidLvalue
   | NoUnionWithId
-  | DeclHasNoName
   | BadWhitespaceEscape
   | SymbolImportedTwice
   | VariableAlreadyExists of identifier
@@ -168,10 +167,6 @@ let render (error: t): err_text =
   | NoUnionWithId ->
      [
        Text "No union with ID"
-     ]
-  | DeclHasNoName ->
-     [
-       Text "decl has no name"
      ]
   | BadWhitespaceEscape ->
      [

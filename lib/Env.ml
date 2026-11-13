@@ -156,7 +156,7 @@ let register (type id) (env: env) (registration: id registration): (env * id) =
      add_decl fresh_function_id (fun id -> Function { id; mod_id; vis; name; docstring; typarams; value_params; rt; external_name; body })
   | NewTypeClass { mod_id; vis; name; docstring; param } ->
      name_must_be_free mod_id name;
-     add_decl fresh_decl_id (fun id -> TypeClass { id; mod_id; vis; name; docstring; param })
+     add_decl fresh_typeclass_id (fun id -> TypeClass { id; mod_id; vis; name; docstring; param })
   | NewTypeClassMethod { mod_id; vis; typeclass_id; name; docstring; typarams; value_params; rt } ->
      (* Not checked (#86): a method can take the name of a method of another
         typeclass, or of any other declaration of the module. *)
@@ -195,17 +195,28 @@ let get_function (env: env) (id: function_id): function_decl =
   registered (fun () -> "function with ID `" ^ (show_function_id id) ^ "`")
     (List.find_opt has_id (List.filter_map function_of decls))
 
+let typeclass_of (decl: decl): typeclass_decl option =
+  match decl with
+  | TypeClass typeclass -> Some typeclass
+  | Constant _ | Record _ | Union _ | UnionCase _ | Function _ | TypeClassMethod _ | Instance _ -> None
+
+let get_typeclass (env: env) (id: typeclass_id): typeclass_decl =
+  let (Env { decls; _ }) = env in
+  let has_id (typeclass: typeclass_decl): bool = equal_typeclass_id typeclass.id id in
+  registered (fun () -> "typeclass with ID `" ^ (show_typeclass_id id) ^ "`")
+    (List.find_opt has_id (List.filter_map typeclass_of decls))
+
 let get_instance_method (env: env) (ins_meth_id: ins_meth_id): ins_meth_rec =
   let (Env { methods; _ }) = env in
   registered (fun () -> "instance method with ID `" ^ (show_ins_meth_id ins_meth_id) ^ "`")
     (List.find_opt (fun (InsMethRec { id; _ }) -> equal_ins_meth_id id ins_meth_id) methods)
 
-let get_method_from_typeclass_id_and_name (env: env) (typeclass_id: decl_id) (name: identifier): decl option =
+let get_method_from_typeclass_id_and_name (env: env) (typeclass_id: typeclass_id) (name: identifier): decl option =
   let (Env { decls; _ }) = env in
   let pred (decl: decl): bool =
     match decl with
     | TypeClassMethod { typeclass_id=target_typeclass_id; name=target_name; _ } ->
-       (equal_decl_id target_typeclass_id typeclass_id)
+       (equal_typeclass_id target_typeclass_id typeclass_id)
        && (equal_identifier target_name name)
     | _ ->
        false

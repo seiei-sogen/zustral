@@ -218,7 +218,7 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
                      | _ -> internal_err ("Couldn't find instance for var method call `"
                                           ^ (qident_debug_name method_name)
                                           ^ "` with typeclass ID `"
-                                          ^ (show_decl_id typeclass_id)
+                                          ^ (show_typeclass_id typeclass_id)
                                           ^ "`."))
      in
      let instance_id: decl_id = decl_id instance in

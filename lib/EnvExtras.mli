@@ -12,5 +12,6 @@ open EnvTypes
 
 val get_decl_by_name_or_die : env -> sident -> decl
 
-val get_decl_sident_or_die : env -> decl_id -> sident
+(** The name of a typeclass, with the name of its module. *)
+val get_decl_sident_or_die : env -> typeclass_id -> sident
 

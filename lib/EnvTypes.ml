@@ -48,6 +48,16 @@ type function_decl = {
     body: tstmt option;
   }
 
+(** A typeclass, as the environment holds it. *)
+type typeclass_decl = {
+    id: typeclass_id;
+    mod_id: mod_id;
+    vis: vis;
+    name: identifier;
+    docstring: docstring;
+    param: type_parameter;
+  }
+
 (** A declaration record represents a declaration.
 
    The definition of declaration here is slightly different than that of the
@@ -96,20 +106,13 @@ type decl =
       slots: typed_slot list;
     }
   | Function of function_decl
-  | TypeClass of {
-      id: decl_id;
-      mod_id: mod_id;
-      vis: vis;
-      name: identifier;
-      docstring: docstring;
-      param: type_parameter;
-    }
+  | TypeClass of typeclass_decl
   | TypeClassMethod of {
       id: decl_id;
       mod_id: mod_id;
       vis: vis;
       (** This is the visibility of the parent typeclass. *)
-      typeclass_id: decl_id;
+      typeclass_id: typeclass_id;
       name: identifier;
       docstring: docstring;
       typarams: typarams;
@@ -120,7 +123,7 @@ type decl =
       id: decl_id;
       mod_id: mod_id;
       vis: vis;
-      typeclass_id: decl_id;
+      typeclass_id: typeclass_id;
       docstring: docstring;
       typarams: typarams;
       argument: ty;
@@ -150,7 +153,7 @@ type callable =
       case: typed_case;
     }
   | MethodCallable of {
-      typeclass_id: decl_id;
+      typeclass_id: typeclass_id;
       value_parameters: value_parameter list;
       return_type: ty
     }
@@ -244,7 +247,7 @@ type type_class_input = {
 type type_class_method_input = {
     mod_id: mod_id;
     vis: vis;
-    typeclass_id: decl_id;
+    typeclass_id: typeclass_id;
     name: identifier;
     docstring: docstring;
     typarams: typarams;
@@ -255,7 +258,7 @@ type type_class_method_input = {
 type instance_input = {
     mod_id: mod_id;
     vis: vis;
-    typeclass_id: decl_id;
+    typeclass_id: typeclass_id;
     docstring: docstring;
     typarams: typarams;
     argument: ty;
@@ -280,7 +283,7 @@ type _ registration =
   | NewUnion : union_input -> decl_id registration
   | NewUnionCase : union_case_input -> decl_id registration
   | NewFunction : function_input -> function_id registration
-  | NewTypeClass : type_class_input -> decl_id registration
+  | NewTypeClass : type_class_input -> typeclass_id registration
   | NewTypeClassMethod : type_class_method_input -> decl_id registration
   | NewInstance : instance_input -> decl_id registration
   | NewInstanceMethod : instance_method_input -> ins_meth_id registration

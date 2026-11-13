@@ -432,7 +432,7 @@ module Linked = struct
     | LRecord of decl_id * type_vis * identifier * typarams * universe * typed_slot list * docstring
     | LUnion of decl_id * type_vis * identifier * typarams * universe * linked_case list * docstring
     | LFunction of function_id * vis * identifier * typarams * value_parameter list * ty * astmt * docstring * pragma list
-    | LTypeclass of decl_id * vis * identifier * type_parameter * linked_method_decl list * docstring
+    | LTypeclass of typeclass_id * vis * identifier * type_parameter * linked_method_decl list * docstring
     | LInstance of decl_id * vis * qident * typarams * ty * linked_method_def list * docstring
 
   and linked_case = LCase of decl_id * identifier * typed_slot list
@@ -512,7 +512,7 @@ module Tast = struct
     | TMethodCall of ins_meth_id * qident * typarams * texpr list * ty * type_bindings
     | TVarMethodCall of {
         source_module_name: module_name;
-        typeclass_id: decl_id;
+        typeclass_id: typeclass_id;
         params: value_parameter list;
         method_name: qident;
         args: texpr list;
@@ -568,7 +568,7 @@ module Tast = struct
     | TUnion of decl_id * type_vis * identifier * typarams * universe * linked_case list * docstring
     | TFunction of function_id * vis * identifier * typarams * value_parameter list * ty * tstmt * docstring
     | TForeignFunction of function_id * vis * identifier * value_parameter list * ty * string * docstring
-    | TTypeClass of decl_id * vis * identifier * type_parameter * typed_method_decl list * docstring
+    | TTypeClass of typeclass_id * vis * identifier * type_parameter * typed_method_decl list * docstring
     | TInstance of decl_id * vis * qident * typarams * ty * typed_method_def list * docstring
 
   type typed_module = TypedModule of module_name * typed_decl list

@@ -272,12 +272,7 @@ and augment_callable (ctx: expr_ctx) (name: qident) (callable: callable) (from_c
      in
      augment_union_constructor ctx type_name type_params universe case from_context args
   | MethodCallable { typeclass_id; value_parameters; return_type; _ } ->
-     let param = (match get_decl_by_id (ctx_env ctx) typeclass_id with
-                  | TypeClass { param; _ } ->
-                     param
-                  | _ ->
-                     internal_err ("no type parameter found for ID `" ^ (show_decl_id typeclass_id) ^ "`"))
-     in
+     let { param; _ }: typeclass_decl = get_typeclass (ctx_env ctx) typeclass_id in
      augment_method_call ctx typeclass_id param name value_parameters return_type from_context args
 
 and augment_function_call (ctx: expr_ctx) (id: function_id) name typarams params rt (from_context: context_bindings) args =
@@ -369,7 +364,7 @@ and augment_union_constructor (ctx: expr_ctx) (type_name: qident) (typarams: typ
     else
       generic_error ConstructorUniverseMismatch
 
-and augment_method_call (ctx: expr_ctx) (typeclass_id: decl_id) (typaram: type_parameter) (callable_name: qident) (params: value_parameter list) (rt: ty) (from_context: context_bindings) (args: typed_arglist): texpr =
+and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: type_parameter) (callable_name: qident) (params: value_parameter list) (rt: ty) (from_context: context_bindings) (args: typed_arglist): texpr =
   (* At this point, we know the method's name and the typeclass it belongs
      to. We pull the parameter list from the typeclass, and compare that against
      the argument list. *)

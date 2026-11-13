@@ -8,7 +8,6 @@ open Id
 open Identifier
 open Env
 open EnvTypes
-open EnvUtils
 open Error
 
 let get_decl_by_name_or_die (env: env) (name: sident): decl =
@@ -22,10 +21,6 @@ let get_decl_by_name_or_die (env: env) (name: sident): decl =
                    ^ ident_string (sident_name name)
                    ^ "`.")
 
-let get_decl_sident_or_die (env: env) (id: decl_id): sident =
-  let decl: decl = get_decl_by_id env id in
-  match (decl_name decl) with
-  | Some name ->
-     make_sident (module_name_from_id env (decl_mod_id decl)) name
-  | None ->
-     generic_error DeclHasNoName
+let get_decl_sident_or_die (env: env) (id: typeclass_id): sident =
+  let { mod_id; name; _ }: typeclass_decl = get_typeclass env id in
+  make_sident (module_name_from_id env mod_id) name

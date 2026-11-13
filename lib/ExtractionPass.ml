@@ -388,7 +388,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
          (* First add the instance to the env, then the methods. *)
          let argument = parse' rm typarams argument in
          (* Find typeclass info. *)
-         let (typeclass_id, typeclass_mod_id, typeclass_param_name, universe): decl_id * mod_id * identifier * universe =
+         let (typeclass_id, typeclass_mod_id, typeclass_param_name, universe): typeclass_id * mod_id * identifier * universe =
            match get_decl_by_name env (qident_to_sident name) with
            | Some decl ->
               (match decl with
@@ -412,7 +412,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
              List.filter (fun decl ->
                  match decl with
                  | Instance { typeclass_id=typeclass_id'; _ } ->
-                    equal_decl_id typeclass_id typeclass_id'
+                    equal_typeclass_id typeclass_id typeclass_id'
                  | _ -> false)
                (module_instances env mod_id)
            in

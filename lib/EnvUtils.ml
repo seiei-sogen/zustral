@@ -18,7 +18,7 @@ let decl_id (decl: decl): decl_id =
   | Union { id; _ } -> id
   | UnionCase { id; _ } -> id
   | Function { id; _ } -> function_decl_id id
-  | TypeClass { id; _ } -> id
+  | TypeClass { id; _ } -> typeclass_decl_id id
   | TypeClassMethod { id; _ } -> id
   | Instance { id; _ } -> id
 

@@ -41,11 +41,16 @@ type mono_id
 type function_id
 [@@deriving (eq, show)]
 
+(** The type of typeclass IDs. *)
+type typeclass_id
+[@@deriving (eq, show)]
+
 (** The next ID of each kind, and the supply to take the one after it from. *)
 
 val fresh_mod_id : Supply.t -> mod_id * Supply.t
 val fresh_decl_id : Supply.t -> decl_id * Supply.t
 val fresh_function_id : Supply.t -> function_id * Supply.t
+val fresh_typeclass_id : Supply.t -> typeclass_id * Supply.t
 val fresh_ins_meth_id : Supply.t -> ins_meth_id * Supply.t
 val fresh_mono_id : Supply.t -> mono_id * Supply.t
 
@@ -57,6 +62,7 @@ val compare_decl_id : decl_id -> decl_id -> int
 (** The declaration ID that an ID of one kind is. *)
 
 val function_decl_id : function_id -> decl_id
+val typeclass_decl_id : typeclass_id -> decl_id
 
 (** The number of an ID. It is for the name that the generated C gives to what
     the ID identifies, and for nothing else. *)

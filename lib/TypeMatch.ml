@@ -257,7 +257,7 @@ and try_constraint (ctx: ctx) (tv: type_var) (ty: ty) (typeclass_name: sident): 
   | None ->
      Error (Internal "No typeclass with the given name. This should have been validated in the extraction pass.")
 
-and try_get_instance (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: decl_id): ((decl * type_bindings) option, error) result =
+and try_get_instance (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: typeclass_id): ((decl * type_bindings) option, error) result =
   match get_module_by_name env source_module_name with
   | None ->
      Error (Declaration (DeclarationErrors.UnknownModule source_module_name))
@@ -267,7 +267,7 @@ and try_get_instance (env: env) (source_module_name: module_name) (dispatch_ty: 
   let pred (decl: decl): (decl * type_bindings) option =
     match decl with
     | Instance { typeclass_id; argument; _ } ->
-       if equal_decl_id typeclass_id typeclass then
+       if equal_typeclass_id typeclass_id typeclass then
          (match try_match_type (env, source_module_name) argument dispatch_ty with
           | Ok bindings ->
              Some (decl, bindings)
@@ -307,7 +307,7 @@ and try_match_type_list (ctx: ctx) (tys: ty list) (tys': ty list): (type_binding
 let match_type (ctx: ctx) (a: ty) (b: ty): type_bindings =
   ok_or_raise (try_match_type ctx a b)
 
-let get_instance (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: decl_id): (decl * type_bindings) option =
+let get_instance (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: typeclass_id): (decl * type_bindings) option =
   ok_or_raise (try_get_instance env source_module_name dispatch_ty typeclass)
 
 let match_typarams (ctx: ctx) (typarams: typarams) (args: ty list): type_bindings =

@@ -17,6 +17,9 @@ type decl_id = DeclId of int
 type function_id = decl_id
 [@@deriving (eq, show)]
 
+type typeclass_id = decl_id
+[@@deriving (eq, show)]
+
 type ins_meth_id = InsMethId of int
 [@@deriving (eq, show)]
 
@@ -36,6 +39,9 @@ let fresh_decl_id (supply: Supply.t): decl_id * Supply.t =
 let fresh_function_id: Supply.t -> function_id * Supply.t =
   fresh_decl_id
 
+let fresh_typeclass_id: Supply.t -> typeclass_id * Supply.t =
+  fresh_decl_id
+
 let fresh_ins_meth_id (supply: Supply.t): ins_meth_id * Supply.t =
   let (number, supply) = Supply.next_ins_meth_id supply in
   (InsMethId number, supply)
@@ -51,6 +57,9 @@ let compare_decl_id (DeclId a) (DeclId b): int =
   compare a b
 
 let function_decl_id (id: function_id): decl_id =
+  id
+
+let typeclass_decl_id (id: typeclass_id): decl_id =
   id
 
 let function_id_number (DeclId number: function_id): int =

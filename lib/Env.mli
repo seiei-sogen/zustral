@@ -83,6 +83,9 @@ val get_decl_by_id : env -> decl_id -> decl
 (** Retrieve a function by its ID. *)
 val get_function : env -> function_id -> function_decl
 
+(** Retrieve a typeclass by its ID. *)
+val get_typeclass : env -> typeclass_id -> typeclass_decl
+
 (** Retrieve a declaration by its sourced name, returning {!None} if it doesn't exist.
 
     If a module with the given name doesn't exist, raises an error. *)
@@ -90,7 +93,7 @@ val get_decl_by_name : env -> sident -> decl option
 
 (** Find a typeclass method from its typeclass ID and name, returning {!None} if
     the typeclass has no method of that name. *)
-val get_method_from_typeclass_id_and_name : env -> decl_id -> identifier -> decl option
+val get_method_from_typeclass_id_and_name : env -> typeclass_id -> identifier -> decl option
 
 (** Return all typeclass instances defined in a module. *)
 val module_instances: env -> mod_id -> decl list
