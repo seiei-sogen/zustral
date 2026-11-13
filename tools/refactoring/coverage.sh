@@ -4,7 +4,8 @@
 #   coverage.sh              compare the per-file summary with expected/coverage.txt
 #   coverage.sh --record     rewrite expected/coverage.txt
 #   coverage.sh --lines F    print the line numbers of lib/F that no program executes
-#   coverage.sh --errors     list the error-raising functions that no program executes
+#   coverage.sh --errors     list the places that raise an error to the user and that no
+#                            program executes
 #   coverage.sh --errors --only DIR
 #                            the same, running only the programs under DIR
 #                            (a directory of test-programs/suites)
@@ -41,16 +42,28 @@ in_shell 'python3 concat_builtins.py && dune build --root . --build-dir _build_c
 ZUSTRAL_EQUIVALENCE_ONLY="$ONLY" BISECT_FILE="$T/cov/bisect" python3 "$HERE/equivalence.py" snapshot "$ROOT/_build_coverage/default/bin/austral.exe" "$T/snapshot" > "$T/snapshot.log" 2>&1 \
   || { echo "corpus run failed: $(tail -n 5 "$T/snapshot.log")" >&2; exit 2; }
 
-if [[ $MODE == errors ]]; then
-  in_shell "bisect-ppx-report cobertura --coverage-path '$T/cov' '$T/cobertura.xml'" > /dev/null 2> "$T/report.err" \
+# The hits of every line, as XML. The report names the generated files too
+# (the parser, the lexer), which are in the instrumented build.
+line_report() {
+  in_shell "bisect-ppx-report cobertura --source-path _build_coverage/default --coverage-path '$T/cov' '$T/cobertura.xml'" > /dev/null 2> "$T/report.err" \
     || { echo "report failed: $(tail -n 5 "$T/report.err")" >&2; exit 2; }
-  python3 "$HERE/unexecuted-errors.py" "$T/cobertura.xml"
+}
+
+# Every point of every file with its hits, in one file. A line can hold several
+# points, and the line report keeps one number per line.
+point_report() {
+  in_shell "bisect-ppx-report merge --coverage-path '$T/cov' '$T/points.coverage'" > /dev/null 2> "$T/report.err" \
+    || { echo "report failed: $(tail -n 5 "$T/report.err")" >&2; exit 2; }
+}
+
+if [[ $MODE == errors ]]; then
+  point_report
+  python3 "$HERE/unexecuted-errors.py" "$T/points.coverage"
   exit $?
 fi
 
 if [[ $MODE == lines ]]; then
-  in_shell "bisect-ppx-report cobertura --coverage-path '$T/cov' '$T/cobertura.xml'" > /dev/null 2> "$T/report.err" \
-    || { echo "report failed: $(tail -n 5 "$T/report.err")" >&2; exit 2; }
+  line_report
   python3 - "$T/cobertura.xml" "$FILE" <<'PY'
 import sys, xml.etree.ElementTree as ET
 tree, wanted = ET.parse(sys.argv[1]), sys.argv[2]
