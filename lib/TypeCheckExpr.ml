@@ -10,7 +10,6 @@ open BuiltIn
 open Id
 open Env
 open EnvTypes
-open EnvUtils
 open EnvExtras
 open Region
 open RegionMap
@@ -406,7 +405,7 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _
       | Pointer _ | FnPtr _ | MonoTy _ ->
          (* If it's not a type variable, continue normal instance resolution. *)
-         let (instance, instance_bindings): decl * type_bindings =
+         let (instance, instance_bindings): instance_decl * type_bindings =
            (match get_instance (ctx_env ctx) (ctx_module_name ctx) dispatch_ty typeclass_id with
             | Some (i, b) -> (i, b)
             | None ->
@@ -415,11 +414,7 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
          in
          let params' = List.map (fun (ValueParameter (n, t)) -> ValueParameter (n, replace_variables instance_bindings t)) params in
          let arguments' = cast_arguments instance_bindings params' arguments in
-         let typarams = (match instance with
-                         | Instance { typarams; _ } -> typarams
-                         | _ -> internal_err "Couldn't get instance while getting type parameters")
-         in
-         let instance_id: decl_id = decl_id instance in
+         let { typarams; id = instance_id; _ }: instance_decl = instance in
          let meth_id: ins_meth_id =
            (match get_instance_method_from_instance_id_and_method_name (ctx_env ctx) instance_id (original_name callable_name) with
             | Some (InsMethRec { id; _ }) -> id

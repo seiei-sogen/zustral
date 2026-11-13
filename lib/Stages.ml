@@ -433,7 +433,7 @@ module Linked = struct
     | LUnion of union_id * type_vis * identifier * typarams * universe * linked_case list * docstring
     | LFunction of function_id * vis * identifier * typarams * value_parameter list * ty * astmt * docstring * pragma list
     | LTypeclass of typeclass_id * vis * identifier * type_parameter * linked_method_decl list * docstring
-    | LInstance of decl_id * vis * qident * typarams * ty * linked_method_def list * docstring
+    | LInstance of instance_id * vis * qident * typarams * ty * linked_method_def list * docstring
 
   and linked_case = LCase of decl_id * identifier * typed_slot list
 
@@ -569,7 +569,7 @@ module Tast = struct
     | TFunction of function_id * vis * identifier * typarams * value_parameter list * ty * tstmt * docstring
     | TForeignFunction of function_id * vis * identifier * value_parameter list * ty * string * docstring
     | TTypeClass of typeclass_id * vis * identifier * type_parameter * typed_method_decl list * docstring
-    | TInstance of decl_id * vis * qident * typarams * ty * typed_method_def list * docstring
+    | TInstance of instance_id * vis * qident * typarams * ty * typed_method_def list * docstring
 
   type typed_module = TypedModule of module_name * typed_decl list
 end
@@ -600,7 +600,7 @@ module Mtast = struct
     | MFunction of function_id * identifier * mvalue_parameter list * mono_ty * mstmt
     | MFunctionMonomorph of mono_id * function_id * mvalue_parameter list * mono_ty * mstmt
     | MForeignFunction of function_id * identifier * mvalue_parameter list * mono_ty * string
-    | MConcreteInstance of decl_id * qident * mono_ty  * concrete_method list
+    | MConcreteInstance of instance_id * qident * mono_ty  * concrete_method list
     | MMethodMonomorph of mono_id * mvalue_parameter list * mono_ty * mstmt
 
   and concrete_method =

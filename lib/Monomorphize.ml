@@ -205,7 +205,7 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
         (MConcreteMethodCall (ins_meth_id, name, args, rt), env))
   | TVarMethodCall { dispatch_ty; typeclass_id; source_module_name; params; args; method_name; rt; _ } ->
      (* Continue the instance resolution process we halted in the typing pass. *)
-     let (instance, instance_bindings): decl * type_bindings =
+     let (instance, instance_bindings): instance_decl * type_bindings =
        (match get_instance env source_module_name dispatch_ty typeclass_id with
         | Some (i, b) -> (i, b)
         | None ->
@@ -213,22 +213,14 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
      in
      let params' = List.map (fun (ValueParameter (n, t)) -> ValueParameter (n, replace_variables instance_bindings t)) params in
      let arguments' = TypeCheckExpr.cast_arguments instance_bindings params' args in
-     let typarams = (match instance with
-                     | Instance { typarams; _ } -> typarams
-                     | _ -> internal_err ("Couldn't find instance for var method call `"
-                                          ^ (qident_debug_name method_name)
-                                          ^ "` with typeclass ID `"
-                                          ^ (show_typeclass_id typeclass_id)
-                                          ^ "`."))
-     in
-     let instance_id: decl_id = decl_id instance in
+     let { typarams; id = instance_id; _ }: instance_decl = instance in
      let meth_id: ins_meth_id =
        (match get_instance_method_from_instance_id_and_method_name env instance_id (original_name method_name) with
         | Some (InsMethRec { id; _ }) -> id
         (* A program reaches this: an instance that leaves out a method of its
            typeclass is accepted where it is declared (#91). *)
         | None -> internal_err ("Couldn't find instance method from instance ID `"
-                                ^ (show_decl_id instance_id)
+                                ^ (show_instance_id instance_id)
                                 ^ "` and method name `"
                                 ^ (method_name |> original_name |> ident_string)
                                 ^ "`."))
@@ -674,15 +666,12 @@ and get_function_definition (env: env) (id: function_id): (typarams * value_para
 
 and get_method_definition (env: env) (id: ins_meth_id): (typarams * value_parameter list * ty * tstmt) =
   let (InsMethRec { instance_id; value_params; rt; body; _ }) = get_instance_method env id in
-  match get_decl_by_id env instance_id with
-  | Instance { typarams; _ } ->
-     (match body with
-      | Some body ->
-         (typarams, value_params, rt, body)
-      | None ->
-         internal_err ("method with ID `" ^ (show_decl_id instance_id) ^ "` has no body"))
-  | _ ->
-     internal_err ("ID `" ^ (show_decl_id instance_id) ^ "`not an instance")
+  let { typarams; _ }: instance_decl = get_instance_decl env instance_id in
+  match body with
+  | Some body ->
+     (typarams, value_params, rt, body)
+  | None ->
+     internal_err ("method with ID `" ^ (show_instance_id instance_id) ^ "` has no body")
 
 and monomorphize_slot_list (env: env) (slots: typed_slot list): (env * mono_slot list) =
   let names: identifier list = List.map (fun (TypedSlot (n, _)) -> n) slots in

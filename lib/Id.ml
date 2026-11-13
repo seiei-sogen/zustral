@@ -26,6 +26,9 @@ type record_id = decl_id
 type union_id = decl_id
 [@@deriving (eq, show)]
 
+type instance_id = decl_id
+[@@deriving (eq, show)]
+
 type ins_meth_id = InsMethId of int
 [@@deriving (eq, show)]
 
@@ -54,6 +57,9 @@ let fresh_record_id: Supply.t -> record_id * Supply.t =
 let fresh_union_id: Supply.t -> union_id * Supply.t =
   fresh_decl_id
 
+let fresh_instance_id: Supply.t -> instance_id * Supply.t =
+  fresh_decl_id
+
 let fresh_ins_meth_id (supply: Supply.t): ins_meth_id * Supply.t =
   let (number, supply) = Supply.next_ins_meth_id supply in
   (InsMethId number, supply)
@@ -65,20 +71,8 @@ let fresh_mono_id (supply: Supply.t): mono_id * Supply.t =
 let compare_mod_id (ModId a) (ModId b): int =
   compare a b
 
-let compare_decl_id (DeclId a) (DeclId b): int =
+let compare_instance_id (DeclId a: instance_id) (DeclId b: instance_id): int =
   compare a b
-
-let function_decl_id (id: function_id): decl_id =
-  id
-
-let typeclass_decl_id (id: typeclass_id): decl_id =
-  id
-
-let record_decl_id (id: record_id): decl_id =
-  id
-
-let union_decl_id (id: union_id): decl_id =
-  id
 
 let function_id_number (DeclId number: function_id): int =
   number

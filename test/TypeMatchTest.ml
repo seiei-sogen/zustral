@@ -12,7 +12,7 @@ open Austral_core.Error
 open Austral_core.Type
 module Env = Austral_core.Env
 module TypeMatch = Austral_core.TypeMatch
-module DeclIdSet = Austral_core.DeclIdSet.DeclIdSet
+module InstanceIdSet = Austral_core.InstanceIdSet.InstanceIdSet
 module ModIdSet = Austral_core.ModIdSet.ModIdSet
 
 (* No program reaches these: the compiler qualifies the name of a constraint
@@ -32,7 +32,7 @@ let constrained (name: string) (typeclass: sident): type_var =
    instance of C for Pointer[U], where U needs an instance of Nope.D. *)
 let env_with_instance: Env.env * sident =
   let (env, mod_id) =
-    Env.add_module Env.empty_env { name = example; imported_instances = DeclIdSet.empty; imports_from = ModIdSet.empty }
+    Env.add_module Env.empty_env { name = example; imported_instances = InstanceIdSet.empty; imports_from = ModIdSet.empty }
   in
   let typeclass: sident = make_sident example (make_ident "C") in
   let (env, typeclass_id) =

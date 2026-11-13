@@ -32,7 +32,7 @@ val check_instance_argument_has_right_shape : typarams -> ty -> unit
 (** Given a list of instances of a given typeclass in a module, and a type
     argument, check if an instance with that type argument would overlap with
     any instance from the list. *)
-val check_instance_locally_unique : decl list -> ty -> unit
+val check_instance_locally_unique : instance_decl list -> ty -> unit
 
 (** Given the ID of the module an instance is defined in, the ID of the module
     the typeclass being implemented is from, and the argument type, check the

@@ -11,7 +11,7 @@ open MonoTypeBindings
 open Stages.Tast
 open Stages.Mtast
 open Id
-open DeclIdSet
+open InstanceIdSet
 open LexEnv
 open EnvTypes
 open EnvUtils
@@ -166,7 +166,7 @@ let register (type id) (env: env) (registration: id registration): (env * id) =
         overlaps no instance of its own module, and the orphan rule. The orphan
         rule takes a built-in type to be local to every module, so instances
         from two modules can overlap (#72). *)
-     add_decl fresh_decl_id (fun id -> Instance { id; mod_id; vis; typeclass_id; docstring; typarams; argument })
+     add_decl fresh_instance_id (fun id -> Instance { id; mod_id; vis; typeclass_id; docstring; typarams; argument })
   | NewInstanceMethod { instance_id; method_id; docstring; name; typarams; value_params; rt; body } ->
      (* Not checked here. The caller checks that the typeclass has a method of
         this name. Nothing checks that an instance defines every method of its
@@ -174,11 +174,6 @@ let register (type id) (env: env) (registration: id registration): (env * id) =
      let (id, supply) = fresh_ins_meth_id supply in
      let meth = InsMethRec { id; instance_id; method_id; docstring; name; typarams; value_params; rt; body } in
      (Env { mods; methods = meth :: methods; decls; monos; exports; supply }, id)
-
-let get_decl_by_id (env: env) (id: decl_id): decl =
-  let (Env { decls; _ }) = env in
-  registered (fun () -> "declaration with ID `" ^ (show_decl_id id) ^ "`")
-    (List.find_opt (fun d -> equal_decl_id id (decl_id d)) decls)
 
 (* The lookups by an ID that says its kind. Each looks only at the declarations
    of that kind, so what it returns is one, and it misses in the one case that
@@ -233,6 +228,17 @@ let union_case_of (decl: decl): union_case_decl option =
   | UnionCase case -> Some case
   | Constant _ | Record _ | Union _ | Function _ | TypeClass _ | TypeClassMethod _ | Instance _ -> None
 
+let instance_of (decl: decl): instance_decl option =
+  match decl with
+  | Instance instance -> Some instance
+  | Constant _ | Record _ | Union _ | UnionCase _ | Function _ | TypeClass _ | TypeClassMethod _ -> None
+
+let get_instance_decl (env: env) (id: instance_id): instance_decl =
+  let (Env { decls; _ }) = env in
+  let has_id (instance: instance_decl): bool = equal_instance_id instance.id id in
+  registered (fun () -> "instance with ID `" ^ (show_instance_id id) ^ "`")
+    (List.find_opt has_id (List.filter_map instance_of decls))
+
 let get_instance_method (env: env) (ins_meth_id: ins_meth_id): ins_meth_rec =
   let (Env { methods; _ }) = env in
   registered (fun () -> "instance method with ID `" ^ (show_ins_meth_id ins_meth_id) ^ "`")
@@ -250,25 +256,17 @@ let get_method_from_typeclass_id_and_name (env: env) (typeclass_id: typeclass_id
   in
   List.find_opt pred decls
 
-let module_instances (env: env) (id: mod_id): decl list =
-  let (Env { decls; _ }) = env
-  and pred = function
-    | Instance { mod_id; _ } ->
-       equal_mod_id mod_id id
-    | _ -> false
-  in
-  List.filter pred decls
+let module_instances (env: env) (id: mod_id): instance_decl list =
+  let (Env { decls; _ }) = env in
+  List.filter (fun (instance: instance_decl) -> equal_mod_id instance.mod_id id) (List.filter_map instance_of decls)
 
-let module_public_instances (env: env) (id: mod_id): decl list =
-  let (Env { decls; _ }) = env
-  and pred = function
-    | Instance { mod_id; vis; _ } ->
-       (match vis with
-        | VisPublic -> equal_mod_id mod_id id
-        | VisPrivate -> false)
-    | _ -> false
+let module_public_instances (env: env) (id: mod_id): instance_decl list =
+  let is_public (instance: instance_decl): bool =
+    match instance.vis with
+    | VisPublic -> true
+    | VisPrivate -> false
   in
-  List.filter pred decls
+  List.filter is_public (module_instances env id)
 
 let get_union_cases (env: env) (id: union_id): union_case_decl list =
   let (Env { decls; _ }) = env in
@@ -320,20 +318,12 @@ let get_variable (env: env) (lexenv: lexenv) (name: qident): (ty * var_source) o
       | None ->
          None)
 
-let visible_instances (env: env) (id: mod_id): decl list =
-  let instances_defined_in_module: decl list =
-    let (Env { decls; _ }) = env
-    and pred = function
-      | Instance { mod_id; _ } ->
-         equal_mod_id id mod_id
-      | _ -> false
-    in
-    List.filter pred decls
-  and instances_imported_by_module: decl list =
+let visible_instances (env: env) (id: mod_id): instance_decl list =
+  let instances_imported_by_module: instance_decl list =
     let (ModRec { imported_instances; _ }) = get_module_by_id env id in
-    List.map (fun id -> get_decl_by_id env id) (List.of_seq (DeclIdSet.to_seq imported_instances))
+    List.map (get_instance_decl env) (List.of_seq (InstanceIdSet.to_seq imported_instances))
   in
-  instances_defined_in_module @ instances_imported_by_module
+  (module_instances env id) @ instances_imported_by_module
 
 let store_function_body (env: env) (fn_id: function_id) (body: tstmt): env =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
@@ -345,7 +335,12 @@ let store_function_body (env: env) (fn_id: function_id) (body: tstmt): env =
     | None ->
        Function { fn with body = Some body }
   in
-  let decls_without_existing_one: decl list = List.filter (fun (d: decl) -> not (equal_decl_id (decl_id d) (function_decl_id fn_id))) decls in
+  let is_existing_one (d: decl): bool =
+    match function_of d with
+    | Some existing -> equal_function_id existing.id fn_id
+    | None -> false
+  in
+  let decls_without_existing_one: decl list = List.filter (fun (d: decl) -> not (is_existing_one d)) decls in
   let env = Env { mods; methods; decls = new_decl :: decls_without_existing_one; monos; exports; supply } in
   env
 
@@ -365,10 +360,10 @@ and replace_method_body (meth: ins_meth_rec) (new_body: tstmt): ins_meth_rec =
    | None ->
       InsMethRec { id; instance_id; method_id; docstring; name; typarams; value_params; rt; body=(Some new_body) })
 
-let get_instance_method_from_instance_id_and_method_name (env: env) (instance_id: decl_id) (name: identifier): ins_meth_rec option =
+let get_instance_method_from_instance_id_and_method_name (env: env) (instance_id: instance_id) (name: identifier): ins_meth_rec option =
   let (Env { methods; _ }) = env in
   let pred (InsMethRec { instance_id=target_instance_id; name=target_name; _ }): bool =
-    (equal_decl_id instance_id target_instance_id)
+    (equal_instance_id instance_id target_instance_id)
     && (equal_identifier name target_name)
   in
   List.find_opt pred methods

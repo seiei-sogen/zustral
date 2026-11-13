@@ -192,13 +192,9 @@ let overlapping_instances (a: ty) (b: ty): bool =
   | MonoTy _ ->
      generic_error InstanceOverlapTypeNotAllowed
 
-let check_instance_locally_unique (instances: decl list) (argument: ty): unit =
-  let pred (decl: decl): bool =
-    match decl with
-    | Instance { argument=argument'; _ } ->
-       overlapping_instances argument argument'
-    | _ ->
-       false
+let check_instance_locally_unique (instances: instance_decl list) (argument: ty): unit =
+  let pred (instance: instance_decl): bool =
+    overlapping_instances argument instance.argument
   in
   if List.exists pred instances then
     generic_error OverlappingInstances

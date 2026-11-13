@@ -6,7 +6,7 @@
 *)
 (** Types used in the various environments. *)
 open Id
-open DeclIdSet
+open InstanceIdSet
 open ModIdSet
 open Identifier
 open Common
@@ -22,13 +22,13 @@ open Stages.Mtast
 type mod_rec = ModRec of {
       id: mod_id;
       name: module_name;
-      imported_instances: DeclIdSet.t;
+      imported_instances: InstanceIdSet.t;
       imports_from: ModIdSet.t;
     }
 
 type mod_input = {
     name: module_name;
-    imported_instances: DeclIdSet.t;
+    imported_instances: InstanceIdSet.t;
     imports_from: ModIdSet.t;
   }
 
@@ -94,6 +94,18 @@ type typeclass_decl = {
     param: type_parameter;
   }
 
+(** An instance of a typeclass, as the environment holds it. Its methods are
+    not declarations: see {!ins_meth_rec}. *)
+type instance_decl = {
+    id: instance_id;
+    mod_id: mod_id;
+    vis: vis;
+    typeclass_id: typeclass_id;
+    docstring: docstring;
+    typarams: typarams;
+    argument: ty;
+  }
+
 (** A declaration record represents a declaration.
 
    The definition of declaration here is slightly different than that of the
@@ -129,20 +141,12 @@ type decl =
       value_params: value_parameter list;
       rt: ty;
     }
-  | Instance of {
-      id: decl_id;
-      mod_id: mod_id;
-      vis: vis;
-      typeclass_id: typeclass_id;
-      docstring: docstring;
-      typarams: typarams;
-      argument: ty;
-    }
+  | Instance of instance_decl
 
 (** Represents an instance method. *)
 type ins_meth_rec = InsMethRec of {
       id: ins_meth_id;
-      instance_id: decl_id;
+      instance_id: instance_id;
       method_id: decl_id;
       docstring: docstring;
       name: identifier;
@@ -275,7 +279,7 @@ type instance_input = {
   }
 
 type instance_method_input = {
-    instance_id: decl_id;
+    instance_id: instance_id;
     method_id: decl_id;
     docstring: docstring;
     name: identifier;
@@ -295,5 +299,5 @@ type _ registration =
   | NewFunction : function_input -> function_id registration
   | NewTypeClass : type_class_input -> typeclass_id registration
   | NewTypeClassMethod : type_class_method_input -> decl_id registration
-  | NewInstance : instance_input -> decl_id registration
+  | NewInstance : instance_input -> instance_id registration
   | NewInstanceMethod : instance_method_input -> ins_meth_id registration

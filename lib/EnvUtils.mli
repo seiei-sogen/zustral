@@ -10,9 +10,6 @@ open Id
 open EnvTypes
 open Type
 
-(** Return the ID of a declaration. *)
-val decl_id : decl -> decl_id
-
 (** Return the ID of the module a decl belongs to. *)
 val decl_mod_id : decl -> mod_id
 

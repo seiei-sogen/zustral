@@ -14,7 +14,7 @@ type import_map =
   ImportMap of {
       import_into: module_name;
       symbols: qident IdentifierMap.t;
-      instances: decl_id list;
+      instances: instance_id list;
     }
 
 let empty_map (n: module_name): import_map =
@@ -40,7 +40,7 @@ let add_symbol (im: import_map) (q: qident) =
          instances = instances
        }
 
-let add_instance_to_imports (im: import_map) (id: decl_id): import_map =
+let add_instance_to_imports (im: import_map) (id: instance_id): import_map =
   let (ImportMap { import_into; symbols; instances }) = im in
   ImportMap {
       import_into = import_into;
@@ -52,7 +52,7 @@ let importing_module (im: import_map): module_name =
   let (ImportMap { import_into; _ }) = im in
   import_into
 
-let imported_instances (im: import_map): decl_id list =
+let imported_instances (im: import_map): instance_id list =
   let (ImportMap { instances; _ }) = im in
   instances
 

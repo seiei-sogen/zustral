@@ -11,7 +11,7 @@ open Austral_core.EnvTypes
 open Austral_core.Error
 module Env = Austral_core.Env
 module Id = Austral_core.Id
-module DeclIdSet = Austral_core.DeclIdSet.DeclIdSet
+module InstanceIdSet = Austral_core.InstanceIdSet.InstanceIdSet
 module ModIdSet = Austral_core.ModIdSet.ModIdSet
 
 (* The message of the internal error the function raises, if it raises one. *)
@@ -27,24 +27,28 @@ let test_id_from_a_later_environment _ =
   let (before, mod_id) =
     Env.add_module Env.empty_env {
         name = make_mod_name "Example";
-        imported_instances = DeclIdSet.empty;
+        imported_instances = InstanceIdSet.empty;
         imports_from = ModIdSet.empty
       }
   in
   let (after, id) =
-    Env.register before (NewConstant {
+    Env.register before (NewFunction {
         mod_id;
         vis = VisPublic;
         name = make_ident "example";
-        ty = Austral_core.Type.Unit;
-        docstring = Docstring ""
+        docstring = Docstring "";
+        typarams = Austral_core.TypeParameters.empty_typarams;
+        value_params = [];
+        rt = Austral_core.Type.Unit;
+        external_name = None;
+        body = None
       })
   in
-  assert_bool "the environment that made the ID has the declaration"
-    (Id.equal_decl_id id (Austral_core.EnvUtils.decl_id (Env.get_decl_by_id after id)));
+  assert_bool "the environment that made the ID has the function"
+    (Id.equal_function_id id (Env.get_function after id).id);
   assert_equal
-    (Some ("No declaration with ID `" ^ (Id.show_decl_id id) ^ "` in this environment."))
-    (internal_error_of (fun () -> Env.get_decl_by_id before id))
+    (Some ("No function with ID `" ^ (Id.show_function_id id) ^ "` in this environment."))
+    (internal_error_of (fun () -> Env.get_function before id))
 
 (* No program reaches this either. A monomorph is registered under a key: what
    it is a monomorph of, and the type arguments. A key is not an ID, so an
@@ -58,7 +62,7 @@ let test_monomorph_key_not_registered _ =
   let (env, mod_id) =
     Env.add_module Env.empty_env {
         name = pervasive;
-        imported_instances = DeclIdSet.empty;
+        imported_instances = InstanceIdSet.empty;
         imports_from = ModIdSet.empty
       }
   in

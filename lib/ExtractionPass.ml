@@ -14,7 +14,7 @@ open Stages
 open Linked
 open Stages.AstDB
 open Id
-open DeclIdSet
+open InstanceIdSet
 open ModIdSet
 open Env
 open EnvTypes
@@ -132,10 +132,10 @@ let rec extract (env: env) (cmodule: combined_module): (env * linked_module) Out
                (List.of_seq (ModuleNameSet.to_seq module_names)))
         in
         (* Add the module to the environment. *)
-        let imported_instances: DeclIdSet.t =
-          DeclIdSet.union
-            (DeclIdSet.of_list (imported_instances interface_imports))
-            (DeclIdSet.of_list (imported_instances body_imports))
+        let imported_instances: InstanceIdSet.t =
+          InstanceIdSet.union
+            (InstanceIdSet.of_list (imported_instances interface_imports))
+            (InstanceIdSet.of_list (imported_instances body_imports))
         in
         let input: mod_input = {
             name;
@@ -408,12 +408,8 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
          let _ = check_disjoint_typarams typeclass_param_name typarams in
          (* Local uniqueness: does this instance collide with other instances in this module? *)
          let _ =
-           let other_instances: decl list =
-             List.filter (fun decl ->
-                 match decl with
-                 | Instance { typeclass_id=typeclass_id'; _ } ->
-                    equal_typeclass_id typeclass_id typeclass_id'
-                 | _ -> false)
+           let other_instances: instance_decl list =
+             List.filter (fun (instance: instance_decl) -> equal_typeclass_id typeclass_id instance.typeclass_id)
                (module_instances env mod_id)
            in
            check_instance_locally_unique other_instances argument

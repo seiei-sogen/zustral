@@ -10,17 +10,6 @@ open Id
 open EnvTypes
 open Type
 
-let decl_id (decl: decl): decl_id =
-  match decl with
-  | Constant { id; _ } -> id
-  | Record { id; _ } -> record_decl_id id
-  | Union { id; _ } -> union_decl_id id
-  | UnionCase { id; _ } -> id
-  | Function { id; _ } -> function_decl_id id
-  | TypeClass { id; _ } -> typeclass_decl_id id
-  | TypeClassMethod { id; _ } -> id
-  | Instance { id; _ } -> id
-
 let decl_mod_id (decl: decl): mod_id =
   match decl with
   | Constant { mod_id; _ } -> mod_id

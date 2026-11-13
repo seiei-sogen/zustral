@@ -5,11 +5,11 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 
-module DeclIdSet =
+module InstanceIdSet =
   Set.Make(
       struct
         open Id
-        type t = decl_id
-        let compare: t -> t -> int = compare_decl_id
+        type t = instance_id
+        let compare: t -> t -> int = compare_instance_id
       end
     )

@@ -34,4 +34,4 @@ val match_typarams : ctx -> typarams -> ty list -> type_bindings
 
 Parameters are: environment, source module name, dispatch type, and ID of the
 typeclass. *)
-val get_instance : env -> module_name -> ty -> typeclass_id -> (decl * type_bindings) option
+val get_instance : env -> module_name -> ty -> typeclass_id -> (instance_decl * type_bindings) option

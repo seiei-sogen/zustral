@@ -77,9 +77,6 @@ val add_exported_function : env -> function_id -> string -> env
 
 (** {2 Retrieve} *)
 
-(** Retrieve a declaration by ID. *)
-val get_decl_by_id : env -> decl_id -> decl
-
 (** Retrieve a function by its ID. *)
 val get_function : env -> function_id -> function_decl
 
@@ -92,6 +89,9 @@ val get_record : env -> record_id -> record_decl
 (** Retrieve a union by its ID. *)
 val get_union : env -> union_id -> union_decl
 
+(** Retrieve an instance by its ID. *)
+val get_instance_decl : env -> instance_id -> instance_decl
+
 (** Retrieve a declaration by its sourced name, returning {!None} if it doesn't exist.
 
     If a module with the given name doesn't exist, raises an error. *)
@@ -102,17 +102,17 @@ val get_decl_by_name : env -> sident -> decl option
 val get_method_from_typeclass_id_and_name : env -> typeclass_id -> identifier -> decl option
 
 (** Return all typeclass instances defined in a module. *)
-val module_instances: env -> mod_id -> decl list
+val module_instances: env -> mod_id -> instance_decl list
 
 (** Return the public typeclass instances defined in a module. *)
-val module_public_instances: env -> mod_id -> decl list
+val module_public_instances: env -> mod_id -> instance_decl list
 
 (** Return the list of cases of a union. *)
 val get_union_cases : env -> union_id -> union_case_decl list
 
 (** Get method from the instance ID and name, returning {!None} if the instance
     does not define a method of that name. *)
-val get_instance_method_from_instance_id_and_method_name : env -> decl_id -> identifier -> ins_meth_rec option
+val get_instance_method_from_instance_id_and_method_name : env -> instance_id -> identifier -> ins_meth_rec option
 
 (** Get an instance method by ID. *)
 val get_instance_method : env -> ins_meth_id -> ins_meth_rec
@@ -183,4 +183,4 @@ val get_variable : env -> lexenv -> qident -> (ty * var_source) option
 (** Return all typeclass instances visible from a module. These are not only the
     instances that are defined in the module itself, but the instances imported
     by the module. *)
-val visible_instances : env -> mod_id -> decl list
+val visible_instances : env -> mod_id -> instance_decl list

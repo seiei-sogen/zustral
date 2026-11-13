@@ -66,7 +66,7 @@ let rec resolve' (env: env) (kind: module_kind) (imports: import_map) (list: imp
   | [] ->
      imports
 
-let rec add_instances (im: import_map) (is: decl_id list): import_map =
+let rec add_instances (im: import_map) (is: instance_id list): import_map =
   match is with
   | first::rest ->
      add_instance_to_imports (add_instances im rest) first
@@ -76,21 +76,20 @@ let rec add_instances (im: import_map) (is: decl_id list): import_map =
 let module_names (cil: concrete_import_list list): module_name list =
   List.map (fun (ConcreteImportList (mn, _)) -> mn) cil
 
-let module_defined_instances (env: env) (mn: module_name): decl_id list =
+let module_defined_instances (env: env) (mn: module_name): instance_id list =
   match (get_module_by_name env mn) with
   | Some mod_rec ->
      let ModRec { id; _ } = mod_rec in
-     let decls: decl list = module_public_instances env id in
-     List.map decl_id decls
+     List.map (fun (instance: instance_decl) -> instance.id) (module_public_instances env id)
   | None ->
      []
 
-let import_instances (env: env) (list: concrete_import_list list): decl_id list =
+let import_instances (env: env) (list: concrete_import_list list): instance_id list =
   let mns = module_names list in
   let instances = List.map (module_defined_instances env) mns in
   List.flatten instances
 
 let resolve (importing_module: module_name) (kind: module_kind) (env: env) (list: concrete_import_list list): import_map =
   let im: import_map = resolve' env kind (empty_map importing_module) (flatten_imports list) in
-  let ins: decl_id list = import_instances env list in
+  let ins: instance_id list = import_instances env list in
   add_instances im ins
