@@ -4,6 +4,11 @@
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
+
+(* A catch-all arm over a variant type is an error in this file: a new
+   constructor must stop the build at every match. *)
+[@@@warning "@4"]
+
 open Common
 open Type
 open Stages.Tast
@@ -35,7 +40,11 @@ and try_folding' (e: Ast.aexpr): Z.t option =
         end
       | None -> None
     end
-  | _ ->
+  | Ast.NilConstant | Ast.BoolConstant _ | Ast.FloatConstant _ | Ast.StringConstant _
+  | Ast.Variable _ | Ast.FunctionCall _ | Ast.Comparison _ | Ast.Conjunction _
+  | Ast.Disjunction _ | Ast.Negation _ | Ast.IfExpression _ | Ast.Path _
+  | Ast.RefPath _ | Ast.Embed _ | Ast.Deref _ | Ast.Typecast _ | Ast.SizeOf _
+  | Ast.BorrowExpr _ | Ast.Reborrow _ ->
      None
 
 and apply_op (op: arithmetic_operator) (lhs: Z.t) (rhs: Z.t): Z.t =
@@ -96,13 +105,25 @@ let literal_matches (place: place) (ty: ty) (expr: texpr): bool =
       | TIntConstant value | TCast (TIntConstant value, _) | TImplicitCast (TIntConstant value, _) ->
          check_int_literal_fits place signedness width value;
          true
-      | _ ->
+      | TNilConstant | TBoolConstant _ | TFloatConstant _ | TStringConstant _
+      | TConstVar _ | TParamVar _ | TLocalVar _ | TFunVar _ | TTemporary _ | TFuncall _
+      | TMethodCall _ | TVarMethodCall _ | TFptrCall _ | TCast _ | TImplicitCast _
+      | TComparison _ | TConjunction _ | TDisjunction _ | TNegation _ | TIfExpression _
+      | TRecordConstructor _ | TUnionConstructor _ | TSlotAccessor _
+      | TPointerSlotAccessor _ | TArrayIndex _ | TSpanIndex _ | TEmbed _ | TDeref _
+      | TSizeOf _ ->
          false)
   | SingleFloat | DoubleFloat ->
      (match expr with
       | TFloatConstant _ | TCast (TFloatConstant _, _) | TImplicitCast (TFloatConstant _, _) ->
          true
-      | _ ->
+      | TNilConstant | TBoolConstant _ | TIntConstant _ | TStringConstant _
+      | TConstVar _ | TParamVar _ | TLocalVar _ | TFunVar _ | TTemporary _ | TFuncall _
+      | TMethodCall _ | TVarMethodCall _ | TFptrCall _ | TCast _ | TImplicitCast _
+      | TComparison _ | TConjunction _ | TDisjunction _ | TNegation _ | TIfExpression _
+      | TRecordConstructor _ | TUnionConstructor _ | TSlotAccessor _
+      | TPointerSlotAccessor _ | TArrayIndex _ | TSpanIndex _ | TEmbed _ | TDeref _
+      | TSizeOf _ ->
          false)
   | Unit | Boolean | NamedType _ | RegionTy _ | ReadRef _ | WriteRef _ | Span _
   | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
@@ -115,13 +136,25 @@ let annotation_types_literal (place: place) (ty: ty) (expr: texpr): bool =
       | TIntConstant value ->
          check_int_literal_fits place signedness width value;
          true
-      | _ ->
+      | TNilConstant | TBoolConstant _ | TFloatConstant _ | TStringConstant _
+      | TConstVar _ | TParamVar _ | TLocalVar _ | TFunVar _ | TTemporary _ | TFuncall _
+      | TMethodCall _ | TVarMethodCall _ | TFptrCall _ | TCast _ | TImplicitCast _
+      | TComparison _ | TConjunction _ | TDisjunction _ | TNegation _ | TIfExpression _
+      | TRecordConstructor _ | TUnionConstructor _ | TSlotAccessor _
+      | TPointerSlotAccessor _ | TArrayIndex _ | TSpanIndex _ | TEmbed _ | TDeref _
+      | TSizeOf _ ->
          false)
   | SingleFloat | DoubleFloat ->
      (match expr with
       | TFloatConstant _ ->
          true
-      | _ ->
+      | TNilConstant | TBoolConstant _ | TIntConstant _ | TStringConstant _
+      | TConstVar _ | TParamVar _ | TLocalVar _ | TFunVar _ | TTemporary _ | TFuncall _
+      | TMethodCall _ | TVarMethodCall _ | TFptrCall _ | TCast _ | TImplicitCast _
+      | TComparison _ | TConjunction _ | TDisjunction _ | TNegation _ | TIfExpression _
+      | TRecordConstructor _ | TUnionConstructor _ | TSlotAccessor _
+      | TPointerSlotAccessor _ | TArrayIndex _ | TSpanIndex _ | TEmbed _ | TDeref _
+      | TSizeOf _ ->
          false)
   | Unit | Boolean | NamedType _ | RegionTy _ | ReadRef _ | WriteRef _ | Span _
   | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->

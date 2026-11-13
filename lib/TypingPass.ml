@@ -5,6 +5,10 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 
+(* A catch-all arm over a variant type is an error in this file: a new
+   constructor must stop the build at every match. *)
+[@@@warning "@4"]
+
 open Identifier
 open Span
 open Common
@@ -60,7 +64,8 @@ let get_record_definition (place: place) (env: env) (name: qident) (ty: ty): (mo
   | (Some (Record { mod_id; vis; typarams; slots; _ })) ->
      let mod_name: module_name = module_name_from_id place env mod_id in
      (mod_name, vis, typarams, slots)
-  | Some _ ->
+  | Some (Constant _ | Union _ | UnionCase _ | Function _ | TypeClass _
+      | TypeClassMethod _ | Instance _) ->
      type_error place (PathNotRecord ty)
   | None ->
      generic_error place (NoRecordWithName (original_name name))
@@ -97,7 +102,18 @@ let rec lifted_assignment_span (stmt: astmt): span option =
      Some span
   | ABorrow { body; _ } ->
      lifted_assignment_span body
-  | _ ->
+  | ASkip _ | ALet _ | ADestructure _ | AInitialAssign _ | AIf _ | AWhen _ | ACase _
+  | AWhile _ | AFor _ | ABlock _ | ADiscarding _ | AReturn _ | LetTmp _ | AssignTmp _
+  | AAssign (_, _, (NilConstant | BoolConstant _ | IntConstant _ | FloatConstant _
+      | StringConstant _ | Variable _ | FunctionCall _ | ArithmeticExpression _
+      | Comparison _ | Conjunction _ | Disjunction _ | Negation _ | IfExpression _
+      | Embed _ | Deref _ | Typecast _ | SizeOf _ | SlotAccessor _
+      | PointerSlotAccessor _ | ArrayIndex _)) | AAssignVar (_, _, (NilConstant
+      | BoolConstant _ | IntConstant _ | FloatConstant _ | StringConstant _
+      | Variable _ | FunctionCall _ | ArithmeticExpression _ | Comparison _
+      | Conjunction _ | Disjunction _ | Negation _ | IfExpression _ | Embed _ | Deref _
+      | Typecast _ | SizeOf _ | SlotAccessor _ | PointerSlotAccessor _
+      | ArrayIndex _)) ->
      None
 
 (* The table with the temporary on the right-hand side of an assignment,
@@ -108,7 +124,10 @@ let declare_assigned_temporary (place: place) (lexenv: lexenv) (rvalue: aexpr) (
   match rvalue with
   | Temporary name ->
      push_var place lexenv name ty (VarLocal Mutable)
-  | _ ->
+  | NilConstant | BoolConstant _ | IntConstant _ | FloatConstant _ | StringConstant _
+  | Variable _ | FunctionCall _ | ArithmeticExpression _ | Comparison _ | Conjunction _
+  | Disjunction _ | Negation _ | IfExpression _ | Embed _ | Deref _ | Typecast _
+  | SizeOf _ | SlotAccessor _ | PointerSlotAccessor _ | ArrayIndex _ ->
      lexenv
 
 (* The supply numbers the regions of the borrow statements, in the order the
@@ -405,7 +424,7 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
                  ()
                else
                  type_error place (CannotBorrowParamMutably { name = original; ty = orig_ty })
-            | _ ->
+            | ((VarConstant | VarLocal Mutable), Write) | (_, Reborrow) ->
                (* And anything else is fine. *)
                ()
           in
@@ -539,7 +558,8 @@ and get_union_type_definition (place: place) (importing_module: module_name) (en
        (ty, cases)
      else
        type_error place CaseNonPublic
-  | _ ->
+  | None | Some (Constant _ | Record _ | UnionCase _ | Function _ | TypeClass _
+      | TypeClassMethod _ | Instance _) ->
      type_error place (CaseNonUnion ty)
 
 and group_cases_whens (cases: union_case_decl list) (whens: abstract_when list): (typed_case * abstract_when) list =
@@ -710,7 +730,7 @@ let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (
       | [] ->
          let (body', _, supply) = augment_stmt ctx lexenv supply body in
          (TFunction (decl_id, vis, name, typarams, params, rt, body', doc), supply)
-      | _ ->
+      | [UnsafeModulePragma] | _ :: _ :: _ ->
          declaration_error NoSpan FunInvalidPragmas)
   | LTypeclass (decl_id, vis, name, typaram, methods, doc) ->
      (TTypeClass (decl_id, vis, name, typaram, List.map (augment_method_decl env rm typaram) methods, doc), supply)

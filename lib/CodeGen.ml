@@ -4,6 +4,11 @@
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
+
+(* A catch-all arm over a variant type is an error in this file: a new
+   constructor must stop the build at every match. *)
+[@@@warning "@4"]
+
 open Id
 open Identifier
 open Type
@@ -661,7 +666,7 @@ and gen_fun_decl mn decl =
   | MMethodMonomorph (id, p, rt, _) ->
      let d = Desc "Method monomorph forward declaration" in
      Some [CFunctionDeclaration (d, gen_mono_id id, gen_params mn p, gen_type rt, LinkageInternal)]
-  | _ ->
+  | MConstant _ | MRecord _ | MRecordMonomorph _ | MUnion _ | MUnionMonomorph _ ->
      None
 
 and gen_method_decl mn (MConcreteMethod (id, _, params, rt, _)) =
@@ -703,7 +708,8 @@ and get_slots name decl =
        Some slots
      else
        None
-  | _ -> None
+  | CMacro _ | CStructForwardDeclaration _ | CEnumDefinition _ | CFunctionDeclaration _
+  | CFunctionDefinition _ -> None
 
 and name_depth name decls =
   let slots =
@@ -722,7 +728,10 @@ let detail_compare decls a b =
   match (a, b) with
   | (CNamedStructDefinition (_, _, s1), CNamedStructDefinition (_, _, s2)) ->
      (slots_depth s1 decls) - (slots_depth s2 decls)
-  | _ ->
+  | ((CMacro _ | CStructForwardDeclaration _ | CEnumDefinition _
+      | CFunctionDeclaration _ | CFunctionDefinition _), _)
+  | (CNamedStructDefinition _, (CMacro _ | CStructForwardDeclaration _
+      | CEnumDefinition _ | CFunctionDeclaration _ | CFunctionDefinition _)) ->
      compare (decl_order a) (decl_order b)
 
 (* end declaration sorting code *)

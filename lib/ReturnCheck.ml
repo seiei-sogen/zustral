@@ -5,6 +5,10 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 
+(* A catch-all arm over a variant type is an error in this file: a new
+   constructor must stop the build at every match. *)
+[@@@warning "@4"]
+
 open Identifier
 open Stages.Ast
 open Stages.Combined
@@ -47,7 +51,11 @@ let rec ends_in_return (stmt: astmt): bool =
      (match e with
       | FunctionCall (name, _) ->
          is_abort name
-      | _ ->
+      | NilConstant | BoolConstant _ | IntConstant _ | FloatConstant _
+      | StringConstant _ | Variable _ | ArithmeticExpression _ | Comparison _
+      | Conjunction _ | Disjunction _ | Negation _ | IfExpression _ | Path _
+      | RefPath _ | Embed _ | Deref _ | Typecast _ | SizeOf _ | BorrowExpr _
+      | Reborrow _ ->
          false)
   | AReturn _ ->
      true

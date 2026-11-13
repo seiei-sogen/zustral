@@ -4,6 +4,11 @@
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
+
+(* A catch-all arm over a variant type is an error in this file: a new
+   constructor must stop the build at every match. *)
+[@@@warning "@4"]
+
 open Env
 open Stages.Tast
 
@@ -17,7 +22,7 @@ and extract_decl (env: env) (decl: typed_decl): env =
       store_function_body env decl_id body
   | TInstance (_, _, _, _, _, methods, _) ->
      Util.iter_with_context extract_method env methods
-  | _ ->
+  | TConstant _ | TRecord _ | TUnion _ | TForeignFunction _ | TTypeClass _ ->
      env
 
 and extract_method (env: env) (meth: typed_method_def): env =

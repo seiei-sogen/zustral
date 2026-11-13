@@ -4,6 +4,11 @@
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
+
+(* A catch-all arm over a variant type is an error in this file: a new
+   constructor must stop the build at every match. *)
+[@@@warning "@4"]
+
 open Identifier
 open Stages.Tast
 open Type
@@ -274,7 +279,7 @@ let is_unconsumed (place: place) (tbl: state_tbl) (name: identifier): bool =
   let state = get_state place tbl name in
   match state with
   | Unconsumed -> true
-  | _ -> false
+  | BorrowedRead | BorrowedWrite | Consumed -> false
 
 type partitions =
   | Zero
@@ -674,7 +679,7 @@ and check_decl_linearity (decl: typed_decl): unit =
   | TInstance (_, _, _, _, _, methods, _) ->
      let _ = List.map check_method_linearity methods in
      ()
-  | _ ->
+  | TConstant _ | TRecord _ | TUnion _ | TForeignFunction _ | TTypeClass _ ->
      ()
 
 and check_method_linearity (TypedMethodDef (_, _, params, _, b)) =
