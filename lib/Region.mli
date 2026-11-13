@@ -13,4 +13,5 @@ val region_id: region -> int
 
 val static_region : region
 
-val fresh_region : unit -> region
+(** A region no other borrow has, and the supply to take the next one from. *)
+val fresh_region : Supply.t -> region * Supply.t

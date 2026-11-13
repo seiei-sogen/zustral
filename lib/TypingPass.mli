@@ -12,4 +12,6 @@ open Stages.Tast
 (** The context for statement checking. *)
 type stmt_ctx
 
-val augment_module : env -> linked_module -> typed_module Outcome.t
+(** Check the types of a module. The regions of its borrows are numbered from
+    the supply, which comes back without them. *)
+val augment_module : env -> Supply.t -> linked_module -> (typed_module * Supply.t) Outcome.t

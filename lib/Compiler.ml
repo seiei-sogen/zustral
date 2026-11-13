@@ -94,7 +94,9 @@ let compile_mod (c: compiler) (source: module_source): compiler Outcome.t =
        with_supply env (fun supply -> DesugaringPass.desugar supply returning)
      in
      let* ((env, linked): env * linked_module) = extract env combined in
-     let* (typed: typed_module) = augment_module env linked in
+     let* ((env, typed): env * typed_module) =
+       with_supply env (fun supply -> augment_module env supply linked)
+     in
      let* (checked: checked_module) = check_module_linearity typed in
      let* (env: env) = extract_bodies env checked in
      let* ((env, mono): env * mono_module) = monomorphize env checked in
