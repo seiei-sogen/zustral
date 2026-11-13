@@ -4,6 +4,11 @@
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
+
+(* A catch-all arm over a variant type is an error in this file: a new
+   constructor must stop the build at every match. *)
+[@@@warning "@4"]
+
 open Id
 open Identifier
 open Env
@@ -52,7 +57,8 @@ let rec check_entrypoint_validity (env: env) (name: qident): function_id * entry
              entrypoint_error NoSpan NotMonomorphic
          else
            entrypoint_error NoSpan NotPublic
-      | _ ->
+      | Constant _ | Record _ | Union _ | UnionCase _ | TypeClass _ | TypeClassMethod _
+      | Instance _ ->
          entrypoint_error NoSpan NotFunction)
   | None ->
       entrypoint_error NoSpan (NoSuchFunction {
@@ -126,7 +132,8 @@ let get_root_capability_monomorph (env: env): mono_id =
             of the entrypoint registered the monomorph under its key, and did
             not hand its ID over. *)
          internal_err NoSpan "No monomorph of RootCapability.")
-  | _ ->
+  | None | Some (Constant _ | Union _ | UnionCase _ | Function _ | TypeClass _
+      | TypeClassMethod _ | Instance _) ->
      (* No type rules this out. The compiler knows this type by the name the
         built-in module declares it under, and by nothing else. *)
      internal_err NoSpan "Can't find the RootCapability type in the environment."
@@ -143,7 +150,8 @@ let get_exit_code_monomorph (env: env): mono_id =
       | None ->
          (* As for RootCapability: registered by key, by an earlier pass. *)
          internal_err NoSpan "No monomorph of ExitCode.")
-  | _ ->
+  | None | Some (Constant _ | Record _ | UnionCase _ | Function _ | TypeClass _
+      | TypeClassMethod _ | Instance _) ->
      (* As for RootCapability: known by its name only. *)
      internal_err NoSpan "Can't find the ExitCode type in the environment."
 

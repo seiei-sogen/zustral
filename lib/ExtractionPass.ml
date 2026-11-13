@@ -380,7 +380,8 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
               (match decl with
                | TypeClass { id; mod_id; param; _ } ->
                   (id, mod_id, typaram_name param, typaram_universe param)
-               | _ ->
+               | Constant _ | Record _ | Union _ | UnionCase _ | Function _
+               | TypeClassMethod _ | Instance _ ->
                   declaration_error place (InstanceForNonTypeclass typeclass_name))
            | None ->
               declaration_error place (UnknownTypeclass typeclass_name)

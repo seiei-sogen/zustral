@@ -5,6 +5,10 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 
+(* A catch-all arm over a variant type is an error in this file: a new
+   constructor must stop the build at every match. *)
+[@@@warning "@4"]
+
 open Identifier
 open Env
 open EnvTypes
@@ -94,7 +98,8 @@ let rec monomorphize_ty (env: env) (ty: stripped_ty): (mono_ty * env) =
              let bindings: mono_type_bindings = mono_bindings_from_list pairs in
              let (env, mono_id) = add_or_get_union_monomorph env id bindings in
              (MonoNamedType (mono_id_of_union mono_id), env)
-          | _ ->
+          | Constant _ | UnionCase _ | Function _ | TypeClass _ | TypeClassMethod _
+          | Instance _ ->
              (* A program reaches this: a union case declared after a record or
                 union of the same name is the one a lookup by name finds (#86). *)
              internal_err NoSpan ("named type `" ^ (qident_debug_name name) ^ "`points to something that isn't a type"))

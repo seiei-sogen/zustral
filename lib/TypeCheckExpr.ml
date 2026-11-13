@@ -110,7 +110,8 @@ let get_record_definition (place: place) (env: env) (name: qident) (ty: ty): (mo
   | (Some (Record { mod_id; vis; typarams; slots; _ })) ->
      let mod_name: module_name = module_name_from_id place env mod_id in
      (mod_name, vis, typarams, slots)
-  | Some _ ->
+  | Some (Constant _ | Union _ | UnionCase _ | Function _ | TypeClass _
+      | TypeClassMethod _ | Instance _) ->
      type_error place (PathNotRecord ty)
   | None ->
      generic_error place (NoRecordWithName (original_name name))
@@ -566,7 +567,8 @@ and augment_variable (ctx: expr_ctx) (name: qident) (from_context: context_bindi
      else
        (* Function is concrete. *)
        TFunVar (id, fn_ty, empty_bindings)
-  | _ ->
+  | None | Some (Constant _ | Record _ | Union _ | UnionCase _ | TypeClass _
+      | TypeClassMethod _ | Instance _) ->
      (match get_variable (ctx_place ctx) (ctx_env ctx) (ctx_lexenv ctx) name with
       | Some (ty, src) ->
          (match src with

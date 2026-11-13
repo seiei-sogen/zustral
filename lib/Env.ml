@@ -301,7 +301,7 @@ let get_callable (place: place) (env: env) (importing_module_name: module_name) 
                  return_type = rt;
                }
            )
-      | _ ->
+      | Constant _ | Union _ | TypeClass _ | Instance _ ->
          None)
   | None ->
      None
@@ -316,7 +316,8 @@ let get_variable (place: place) (env: env) (lexenv: lexenv) (name: qident): (ty 
          (match decl with
           | Constant { ty; _ } ->
              Some (ty, VarConstant)
-          | _ ->
+          | Record _ | Union _ | UnionCase _ | Function _ | TypeClass _
+          | TypeClassMethod _ | Instance _ ->
              None)
       | None ->
          None)
