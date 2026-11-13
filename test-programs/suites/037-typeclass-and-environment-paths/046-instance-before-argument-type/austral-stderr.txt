@@ -1,17 +1,12 @@
 {
   "module": "Test",
-  "kind": "Internal Error",
+  "kind": "Declaration Error",
   "text": [
-    { "type": "text", "content": "Internal compiler error: " },
-    { "type": "text", "content": "No declaration with name `Square`." },
-    { "type": "break" },
+    { "type": "text", "content": "An instance for the type " },
+    { "type": "code", "content": "Square" },
     {
       "type": "text",
-      "content": "This is a bug in the compiler, please open an issue here: "
-    },
-    {
-      "type": "code",
-      "content": "https://github.com/austral/austral/issues"
+      "content": " is declared before the type. Declare the type first, and its instances after it."
     }
   ],
   "span": {

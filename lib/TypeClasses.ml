@@ -14,7 +14,6 @@ open TypeParser
 open TypeSystem
 open Env
 open EnvTypes
-open EnvExtras
 open EnvUtils
 open Error
 
@@ -223,8 +222,14 @@ and is_type_local (place: place) (env: env) (mod_id: mod_id) (ty: ty): bool =
   | DoubleFloat ->
      true
   | NamedType (name, _, _) ->
-     let type_mod_id: mod_id = decl_mod_id (get_decl_by_name_or_die place env (qident_to_sident name)) in
-     equal_mod_id mod_id type_mod_id
+     (match get_decl_by_name place env (qident_to_sident name) with
+      | Some decl ->
+         equal_mod_id mod_id (decl_mod_id decl)
+      | None ->
+         (* The type parser found the type among the signatures of this module,
+            but the declarations are registered in order, and the type's comes
+            after the instance's. *)
+         declaration_error place (InstanceBeforeType (original_name name)))
   | RegionTy _ ->
      (* Not applicable. *)
      false

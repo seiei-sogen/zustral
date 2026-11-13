@@ -8,9 +8,6 @@
 open Id
 open Identifier
 open Env
-open EnvTypes
-
-val get_decl_by_name_or_die : Error.place -> env -> sident -> decl
 
 (** The name of a typeclass, with the name of its module. *)
 val get_decl_sident_or_die : Error.place -> env -> typeclass_id -> sident

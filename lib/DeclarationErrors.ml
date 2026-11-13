@@ -68,6 +68,7 @@ type t =
   | ExportGeneric of identifier
   | ForeignImportExport of identifier
   | InstanceForNonTypeclass of identifier
+  | InstanceBeforeType of identifier
   | TypeclassNoMethod of { typeclass: identifier; method_name: identifier }
   | TypeclassParamIsRegion of identifier
   | TypesAreNotRegions of { name: identifier; declaration: declaration_kind }
@@ -213,6 +214,12 @@ let render (error: t): err_text =
        Text "Cannot create an instance for ";
        Code (ident_string name);
        Text " because it is not a typeclass."
+     ]
+  | InstanceBeforeType name ->
+     [
+       Text "An instance for the type ";
+       Code (ident_string name);
+       Text " is declared before the type. Declare the type first, and its instances after it."
      ]
   | TypeclassNoMethod { typeclass; method_name } ->
      [
