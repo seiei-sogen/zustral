@@ -14,6 +14,8 @@
 #   5. the interface files export nothing that no other file uses
 #   6. every piece of an error message appears in some test's expected output,
 #      or is on the recorded list of pieces no program can reach
+#   7. no error leaves a stage as an exception: the functions the driver calls
+#      return their errors as values (escape-check.py)
 # Exits 1 if a step fails, 2 if a compiler could not be built or run.
 # --quick skips steps 1 and 2.
 #
@@ -100,5 +102,7 @@ if ((failed)); then python3 "$HERE/equivalence.py" compare "${NORMALIZE[@]}" "$T
 step "metrics" "$HERE/measure.sh" --check
 step "unused exports" "$HERE/unused-exports.sh"
 step "error messages have tests" python3 "$HERE/unpinned-messages.py"
+# R13 moves the stages one at a time; these are the ones that return values.
+step "no error escapes a stage" python3 "$HERE/escape-check.py" ParserInterface
 
 exit "$failed"

@@ -61,17 +61,17 @@ type module_source =
 let parse_and_combine (env: env) (source: module_source): (module_name * Combined.combined_module) =
   match source with
   | TwoFileModuleSource { int_filename; int_code; body_filename; body_code } ->
-     let ci: concrete_module_interface = parse_module_int int_code int_filename in
+     let ci: concrete_module_interface = Outcome.or_raise (parse_module_int int_code int_filename) in
      let name: module_name = mod_int_name ci in
      adorn_error_with_module_name name
        (fun _ ->
-         let cb: concrete_module_body = parse_module_body body_code body_filename in
+         let cb: concrete_module_body = Outcome.or_raise (parse_module_body body_code body_filename) in
          let ci: concrete_module_interface = append_import_to_interface ci pervasive_imports
          and cb: concrete_module_body = append_import_to_body cb pervasive_imports in
          let combined: Combined.combined_module = combine env ci cb in
          (name, combined))
   | BodyModuleSource { body_filename; body_code } ->
-     let cb: concrete_module_body = parse_module_body body_code body_filename in
+     let cb: concrete_module_body = Outcome.or_raise (parse_module_body body_code body_filename) in
      let name: module_name = mod_body_name cb in
      adorn_error_with_module_name name
        (fun _ ->
