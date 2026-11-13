@@ -1,9 +1,6 @@
 files 26
-fragile-matches 396
+fragile-matches 390
 type CRepr.c_decl 4
-type CRepr.c_slot 2
-type CRepr.c_struct 2
-type CRepr.c_ty 2
 type CliUtil.arg 10
 type Common.borrow_stmt_kind 2
 type Common.mutability 2
@@ -22,7 +19,7 @@ type EnvTypes.ins_meth_rec 2
 type EnvTypes.mod_rec 4
 type EnvTypes.monomorph 16
 type LexEnv.var_source 2
-type LinearityCheck.var_state 2
+type LinearityErrors.var_state 2
 type MonoType.mono_ty 10
 type Stages.Ast.aexpr 4
 type Stages.Ast.astmt 2
@@ -36,3 +33,4 @@ type Type.ty 152
 type Type.type_var 4
 type Type.universe 12
 type Type.value_parameter 2
+type-fragile 180

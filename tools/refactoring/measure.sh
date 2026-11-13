@@ -117,7 +117,7 @@ fragile() {
       # A type named without its module is defined in the file being compiled.
       if (t !~ /\./) { m = file; sub(/.*\//, "", m); sub(/\.ml$/, "", m); t = m "." t }
       print file "\t" t
-    }' "$T/build.log" | sort | uniq -c | awk '{ print $2 "\t" $3 "\t" $1 }'
+    }' "$T/build.log" | LC_ALL=C sort | uniq -c | awk '{ print $2 "\t" $3 "\t" $1 }'
 }
 
 check() { # name
@@ -146,7 +146,11 @@ check metrics.tsv
 check totals.txt
 if ((FRAGILE)); then
   if fragile > "$T/fragile.tsv"; then
-    awk -F'\t' '{ s += $3; f[$1] = 1; t[$2] += $3 } END { print "fragile-matches " s; print "files " length(f); for (k in t) print "type " k " " t[k] }' "$T/fragile.tsv" | sort > "$T/fragile-totals.txt"
+    # type-fragile is the part on the types of lib/Type.ml and on
+    # MonoType.mono_ty. R20 brought it to 0; a new type constructor must stop
+    # the build at every match on these types, so it stays at 0.
+    awk -F'\t' '{ s += $3; f[$1] = 1; t[$2] += $3; if ($2 ~ /^(Type|MonoType)\./) ty += $3 }
+      END { print "fragile-matches " s + 0; print "files " length(f); print "type-fragile " ty + 0; for (k in t) print "type " k " " t[k] }' "$T/fragile.tsv" | LC_ALL=C sort > "$T/fragile-totals.txt"
     check fragile.tsv
     check fragile-totals.txt
   else

@@ -5,9 +5,6 @@ lib/AbstractionPass.ml	Stages.Ast.aexpr	2
 lib/AbstractionPass.ml	Stages.Ast.astmt	2
 lib/BodyExtractionPass.ml	Stages.Tast.typed_decl	2
 lib/CodeGen.ml	CRepr.c_decl	4
-lib/CodeGen.ml	CRepr.c_slot	2
-lib/CodeGen.ml	CRepr.c_struct	2
-lib/CodeGen.ml	CRepr.c_ty	2
 lib/CodeGen.ml	EnvTypes.decl	2
 lib/CodeGen.ml	EnvTypes.mod_rec	2
 lib/CodeGen.ml	EnvTypes.monomorph	2
@@ -36,7 +33,7 @@ lib/EnvUtils.ml	EnvTypes.decl	2
 lib/ExportInstantiation.ml	EnvTypes.decl	4
 lib/ExtractionPass.ml	Common.pragma	4
 lib/ExtractionPass.ml	EnvTypes.decl	6
-lib/LinearityCheck.ml	LinearityCheck.var_state	2
+lib/LinearityCheck.ml	LinearityErrors.var_state	2
 lib/LinearityCheck.ml	Stages.Tast.typed_decl	2
 lib/LinearityCheck.ml	Type.ty	4
 lib/LinearityCheck.ml	Type.universe	2
