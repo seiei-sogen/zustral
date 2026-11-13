@@ -1,1 +1,1 @@
-Covers the internal error for a type parameter constraint that names no declaration (lib/TypeMatch.ml, try_constraint).
+A type parameter constraint that names no declaration is reported as a type error where the generic function is called (lib/TypeMatch.ml, try_constraint). The constraint is not checked where it is declared (issue #128).

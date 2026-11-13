@@ -80,6 +80,8 @@ type t =
   | InstanceArgumentWrongUniverse of { ty: ty; expected: universe; actual: universe }
   | TypeMismatch of { expected: ty; actual: ty }
   | UnsatisfiedConstraint of { tyvar: type_var; ty: ty; typeclass: sident }
+  | ConstraintNotTypeclass of { tyvar: type_var; typeclass: sident }
+  | ConstraintUnknownTypeclass of { tyvar: type_var; typeclass: sident }
   | TypeArgumentWrongUniverse of { param: type_parameter; expected: universe; actual: universe }
   | UnresolvedType of identifier
   | IntegerDoesNotFit of { literal: NumberLiteral.int_literal; ty: ty }
@@ -400,6 +402,28 @@ let render (error: t): err_text =
        Text "This constraint is for the type variable ";
        Code (ident_string tyvar_name);
        Text "."
+     ]
+  | ConstraintNotTypeclass { tyvar; typeclass } ->
+     let (TypeVariable (tyvar_name, _, source, _)) = tyvar in
+     [
+       Text "The type parameter ";
+       Code (ident_string tyvar_name);
+       Text " of ";
+       Code (ident_string (original_name source));
+       Text " is constrained by ";
+       Code (ident_string (sident_name typeclass));
+       Text ", which is not a typeclass. A constraint must name a typeclass."
+     ]
+  | ConstraintUnknownTypeclass { tyvar; typeclass } ->
+     let (TypeVariable (tyvar_name, _, source, _)) = tyvar in
+     [
+       Text "The type parameter ";
+       Code (ident_string tyvar_name);
+       Text " of ";
+       Code (ident_string (original_name source));
+       Text " is constrained by ";
+       Code (ident_string (sident_name typeclass));
+       Text ", but no typeclass with that name is declared or imported."
      ]
   | TypeArgumentWrongUniverse { param; expected; actual } ->
      [

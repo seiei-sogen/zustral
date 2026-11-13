@@ -1,20 +1,16 @@
 {
   "module": "Test",
-  "kind": "Internal Error",
+  "kind": "Type Error",
   "text": [
-    { "type": "text", "content": "Internal compiler error: " },
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": " of " },
+    { "type": "code", "content": "accept" },
+    { "type": "text", "content": " is constrained by " },
+    { "type": "code", "content": "Foo" },
     {
       "type": "text",
-      "content": "Type parameter constraint refers to a declaration which is not a typeclass."
-    },
-    { "type": "break" },
-    {
-      "type": "text",
-      "content": "This is a bug in the compiler, please open an issue here: "
-    },
-    {
-      "type": "code",
-      "content": "https://github.com/austral/austral/issues"
+      "content": ", which is not a typeclass. A constraint must name a typeclass."
     }
   ],
   "span": {
