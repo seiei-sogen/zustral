@@ -151,7 +151,7 @@ type monomorphize = env -> LinearityCheck.checked_module -> (env * Mtast.mono_mo
 type generate = env -> Supply.t -> Mtast.mono_module -> (c_unit * Supply.t) Outcome.t
 ```
 
-`lib/CodeGen.ml` の `gen_module` が、`Mtast` のモジュールから、C の構文木（`lib/CRepr.ml`）の1つの単位を作る。C の変数の番号を、番号の元から取る。前の段の型がまだ締め出していない状態に備えて、内部エラーを出しうる（issue #117）。
+`lib/CodeGen.ml` の `gen_module` が、`Mtast` のモジュールから、C の構文木（`lib/CRepr.ml`）の1つの単位を作る。C の変数の番号を、番号の元から取る。この段のコードは、例外を投げる箇所を持たない。型は `Outcome.t` のままである。中で呼ぶ環境の検索が、内部エラーを出しうるためである。
 
 ## 仕上げ
 
