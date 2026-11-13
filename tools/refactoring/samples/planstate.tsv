@@ -1,0 +1,18 @@
+# One line of OCaml per row, after the verdict the pattern of the column planstate must give it.
+# count: the count the plan was made with sees it. skip: only the wider count (state.tsv) sees it, or neither does.
+count	let counter = ref 0
+count	  let seen = ref [] in
+count	  ref (Some x)
+count	  let table = Hashtbl.create 16 in
+count	  Hashtbl.replace table key value;
+count	let string_acc: Buffer.t = Buffer.create 64
+count	  mutable count: int;
+skip	  | '"' { read_string (Buffer.create 64) lexbuf }
+skip	  let buf = Buffer.create 16 in
+skip	  let lexbuf = Lexing.from_string code in
+skip	  lexbuf.lex_curr_p <- pos'
+skip	  Array.set slots i value;
+skip	  incr counter;
+skip	  let x = !counter in
+skip	  Lexing.new_line lexbuf;
+skip	  let refined = refine ty in

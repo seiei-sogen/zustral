@@ -122,17 +122,25 @@ STATE_PATTERN='= *ref ([a-z0-9("\[]|\[\])|^\s*ref \(|Hashtbl\.(create|add|replac
 STATE_PATTERN+='|(Array|Bytes)\.(unsafe_)?(set|fill|blit)|(^|[^_a-zA-Z0-9])(incr|decr|lazy)( |$|\()|Lazy\.'
 STATE_PATTERN+='|(^|[^_a-zA-Z0-9])(Queue|Stack)\.'
 
+# The count the plan was made with: creating a ref cell or a Hashtbl, declaring
+# a mutable field, a top-level Buffer. The plan set its target for mutable
+# state (0) under this count, so it stays measured beside the wider one above.
+# Every line it counts, STATE_PATTERN counts too.
+PLAN_STATE_PATTERN='= *ref ([a-z0-9("\[]|\[\])|^\s*ref \(|Hashtbl\.(create|add|replace)|^\s*mutable [a-z_]+ *:'
+PLAN_STATE_PATTERN+='|^let [a-z_]+ *(: *[A-Za-z_.]+ *)?= *Buffer\.create'
+
 # samples/COLUMN.tsv holds one line of OCaml per row, after the verdict the
 # column must give it: count or skip.
 self_test() {
   local column verdict line got bad=0 n=0
-  for column in io names state; do
+  for column in io names state planstate; do
     while IFS=$'\t' read -r verdict line; do
       [[ -z $verdict || $verdict == \#* ]] && continue
       case $column in
         io) got=$(grep -cE -- "$IO_PATTERN" <<< "$line") ;;
         names) got=$(name_lines <<< "$line" | wc -l) ;;
         state) got=$(grep -cE -- "$STATE_PATTERN" <<< "$line") ;;
+        planstate) got=$(grep -cE -- "$PLAN_STATE_PATTERN" <<< "$line") ;;
       esac
       if ((got)); then got=count; else got=skip; fi
       n=$((n + 1))
@@ -157,10 +165,11 @@ self_test() {
 #   wildcard  match arms that catch everything: | _ ->
 #   strings   string used as a field or constructor argument in a type definition
 #   names     string literals that name something built in, outside lib/BuiltInNames.ml
+#   planstate mutable state by the count the plan was made with (PLAN_STATE_PATTERN above)
 metrics() {
-  printf 'file\tlines\traise\tcatch\tstate\tio\twildcard\tstrings\tinternal\tadhoc\tnames\n'
+  printf 'file\tlines\traise\tcatch\tstate\tio\twildcard\tstrings\tinternal\tadhoc\tnames\tplanstate\n'
   sources | while read -r f; do
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$f" \
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$f" \
       "$(wc -l < "$ROOT/$f")" \
       "$(count 'raise_error|ok_or_raise|(^|[^_a-zA-Z])(parse|cli|type|linearity|declaration|entrypoint|generic)_error(_at)? |internal_err|failwith|(^|[^_a-zA-Z])raise |assert false' "$f")" \
       "$(count '(^|[^_a-zA-Z])try($|[^_a-zA-Z])|adorn_error_with_[a-z_]+|with_errors' "$f")" \
@@ -170,14 +179,15 @@ metrics() {
       "$(count_type_strings "$f")" \
       "$(count 'internal_err|Error \(Internal ' "$f")" \
       "$(count '(^|[^_a-zA-Z])err [("]' "$f")" \
-      "$(count_names "$f")"
+      "$(count_names "$f")" \
+      "$(count "$PLAN_STATE_PATTERN" "$f")"
   done
 }
 
 totals() { # metrics-file
   # coreio is the part of io that is in the core (lib/). The plan wants it at 0.
   awk -F'\t' 'NR > 1 { for (i = 2; i <= NF; i++) s[i] += $i; n++; if ($1 ~ /^lib\//) coreio += $6 }
-    END { printf "files %d\nlines %d\nraise %d\ncatch %d\nstate %d\nio %d\nwildcard %d\nstrings %d\ninternal %d\nadhoc %d\ncoreio %d\nnames %d\n", n, s[2], s[3], s[4], s[5], s[6], s[7], s[8], s[9], s[10], coreio, s[11] }' "$1"
+    END { printf "files %d\nlines %d\nraise %d\ncatch %d\nstate %d\nio %d\nwildcard %d\nstrings %d\ninternal %d\nadhoc %d\ncoreio %d\nnames %d\nplanstate %d\n", n, s[2], s[3], s[4], s[5], s[6], s[7], s[8], s[9], s[10], coreio, s[11], s[12] }' "$1"
 }
 
 check() { # name

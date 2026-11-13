@@ -120,7 +120,8 @@ quoted = {
     f"（`internal_err`） | {totals['internal']} |": "internal",
     f"（`err \"...\"`） | {totals['adhoc']} |": "adhoc",
     f"| 例外を捕まえる箇所 | {totals['catch']} |": "catch",
-    f"| 可変の状態 | {totals['state']} |": "state",
+    f"| 可変の状態（計画の時点の数え方） | {totals['planstate']} |": "state by the plan's count",
+    f"| 可変の状態（後から広げた数え方。関数の中だけで作って捨てる可変のものも数える） | {totals['state']} |": "state by the wider count",
     f"| 何でも受ける match の枝 | {totals['wildcard']} |": "wildcard",
     f"| 壊れやすい match | {fragile_total} |": "fragile",
     f"| 外から使われていない公開関数 | {unused}（": "unused exports",
@@ -129,6 +130,12 @@ quoted = {
 for text, name in quoted.items():
     if text not in measured:
         findings.append(f"refactoring plan section 6 does not quote the recorded {name}: expected {text!r}")
+
+# The plan's target for mutable state is 0 by the count the plan was made with. The table must say what is measured now.
+now = dict(line.split() for line in (baseline.parent / "expected" / "totals.txt").read_text().splitlines())
+state_row = re.search(r"^\| 可変の状態（計画の時点の数え方） \|.*\| (\d+) \|$", measured, re.M)
+if not state_row or state_row.group(1) != now["planstate"]:
+    findings.append(f"refactoring plan section 6 does not end the row of mutable state by the plan's count with the measured {now['planstate']}")
 
 path = sorted(closure("D7", {"D7"}), key=by_id)
 print(f"open issues: {len(open_issues)}, items with a heading: {len(deps)}, of which refactoring: {len(refactoring_items)}, spec 15 rows: {len(rows)}")
