@@ -434,16 +434,16 @@ module Linked = struct
       }
 
   and linked_definition =
-    | LConstant of decl_id * vis * identifier * ty * aexpr * docstring
+    | LConstant of constant_id * vis * identifier * ty * aexpr * docstring
     | LRecord of record_id * type_vis * identifier * typarams * universe * typed_slot list * docstring
     | LUnion of union_id * type_vis * identifier * typarams * universe * linked_case list * docstring
     | LFunction of function_id * vis * identifier * typarams * value_parameter list * ty * astmt * docstring * pragma list
     | LTypeclass of typeclass_id * vis * identifier * type_parameter * linked_method_decl list * docstring
     | LInstance of instance_id * vis * qident * typarams * ty * linked_method_def list * docstring
 
-  and linked_case = LCase of decl_id * identifier * typed_slot list
+  and linked_case = LCase of union_case_id * identifier * typed_slot list
 
-  and linked_method_decl = LMethodDecl of decl_id * identifier * value_parameter list * ty * docstring
+  and linked_method_decl = LMethodDecl of typeclass_method_id * identifier * value_parameter list * ty * docstring
 
   and linked_method_def = LMethodDef of ins_meth_id * identifier * value_parameter list * ty * docstring * astmt
 end
@@ -563,13 +563,13 @@ module Tast = struct
   [@@deriving show]
 
   type typed_method_decl =
-    TypedMethodDecl of decl_id * identifier * value_parameter list * ty
+    TypedMethodDecl of typeclass_method_id * identifier * value_parameter list * ty
 
   type typed_method_def =
     TypedMethodDef of ins_meth_id * identifier * value_parameter list * ty * tstmt
 
   type typed_decl =
-    | TConstant of decl_id * vis * identifier * ty * texpr * docstring
+    | TConstant of constant_id * vis * identifier * ty * texpr * docstring
     | TRecord of record_id * type_vis * identifier * typarams * universe * typed_slot list * docstring
     | TUnion of union_id * type_vis * identifier * typarams * universe * linked_case list * docstring
     | TFunction of function_id * vis * identifier * typarams * value_parameter list * ty * tstmt * docstring
@@ -598,7 +598,7 @@ module Mtast = struct
   type mono_module = MonoModule of module_name * mdecl list
 
   and mdecl =
-    | MConstant of decl_id * identifier * mono_ty * mexpr
+    | MConstant of constant_id * identifier * mono_ty * mexpr
     | MRecord of record_id * identifier * mono_slot list
     | MRecordMonomorph of mono_id * mono_slot list
     | MUnion of union_id * identifier * mono_case list

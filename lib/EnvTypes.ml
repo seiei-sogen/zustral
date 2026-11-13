@@ -55,7 +55,7 @@ type union_decl = {
 
 (** A case of a union, as the environment holds it. *)
 type union_case_decl = {
-    id: decl_id;
+    id: union_case_id;
     mod_id: mod_id;
     vis: vis;
     (** This is {!VisPublic} if the parent union is public, {!VisPrivate} otherwise. *)
@@ -109,6 +109,20 @@ type instance_decl = {
     argument: ty;
   }
 
+(** A method of a typeclass, as the environment holds it. *)
+type typeclass_method_decl = {
+    id: typeclass_method_id;
+    mod_id: mod_id;
+    vis: vis;
+    (** This is the visibility of the parent typeclass. *)
+    typeclass_id: typeclass_id;
+    name: identifier;
+    docstring: docstring;
+    typarams: typarams;
+    value_params: value_parameter list;
+    rt: ty;
+  }
+
 (** A declaration record represents a declaration.
 
    The definition of declaration here is slightly different than that of the
@@ -120,7 +134,7 @@ type instance_decl = {
 *)
 type decl =
   | Constant of {
-      id: decl_id;
+      id: constant_id;
       mod_id: mod_id;
       vis: vis;
       name: identifier;
@@ -132,25 +146,14 @@ type decl =
   | UnionCase of union_case_decl
   | Function of function_decl
   | TypeClass of typeclass_decl
-  | TypeClassMethod of {
-      id: decl_id;
-      mod_id: mod_id;
-      vis: vis;
-      (** This is the visibility of the parent typeclass. *)
-      typeclass_id: typeclass_id;
-      name: identifier;
-      docstring: docstring;
-      typarams: typarams;
-      value_params: value_parameter list;
-      rt: ty;
-    }
+  | TypeClassMethod of typeclass_method_decl
   | Instance of instance_decl
 
 (** Represents an instance method. *)
 type ins_meth_rec = InsMethRec of {
       id: ins_meth_id;
       instance_id: instance_id;
-      method_id: decl_id;
+      method_id: typeclass_method_id;
       docstring: docstring;
       name: identifier;
       typarams: typarams;
@@ -282,7 +285,7 @@ type instance_input = {
 
 type instance_method_input = {
     instance_id: instance_id;
-    method_id: decl_id;
+    method_id: typeclass_method_id;
     docstring: docstring;
     name: identifier;
     typarams: typarams;
@@ -294,12 +297,12 @@ type instance_method_input = {
 (** Something to register in the environment: a declaration, or a method of an
     instance. The parameter is the type of the ID that registering it returns. *)
 type _ registration =
-  | NewConstant : const_input -> decl_id registration
+  | NewConstant : const_input -> constant_id registration
   | NewRecord : record_input -> record_id registration
   | NewUnion : union_input -> union_id registration
-  | NewUnionCase : union_case_input -> decl_id registration
+  | NewUnionCase : union_case_input -> union_case_id registration
   | NewFunction : function_input -> function_id registration
   | NewTypeClass : type_class_input -> typeclass_id registration
-  | NewTypeClassMethod : type_class_method_input -> decl_id registration
+  | NewTypeClassMethod : type_class_method_input -> typeclass_method_id registration
   | NewInstance : instance_input -> instance_id registration
   | NewInstanceMethod : instance_method_input -> ins_meth_id registration

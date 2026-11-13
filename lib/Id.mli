@@ -21,10 +21,6 @@ when something is registered in it. No type can say that, so a check does
 type mod_id
 [@@deriving eq]
 
-(** The type of declaration IDs. *)
-type decl_id
-[@@deriving (eq, show)]
-
 (** The type of instance method IDs. *)
 type ins_meth_id
 [@@deriving (eq, show)]
@@ -35,11 +31,19 @@ type mono_id
 
 (** {1 IDs that say what kind of declaration they stand for}
 
-    Each of these is a declaration ID: it takes the next number of the
-    declarations, and prints as a declaration ID does. Its type says which
-    kind of declaration the environment made it for, so the lookup that takes
-    it returns a declaration of that kind. Nothing turns a declaration ID
-    into one of these. *)
+    Each of these takes the next number of the declarations, so the kinds
+    share one sequence, and prints as the others do. Its type says which kind
+    of declaration the environment made it for, so the lookup that takes it
+    returns a declaration of that kind. *)
+
+(** The type of constant IDs. *)
+type constant_id
+
+(** The type of union case IDs. *)
+type union_case_id
+
+(** The type of typeclass method IDs. *)
+type typeclass_method_id
 
 (** The type of function IDs. *)
 type function_id
@@ -88,7 +92,9 @@ val mono_id_of_method : method_mono_id -> mono_id
 (** The next ID of each kind, and the supply to take the one after it from. *)
 
 val fresh_mod_id : Supply.t -> mod_id * Supply.t
-val fresh_decl_id : Supply.t -> decl_id * Supply.t
+val fresh_constant_id : Supply.t -> constant_id * Supply.t
+val fresh_union_case_id : Supply.t -> union_case_id * Supply.t
+val fresh_typeclass_method_id : Supply.t -> typeclass_method_id * Supply.t
 val fresh_function_id : Supply.t -> function_id * Supply.t
 val fresh_typeclass_id : Supply.t -> typeclass_id * Supply.t
 val fresh_record_id : Supply.t -> record_id * Supply.t

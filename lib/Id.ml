@@ -14,6 +14,12 @@ type decl_id = DeclId of int
 (* Inside this module an ID of one kind is a declaration ID, so the two take
    their numbers from one sequence and print the same. The interface hides
    that: outside, the types differ. *)
+type constant_id = decl_id
+
+type union_case_id = decl_id
+
+type typeclass_method_id = decl_id
+
 type function_id = decl_id
 [@@deriving (eq, show)]
 
@@ -58,6 +64,15 @@ let fresh_mod_id (supply: Supply.t): mod_id * Supply.t =
 let fresh_decl_id (supply: Supply.t): decl_id * Supply.t =
   let (number, supply) = Supply.next_decl_id supply in
   (DeclId number, supply)
+
+let fresh_constant_id: Supply.t -> constant_id * Supply.t =
+  fresh_decl_id
+
+let fresh_union_case_id: Supply.t -> union_case_id * Supply.t =
+  fresh_decl_id
+
+let fresh_typeclass_method_id: Supply.t -> typeclass_method_id * Supply.t =
+  fresh_decl_id
 
 let fresh_function_id: Supply.t -> function_id * Supply.t =
   fresh_decl_id

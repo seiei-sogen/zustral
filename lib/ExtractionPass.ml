@@ -402,11 +402,11 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
            let effective_typarams: typarams = merge_typarams place typarams method_typarams in
            let value_params = List.map (parse_param place effective_typarams) params
            and rt = parse' place rm effective_typarams rt
-           and method_id: decl_id =
+           and method_id: typeclass_method_id =
              (match get_method_from_typeclass_id_and_name env typeclass_id name with
-              | Some (TypeClassMethod { id; _ }) ->
+              | Some { id; _ } ->
                  id
-              | _ ->
+              | None ->
                  declaration_error place (TypeclassNoMethod {
                      typeclass = typeclass_name;
                      method_name = name;

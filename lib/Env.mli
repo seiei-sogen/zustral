@@ -106,7 +106,7 @@ val get_decl_by_name : Error.place -> env -> sident -> decl option
 
 (** Find a typeclass method from its typeclass ID and name, returning {!None} if
     the typeclass has no method of that name. *)
-val get_method_from_typeclass_id_and_name : env -> typeclass_id -> identifier -> decl option
+val get_method_from_typeclass_id_and_name : env -> typeclass_id -> identifier -> typeclass_method_decl option
 
 (** Return all typeclass instances defined in a module. *)
 val module_instances: env -> mod_id -> instance_decl list

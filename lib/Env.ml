@@ -139,7 +139,7 @@ let register (type id) (place: place) (env: env) (registration: id registration)
   match registration with
   | NewConstant { mod_id; vis; name; ty; docstring } ->
      name_must_be_free mod_id name;
-     add_decl fresh_decl_id (fun id -> Constant { id; mod_id; vis; name; ty; docstring })
+     add_decl fresh_constant_id (fun id -> Constant { id; mod_id; vis; name; ty; docstring })
   | NewRecord { mod_id; vis; name; docstring; typarams; universe; slots } ->
      name_must_be_free mod_id name;
      add_decl fresh_record_id (fun id -> Record { id; mod_id; vis; name; docstring; typarams; universe; slots })
@@ -149,7 +149,7 @@ let register (type id) (place: place) (env: env) (registration: id registration)
   | NewUnionCase { mod_id; vis; union_id; name; docstring; slots } ->
      (* Not checked (#86): a case can take the name of another case, or of any
         other declaration of the module. *)
-     add_decl fresh_decl_id (fun id -> UnionCase { id; vis; mod_id; union_id; name; docstring; slots })
+     add_decl fresh_union_case_id (fun id -> UnionCase { id; vis; mod_id; union_id; name; docstring; slots })
   | NewFunction { mod_id; vis; name; docstring; typarams; value_params; rt; impl } ->
      name_must_be_free mod_id name;
      add_decl fresh_function_id (fun id -> Function { id; mod_id; vis; name; docstring; typarams; value_params; rt; impl })
@@ -159,7 +159,7 @@ let register (type id) (place: place) (env: env) (registration: id registration)
   | NewTypeClassMethod { mod_id; vis; typeclass_id; name; docstring; typarams; value_params; rt } ->
      (* Not checked (#86): a method can take the name of a method of another
         typeclass, or of any other declaration of the module. *)
-     add_decl fresh_decl_id (fun id -> TypeClassMethod { id; mod_id; vis; typeclass_id; name; docstring; typarams; value_params; rt })
+     add_decl fresh_typeclass_method_id (fun id -> TypeClassMethod { id; mod_id; vis; typeclass_id; name; docstring; typarams; value_params; rt })
   | NewInstance { mod_id; vis; typeclass_id; docstring; typarams; argument } ->
      (* Not checked here: an instance has no name. The caller checks that it
         overlaps no instance of its own module, and the orphan rule. The orphan
@@ -243,17 +243,19 @@ let get_instance_method (env: env) (ins_meth_id: ins_meth_id): ins_meth_rec =
   registered NoSpan (fun () -> "instance method with ID `" ^ (show_ins_meth_id ins_meth_id) ^ "`")
     (List.find_opt (fun (InsMethRec { id; _ }) -> equal_ins_meth_id id ins_meth_id) methods)
 
-let get_method_from_typeclass_id_and_name (env: env) (typeclass_id: typeclass_id) (name: identifier): decl option =
+let get_method_from_typeclass_id_and_name (env: env) (typeclass_id: typeclass_id) (name: identifier): typeclass_method_decl option =
   let (Env { decls; _ }) = env in
-  let pred (decl: decl): bool =
+  let pick (decl: decl): typeclass_method_decl option =
     match decl with
-    | TypeClassMethod { typeclass_id=target_typeclass_id; name=target_name; _ } ->
-       (equal_typeclass_id target_typeclass_id typeclass_id)
-       && (equal_identifier target_name name)
-    | _ ->
-       false
+    | TypeClassMethod meth ->
+       if (equal_typeclass_id meth.typeclass_id typeclass_id) && (equal_identifier meth.name name) then
+         Some meth
+       else
+         None
+    | Constant _ | Record _ | Union _ | UnionCase _ | Function _ | TypeClass _ | Instance _ ->
+       None
   in
-  List.find_opt pred decls
+  List.find_map pick decls
 
 let module_instances (env: env) (id: mod_id): instance_decl list =
   let (Env { decls; _ }) = env in
