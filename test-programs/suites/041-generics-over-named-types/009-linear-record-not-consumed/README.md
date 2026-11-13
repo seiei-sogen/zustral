@@ -1,0 +1,1 @@
+The program of 008 without the generic function: a linear record that is never consumed. Same message as 008.

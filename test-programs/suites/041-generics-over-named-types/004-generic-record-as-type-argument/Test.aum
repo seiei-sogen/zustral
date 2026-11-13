@@ -1,0 +1,25 @@
+module body Test is
+    record Foo: Free is
+        n: Int32;
+    end;
+
+    record Box[T: Type]: Type is
+        value: T;
+    end;
+
+    generic [U: Type]
+    function second(x: U): U is
+        return x;
+    end;
+
+    generic [T: Type]
+    function first(x: T): T is
+        return second(x);
+    end;
+
+    function main(): ExitCode is
+        let b: Box[Foo] := first(Box(value => Foo(n => 9)));
+        printLn(b.value.n);
+        return ExitSuccess();
+    end;
+end module body.

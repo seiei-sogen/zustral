@@ -1,0 +1,1 @@
+A linear record returned from a generic function and never consumed is rejected with the same message as when it is made directly (009).

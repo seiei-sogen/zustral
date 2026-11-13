@@ -1,0 +1,1 @@
+A generic function over `T: Type` returning `Option[T]`, instantiated with a record: the value the caller unpacks is the one it passed in.

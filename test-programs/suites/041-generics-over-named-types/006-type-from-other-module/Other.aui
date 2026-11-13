@@ -1,0 +1,5 @@
+module Other is
+    record Thing: Free is
+        n: Int32;
+    end;
+end module.

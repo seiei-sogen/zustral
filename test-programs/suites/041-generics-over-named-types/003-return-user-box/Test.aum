@@ -1,0 +1,30 @@
+module body Test is
+    record Box[T: Type]: Type is
+        value: T;
+    end;
+
+    union Shape: Free is
+        case Circle is
+            radius: Int32;
+        case Square is
+            side: Int32;
+    end;
+
+    generic [T: Type]
+    function box(value: T): Box[T] is
+        return Box(value => value);
+    end;
+
+    function main(): ExitCode is
+        let b: Box[Shape] := box(Square(side => 3));
+        case b.value of
+            when Circle(radius: Int32) do
+                printLn("circle");
+                printLn(radius);
+            when Square(side: Int32) do
+                printLn("square");
+                printLn(side);
+        end case;
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,1 @@
+A linear record moved through a generic function over `T: Type` and destructured by the caller.

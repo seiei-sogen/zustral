@@ -188,6 +188,11 @@ val get_uninstantiated_monomorphs : env -> monomorph list
 (** Get a monomorph by ID. *)
 val get_monomorph : env -> mono_id -> monomorph
 
+(** Given the ID of a record's or a union's monomorph, return the module that
+    declares the type, the type's signature, and the monomorph's type
+    arguments. *)
+val get_type_monomorph : env -> mono_id -> (mod_id * TypeSignature.type_signature * mono_type_bindings)
+
 (** Get the type of a variable, trying first the lexenv and then the env for
     constants. *)
 val get_variable : Error.place -> env -> lexenv -> qident -> (ty * var_source) option

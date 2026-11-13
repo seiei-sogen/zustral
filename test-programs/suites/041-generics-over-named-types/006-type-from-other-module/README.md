@@ -1,0 +1,1 @@
+A record declared in another module, passed to a constrained generic function (dispatching to an instance in this module) and to a generic function returning `Option[T]`.

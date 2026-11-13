@@ -420,6 +420,30 @@ let get_monomorph (env: env) (id: mono_id): monomorph =
   registered NoSpan (fun () -> "monomorph with ID `" ^ (show_mono_id id) ^ "`")
     (List.find_opt (fun mono -> equal_mono_id id (monomorph_id mono)) monos)
 
+let get_type_monomorph (env: env) (id: mono_id): (mod_id * TypeSignature.type_signature * mono_type_bindings) =
+  let (Env { monos; _ }) = env in
+  let pick (mono: monomorph): (mod_id * TypeSignature.type_signature * mono_type_bindings) option =
+    match mono with
+    | MonoRecordDefinition { id = mono_id; type_id; tyargs; _ } ->
+       if equal_mono_id id (mono_id_of_record mono_id) then
+         let { mod_id; name; typarams; universe; _ }: record_decl = get_record env type_id in
+         Some (mod_id, TypeSignature.TypeSignature (name, typarams, universe), tyargs)
+       else
+         None
+    | MonoUnionDefinition { id = mono_id; type_id; tyargs; _ } ->
+       if equal_mono_id id (mono_id_of_union mono_id) then
+         let { mod_id; name; typarams; universe; _ }: union_decl = get_union NoSpan env type_id in
+         Some (mod_id, TypeSignature.TypeSignature (name, typarams, universe), tyargs)
+       else
+         None
+    | MonoFunction _ | MonoInstanceMethod _ ->
+       None
+  in
+  (* `MonoNamedType` holds an ID of any kind of monomorph, so the ID of a
+     function's monomorph also misses here. *)
+  registered NoSpan (fun () -> "record or union monomorph with ID `" ^ (show_mono_id id) ^ "`")
+    (List.find_map pick monos)
+
 (* A monomorph is also found by its key: what it is a monomorph of, and the
    type arguments. A key is not an ID. It can name a monomorph that no pass has
    registered yet, so these lookups return an option. `add_or_get_*` register

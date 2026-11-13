@@ -1,0 +1,41 @@
+module body Test is
+    typeclass Describe(T: Free) is
+        method describe(x: T): Unit;
+    end;
+
+    record Point: Free is
+        x: Int32;
+    end;
+
+    record Box[T: Free]: Free is
+        value: T;
+    end;
+
+    instance Describe(Point) is
+        method describe(p: Point): Unit is
+            printLn("point");
+            printLn(p.x);
+            return nil;
+        end;
+    end;
+
+    generic [U: Free(Describe)]
+    instance Describe(Box[U]) is
+        method describe(b: Box[U]): Unit is
+            printLn("box of");
+            describe(b.value);
+            return nil;
+        end;
+    end;
+
+    generic [T: Free(Describe)]
+    function show(x: T): Unit is
+        describe(x);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        show(Box(value => Point(x => 5)));
+        return ExitSuccess();
+    end;
+end module body.

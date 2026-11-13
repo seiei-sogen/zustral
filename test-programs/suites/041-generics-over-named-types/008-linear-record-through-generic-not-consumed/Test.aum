@@ -1,0 +1,15 @@
+module body Test is
+    record Handle: Linear is
+        id: Int32;
+    end;
+
+    generic [T: Type]
+    function pass(x: T): T is
+        return x;
+    end;
+
+    function main(): ExitCode is
+        let h: Handle := pass(Handle(id => 5));
+        return ExitSuccess();
+    end;
+end module body.

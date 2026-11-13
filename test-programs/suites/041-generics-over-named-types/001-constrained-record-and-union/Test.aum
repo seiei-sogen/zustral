@@ -1,0 +1,46 @@
+module body Test is
+    typeclass Describe(T: Free) is
+        method describe(x: T): Unit;
+    end;
+
+    record Point: Free is
+        x: Int32;
+    end;
+
+    union Color: Free is
+        case Red;
+        case Green;
+    end;
+
+    instance Describe(Point) is
+        method describe(p: Point): Unit is
+            printLn("point");
+            printLn(p.x);
+            return nil;
+        end;
+    end;
+
+    instance Describe(Color) is
+        method describe(c: Color): Unit is
+            case c of
+                when Red do
+                    printLn("color red");
+                when Green do
+                    printLn("color green");
+            end case;
+            return nil;
+        end;
+    end;
+
+    generic [T: Free(Describe)]
+    function show(x: T): Unit is
+        describe(x);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        show(Point(x => 7));
+        show(Green());
+        return ExitSuccess();
+    end;
+end module body.

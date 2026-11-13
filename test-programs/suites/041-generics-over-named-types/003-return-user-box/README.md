@@ -1,0 +1,1 @@
+A generic function returning a user's generic record `Box[T]`, instantiated with a union with slots: the case and the slot of the returned value are the ones passed in.
