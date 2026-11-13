@@ -5,24 +5,25 @@
 # Builds the compiler at BASE_REF (once; kept in a cache) and the compiler of
 # the working tree, then runs, in this order:
 #   1. the unit tests (dune runtest)
-#   2. the end-to-end suite (test-programs/runner.py) and the command-line
-#      tests (test-programs/cli-runner.py)
-#   3. the equivalence check: every program in the repository compiled by both
+#   2. the end-to-end suite (test-programs/runner.py)
+#   3. the command-line tests (test-programs/cli-runner.py)
+#   4. the equivalence check: every program in the repository compiled by both
 #      compilers, with the generated C, stdout, stderr, exit status, error.html
 #      and the names of the files left behind compared
-#   4. the metrics: every count equals the one recorded in expected/. A commit
+#   5. the metrics: every count equals the one recorded in expected/. A commit
 #      that moves a count, down as well as up, records it again in the same
 #      commit (measure.sh --record) and says why in its message
-#   5. the interface files export nothing that no other file uses
-#   6. every piece of an error message appears in some test's expected output,
+#   6. the interface files export nothing that no other file uses
+#   7. every piece of an error message appears in some test's expected output,
 #      or is on the recorded list of pieces no program can reach
-#   7. no error leaves a stage as an exception: the functions the driver calls
+#   8. no error leaves a stage as an exception: the functions the driver calls
 #      return their errors as values (escape-check.py)
-#   8. the fragile matches (a catch-all arm over a variant type): the counts of
+#   9. the fragile matches (a catch-all arm over a variant type): the counts of
 #      expected/fragile-totals.txt, and none on the types of lib/Type.ml or on
 #      MonoType.mono_ty. This builds the compiler once more, with warning 4 on
+# Each step prints one line that starts with ok or FAIL.
 # Exits 1 if a step fails, 2 if a compiler could not be built or run.
-# --quick skips steps 1, 2 and 8.
+# --quick skips steps 1, 2, 3 and 9.
 #
 # One check is not here, because it needs a second, instrumented build of the
 # compiler: `coverage.sh --messages`, which fails when a line of error wording
