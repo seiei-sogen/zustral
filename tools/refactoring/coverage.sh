@@ -9,6 +9,11 @@
 #   coverage.sh --errors --only DIR
 #                            the same, running only the programs under DIR
 #                            (a directory of test-programs/suites)
+#   coverage.sh --messages   list the lines of error wording (lib/*Errors.ml) that no
+#                            program executes, and fail if one is not on the record,
+#                            expected/unexecuted-message-lines.txt
+#   coverage.sh --messages --record
+#                            rewrite that record
 # Environment:
 #   ZUSTRAL_NIX_FLAGS  extra flags for `nix develop`
 #
@@ -20,10 +25,12 @@ ROOT=$(cd "$HERE/../.." && pwd)
 read -r -a NIX_FLAGS <<< "${ZUSTRAL_NIX_FLAGS:-}"
 MODE=compare FILE=
 ONLY=
+RECORD_MESSAGES=()
 case ${1:-} in
   --record) MODE=record ;;
   --lines) MODE=lines; FILE=${2:?usage: coverage.sh --lines File.ml} ;;
   --errors) MODE=errors; [[ ${2:-} == --only ]] && ONLY=${3:?usage: coverage.sh --errors --only DIR} ;;
+  --messages) MODE=messages; [[ ${2:-} == --record ]] && RECORD_MESSAGES=(--record) ;;
 esac
 
 T=$(mktemp -d)
@@ -59,6 +66,12 @@ point_report() {
 if [[ $MODE == errors ]]; then
   point_report
   python3 "$HERE/unexecuted-errors.py" "$T/points.coverage"
+  exit $?
+fi
+
+if [[ $MODE == messages ]]; then
+  point_report
+  python3 "$HERE/unexecuted-errors.py" --messages "${RECORD_MESSAGES[@]}" "$T/points.coverage"
   exit $?
 fi
 

@@ -1,0 +1,84 @@
+lib/CliErrors.ml	| EmptyArgs ->
+lib/CliErrors.ml	Text "Argument list must have at least one element in it, the path to the binary. Was the compiler invoked through a system call?"
+lib/CliErrors.ml	| None ->
+lib/CliErrors.ml	Text "Failed to write to file ";
+lib/CliErrors.ml	Code path
+lib/DeclarationErrors.ml	| MethodDeclaration -> "method"
+lib/DeclarationErrors.ml	| InstanceDeclaration -> "instance"
+lib/DeclarationErrors.ml	| OtherDifference -> "are different."
+lib/DeclarationErrors.ml	| Some declaration ->
+lib/DeclarationErrors.ml	Text "The ";
+lib/DeclarationErrors.ml	Text (declaration_kind_word declaration);
+lib/DeclarationErrors.ml	Text " ";
+lib/DeclarationErrors.ml	Code (ident_string name);
+lib/DeclarationErrors.ml	Text " has no corresponding body implementation."
+lib/DeclarationErrors.ml	| MultiargTypeclass name ->
+lib/DeclarationErrors.ml	Text "The typeclass ";
+lib/DeclarationErrors.ml	Code (ident_string name);
+lib/DeclarationErrors.ml	Text " has multiple type parameters, which is unsupported."
+lib/DeclarationErrors.ml	| ForeignImportExport name ->
+lib/DeclarationErrors.ml	Text "The function ";
+lib/DeclarationErrors.ml	Code (ident_string name);
+lib/DeclarationErrors.ml	Text " cannot have both the ";
+lib/DeclarationErrors.ml	Code "Foreign_Import";
+lib/DeclarationErrors.ml	Text " and ";
+lib/DeclarationErrors.ml	Code "Foreign_Export";
+lib/DeclarationErrors.ml	Text " pragmas simultaneously."
+lib/DeclarationErrors.ml	| InstanceArgumentRegion ->
+lib/DeclarationErrors.ml	Text "Typeclass arguments cannot be regions."
+lib/GenericErrors.ml	| CannotAssignToConstant ->
+lib/GenericErrors.ml	Text "Cannot assign a value to a constant."
+lib/GenericErrors.ml	| LetOutsideStatementList ->
+lib/GenericErrors.ml	Text "Let statement not in a list context"
+lib/GenericErrors.ml	| DestructureOutsideStatementList ->
+lib/GenericErrors.ml	Text "Destructure statement not in a list context"
+lib/GenericErrors.ml	| InvalidDeclInContext ->
+lib/GenericErrors.ml	Text "Invalid decl in this context"
+lib/GenericErrors.ml	| InvalidLvalue ->
+lib/GenericErrors.ml	Text "Invalid lvalue."
+lib/GenericErrors.ml	| NoUnionWithId ->
+lib/GenericErrors.ml	Text "No union with ID"
+lib/GenericErrors.ml	| DeclHasNoName ->
+lib/GenericErrors.ml	Text "decl has no name"
+lib/GenericErrors.ml	| SymbolImportedTwice ->
+lib/GenericErrors.ml	Text "Cannot add symbol to the import map twice."
+lib/GenericErrors.ml	| ParameterNotFound ->
+lib/GenericErrors.ml	Text "Parameter not found."
+lib/GenericErrors.ml	| NoRecordWithName name ->
+lib/GenericErrors.ml	Text ("No record with this name: " ^ (ident_string name))
+lib/GenericErrors.ml	| BindingUniverseMismatch { expected; actual } ->
+lib/GenericErrors.ml	Text ("Mismatched universes: expected "
+lib/GenericErrors.ml	^ (show_universe expected)
+lib/GenericErrors.ml	^ " and got "
+lib/GenericErrors.ml	^ (show_universe actual))
+lib/GenericErrors.ml	| ConstructorUniverseMismatch ->
+lib/GenericErrors.ml	Text "Universe mismatch"
+lib/GenericErrors.ml	| InstanceArgumentShapeNotAllowed ->
+lib/GenericErrors.ml	Text "Not allowed"
+lib/GenericErrors.ml	| InstanceOverlapTypeNotAllowed ->
+lib/GenericErrors.ml	Text "Not allowed"
+lib/GenericErrors.ml	| MatchTypeOnMonoTy ->
+lib/GenericErrors.ml	Text "match_type called with MonoTy argument"
+lib/GenericErrors.ml	| IsNumericOnMonoTy ->
+lib/GenericErrors.ml	Text "is_numeric called with MonoTy argument"
+lib/GenericErrors.ml	| MinOfEmptyList ->
+lib/GenericErrors.ml	Text "empty list passed to min_list"
+lib/GenericErrors.ml	| SplitReturnedEmpty ->
+lib/GenericErrors.ml	Text "split_on_char returned empty"
+lib/LinearityErrors.ml	| CaseBranching -> "a case"
+lib/ParseErrors.ml	| StringInvalidCharacter lexeme ->
+lib/ParseErrors.ml	Text "Character not allowed in string literal: ";
+lib/ParseErrors.ml	Code lexeme
+lib/TypeErrors.ml	match bound with
+lib/TypeErrors.ml	| InitialBound -> "initial"
+lib/TypeErrors.ml	| FinalBound -> "final"
+lib/TypeErrors.ml	| ForBoundsNonIntegral { bound; ty } ->
+lib/TypeErrors.ml	Text "The type of the ";
+lib/TypeErrors.ml	Text (loop_bound_word bound);
+lib/TypeErrors.ml	Text " value in the loop range is ";
+lib/TypeErrors.ml	Type ty;
+lib/TypeErrors.ml	Text " which is not ";
+lib/TypeErrors.ml	Code "Index";
+lib/TypeErrors.ml	Text "."
+lib/TypeErrors.ml	| _ ->
+lib/TypeErrors.ml	Text "All operands of a logical operator must be boolean expressions."

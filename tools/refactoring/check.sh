@@ -24,6 +24,11 @@
 # Exits 1 if a step fails, 2 if a compiler could not be built or run.
 # --quick skips steps 1, 2 and 8.
 #
+# One check is not here, because it needs a second, instrumented build of the
+# compiler: `coverage.sh --messages`, which fails when a line of error wording
+# is executed by no test and is not on the record. CI runs it as its own step,
+# and the coordinator runs it before merging a branch.
+#
 # Environment:
 #   ZUSTRAL_NIX_FLAGS       extra flags for `nix develop`
 #   ZUSTRAL_COMPILER_CACHE  where base compilers are kept

@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
-"""Lists the places that raise an error to the user and that no program executed.
+"""Lists what no program executed of the errors to the user: the places that
+raise one, or the lines of their wording.
 
-  unexecuted-errors.py COVERAGE_FILE
+  unexecuted-errors.py COVERAGE_FILE                       the places
+  unexecuted-errors.py --messages COVERAGE_FILE            the wording, compared with
+                                                           expected/unexecuted-message-lines.txt
+  unexecuted-errors.py --messages --record COVERAGE_FILE   rewrite that file
 
-Called by coverage.sh --errors with the file `bisect-ppx-report merge` writes:
-for every source file, the offset of each point and how often it was hit.
+Called by coverage.sh --errors and coverage.sh --messages with the file
+`bisect-ppx-report merge` writes: for every source file, the offset of each
+point and how often it was hit.
+
+The places
 
 A place is a call of one of the functions that raise an error of a category
 (`type_error`, `cli_error`, and so on; lib/Error.mli lists them).
@@ -25,17 +32,43 @@ and the report names the line of the .mll.
 
 Prints one line per unexecuted place: file, line, the enclosing top-level
 definition and the constructor of the error. The last line gives the totals.
+
+The wording
+
+All of it is in lib/*Errors.ml: the `render` function of each category, and
+the functions `render` calls for the words of an enumeration. That code runs
+only when an error is printed, so a line of it that no program executed is
+wording that no test shows.
+
+A line that carries points is executed if every one of them was hit: both
+branches of an `if` written on one line have to run. A line without a point
+(most wording is a literal in a list) goes with the nearest earlier line that
+carries one and is indented less, in the same top-level definition: the match
+arm it belongs to. Lines outside any arm or function body (types, `open`) are
+not wording and are left out. So is a line that calls a function that never
+returns: the point after such a call is never hit, and what the line says is
+not wording.
+
+Prints the unexecuted lines as file, tab, the line without its indentation.
+Line numbers shift, the text of a line does not. The same text can occur
+several times in a file (`| None ->`), so the comparison counts: a line that
+is unexecuted more times than the record says is new. Issue #124 gives, for
+each recorded line, why no program reaches it.
 """
 import bisect
+import collections
 import pathlib
 import re
 import sys
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
+HERE = pathlib.Path(__file__).resolve().parent
+ROOT = HERE.parents[1]
+RECORDED = HERE / "expected" / "unexecuted-message-lines.txt"
 BUILD = ROOT / "_build_coverage" / "default"
 # A definition at the top of an OCaml file. A lexer also defines its rules.
 DEFINITION = re.compile(r"^(?:let rec|let|and|rule) ([a-z_][A-Za-z0-9_']*)", re.M)
 PLACE = re.compile(r"(?<![_a-zA-Z])%s\b" % r"(?:parse|cli|type|linearity|declaration|entrypoint|generic)_error(?:_at)?")
+NEVER_RETURNS = re.compile(r"(?<![_a-zA-Z])(?:raise|failwith|invalid_arg|internal_err|exit|assert false)\b")
 # The constructor of the error: the first capitalised word that is not a module's name.
 CONSTRUCTOR = re.compile(r"\b[A-Z][A-Za-z0-9_]*\b(?!\.)")
 # ocamllex writes `# 159 "lib/Lexer.mll"` before the lines it copies from there.
@@ -165,6 +198,64 @@ def report_places(points: dict[str, list[tuple[int, int]]]) -> int:
     return 0
 
 
-if len(sys.argv) != 2:
+def indentation(line: str) -> int:
+    return len(line) - len(line.lstrip())
+
+
+def message_lines(points: dict[str, list[tuple[int, int]]]):
+    """Every line of wording: (file, the line without its indentation, whether it ran)."""
+    for path in sorted((ROOT / "lib").glob("*Errors.ml")):
+        name = str(path.relative_to(ROOT))
+        text = read(path)
+        original, code = text.split("\n"), without_comments(text).split("\n")
+        hits: list[list[int]] = [[] for _ in code]  # per line, the hits of its points
+        for offset, count in points.get(name, []):
+            hits[line_of(text, offset) - 1].append(count)
+        for index, line in enumerate(code):
+            if not re.search(r"\w", line) or PLACE.search(line) or NEVER_RETURNS.search(line):
+                continue
+            if hits[index]:
+                ran = all(hits[index])
+            else:
+                ran = None
+                for earlier in range(index - 1, -1, -1):
+                    if hits[earlier] and indentation(code[earlier]) < indentation(line):
+                        ran = any(hits[earlier])
+                        break
+                    if code[earlier].strip() and indentation(code[earlier]) == 0:
+                        break  # the first line of the top-level definition
+            if ran is not None:
+                yield name, original[index].strip().encode("latin-1").decode(), ran
+
+
+def report_messages(points: dict[str, list[tuple[int, int]]], record: bool) -> int:
+    rows = list(message_lines(points))
+    unexecuted = [f"{name}\t{line}" for name, line, ran in rows if not ran]
+    summary = f"message lines {len(rows)}, unexecuted {len(unexecuted)}"
+    if record:
+        RECORDED.write_text("".join(row + "\n" for row in unexecuted))
+        print(f"recorded {RECORDED.name}: {summary}")
+        return 0
+    now = collections.Counter(unexecuted)
+    recorded = collections.Counter(RECORDED.read_text().splitlines()) if RECORDED.exists() else collections.Counter()
+    new, gone = now - recorded, recorded - now
+    for row in new.elements():
+        print(f"NEW   {row}")
+    for row in gone.elements():
+        print(f"GONE  {row}")
+    if new:
+        print(f"{sum(new.values())} lines of wording are executed by no test. Write a test, or record why none can exist.")
+        return 1
+    if gone:
+        print("lines on the record are now executed or deleted; run coverage.sh --messages --record")
+        return 1
+    print(f"match {RECORDED.name}: {summary}")
+    return 0
+
+
+arguments = [argument for argument in sys.argv[1:] if not argument.startswith("--")]
+if len(arguments) != 1:
     sys.exit(__doc__)
-sys.exit(report_places(load_points(sys.argv[1])))
+if "--messages" in sys.argv:
+    sys.exit(report_messages(load_points(arguments[0]), "--record" in sys.argv))
+sys.exit(report_places(load_points(arguments[0])))
