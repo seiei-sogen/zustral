@@ -12,6 +12,7 @@
 open MonoType
 open Stages.Mtast
 open Error
+open Error.Placed
 
 let rec get_type (e: mexpr): mono_ty =
   match e with
@@ -24,7 +25,7 @@ let rec get_type (e: mexpr): mono_ty =
   | MFloatConstant _ ->
      MonoDoubleFloat
   | MStringConstant _ ->
-     generic_error TypeOfStringConstant
+     generic_error NoSpan TypeOfStringConstant
   | MConstVar (_, ty) ->
      ty
   | MParamVar (_, ty) ->
@@ -74,7 +75,7 @@ let rec get_type (e: mexpr): mono_ty =
       | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
       | MonoNamedType _ | MonoRegionTy _ | MonoSpan _ | MonoSpanMut _ | MonoAddress _
       | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
-         internal_err ("a dereference expression was constructed whose argument is not a reference type."))
+         internal_err NoSpan ("a dereference expression was constructed whose argument is not a reference type."))
   | MSizeOf _ ->
      MonoInteger (Unsigned, Width64)
   | MSlotAccessor (_, _, ty) -> ty

@@ -18,6 +18,7 @@ open CRepr
 open Util
 open Escape
 open Error
+open Error.Placed
 
 (* Codegen implementation notes:
 
@@ -170,7 +171,7 @@ let rec gen_type (ty: mono_ty): c_ty =
   | MonoFnPtr _ ->
      fn_type
   | MonoRegionTyVar _ ->
-     internal_err "Invalid C type"
+     internal_err NoSpan "Invalid C type"
 
 (* Expressions *)
 
@@ -184,7 +185,7 @@ let union_type_id = function
   | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
   | MonoRegionTy _ | MonoReadRef _ | MonoWriteRef _ | MonoSpan _ | MonoSpanMut _
   | MonoAddress _ | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
-     internal_err "Union is not a named type?"
+     internal_err NoSpan "Union is not a named type?"
 
 (* Given the ID of a union type, returns the name of the
    union's tag enum. *)
@@ -290,7 +291,7 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
          | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
          | MonoNamedType _ | MonoRegionTy _ | MonoSpan _ | MonoSpanMut _
          | MonoAddress _ | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
-            internal_err "Internal error"
+            internal_err NoSpan "Internal error"
        end
      in
      let elem_ty = gen_type elem_ty in
@@ -310,7 +311,7 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
          | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
          | MonoNamedType _ | MonoRegionTy _ | MonoSpan _ | MonoSpanMut _
          | MonoAddress _ | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
-            internal_err "Internal error"
+            internal_err NoSpan "Internal error"
        end
      in
      let elem_ty = gen_type elem_ty in
@@ -561,7 +562,7 @@ let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_de
      let param_type_to_c_type (t: mono_ty): c_ty =
        (match t with
         | MonoUnit ->
-           generic_error ForeignFunctionTypeNotAllowed
+           generic_error NoSpan ForeignFunctionTypeNotAllowed
         | MonoBoolean ->
            gen_type t
         | MonoInteger _ ->
@@ -571,13 +572,13 @@ let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_de
         | MonoDoubleFloat ->
            gen_type t
         | MonoNamedType _ ->
-           generic_error ForeignFunctionTypeNotAllowed
+           generic_error NoSpan ForeignFunctionTypeNotAllowed
         | MonoRegionTy _ ->
-           generic_error ForeignFunctionTypeNotAllowed
+           generic_error NoSpan ForeignFunctionTypeNotAllowed
         | MonoReadRef _ ->
-           generic_error ForeignFunctionTypeNotAllowed
+           generic_error NoSpan ForeignFunctionTypeNotAllowed
         | MonoWriteRef _ ->
-           generic_error ForeignFunctionTypeNotAllowed
+           generic_error NoSpan ForeignFunctionTypeNotAllowed
         | MonoSpan (ty, _) ->
            CPointer (gen_type ty)
         | MonoSpanMut (ty, _) ->
@@ -589,7 +590,7 @@ let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_de
         | MonoFnPtr _ ->
            gen_type t
         | MonoRegionTyVar _ ->
-           generic_error ForeignFunctionTypeNotAllowed)
+           generic_error NoSpan ForeignFunctionTypeNotAllowed)
      in
      let return_type_to_c_type t =
        match t with

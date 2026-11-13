@@ -10,6 +10,7 @@ open Env
 open Type
 open TypeParameters
 open Error
+open Error.Placed
 open BuiltIn
 open CodeGen
 open MonoTypeBindings
@@ -36,26 +37,26 @@ let rec check_entrypoint_validity (env: env) (name: qident): function_id * entry
                 if is_exit_code_type rt then
                   (id, EmptyEntrypoint)
                 else
-                  entrypoint_error (WrongReturnType rt)
+                  entrypoint_error NoSpan (WrongReturnType rt)
              | [ValueParameter (_, pt)] ->
                 (* Single parameter case: the `root` parameter. *)
                 if is_root_cap_type pt then
                   if is_exit_code_type rt then
                     (id, RootCapEntrypoint)
                   else
-                    entrypoint_error (WrongReturnType rt)
+                    entrypoint_error NoSpan (WrongReturnType rt)
                 else
-                  entrypoint_error (WrongParameterType pt)
+                  entrypoint_error NoSpan (WrongParameterType pt)
              | _ :: _ :: _ ->
-                entrypoint_error MultipleParameters
+                entrypoint_error NoSpan MultipleParameters
            else
-             entrypoint_error NotMonomorphic
+             entrypoint_error NoSpan NotMonomorphic
          else
-           entrypoint_error NotPublic
+           entrypoint_error NoSpan NotPublic
       | _ ->
-         entrypoint_error NotFunction)
+         entrypoint_error NoSpan NotFunction)
   | None ->
-      entrypoint_error (NoSuchFunction {
+      entrypoint_error NoSpan (NoSuchFunction {
           name = original_name name;
           module_name = source_module_name name;
         })
@@ -125,11 +126,11 @@ let get_root_capability_monomorph (env: env): mono_id =
          (* No type rules this out. The pass that monomorphized the signature
             of the entrypoint registered the monomorph under its key, and did
             not hand its ID over. *)
-         internal_err "No monomorph of RootCapability.")
+         internal_err NoSpan "No monomorph of RootCapability.")
   | _ ->
      (* No type rules this out. The compiler knows this type by the name the
         built-in module declares it under, and by nothing else. *)
-     internal_err "Can't find the RootCapability type in the environment."
+     internal_err NoSpan "Can't find the RootCapability type in the environment."
 
 let get_exit_code_monomorph (env: env): mono_id =
   let mn: module_name = pervasive_module_name
@@ -142,10 +143,10 @@ let get_exit_code_monomorph (env: env): mono_id =
          id
       | None ->
          (* As for RootCapability: registered by key, by an earlier pass. *)
-         internal_err "No monomorph of ExitCode.")
+         internal_err NoSpan "No monomorph of ExitCode.")
   | _ ->
      (* As for RootCapability: known by its name only. *)
-     internal_err "Can't find the ExitCode type in the environment."
+     internal_err NoSpan "Can't find the ExitCode type in the environment."
 
 let entrypoint_code (env: env) (name: qident): CRepr.c_source Outcome.t =
   Outcome.catch (fun () ->

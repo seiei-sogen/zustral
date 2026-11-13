@@ -8,13 +8,14 @@ open Id
 open Env
 open Type
 open Error
+open Error.Placed
 open CodeGen
 open CRepr
 
 let rec transform_ty (ty: ty): c_ty =
   match ty with
   | Unit ->
-     type_error (ExportDisallowedType ty)
+     type_error NoSpan (ExportDisallowedType ty)
   | Boolean ->
      CBuiltinType CBoolType
   | Integer (s, w) ->
@@ -24,27 +25,27 @@ let rec transform_ty (ty: ty): c_ty =
   | DoubleFloat ->
      CBuiltinType CDoubleType
   | NamedType _ ->
-     type_error (ExportDisallowedType ty)
+     type_error NoSpan (ExportDisallowedType ty)
   | RegionTy _ ->
-     type_error (ExportDisallowedType ty)
+     type_error NoSpan (ExportDisallowedType ty)
   | ReadRef _ ->
-     type_error (ExportDisallowedType ty)
+     type_error NoSpan (ExportDisallowedType ty)
   | WriteRef _ ->
-     type_error (ExportDisallowedType ty)
+     type_error NoSpan (ExportDisallowedType ty)
   | Span _ ->
-     type_error (ExportDisallowedType ty)
+     type_error NoSpan (ExportDisallowedType ty)
   | SpanMut _ ->
-     type_error (ExportDisallowedType ty)
+     type_error NoSpan (ExportDisallowedType ty)
   | TyVar _ ->
-     type_error (ExportDisallowedType ty)
+     type_error NoSpan (ExportDisallowedType ty)
   | Address t ->
      CPointer (transform_ty t)
   | Pointer _ ->
-     type_error (ExportDisallowedType ty)
+     type_error NoSpan (ExportDisallowedType ty)
   | FnPtr _ ->
      fn_type
   | MonoTy _ ->
-     type_error (ExportDisallowedType ty)
+     type_error NoSpan (ExportDisallowedType ty)
 
 let transform_param (ValueParameter (name, ty)): c_param =
   CValueParam (gen_ident name, transform_ty ty)
