@@ -241,7 +241,7 @@ and try_constraint (ctx: ctx) (tv: type_var) (ty: ty) (typeclass_name: sident): 
      Error (Declaration (DeclarationErrors.UnknownModule (sident_module_name typeclass_name)))
   | Some _ ->
   (* Find the typeclass. *)
-  match get_decl_by_name (ctx_env ctx) typeclass_name with
+  match get_decl_by_name place_from_adorn (ctx_env ctx) typeclass_name with
   | Some (TypeClass { id; _ }) ->
      (* Try to find an instance for the given typeclass name that implements this type. *)
      let* instance = try_get_instance (ctx_env ctx) (ctx_mn ctx) ty id in
@@ -280,7 +280,7 @@ and try_get_instance (env: env) (source_module_name: module_name) (dispatch_ty: 
          None
   in
   let filtered: (instance_decl * type_bindings) list =
-    (List.filter_map pred (visible_instances env mod_id))
+    (List.filter_map pred (visible_instances place_from_adorn env mod_id))
   in
   match filtered with
   | [a] ->

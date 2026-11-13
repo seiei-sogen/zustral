@@ -45,7 +45,7 @@ let flatten_imports (list: concrete_import_list list): import_decl list =
 let resolve_import (env: env) (kind: module_kind) (imports: import_map) (idecl: import_decl): import_map =
   let (ImportDecl (module_name, name, nickname)) = idecl in
   let sname = make_sident module_name name in
-  match get_decl_by_name env sname with
+  match get_decl_by_name NoSpan env sname with
   | Some decl ->
      if is_importable decl then
        match get_symbol imports nickname with

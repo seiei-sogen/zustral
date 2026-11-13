@@ -40,7 +40,7 @@ let ctx: TypeCheckExpr.expr_ctx =
     TypeParameter.make_typaram (make_ident "T", FreeUniverse, named "make", [])
   in
   let (env, _) =
-    Env.register env (EnvTypes.NewFunction {
+    Env.register NoSpan env (EnvTypes.NewFunction {
         mod_id;
         vis = VisPublic;
         name = make_ident "make";

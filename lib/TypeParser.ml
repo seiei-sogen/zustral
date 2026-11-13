@@ -173,12 +173,12 @@ and all_arguments_are_free (place: place) (args: ty list): bool =
 
 (* Type signature retrieval *)
 
-let get_type_signature (env: env) (sigs: type_signature list) (name: qident) =
+let get_type_signature (place: place) (env: env) (sigs: type_signature list) (name: qident) =
   let get_local_type_signature (sigs: type_signature list) (name: qident): type_signature option =
     List.find_opt (fun (TypeSignature (n, _, _)) -> n = (local_name name)) sigs
 
   and get_foreign_type_signature (env: env) (name: qident): type_signature option =
-    match get_decl_by_name env (qident_to_sident name) with
+    match get_decl_by_name place env (qident_to_sident name) with
     | (Some decl) ->
        decl_type_signature decl
     | None ->
@@ -248,7 +248,7 @@ and is_region (rm: region_map) (name: qident): ty option =
   | None -> None
 
 and parse_user_defined_type (place: place) (env: env) (sigs: type_signature list) (name: qident) (args: ty list): ty =
-  match get_type_signature env sigs name with
+  match get_type_signature place env sigs name with
   | Some ts ->
      parse_user_defined_type' place ts name args
   | None ->

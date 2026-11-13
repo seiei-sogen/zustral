@@ -204,14 +204,14 @@ let check_instance_locally_unique (place: place) (instances: instance_decl list)
 
 let rec check_instance_orphan_rules (place: place) (env: env) (mod_id: mod_id) (typeclass_mod_id: mod_id) (ty: ty): unit =
   let tc_local: bool = equal_mod_id mod_id typeclass_mod_id
-  and ty_local: bool = is_type_local env mod_id ty
+  and ty_local: bool = is_type_local place env mod_id ty
   in
   if (not tc_local) && (not ty_local) then
     generic_error place BrokenOrphanRule
   else
     ()
 
-and is_type_local (env: env) (mod_id: mod_id) (ty: ty): bool =
+and is_type_local (place: place) (env: env) (mod_id: mod_id) (ty: ty): bool =
   match ty with
   | Unit ->
      true
@@ -224,7 +224,7 @@ and is_type_local (env: env) (mod_id: mod_id) (ty: ty): bool =
   | DoubleFloat ->
      true
   | NamedType (name, _, _) ->
-     let type_mod_id: mod_id = decl_mod_id (get_decl_by_name_or_die env (qident_to_sident name)) in
+     let type_mod_id: mod_id = decl_mod_id (get_decl_by_name_or_die place env (qident_to_sident name)) in
      equal_mod_id mod_id type_mod_id
   | RegionTy _ ->
      (* Not applicable. *)

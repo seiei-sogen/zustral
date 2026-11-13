@@ -14,6 +14,7 @@ open Id
 open Identifier
 open Region
 open Error
+open Error.Placed
 
 type stripped_ty =
   | SUnit
@@ -76,7 +77,7 @@ let rec strip_type (ty: ty): stripped_ty =
           left over by stripping time, that's an error. Anyways, the
           search-and-replace step should *also* have signalled an error if a
           type variable has no replacement. *)
-       generic_error (TypeVariableNotReplaced name)
+       generic_error NoSpan (TypeVariableNotReplaced name)
   | Address ty ->
      SAddress (strip_type ty)
   | Pointer ty ->

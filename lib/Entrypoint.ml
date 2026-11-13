@@ -25,7 +25,7 @@ type entrypoint_kind =
 (** Check the entrypoint function is valid, return the ID of the function
     and the entrypoint kind. *)
 let rec check_entrypoint_validity (env: env) (name: qident): function_id * entrypoint_kind =
-  match get_decl_by_name env (qident_to_sident name) with
+  match get_decl_by_name NoSpan env (qident_to_sident name) with
   | Some decl ->
      (match decl with
       | Function { id; vis; typarams; value_params; rt; _ } ->
@@ -117,7 +117,7 @@ let get_root_capability_monomorph (env: env): mono_id =
   let mn: module_name = pervasive_module_name
   and n: identifier = make_ident BuiltInNames.root_capability_name in
   let sn: sident = make_sident mn n in
-  match get_decl_by_name env sn with
+  match get_decl_by_name NoSpan env sn with
   | Some (Record { id; _ }) ->
      (match get_record_monomorph env id empty_mono_bindings with
       | Some id ->
@@ -136,7 +136,7 @@ let get_exit_code_monomorph (env: env): mono_id =
   let mn: module_name = pervasive_module_name
   and n: identifier = make_ident BuiltInNames.exit_code_name in
   let sn: sident = make_sident mn n in
-  match get_decl_by_name env sn with
+  match get_decl_by_name NoSpan env sn with
   | Some (Union { id; _ }) ->
      (match get_union_monomorph env id empty_mono_bindings with
       | Some id ->

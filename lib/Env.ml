@@ -16,6 +16,7 @@ open LexEnv
 open EnvTypes
 open EnvUtils
 open Error
+open Error.Placed
 
 (** The module environment contains module metadata. *)
 type mod_env = mod_rec list
@@ -52,16 +53,16 @@ let empty_env: env =
    its callers put the monomorph back, with its definition, before they
    return. So when a lookup by ID misses, the ID was made by a later
    environment than the one asked, which is a bug in the compiler. *)
-let registered (what: unit -> string) (found: 'a option): 'a =
+let registered (place: place) (what: unit -> string) (found: 'a option): 'a =
   match found with
   | Some thing ->
      thing
   | None ->
-     internal_err ("No " ^ (what ()) ^ " in this environment.")
+     internal_err place ("No " ^ (what ()) ^ " in this environment.")
 
-let get_module_by_id (env: env) (mod_id: mod_id): mod_rec =
+let get_module_by_id (place: place) (env: env) (mod_id: mod_id): mod_rec =
   let (Env { mods; _ }) = env in
-  registered (fun () -> "module with this ID")
+  registered place (fun () -> "module with this ID")
     (List.find_opt (fun (ModRec { id; _ }) -> equal_mod_id mod_id id) mods)
 
 let get_module_by_name (env: env) (mod_name: module_name): mod_rec option =
@@ -71,12 +72,12 @@ let get_module_by_name (env: env) (mod_name: module_name): mod_rec option =
 let ensure_no_mod_with_name (env: env) (name: module_name): unit =
   match get_module_by_name env name with
   | Some _ ->
-      declaration_error (ModuleAlreadyExists name)
+      declaration_error NoSpan (ModuleAlreadyExists name)
   | None ->
      ()
 
-let module_name_from_id (env: env) (mod_id: mod_id): module_name =
-  let (ModRec { name; _ }) = get_module_by_id env mod_id in
+let module_name_from_id (place: place) (env: env) (mod_id: mod_id): module_name =
+  let (ModRec { name; _ }) = get_module_by_id place env mod_id in
   name
 
 let add_module (env: env) (input: mod_input): (env * mod_id) =
@@ -93,7 +94,7 @@ let add_module (env: env) (input: mod_input): (env * mod_id) =
   let env = Env { mods = md :: mods; methods; decls; monos; exports; supply } in
   (env, id)
 
-let get_decl_by_name (env: env) (name: sident): decl option =
+let get_decl_by_name (place: place) (env: env) (name: sident): decl option =
   match get_module_by_name env (sident_module_name name) with
   | Some (ModRec { id=target_mod_id; _ }) ->
      let (Env { decls; _ }) = env in
@@ -112,23 +113,23 @@ let get_decl_by_name (env: env) (name: sident): decl option =
      in
      List.find_opt (fun d -> pred d) decls
   | None ->
-     declaration_error (UnknownModule (sident_module_name name))
+     declaration_error place (UnknownModule (sident_module_name name))
 
 (* The one way a declaration or an instance method enters the environment. The
    rule about names that are already taken is here and nowhere else. A kind of
    registration that is not checked today says so in its arm, and a check for
    it belongs in that arm. *)
-let register (type id) (env: env) (registration: id registration): (env * id) =
+let register (type id) (place: place) (env: env) (registration: id registration): (env * id) =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
   (* The duplicate rule: a name is taken if any declaration of the module has
      it, union cases and typeclass methods included. The rule does not look at
      the names the module imports (#28) or at the names of the built-in types
      (#51). *)
   let name_must_be_free (mod_id: mod_id) (name: identifier): unit =
-    let module_name: module_name = module_name_from_id env mod_id in
-    match get_decl_by_name env (make_sident module_name name) with
+    let module_name: module_name = module_name_from_id place env mod_id in
+    match get_decl_by_name place env (make_sident module_name name) with
     | Some _ ->
-       declaration_error (DeclarationAlreadyExists { name; module_name })
+       declaration_error place (DeclarationAlreadyExists { name; module_name })
     | None ->
        ()
   in
@@ -186,7 +187,7 @@ let function_of (decl: decl): function_decl option =
 let get_function (env: env) (id: function_id): function_decl =
   let (Env { decls; _ }) = env in
   let has_id (fn: function_decl): bool = equal_function_id fn.id id in
-  registered (fun () -> "function with ID `" ^ (show_function_id id) ^ "`")
+  registered NoSpan (fun () -> "function with ID `" ^ (show_function_id id) ^ "`")
     (List.find_opt has_id (List.filter_map function_of decls))
 
 let typeclass_of (decl: decl): typeclass_decl option =
@@ -194,10 +195,10 @@ let typeclass_of (decl: decl): typeclass_decl option =
   | TypeClass typeclass -> Some typeclass
   | Constant _ | Record _ | Union _ | UnionCase _ | Function _ | TypeClassMethod _ | Instance _ -> None
 
-let get_typeclass (env: env) (id: typeclass_id): typeclass_decl =
+let get_typeclass (place: place) (env: env) (id: typeclass_id): typeclass_decl =
   let (Env { decls; _ }) = env in
   let has_id (typeclass: typeclass_decl): bool = equal_typeclass_id typeclass.id id in
-  registered (fun () -> "typeclass with ID `" ^ (show_typeclass_id id) ^ "`")
+  registered place (fun () -> "typeclass with ID `" ^ (show_typeclass_id id) ^ "`")
     (List.find_opt has_id (List.filter_map typeclass_of decls))
 
 let record_of (decl: decl): record_decl option =
@@ -208,7 +209,7 @@ let record_of (decl: decl): record_decl option =
 let get_record (env: env) (id: record_id): record_decl =
   let (Env { decls; _ }) = env in
   let has_id (record: record_decl): bool = equal_record_id record.id id in
-  registered (fun () -> "record with ID `" ^ (show_record_id id) ^ "`")
+  registered NoSpan (fun () -> "record with ID `" ^ (show_record_id id) ^ "`")
     (List.find_opt has_id (List.filter_map record_of decls))
 
 let union_of (decl: decl): union_decl option =
@@ -216,10 +217,10 @@ let union_of (decl: decl): union_decl option =
   | Union union -> Some union
   | Constant _ | Record _ | UnionCase _ | Function _ | TypeClass _ | TypeClassMethod _ | Instance _ -> None
 
-let get_union (env: env) (id: union_id): union_decl =
+let get_union (place: place) (env: env) (id: union_id): union_decl =
   let (Env { decls; _ }) = env in
   let has_id (union: union_decl): bool = equal_union_id union.id id in
-  registered (fun () -> "union with ID `" ^ (show_union_id id) ^ "`")
+  registered place (fun () -> "union with ID `" ^ (show_union_id id) ^ "`")
     (List.find_opt has_id (List.filter_map union_of decls))
 
 let union_case_of (decl: decl): union_case_decl option =
@@ -232,15 +233,15 @@ let instance_of (decl: decl): instance_decl option =
   | Instance instance -> Some instance
   | Constant _ | Record _ | Union _ | UnionCase _ | Function _ | TypeClass _ | TypeClassMethod _ -> None
 
-let get_instance_decl (env: env) (id: instance_id): instance_decl =
+let get_instance_decl (place: place) (env: env) (id: instance_id): instance_decl =
   let (Env { decls; _ }) = env in
   let has_id (instance: instance_decl): bool = equal_instance_id instance.id id in
-  registered (fun () -> "instance with ID `" ^ (show_instance_id id) ^ "`")
+  registered place (fun () -> "instance with ID `" ^ (show_instance_id id) ^ "`")
     (List.find_opt has_id (List.filter_map instance_of decls))
 
 let get_instance_method (env: env) (ins_meth_id: ins_meth_id): ins_meth_rec =
   let (Env { methods; _ }) = env in
-  registered (fun () -> "instance method with ID `" ^ (show_ins_meth_id ins_meth_id) ^ "`")
+  registered NoSpan (fun () -> "instance method with ID `" ^ (show_ins_meth_id ins_meth_id) ^ "`")
     (List.find_opt (fun (InsMethRec { id; _ }) -> equal_ins_meth_id id ins_meth_id) methods)
 
 let get_method_from_typeclass_id_and_name (env: env) (typeclass_id: typeclass_id) (name: identifier): decl option =
@@ -271,15 +272,15 @@ let get_union_cases (env: env) (id: union_id): union_case_decl list =
   let (Env { decls; _ }) = env in
   List.filter (fun (case: union_case_decl) -> equal_union_id case.union_id id) (List.filter_map union_case_of decls)
 
-let get_callable (env: env) (importing_module_name: module_name) (name: sident): callable option =
+let get_callable (place: place) (env: env) (importing_module_name: module_name) (name: sident): callable option =
   let _ = importing_module_name in
-  match get_decl_by_name env name with
+  match get_decl_by_name place env name with
   | Some decl ->
      (match decl with
       | Record { id; typarams; universe; slots; _ } ->
          Some (RecordConstructor (id, typarams, universe, slots))
       | UnionCase { name; union_id; slots; _ } ->
-         let { typarams; universe; _ }: union_decl = get_union env union_id in
+         let { typarams; universe; _ }: union_decl = get_union place env union_id in
          Some (
              UnionConstructor {
                  union_id = union_id;
@@ -302,12 +303,12 @@ let get_callable (env: env) (importing_module_name: module_name) (name: sident):
   | None ->
      None
 
-let get_variable (env: env) (lexenv: lexenv) (name: qident): (ty * var_source) option =
+let get_variable (place: place) (env: env) (lexenv: lexenv) (name: qident): (ty * var_source) option =
   match get_var lexenv (original_name name) with
   | Some (ty, src) ->
      Some (ty, src)
   | None ->
-     (match get_decl_by_name env (qident_to_sident name) with
+     (match get_decl_by_name place env (qident_to_sident name) with
       | Some decl ->
          (match decl with
           | Constant { ty; _ } ->
@@ -317,10 +318,10 @@ let get_variable (env: env) (lexenv: lexenv) (name: qident): (ty * var_source) o
       | None ->
          None)
 
-let visible_instances (env: env) (id: mod_id): instance_decl list =
+let visible_instances (place: place) (env: env) (id: mod_id): instance_decl list =
   let instances_imported_by_module: instance_decl list =
-    let (ModRec { imported_instances; _ }) = get_module_by_id env id in
-    List.map (get_instance_decl env) (List.of_seq (InstanceIdSet.to_seq imported_instances))
+    let (ModRec { imported_instances; _ }) = get_module_by_id place env id in
+    List.map (get_instance_decl place env) (List.of_seq (InstanceIdSet.to_seq imported_instances))
   in
   (module_instances env id) @ instances_imported_by_module
 
@@ -332,7 +333,7 @@ let store_function_body (env: env) (fn_id: function_id) (body: tstmt): env =
     (* A foreign function is typed as TForeignFunction, which has no body to
        store. *)
     | Body _ | Foreign _ ->
-       internal_err ("function `" ^ (ident_string fn.name) ^ "` already has a body")
+       internal_err NoSpan ("function `" ^ (ident_string fn.name) ^ "` already has a body")
     | BodyNotAttached ->
        Function { fn with impl = Body body }
   in
@@ -357,7 +358,7 @@ and replace_method_body (meth: ins_meth_rec) (new_body: tstmt): ins_meth_rec =
   let (InsMethRec { id; instance_id; method_id; docstring; name; typarams; value_params; rt; body }) = meth in
   (match body with
    | Some _ ->
-      internal_err ("function `" ^ (ident_string name) ^ "` already has a body")
+      internal_err NoSpan ("function `" ^ (ident_string name) ^ "` already has a body")
    | None ->
       InsMethRec { id; instance_id; method_id; docstring; name; typarams; value_params; rt; body=(Some new_body) })
 
@@ -406,7 +407,7 @@ let monomorph_id (mono: monomorph): mono_id =
 
 let get_monomorph (env: env) (id: mono_id): monomorph =
   let (Env { monos; _ }) = env in
-  registered (fun () -> "monomorph with ID `" ^ (show_mono_id id) ^ "`")
+  registered NoSpan (fun () -> "monomorph with ID `" ^ (show_mono_id id) ^ "`")
     (List.find_opt (fun mono -> equal_mono_id id (monomorph_id mono)) monos)
 
 (* A monomorph is also found by its key: what it is a monomorph of, and the
@@ -530,7 +531,7 @@ let store_record_monomorph_definition (env: env) (id: mono_id) (new_slots: mono_
     let env = Env { mods; methods; decls; monos = new_mono :: monos; exports; supply } in
     env
   | _ ->
-    internal_err ("Couldn't find monomorph record definition with ID: " ^ (show_mono_id id))
+    internal_err NoSpan ("Couldn't find monomorph record definition with ID: " ^ (show_mono_id id))
 
 let store_union_monomorph_definition (env: env) (id: mono_id) (new_cases: mono_case list): env =
   let (env, mono) = pop_monomorph env id in
@@ -542,7 +543,7 @@ let store_union_monomorph_definition (env: env) (id: mono_id) (new_cases: mono_c
     let env = Env { mods; methods; decls; monos = new_mono :: monos; exports; supply } in
     env
   | _ ->
-    internal_err ("Couldn't find monomorph union definition with ID: " ^ (show_mono_id id))
+    internal_err NoSpan ("Couldn't find monomorph union definition with ID: " ^ (show_mono_id id))
 
 let store_function_monomorph_definition (env: env) (id: mono_id) (new_body: mstmt): env =
   let (env, mono) = pop_monomorph env id in
@@ -554,7 +555,7 @@ let store_function_monomorph_definition (env: env) (id: mono_id) (new_body: mstm
     let env = Env { mods; methods; decls; monos = new_mono :: monos; exports; supply } in
     env
   | _ ->
-    internal_err ("Couldn't find monomorph function definition with ID: " ^ (show_mono_id id))
+    internal_err NoSpan ("Couldn't find monomorph function definition with ID: " ^ (show_mono_id id))
 
 let store_instance_method_monomorph_definition (env: env) (id: mono_id) (new_body: mstmt): env =
   let (env, mono) = pop_monomorph env id in
@@ -566,7 +567,7 @@ let store_instance_method_monomorph_definition (env: env) (id: mono_id) (new_bod
     let env = Env { mods; methods; decls; monos = new_mono :: monos; exports; supply } in
     env
   | _ ->
-    internal_err ("Couldn't find monomorph instance method definition with ID: " ^ (show_mono_id id))
+    internal_err NoSpan ("Couldn't find monomorph instance method definition with ID: " ^ (show_mono_id id))
 
 let add_exported_function (env: env) (id: function_id) (export_name: string): env =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in

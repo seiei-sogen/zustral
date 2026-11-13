@@ -24,15 +24,15 @@ lib/DesugarPaths.ml	146	0	0	0	0	0	0	0	0	0
 lib/DesugaringPass.ml	43	0	0	0	0	0	0	0	0	0
 lib/Entrypoint.ml	158	12	0	0	0	3	0	4	0	0
 lib/EntrypointErrors.ml	63	0	0	0	0	0	0	0	0	0
-lib/Env.ml	584	10	0	0	0	9	1	7	0	0
-lib/EnvExtras.ml	26	1	0	0	0	0	0	1	0	0
+lib/Env.ml	585	10	0	0	0	9	1	7	0	0
+lib/EnvExtras.ml	27	1	0	0	0	0	0	1	0	0
 lib/EnvTypes.ml	305	0	0	0	0	0	1	0	0	0
 lib/EnvUtils.ml	55	0	0	0	0	0	0	0	0	0
 lib/Error.ml	299	28	2	0	0	0	1	2	0	0
 lib/ErrorText.ml	57	0	0	0	0	0	2	0	0	0
 lib/Escape.ml	54	1	0	0	0	1	1	0	0	0
 lib/ExportInstantiation.ml	67	10	0	0	0	0	0	0	0	0
-lib/ExtractionPass.ml	478	14	6	0	0	5	0	0	0	0
+lib/ExtractionPass.ml	466	14	0	0	0	5	0	0	0	0
 lib/GenericErrors.ml	239	0	0	0	0	0	0	0	0	0
 lib/HtmlError.ml	304	0	0	0	0	0	0	0	0	0
 lib/Id.ml	81	0	0	0	0	0	0	0	0	0
@@ -50,7 +50,7 @@ lib/LinearityErrors.ml	159	0	0	0	0	0	0	0	0	0
 lib/LiteralTyping.ml	128	1	0	0	0	5	0	0	0	0
 lib/MonoType.ml	37	0	0	0	0	0	0	0	0	0
 lib/MonoTypeBindings.ml	44	0	0	0	0	0	0	0	0	0
-lib/Monomorphize.ml	761	8	0	0	0	1	0	5	0	0
+lib/Monomorphize.ml	762	8	0	0	0	1	0	5	0	0
 lib/MtastUtil.ml	84	2	0	0	0	0	0	1	0	0
 lib/NumberLiteral.ml	92	0	0	0	0	0	2	0	0	0
 lib/Outcome.ml	53	0	1	0	0	0	0	0	0	0
@@ -78,7 +78,7 @@ lib/TypeParameters.ml	62	2	0	0	0	0	0	0	0	0
 lib/TypeParser.ml	306	8	0	0	0	3	0	1	0	0
 lib/TypeReplace.ml	202	0	0	0	0	0	0	0	0	0
 lib/TypeSignature.ml	18	0	0	0	0	0	0	0	0	0
-lib/TypeStripping.ml	88	1	0	0	0	0	0	0	0	0
+lib/TypeStripping.ml	89	1	0	0	0	0	0	0	0	0
 lib/TypeSystem.ml	106	2	0	0	0	0	0	1	0	0
 lib/TypeVarSet.ml	15	0	0	0	0	0	0	0	0	0
 lib/TypingPass.ml	758	34	13	0	0	5	0	1	0	0

@@ -35,7 +35,7 @@ let env_with_instance: Env.env * sident =
   in
   let typeclass: sident = make_sident example (make_ident "C") in
   let (env, typeclass_id) =
-    Env.register env (NewTypeClass {
+    Env.register NoSpan env (NewTypeClass {
         mod_id;
         vis = VisPublic;
         name = make_ident "C";
@@ -44,7 +44,7 @@ let env_with_instance: Env.env * sident =
       })
   in
   let (env, _) =
-    Env.register env (NewInstance {
+    Env.register NoSpan env (NewInstance {
         mod_id;
         vis = VisPublic;
         typeclass_id;

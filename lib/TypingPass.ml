@@ -52,9 +52,9 @@ let check_annotated_expr (module_name: module_name) (env: env) (rm: region_map) 
   TypeCheckExpr.check_annotated ctx expr annotation
 
 let get_record_definition (env: env) (name: qident) (ty: ty): (module_name * type_vis * typarams * typed_slot list) =
-  match get_decl_by_name env (qident_to_sident name) with
+  match get_decl_by_name place_from_adorn env (qident_to_sident name) with
   | (Some (Record { mod_id; vis; typarams; slots; _ })) ->
-     let mod_name: module_name = module_name_from_id env mod_id in
+     let mod_name: module_name = module_name_from_id place_from_adorn env mod_id in
      (mod_name, vis, typarams, slots)
   | Some _ ->
      type_error (PathNotRecord ty)
@@ -81,7 +81,7 @@ type case_mode =
 let check_var_doesnt_collide_with_decl (ctx: stmt_ctx) (name: identifier) =
   let (StmtCtx (module_name, env, _, _, _)) = ctx in
   let sname: sident = make_sident module_name name in
-  match get_decl_by_name env sname with
+  match get_decl_by_name place_from_adorn env sname with
   | Some _ ->
      generic_error (VarCollidesWithDecl name)
   | None ->
@@ -538,9 +538,9 @@ and get_union_type_definition (importing_module: module_name) (env: env) (ty: ty
                       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _
                       | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
                          type_error (CaseNonUnion ty)) in
-  match get_decl_by_name env (qident_to_sident name) with
+  match get_decl_by_name place_from_adorn env (qident_to_sident name) with
   | Some (Union { id; vis; name; mod_id; typarams; universe; _ }) ->
-     let module_name = module_name_from_id env mod_id in
+     let module_name = module_name_from_id place_from_adorn env mod_id in
      if (vis = TypeVisPublic) || (importing_module = module_name) then
        let n = make_qident (module_name, name, name)
        and args = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams)

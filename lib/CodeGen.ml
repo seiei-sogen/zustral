@@ -490,7 +490,7 @@ let rec mono_desc (env: env) (id: mono_id): string =
   | MonoRecordDefinition { type_id; tyargs; _ } ->
      (ident_string (get_record env type_id).name) ^ (tyargs_string tyargs)
   | MonoUnionDefinition { type_id; tyargs; _ } ->
-     (ident_string (get_union env type_id).name) ^ (tyargs_string tyargs)
+     (ident_string (get_union NoSpan env type_id).name) ^ (tyargs_string tyargs)
   | MonoFunction { function_id; tyargs; _ } ->
      (ident_string (get_function env function_id).name) ^ (tyargs_string tyargs)
   | MonoInstanceMethod _ ->
@@ -551,7 +551,7 @@ let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_de
   | MFunctionMonomorph (id, function_id, params, rt, body) ->
      (* Load-bearing hack: prefix parameters not with the current module name,
         but with the name of the module the monomorph's declaration is from. *)
-     let mn': module_name = module_name_from_id env (get_function env function_id).mod_id in
+     let mn': module_name = module_name_from_id NoSpan env (get_function env function_id).mod_id in
      let d = Desc ("Function monomorph: " ^ (mono_desc env id)) in
      let (body, supply) = gen_stmt mn supply body in
      ([

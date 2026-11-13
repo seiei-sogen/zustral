@@ -30,7 +30,7 @@ let test_id_from_a_later_environment _ =
       }
   in
   let (after, id) =
-    Env.register before (NewFunction {
+    Env.register NoSpan before (NewFunction {
         mod_id;
         vis = VisPublic;
         name = make_ident "example";
@@ -63,7 +63,7 @@ let test_monomorph_key_not_registered _ =
       }
   in
   let (env, _) =
-    Env.register env (NewUnion {
+    Env.register NoSpan env (NewUnion {
         mod_id;
         vis = TypeVisPublic;
         name = exit_code;
@@ -73,7 +73,7 @@ let test_monomorph_key_not_registered _ =
       })
   in
   let (env, _) =
-    Env.register env (NewFunction {
+    Env.register NoSpan env (NewFunction {
         mod_id;
         vis = VisPublic;
         name = main;

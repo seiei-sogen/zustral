@@ -170,17 +170,13 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
   in
   match def with
   | CConstant (span, vis, name, typespec, def, docstring) ->
-     adorn_error_with_span span
-       (fun _ ->
-         let place: place = AtSpan span in
+     (let place: place = AtSpan span in
          let ty = parse' place rm empty_typarams typespec in
-         let (env, decl_id) = register env (NewConstant { mod_id; vis; name; ty; docstring }) in
+         let (env, decl_id) = register place env (NewConstant { mod_id; vis; name; ty; docstring }) in
          let decl = LConstant (decl_id, vis, name, ty, def, docstring) in
          (env, decl))
   | CRecord (span, vis, name, typarams, universe, slots, docstring) ->
-     adorn_error_with_span span
-       (fun _ ->
-         let place: place = AtSpan span in
+     (let place: place = AtSpan span in
          let slots = List.map (parse_slot place typarams) slots in
          (* If the universe is `Free`, check that there are no slots with types in the `Type` or `Linear` universes. *)
          let _ =
@@ -209,13 +205,11 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
            else
              ()
          in
-         let (env, decl_id) = register env (NewRecord { mod_id; vis; name; docstring; typarams; universe; slots }) in
+         let (env, decl_id) = register place env (NewRecord { mod_id; vis; name; docstring; typarams; universe; slots }) in
          let decl = LRecord (decl_id, vis, name, typarams, universe, slots, docstring) in
          (env, decl))
   | CUnion (span, vis, name, typarams, universe, cases, docstring) ->
-     adorn_error_with_span span
-       (fun _ ->
-         let place: place = AtSpan span in
+     (let place: place = AtSpan span in
          (* If the universe is `Free`, check that there are no cases with slots with types in the `Type` or `Linear` universes. *)
          let _ =
            if universe = FreeUniverse then
@@ -241,7 +235,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
              ()
          in
          (* Add the union itself to the env *)
-         let (env, union_id) = register env (NewUnion { mod_id; vis; name; docstring; typarams; universe }) in
+         let (env, union_id) = register place env (NewUnion { mod_id; vis; name; docstring; typarams; universe }) in
          (* If the union is public, the cases are public, otherwise they are private. *)
          let case_vis: vis =
            match vis with
@@ -263,14 +257,12 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
          in
          let cases: union_case_input list = List.map case_map cases in
          (* Add the union cases to the environmenmt *)
-         let (env, linked_cases) = add_union_cases env cases in
+         let (env, linked_cases) = add_union_cases place env cases in
          (* Construct the decl *)
          let decl = LUnion (union_id, vis, name, typarams, universe, linked_cases, docstring) in
          (env, decl))
   | CFunction (span, vis, name, typarams, params, rt, body, docstring, pragmas) ->
-     adorn_error_with_span span
-       (fun _ ->
-         let place: place = AtSpan span in
+     (let place: place = AtSpan span in
          let value_params = List.map (parse_param place typarams) params
          and rt = parse' place rm typarams rt
          and external_name: string option =
@@ -322,7 +314,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
                      | None -> BodyNotAttached)
            }
          in
-         let (env, decl_id) = register env (NewFunction fn_input) in
+         let (env, decl_id) = register place env (NewFunction fn_input) in
          let env =
            (* If the function has an export name, register it in the environment. *)
            match export_name with
@@ -334,9 +326,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
          let decl = LFunction (decl_id, vis, name, typarams, value_params, rt, body, docstring, pragmas) in
          (env, decl))
   | CTypeclass (span, vis, name, typaram, methods, docstring) ->
-     adorn_error_with_span span
-       (fun _ ->
-         let place: place = AtSpan span in
+     (let place: place = AtSpan span in
          (* Check: the universe is one of {Type, Linear, Free} *)
          let _ =
            match typaram_universe typaram with
@@ -347,7 +337,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
               declaration_error place (TypeclassParamIsRegion name)
          in
          (* Add the typeclass itself to the env *)
-         let (env, typeclass_id) = register env (NewTypeClass { mod_id; vis; name; docstring; param = typaram; }) in
+         let (env, typeclass_id) = register place env (NewTypeClass { mod_id; vis; name; docstring; param = typaram; }) in
          (* Convert the list of methods into a list of type_class_method records *)
          let typarams = typarams_from_list place [typaram] in
          let method_map (Combined.CMethodDecl (name, method_typarams, params, rt, docstring)): type_class_method_input =
@@ -367,20 +357,18 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
          in
          let methods: type_class_method_input list = List.map method_map methods in
          (* Add the methods to the env *)
-         let (env, linked_methods) = add_type_class_methods env methods in
+         let (env, linked_methods) = add_type_class_methods place env methods in
          (* Construct the decl *)
          let decl = LTypeclass (typeclass_id, vis, name, typaram, linked_methods, docstring) in
          (env, decl))
   | CInstance (span, vis, name, typarams, argument, methods, docstring) ->
-     adorn_error_with_span span
-       (fun _ ->
-         let place: place = AtSpan span in
+     (let place: place = AtSpan span in
          let typeclass_name = qident_to_sident name |> sident_name in
          (* First add the instance to the env, then the methods. *)
          let argument = parse' place rm typarams argument in
          (* Find typeclass info. *)
          let (typeclass_id, typeclass_mod_id, typeclass_param_name, universe): typeclass_id * mod_id * identifier * universe =
-           match get_decl_by_name env (qident_to_sident name) with
+           match get_decl_by_name place env (qident_to_sident name) with
            | Some decl ->
               (match decl with
                | TypeClass { id; mod_id; param; _ } ->
@@ -409,7 +397,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
          let _ = check_instance_orphan_rules place env mod_id typeclass_mod_id argument in
          (* Add the instance to the env *)
          let input: instance_input = { mod_id; vis; typeclass_id; docstring; typarams; argument } in
-         let (env, instance_id) = register env (NewInstance input) in
+         let (env, instance_id) = register place env (NewInstance input) in
          (* Convert the list of methods into a list of instance_method_input records *)
          let method_map (CMethodDef (name, method_typarams, params, rt, meth_docstring, body)): (instance_method_input * astmt) =
            let effective_typarams: typarams = merge_typarams place typarams method_typarams in
@@ -439,24 +427,24 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
          in
          let methods: (instance_method_input * astmt) list = List.map method_map methods in
          (* Add the methods to the env *)
-         let (env, linked_methods) = add_instance_methods env methods in
+         let (env, linked_methods) = add_instance_methods place env methods in
          (* Construct the decl *)
          let decl = LInstance (instance_id, vis, name, typarams, argument, linked_methods, docstring) in
          (env, decl))
 
 (** Utility functions to add lists of things to the environment. *)
-and add_union_cases (env: env) (cases: union_case_input list): (env * (linked_case list)) =
+and add_union_cases (place: place) (env: env) (cases: union_case_input list): (env * (linked_case list)) =
   let f ((env, input): (env * union_case_input)): (env * linked_case) =
-    let (env, decl_id) = register env (NewUnionCase input) in
+    let (env, decl_id) = register place env (NewUnionCase input) in
     let { name; slots; _ } = input in
     let case = LCase (decl_id, name, slots) in
     (env, case)
   in
   map_with_context f env cases
 
-and add_type_class_methods (env: env) (cases: type_class_method_input list): (env * (linked_method_decl list)) =
+and add_type_class_methods (place: place) (env: env) (cases: type_class_method_input list): (env * (linked_method_decl list)) =
   let f ((env, input): (env * type_class_method_input)): (env * linked_method_decl) =
-    let (env, decl_id) = register env (NewTypeClassMethod input) in
+    let (env, decl_id) = register place env (NewTypeClassMethod input) in
     let { name; value_params; rt; docstring; vis; _ } = input in
     (* LOAD-BEARING HACK: need to destructure `vis` because otherwise the
        compiler thinks `input` is supposed to be an instance of
@@ -467,10 +455,10 @@ and add_type_class_methods (env: env) (cases: type_class_method_input list): (en
   in
   map_with_context f env cases
 
-and add_instance_methods (env: env) (cases: (instance_method_input * astmt) list): (env * (linked_method_def list)) =
+and add_instance_methods (place: place) (env: env) (cases: (instance_method_input * astmt) list): (env * (linked_method_def list)) =
   let f ((env, pair): (env * (instance_method_input * astmt))): (env * linked_method_def) =
     let (input, body) = pair in
-    let (env, decl_id) = register env (NewInstanceMethod input) in
+    let (env, decl_id) = register place env (NewInstanceMethod input) in
     let { name; value_params; rt; docstring; _ } = input in
     let decl = LMethodDef (decl_id, name, value_params, rt, docstring, body) in
     (env, decl)

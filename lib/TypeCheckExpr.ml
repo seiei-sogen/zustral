@@ -100,9 +100,9 @@ let parse_typespec (ctx: expr_ctx) (ty: qtypespec): ty =
   parse_type place_from_adorn (ctx_env ctx) [] (ctx_region_map ctx) (ctx_typarams ctx) ty
 
 let get_record_definition (env: env) (name: qident) (ty: ty): (module_name * type_vis * typarams * typed_slot list) =
-  match get_decl_by_name env (qident_to_sident name) with
+  match get_decl_by_name place_from_adorn env (qident_to_sident name) with
   | (Some (Record { mod_id; vis; typarams; slots; _ })) ->
-     let mod_name: module_name = module_name_from_id env mod_id in
+     let mod_name: module_name = module_name_from_id place_from_adorn env mod_id in
      (mod_name, vis, typarams, slots)
   | Some _ ->
      type_error (PathNotRecord ty)
@@ -219,7 +219,7 @@ let rec augment_call (ctx: expr_ctx) (name: qident) (args: typed_arglist) (from_
      augment_fptr_call ctx (local_name name) ty from_context args
   | None ->
      (* Otherwise, find a callable from the environment. *)
-     (match get_callable (ctx_env ctx) (ctx_module_name ctx) (qident_to_sident name) with
+     (match get_callable place_from_adorn (ctx_env ctx) (ctx_module_name ctx) (qident_to_sident name) with
       | Some callable ->
          augment_callable ctx name callable from_context args
       | None ->
@@ -262,13 +262,13 @@ and augment_callable (ctx: expr_ctx) (name: qident) (callable: callable) (from_c
   | RecordConstructor (_, typarams, universe, slots) ->
      augment_record_constructor ctx name typarams universe slots from_context args
   | UnionConstructor { union_id; type_params; universe; case } ->
-     let type_name: qident = (let { name; mod_id; _ }: union_decl = get_union (ctx_env ctx) union_id in
+     let type_name: qident = (let { name; mod_id; _ }: union_decl = get_union place_from_adorn (ctx_env ctx) union_id in
                                  (* TODO: constructing a fake qident *)
-                                 make_qident (module_name_from_id (ctx_env ctx) mod_id, name, name))
+                                 make_qident (module_name_from_id place_from_adorn (ctx_env ctx) mod_id, name, name))
      in
      augment_union_constructor ctx type_name type_params universe case from_context args
   | MethodCallable { typeclass_id; value_parameters; return_type; _ } ->
-     let { param; _ }: typeclass_decl = get_typeclass (ctx_env ctx) typeclass_id in
+     let { param; _ }: typeclass_decl = get_typeclass place_from_adorn (ctx_env ctx) typeclass_id in
      augment_method_call ctx typeclass_id param name value_parameters return_type from_context args
 
 and augment_function_call (ctx: expr_ctx) (id: function_id) name typarams params rt (from_context: context_bindings) args =
@@ -382,7 +382,7 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
      (match dispatch_ty with
       | TyVar (TypeVariable (typaram, _, _, constraints)) ->
          (* If so, check if the constraints say that it implements the typeclass. *)
-         let tc_name: sident = get_decl_sident_or_die (ctx_env ctx) typeclass_id in
+         let tc_name: sident = get_decl_sident_or_die place_from_adorn (ctx_env ctx) typeclass_id in
          if List.exists (fun c -> equal_sident tc_name c) constraints then
            (* If it's a tyvar that implements the typeclass, we have to
               proceed differently. Essentially we can't go on with instance
@@ -409,7 +409,7 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
            (match get_instance (ctx_env ctx) (ctx_module_name ctx) dispatch_ty typeclass_id with
             | Some (i, b) -> (i, b)
             | None ->
-               let tc_name: sident = get_decl_sident_or_die (ctx_env ctx) typeclass_id in
+               let tc_name: sident = get_decl_sident_or_die place_from_adorn (ctx_env ctx) typeclass_id in
                type_error (NoSuitableInstance { typeclass = sident_name tc_name; ty = dispatch_ty }))
          in
          let params' = List.map (fun (ValueParameter (n, t)) -> ValueParameter (n, replace_variables instance_bindings t)) params in
@@ -556,7 +556,7 @@ and infer_with_expected (ctx: expr_ctx) (expr: aexpr) (expected: ty): texpr =
 and augment_variable (ctx: expr_ctx) (name: qident) (from_context: context_bindings): texpr =
   let env = ctx_env ctx in
   (* Does this name a declaration? *)
-  match get_decl_by_name env (qident_to_sident name) with
+  match get_decl_by_name place_from_adorn env (qident_to_sident name) with
   | Some (Function { id; typarams; value_params; rt; _ }) ->
      let arg_tys: ty list = List.map (fun (ValueParameter (_, ty)) -> ty) value_params in
      let fn_ty: ty = FnPtr (arg_tys, rt) in
@@ -572,7 +572,7 @@ and augment_variable (ctx: expr_ctx) (name: qident) (from_context: context_bindi
        (* Function is concrete. *)
        TFunVar (id, fn_ty, empty_bindings)
   | _ ->
-     (match get_variable (ctx_env ctx) (ctx_lexenv ctx) name with
+     (match get_variable place_from_adorn (ctx_env ctx) (ctx_lexenv ctx) name with
       | Some (ty, src) ->
          (match src with
           | VarConstant ->

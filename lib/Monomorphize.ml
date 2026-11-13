@@ -24,6 +24,7 @@ open Stages.Linked
 open Id
 open Region
 open Error
+open Error.Placed
 
 let make_substs2 (bindings: type_bindings) (typarams: typarams): type_bindings =
   let f (tp: type_parameter): (type_parameter * ty) option =
@@ -78,7 +79,7 @@ let rec monomorphize_ty (env: env) (ty: stripped_ty): (mono_ty * env) =
      (MonoPointer ty, env)
   | SNamedType (name, args) ->
      let (args, env) = monomorphize_ty_list env args in
-     (match get_decl_by_name env (qident_to_sident name) with
+     (match get_decl_by_name NoSpan env (qident_to_sident name) with
       | Some decl ->
          (match decl with
           | Record { id; typarams; _ } ->
@@ -96,13 +97,13 @@ let rec monomorphize_ty (env: env) (ty: stripped_ty): (mono_ty * env) =
           | _ ->
              (* A program reaches this: a union case declared after a record or
                 union of the same name is the one a lookup by name finds (#86). *)
-             internal_err ("named type `" ^ (qident_debug_name name) ^ "`points to something that isn't a type"))
+             internal_err NoSpan ("named type `" ^ (qident_debug_name name) ^ "`points to something that isn't a type"))
       | None ->
          (* No type rules this out. A named type holds the name of its
             declaration, not an ID: the type parser resolves a type of the
             module being extracted from the signatures of that module, before
             the declaration is registered and has an ID. *)
-         internal_err ("Couldn't get declaration for named type `" ^ (qident_debug_name name) ^ "`."))
+         internal_err NoSpan ("Couldn't get declaration for named type `" ^ (qident_debug_name name) ^ "`."))
   | SFnPtr (args, rt) ->
      let (args, env) = monomorphize_ty_list env args in
      let (rt, env) = monomorphize_ty env rt in
@@ -213,7 +214,7 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
        (match get_instance env source_module_name dispatch_ty typeclass_id with
         | Some (i, b) -> (i, b)
         | None ->
-           generic_error (TypeclassResolutionFailed dispatch_ty))
+           generic_error NoSpan (TypeclassResolutionFailed dispatch_ty))
      in
      let params' = List.map (fun (ValueParameter (n, t)) -> ValueParameter (n, replace_variables instance_bindings t)) params in
      let arguments' = TypeCheckExpr.cast_arguments instance_bindings params' args in
@@ -223,7 +224,7 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
         | Some (InsMethRec { id; _ }) -> id
         (* A program reaches this: an instance that leaves out a method of its
            typeclass is accepted where it is declared (#91). *)
-        | None -> internal_err ("Couldn't find instance method from instance ID `"
+        | None -> internal_err NoSpan ("Couldn't find instance method from instance ID `"
                                 ^ (show_instance_id instance_id)
                                 ^ "` and method name `"
                                 ^ (method_name |> original_name |> ident_string)
@@ -571,7 +572,7 @@ and instantiate_monomorph (env: env) (mono: monomorph): (env * mdecl) =
       (env, decl))
   | MonoUnionDefinition { id; type_id; tyargs; _ } ->
      (* Find the list of type parameters from the union definition. *)
-     let { typarams; _ }: union_decl = get_union env type_id in
+     let { typarams; _ }: union_decl = get_union NoSpan env type_id in
      (* Find the list of cases from the env. *)
      let cases: typed_case list = List.map union_case_to_typed_case (get_union_cases env type_id) in
      (* Search/replace the type variables in the case list with the type
@@ -666,16 +667,16 @@ and get_function_definition (env: env) (id: function_id): (typarams * value_para
   | Body body ->
      (typarams, value_params, rt, body)
   | BodyNotAttached | Foreign _ ->
-     internal_err ("function `" ^ (ident_string name) ^ "` has no body")
+     internal_err NoSpan ("function `" ^ (ident_string name) ^ "` has no body")
 
 and get_method_definition (env: env) (id: ins_meth_id): (typarams * value_parameter list * ty * tstmt) =
   let (InsMethRec { instance_id; value_params; rt; body; _ }) = get_instance_method env id in
-  let { typarams; _ }: instance_decl = get_instance_decl env instance_id in
+  let { typarams; _ }: instance_decl = get_instance_decl NoSpan env instance_id in
   match body with
   | Some body ->
      (typarams, value_params, rt, body)
   | None ->
-     internal_err ("method with ID `" ^ (show_instance_id instance_id) ^ "` has no body")
+     internal_err NoSpan ("method with ID `" ^ (show_instance_id instance_id) ^ "` has no body")
 
 and monomorphize_slot_list (env: env) (slots: typed_slot list): (env * mono_slot list) =
   let names: identifier list = List.map (fun (TypedSlot (n, _)) -> n) slots in
@@ -704,13 +705,13 @@ and make_bindings (typarams: typarams) (args: mono_type_bindings): type_bindings
            | Some ty ->
               (tp, mono_to_ty ty)
            | None ->
-              generic_error ParameterNotFound))
+              generic_error NoSpan ParameterNotFound))
         typarams
     in
     let b = bindings_from_list pairs in
     b
   else
-    generic_error (ParameterArgumentLengthMismatch {
+    generic_error NoSpan (ParameterArgumentLengthMismatch {
         parameters = typarams;
         arguments = List.map (fun (_, ty) -> ty) (mono_bindings_as_list args);
       })
