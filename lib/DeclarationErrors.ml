@@ -154,9 +154,9 @@ let render (error: t): err_text =
      ]
   | PragmaArgumentError pragma ->
      let (pragma_name, argument) = match pragma with
-       | ForeignImport -> ("Foreign_Import", Some "External_Name")
-       | ForeignExport -> ("Foreign_Export", Some "External_Name")
-       | UnsafeModule -> ("Unsafe_Module", None)
+       | ForeignImport -> (BuiltInNames.foreign_import_pragma_name, Some BuiltInNames.external_name_argument)
+       | ForeignExport -> (BuiltInNames.foreign_export_pragma_name, Some BuiltInNames.external_name_argument)
+       | UnsafeModule -> (BuiltInNames.unsafe_module_pragma_name, None)
      in
      Text ("Invalid " ^ pragma_name ^ " pragma.") :: (match argument with
       | Some argument -> [Break; Text "This pragma takes exactly one argument, "; Code argument]
@@ -197,9 +197,9 @@ let render (error: t): err_text =
        Text "The function ";
        Code (ident_string name);
        Text " cannot have both the ";
-       Code "Foreign_Import";
+       Code BuiltInNames.foreign_import_pragma_name;
        Text " and ";
-       Code "Foreign_Export";
+       Code BuiltInNames.foreign_export_pragma_name;
        Text " pragmas simultaneously."
      ]
   | InstanceForNonTypeclass name ->
@@ -277,7 +277,7 @@ let render (error: t): err_text =
        Text " module in a safe module.";
        Break;
        Text "Consider using a safe wrapper or adding ";
-       Code "pragma Unsafe_Module;"
+       Code ("pragma " ^ BuiltInNames.unsafe_module_pragma_name ^ ";")
      ]
   | ImportPrivate name ->
      [

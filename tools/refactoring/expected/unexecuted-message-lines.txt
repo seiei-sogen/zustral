@@ -13,9 +13,9 @@ lib/DeclarationErrors.ml	| ForeignImportExport name ->
 lib/DeclarationErrors.ml	Text "The function ";
 lib/DeclarationErrors.ml	Code (ident_string name);
 lib/DeclarationErrors.ml	Text " cannot have both the ";
-lib/DeclarationErrors.ml	Code "Foreign_Import";
+lib/DeclarationErrors.ml	Code BuiltInNames.foreign_import_pragma_name;
 lib/DeclarationErrors.ml	Text " and ";
-lib/DeclarationErrors.ml	Code "Foreign_Export";
+lib/DeclarationErrors.ml	Code BuiltInNames.foreign_export_pragma_name;
 lib/DeclarationErrors.ml	Text " pragmas simultaneously."
 lib/DeclarationErrors.ml	| InstanceArgumentRegion ->
 lib/DeclarationErrors.ml	Text "Typeclass arguments cannot be regions."
