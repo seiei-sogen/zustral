@@ -22,5 +22,9 @@ let make_wrapper ((export_name, mono_id, { params; rt }): string * mono_id * mon
       ]
     )
 
+(* This can still raise. gen_foreign_type makes the C type of the pointee of a
+   ForeignPointer or a ForeignSpan with gen_type, which raises an internal error
+   for a region type variable. ForeignType.check_signature makes neither for an
+   export, but the type of a signature does not say which way it crosses. *)
 let all_wrappers (exported: (string * mono_id * mono_ty foreign_signature) list): c_decl list Outcome.t =
   Outcome.catch (fun () -> List.map make_wrapper exported)
