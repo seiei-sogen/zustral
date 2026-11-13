@@ -3,7 +3,6 @@ lib/CliErrors.ml	Text "Argument list must have at least one element in it, the p
 lib/CliErrors.ml	| None ->
 lib/CliErrors.ml	Text "Failed to write to file ";
 lib/CliErrors.ml	Code path
-lib/DeclarationErrors.ml	| MethodDeclaration -> "method"
 lib/DeclarationErrors.ml	| InstanceDeclaration -> "instance"
 lib/DeclarationErrors.ml	| OtherDifference -> "are different."
 lib/DeclarationErrors.ml	| Some declaration ->
@@ -65,7 +64,6 @@ lib/GenericErrors.ml	| MinOfEmptyList ->
 lib/GenericErrors.ml	Text "empty list passed to min_list"
 lib/GenericErrors.ml	| SplitReturnedEmpty ->
 lib/GenericErrors.ml	Text "split_on_char returned empty"
-lib/LinearityErrors.ml	| CaseBranching -> "a case"
 lib/ParseErrors.ml	| StringInvalidCharacter lexeme ->
 lib/ParseErrors.ml	Text "Character not allowed in string literal: ";
 lib/ParseErrors.ml	Code lexeme

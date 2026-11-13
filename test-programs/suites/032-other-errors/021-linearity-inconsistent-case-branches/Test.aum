@@ -1,0 +1,17 @@
+module body Test is
+    record R : Linear is
+        x: Int32;
+    end;
+
+    function main(): ExitCode is
+        let r: R := R(x => 32);
+        let o: Option[Int32] := Some(value => 10);
+        case o of
+            when Some(value: Int32) do
+                let { x: Int32 } := r;
+            when None do
+                skip;
+        end case;
+        return ExitSuccess();
+    end;
+end module body.

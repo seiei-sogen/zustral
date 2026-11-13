@@ -1,0 +1,29 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The " },
+    { "type": "text", "content": "method" },
+    { "type": "text", "content": " " },
+    { "type": "code", "content": "describe" },
+    { "type": "text", "content": " does not end in a return statement." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/027-missing-return-method/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 10, "column": 8 }
+  },
+  "context": [
+    [ 2, "    typeclass Describable(T: Free) is" ],
+    [ 3, "        method describe(value: T): Int32;" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    instance Describable(Int32) is" ],
+    [ 7, "        method describe(value: Int32): Int32 is" ],
+    [ 8, "            skip;" ],
+    [ 9, "        end;" ],
+    [ 10, "    end;" ],
+    [ 11, "" ],
+    [ 12, "    function main(): ExitCode is" ]
+  ]
+}
