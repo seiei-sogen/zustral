@@ -60,7 +60,7 @@ lib/ParserInterface.ml	28	1	1	0	0	0	0	0	0	0
 lib/Qualifier.ml	30	0	0	0	0	0	0	0	0	0
 lib/Region.ml	16	0	0	0	0	0	0	0	0	0
 lib/RegionMap.ml	24	1	0	0	0	0	0	0	0	0
-lib/ReturnCheck.ml	100	2	2	0	0	2	0	0	0	0
+lib/ReturnCheck.ml	97	2	0	0	0	2	0	0	0	0
 lib/SourceContext.ml	60	0	0	0	0	0	1	0	0	0
 lib/Span.ml	64	0	0	0	0	0	1	0	0	0
 lib/Stages.ml	684	0	0	0	0	0	8	0	0	0
