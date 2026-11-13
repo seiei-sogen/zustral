@@ -646,6 +646,6 @@ and augment_method_def module_name menv rm typarams (LMethodDef (ins_meth_id, na
   let body' = augment_stmt ctx body in
   TypedMethodDef (ins_meth_id, name, params, rt, body')
 
-let augment_module menv (LinkedModule { name; decls; kind; _ }) =
-  let decls' = List.map (augment_decl name kind menv) decls in
-  TypedModule (name, decls')
+let augment_module menv (LinkedModule { name; decls; kind; _ }): typed_module Outcome.t =
+  Outcome.map (fun decls' -> TypedModule (name, decls'))
+    (Outcome.traverse (fun decl -> Outcome.catch (fun () -> augment_decl name kind menv decl)) decls)

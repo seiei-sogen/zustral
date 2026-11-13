@@ -12,4 +12,4 @@ open Stages.Tast
 (** The context for statement checking. *)
 type stmt_ctx
 
-val augment_module : env -> linked_module -> typed_module
+val augment_module : env -> linked_module -> typed_module Outcome.t
