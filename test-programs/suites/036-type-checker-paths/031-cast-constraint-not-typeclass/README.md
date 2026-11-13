@@ -1,1 +1,1 @@
-Pins what a cast does when the constraint of the target type variable names a record: the internal error of 037-typeclass-and-environment-paths/014 is discarded, and the error is that the cast is invalid (lib/TypeCheckExpr.ml, augment_typecast).
+Pins what a cast does when the constraint of the target type variable names a record: the internal error of 037-typeclass-and-environment-paths/014 is discarded, and the error is that the cast is invalid (lib/TypeCheckExpr.ml, check_annotated).
