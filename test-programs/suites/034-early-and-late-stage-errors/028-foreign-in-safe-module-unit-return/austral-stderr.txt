@@ -1,12 +1,18 @@
 {
   "module": "Test",
-  "kind": "Declaration Error",
-  "text": [
-    {
-      "type": "text",
-      "content": "Can't declare a foreign function in a safe module."
-    }
-  ],
-  "span": null,
-  "context": null
+  "kind": "Generic Error",
+  "text": [ { "type": "text", "content": "Not allowed" } ],
+  "span": {
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/028-foreign-in-safe-module-unit-return/Test.aum",
+    "startp": { "line": 2, "column": 48 },
+    "end": { "line": 4, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    pragma Foreign_Import(External_Name => \"f\");" ],
+    [ 3, "    function f(): Unit is" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    function main(): ExitCode is" ]
+  ]
 }

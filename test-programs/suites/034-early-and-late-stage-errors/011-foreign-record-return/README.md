@@ -1,1 +1,1 @@
-Pins `Not allowed` (lib/CodeGen.ml, the check on the types of a foreign function, `MonoNamedType` branch: a record, here as the return type).
+Pins `Not allowed` (lib/ForeignType.ml, check_ty, the rule for imports, `MonoNamedType` branch: a record, here as the return type).

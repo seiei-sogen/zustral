@@ -27,6 +27,7 @@ open BuiltIn
 open TypeVarSet
 open Util
 open Error
+open ForeignType
 
 let check_slots_are_free (place: place) (name: identifier) (slots: typed_slot list): unit =
   let check_slot_is_free (slot: typed_slot): unit =
@@ -309,16 +310,23 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
              value_params = value_params;
              rt = rt;
              impl = (match external_name with
-                     | Some s -> Foreign s
+                     | Some s ->
+                        if typarams_size typarams = 0 then
+                          Foreign (s, check_signature place Import value_params rt)
+                        else
+                          ForeignGeneric
                      | None -> BodyNotAttached)
            }
+         in
+         let export: (string * ty foreign_signature) option =
+           Option.map (fun name -> (name, check_signature place Export value_params rt)) export_name
          in
          let (env, decl_id) = register place env (NewFunction fn_input) in
          let env =
            (* If the function has an export name, register it in the environment. *)
-           match export_name with
-           | Some name ->
-              add_exported_function env decl_id name
+           match export with
+           | Some (name, signature) ->
+              add_exported_function env decl_id name signature
            | None ->
               env
          in

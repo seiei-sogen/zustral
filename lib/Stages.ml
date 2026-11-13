@@ -605,7 +605,7 @@ module Mtast = struct
     | MUnionMonomorph of mono_id * mono_case list
     | MFunction of function_id * identifier * mvalue_parameter list * mono_ty * mstmt
     | MFunctionMonomorph of mono_id * function_id * mvalue_parameter list * mono_ty * mstmt
-    | MForeignFunction of function_id * identifier * mvalue_parameter list * mono_ty * string
+    | MForeignFunction of function_id * identifier * mvalue_parameter list * mono_ty * mono_ty ForeignType.foreign_signature * string
     | MConcreteInstance of instance_id * qident * mono_ty  * concrete_method list
     | MMethodMonomorph of mono_id * mvalue_parameter list * mono_ty * mstmt
 

@@ -1,1 +1,1 @@
-Pins `Not allowed` (lib/CodeGen.ml, the check on the types of a foreign function, foreign function signature, `MonoUnit` branch: `Unit`, here as the return type).
+Pins `Not allowed` (lib/ForeignType.ml, check_ty, the rule for imports, `Unit` branch: `Unit`, here as the return type).

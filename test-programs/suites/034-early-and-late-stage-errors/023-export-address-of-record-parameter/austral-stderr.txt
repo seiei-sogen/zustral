@@ -1,5 +1,5 @@
 {
-  "module": null,
+  "module": "Test",
   "kind": "Type Error",
   "text": [
     { "type": "text", "content": "The type " },
@@ -9,6 +9,19 @@
       "content": " is not allowed in the signature of an exported function."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/023-export-address-of-record-parameter/Test.aum",
+    "startp": { "line": 12, "column": 48 },
+    "end": { "line": 15, "column": 8 }
+  },
+  "context": [
+    [ 10, "    end;" ],
+    [ 11, "" ],
+    [ 12, "    pragma Foreign_Export(External_Name => \"f\");" ],
+    [ 13, "    function f(a: Address[R]): Int32 is" ],
+    [ 14, "        return 1;" ],
+    [ 15, "    end;" ],
+    [ 16, "" ],
+    [ 17, "    function main(): ExitCode is" ]
+  ]
 }

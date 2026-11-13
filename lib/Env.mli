@@ -78,9 +78,9 @@ val module_name_from_id : Error.place -> env -> mod_id -> module_name
     cases, typeclass methods, instances and instance methods are not checked. *)
 val register : Error.place -> env -> 'id registration -> (env * 'id)
 
-(** Given a function ID, and the export name of that function, register them in
-    the environment. *)
-val add_exported_function : env -> function_id -> string -> env
+(** Given a function ID, the export name of that function and its checked
+    signature, register them in the environment. *)
+val add_exported_function : env -> function_id -> string -> ty ForeignType.foreign_signature -> env
 
 (** {2 Retrieve} *)
 
@@ -125,8 +125,8 @@ val get_instance_method_from_instance_id_and_method_name : env -> instance_id ->
 val get_instance_method : env -> ins_meth_id -> ins_meth_rec
 
 (** Return a list of all exported functions in the environment, as (ID, export
-    name) pairs. *)
-val get_export_functions : env -> (function_id * string) list
+    name, checked signature) triples. *)
+val get_export_functions : env -> (function_id * string * ty ForeignType.foreign_signature) list
 
 (** {2 Update} *)
 

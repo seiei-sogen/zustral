@@ -1,1 +1,1 @@
-Pins `Not allowed` (lib/CodeGen.ml, the check on the types of a foreign function, foreign function signature, `MonoWriteRef` branch: a write reference).
+Pins `Not allowed` (lib/ForeignType.ml, check_ty, the rule for imports, `WriteRef` branch: a write reference).

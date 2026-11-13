@@ -1,5 +1,5 @@
 {
-  "module": null,
+  "module": "Test",
   "kind": "Type Error",
   "text": [
     { "type": "text", "content": "The type " },
@@ -9,6 +9,19 @@
       "content": " is not allowed in the signature of an exported function."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/024-export-address-of-unit-return/Test.aum",
+    "startp": { "line": 8, "column": 48 },
+    "end": { "line": 11, "column": 8 }
+  },
+  "context": [
+    [ 6, "" ],
+    [ 7, "module body Test is" ],
+    [ 8, "    pragma Foreign_Export(External_Name => \"f\");" ],
+    [ 9, "    function f(): Address[Unit] is" ],
+    [ 10, "        return @embed(Address[Unit], \"0\");" ],
+    [ 11, "    end;" ],
+    [ 12, "" ],
+    [ 13, "    function main(): ExitCode is" ]
+  ]
 }

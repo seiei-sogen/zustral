@@ -5,62 +5,22 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 open Id
-open Env
-open Type
-open Error
+open MonoType
 open CodeGen
 open CRepr
+open ForeignType
 
-let rec transform_ty (ty: ty): c_ty =
-  match ty with
-  | Unit ->
-     type_error NoSpan (ExportDisallowedType ty)
-  | Boolean ->
-     CBuiltinType CBoolType
-  | Integer (s, w) ->
-     gen_integer_type s w
-  | SingleFloat ->
-     CBuiltinType CFloatType
-  | DoubleFloat ->
-     CBuiltinType CDoubleType
-  | NamedType _ ->
-     type_error NoSpan (ExportDisallowedType ty)
-  | RegionTy _ ->
-     type_error NoSpan (ExportDisallowedType ty)
-  | ReadRef _ ->
-     type_error NoSpan (ExportDisallowedType ty)
-  | WriteRef _ ->
-     type_error NoSpan (ExportDisallowedType ty)
-  | Span _ ->
-     type_error NoSpan (ExportDisallowedType ty)
-  | SpanMut _ ->
-     type_error NoSpan (ExportDisallowedType ty)
-  | TyVar _ ->
-     type_error NoSpan (ExportDisallowedType ty)
-  | Address t ->
-     CPointer (transform_ty t)
-  | Pointer _ ->
-     type_error NoSpan (ExportDisallowedType ty)
-  | FnPtr _ ->
-     fn_type
-  | MonoTy _ ->
-     type_error NoSpan (ExportDisallowedType ty)
-
-let transform_param (ValueParameter (name, ty)): c_param =
-  CValueParam (gen_ident name, transform_ty ty)
-
-let make_wrapper (env: env) ((function_id, export_name, mono_id): function_id * string * mono_id): c_decl =
-  let { value_params = params; rt; _ }: EnvTypes.function_decl = get_function env function_id in
+let make_wrapper ((export_name, mono_id, { params; rt }): string * mono_id * mono_ty foreign_signature): c_decl =
   CFunctionDefinition (
       Desc "Wrapper function",
       (* The name the user asked for gets the reserved-word escape (issue #92). *)
       CIdent.external_escaped export_name,
-      List.map transform_param params,
-      transform_ty rt,
+      List.map (fun (name, ty) -> CValueParam (gen_ident name, gen_foreign_type ty)) params,
+      gen_foreign_type rt,
       CBlock [
-          CReturn (CFuncall (gen_mono_id mono_id, List.map (fun (ValueParameter (n, _)) -> CVar (gen_ident n)) params))
+          CReturn (CFuncall (gen_mono_id mono_id, List.map (fun (n, _) -> CVar (gen_ident n)) params))
       ]
     )
 
-let all_wrappers (env: env) (exported: (function_id * string * mono_id) list): c_decl list Outcome.t =
-  Outcome.catch (fun () -> List.map (make_wrapper env) exported)
+let all_wrappers (exported: (string * mono_id * mono_ty foreign_signature) list): c_decl list Outcome.t =
+  Outcome.catch (fun () -> List.map make_wrapper exported)

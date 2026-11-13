@@ -34,7 +34,7 @@ type env = Env of {
       methods: ins_meth_env;
       decls: decl_env;
       monos: mono_env;
-      exports: (function_id * string) list;
+      exports: (function_id * string * ty ForeignType.foreign_signature) list;
       (** The list of exported functions. *)
       supply: Supply.t;
       (** The numbers that have not been given out. Every ID in the
@@ -335,7 +335,7 @@ let store_function_body (env: env) (fn_id: function_id) (body: tstmt): env =
     match fn.impl with
     (* A foreign function is typed as TForeignFunction, which has no body to
        store. *)
-    | Body _ | Foreign _ ->
+    | Body _ | Foreign _ | ForeignGeneric ->
        (* Depends on the stage: the body extraction pass stores each body once.
           The type of a declaration does not say whether that pass has run. *)
        internal_err NoSpan ("function `" ^ (ident_string fn.name) ^ "` already has a body")
@@ -575,12 +575,12 @@ let store_instance_method_monomorph_definition (env: env) (id: method_mono_id) (
       | MonoRecordDefinition _ | MonoUnionDefinition _ | MonoFunction _ ->
         None)
 
-let add_exported_function (env: env) (id: function_id) (export_name: string): env =
+let add_exported_function (env: env) (id: function_id) (export_name: string) (signature: ty ForeignType.foreign_signature): env =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
-  let env = Env { mods; methods; decls; monos; exports = (id, export_name) :: exports; supply } in
+  let env = Env { mods; methods; decls; monos; exports = (id, export_name, signature) :: exports; supply } in
   env
 
-let get_export_functions (env: env): (function_id * string) list =
+let get_export_functions (env: env): (function_id * string * ty ForeignType.foreign_signature) list =
   let (Env { exports; _ }) = env in
   exports
 

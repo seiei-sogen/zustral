@@ -2,6 +2,18 @@
   "module": "Test",
   "kind": "Generic Error",
   "text": [ { "type": "text", "content": "Not allowed" } ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/014-foreign-write-reference-return/Test.aum",
+    "startp": { "line": 4, "column": 48 },
+    "end": { "line": 6, "column": 8 }
+  },
+  "context": [
+    [ 2, "" ],
+    [ 3, "module body Test is" ],
+    [ 4, "    pragma Foreign_Import(External_Name => \"f\");" ],
+    [ 5, "    function f(): &![Int32, Static] is" ],
+    [ 6, "    end;" ],
+    [ 7, "" ],
+    [ 8, "    function main(): ExitCode is" ]
+  ]
 }

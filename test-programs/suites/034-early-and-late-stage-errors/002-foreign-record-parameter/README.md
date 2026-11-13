@@ -1,1 +1,1 @@
-Pins `Not allowed` (lib/CodeGen.ml, the check on the types of a foreign function, foreign function signature, `MonoNamedType` branch: a record or union).
+Pins `Not allowed` (lib/ForeignType.ml, check_ty, the rule for imports, `NamedType` branch: a record or union).

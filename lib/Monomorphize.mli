@@ -35,6 +35,7 @@ val monomorphize : env -> LinearityCheck.checked_module -> (env * mono_module) O
 
 (** Instantiate the functions the program exports, and everything they use.
     Called once, after all modules. Returns the declarations, and for each
-    exported function, in the order the environment lists them, its ID, its
-    export name and the ID of the monomorph that its wrapper calls. *)
-val monomorphize_wrappers : env -> (env * mdecl list * (function_id * string * mono_id) list) Outcome.t
+    exported function, in the order the environment lists them, its export
+    name, the ID of the monomorph that its wrapper calls and its checked
+    signature. *)
+val monomorphize_wrappers : env -> (env * mdecl list * (string * mono_id * MonoType.mono_ty ForeignType.foreign_signature) list) Outcome.t

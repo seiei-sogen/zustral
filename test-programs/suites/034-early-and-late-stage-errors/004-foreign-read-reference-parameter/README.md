@@ -1,1 +1,1 @@
-Pins `Not allowed` (lib/CodeGen.ml, the check on the types of a foreign function, foreign function signature, `MonoReadRef` branch: a read reference).
+Pins `Not allowed` (lib/ForeignType.ml, check_ty, the rule for imports, `ReadRef` branch: a read reference).

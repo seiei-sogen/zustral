@@ -1,5 +1,5 @@
 {
-  "module": null,
+  "module": "Test",
   "kind": "Type Error",
   "text": [
     { "type": "text", "content": "The type " },
@@ -9,6 +9,18 @@
       "content": " is not allowed in the signature of an exported function."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/032-other-errors/008-export-disallowed-type/Test.aum",
+    "startp": { "line": 2, "column": 48 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    pragma Foreign_Export(External_Name => \"f\");" ],
+    [ 3, "    function f(): Unit is" ],
+    [ 4, "        return nil;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    function main(): ExitCode is" ]
+  ]
 }

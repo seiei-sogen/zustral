@@ -121,7 +121,7 @@ let finish (compiler: compiler) (entrypoint: (module_name * identifier) option):
   let* (env, wrapper_unit) =
     with_supply env (fun supply -> gen_module env supply (MonoModule (make_mod_name BuiltInNames.wrappers_module, decls)))
   in
-  let* wrappers = Outcome.map (fun decls -> CUnit (BuiltInNames.wrappers_unit_name, decls)) (all_wrappers env exported) in
+  let* wrappers = Outcome.map (fun decls -> CUnit (BuiltInNames.wrappers_unit_name, decls)) (all_wrappers exported) in
   let* entrypoint =
     match entrypoint with
     | Some (mn, i) ->

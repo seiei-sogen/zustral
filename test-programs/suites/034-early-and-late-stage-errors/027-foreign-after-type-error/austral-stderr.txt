@@ -1,22 +1,19 @@
 {
   "module": "Test",
-  "kind": "Type Error",
-  "text": [
-    { "type": "text", "content": "Cannot cast to " },
-    { "type": "type", "content": "Int32" },
-    { "type": "text", "content": " from " },
-    { "type": "type", "content": "Bool" }
-  ],
+  "kind": "Generic Error",
+  "text": [ { "type": "text", "content": "Not allowed" } ],
   "span": {
     "filename": "test-programs/suites/034-early-and-late-stage-errors/027-foreign-after-type-error/Test.aum",
-    "startp": { "line": 5, "column": 8 },
-    "end": { "line": 5, "column": 29 }
+    "startp": { "line": 9, "column": 48 },
+    "end": { "line": 11, "column": 8 }
   },
   "context": [
-    [ 3, "module body Test is" ],
-    [ 4, "    function g(): Int32 is" ],
-    [ 5, "        let x: Int32 := true;" ],
-    [ 6, "        return x;" ],
-    [ 7, "    end;" ]
+    [ 7, "    end;" ],
+    [ 8, "" ],
+    [ 9, "    pragma Foreign_Import(External_Name => \"f\");" ],
+    [ 10, "    function f(): Unit is" ],
+    [ 11, "    end;" ],
+    [ 12, "" ],
+    [ 13, "    function main(): ExitCode is" ]
   ]
 }

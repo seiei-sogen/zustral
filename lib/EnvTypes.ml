@@ -71,8 +71,13 @@ type function_impl =
   (** A function written in Austral, until its body is stored after type
       checking ({!Env.store_function_body}). *)
   | Body of tstmt
-  | Foreign of string
-  (** A foreign function: the name of the underlying function it calls. *)
+  | Foreign of string * ty ForeignType.foreign_signature
+  (** A foreign function: the name of the underlying function it calls, and
+      its signature, checked when it was registered. *)
+  | ForeignGeneric
+  (** A foreign function with type parameters. Its signature is not checked:
+      the type checker rejects it ({!DeclarationErrors.ForeignTypeParameters}),
+      and that error stays the one reported. *)
 
 (** A function, as the environment holds it. *)
 type function_decl = {

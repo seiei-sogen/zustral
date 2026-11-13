@@ -1,1 +1,1 @@
-Pins the error for an exported function that returns a record (lib/ExportInstantiation.ml, transform_ty).
+Pins the error for an exported function that returns a record (lib/ForeignType.ml, check_ty, the rule for exports).

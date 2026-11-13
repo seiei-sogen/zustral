@@ -18,6 +18,7 @@ open CRepr
 open Util
 open Escape
 open Error
+open ForeignType
 
 (* Codegen implementation notes:
 
@@ -174,6 +175,28 @@ let rec gen_type (ty: mono_ty): c_ty =
         region type variable as its type: one is only the region of a reference,
         which this function drops. mono_ty is one type for both places. *)
      internal_err NoSpan "Invalid C type"
+
+(* The C type of a type that crosses the C boundary. For every type a rule of
+   ForeignType accepts, this is the C type of the Austral type, except a span,
+   which C receives as a pointer to its elements. *)
+let rec gen_foreign_type (ty: mono_ty foreign_ty): c_ty =
+  match ty with
+  | ForeignBoolean ->
+     CBuiltinType CBoolType
+  | ForeignInteger (s, w) ->
+     gen_integer_type s w
+  | ForeignSingleFloat ->
+     CBuiltinType CFloatType
+  | ForeignDoubleFloat ->
+     CBuiltinType CDoubleType
+  | ForeignFnPtr ->
+     fn_type
+  | ForeignAddress t ->
+     CPointer (gen_foreign_type t)
+  | ForeignPointer t ->
+     CPointer (gen_type t)
+  | ForeignSpan t ->
+     CPointer (gen_type t)
 
 (* Expressions *)
 
@@ -568,66 +591,24 @@ let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_de
      ([
        CFunctionDefinition (d, gen_mono_id id, gen_params mn' params, gen_type rt, body)
      ], supply)
-  | MForeignFunction (id, _, params, rt, underlying) ->
+  | MForeignFunction (id, _, params, rt, signature, underlying) ->
      let def_d = Desc "Foreign function" in
-     let param_type_to_c_type (t: mono_ty): c_ty =
-       (match t with
-        | MonoUnit ->
-           generic_error NoSpan ForeignFunctionTypeNotAllowed
-        | MonoBoolean ->
-           gen_type t
-        | MonoInteger _ ->
-           gen_type t
-        | MonoSingleFloat ->
-           gen_type t
-        | MonoDoubleFloat ->
-           gen_type t
-        | MonoNamedType _ ->
-           generic_error NoSpan ForeignFunctionTypeNotAllowed
-        | MonoRegionTy _ ->
-           generic_error NoSpan ForeignFunctionTypeNotAllowed
-        | MonoReadRef _ ->
-           generic_error NoSpan ForeignFunctionTypeNotAllowed
-        | MonoWriteRef _ ->
-           generic_error NoSpan ForeignFunctionTypeNotAllowed
-        | MonoSpan (ty, _) ->
-           CPointer (gen_type ty)
-        | MonoSpanMut (ty, _) ->
-           CPointer (gen_type ty)
-        | MonoAddress _ ->
-           gen_type t
-        | MonoPointer _ ->
-           gen_type t
-        | MonoFnPtr _ ->
-           gen_type t
-        | MonoRegionTyVar _ ->
-           generic_error NoSpan ForeignFunctionTypeNotAllowed)
-     in
-     let return_type_to_c_type t =
-       match t with
-       | _ ->
-          param_type_to_c_type t
-     in
      (* The parameters of the `extern` declaration are not escaped, and the
         name is escaped where it is called and not where it is declared
         (issue #92). *)
-     let ff_params = List.map (fun (MValueParameter (n, t)) -> CValueParam (CIdent.austral_unescaped (ident_text n), param_type_to_c_type t)) params
-     and ff_rt = return_type_to_c_type rt in
+     let ff_params = List.map (fun (n, t) -> CValueParam (CIdent.austral_unescaped (ident_text n), gen_foreign_type t)) signature.params
+     and ff_rt = gen_foreign_type signature.rt in
      let ff_local_decl = CLocalFunctionDeclaration (CIdent.external_name underlying, ff_params, ff_rt, LinkageExternal) in
-     let make_param (n: identifier) (t: mono_ty) =
-       match gen_type t with
-       | CBuiltinType CSpanType ->
+     let make_param ((n, t): identifier * mono_ty foreign_ty) =
+       match t with
+       | ForeignSpan _ ->
           (* Extract the pointer from the Array struct *)
           CStructAccessor (CVar (gen_ident n), CIdent.generated "data")
-       | CBuiltinType (CUnitType | CBoolType
-                       | CNat8Type | CNat16Type | CNat32Type | CNat64Type
-                       | CInt8Type | CInt16Type | CInt32Type | CInt64Type
-                       | CSizeType | CIndexType | CFloatType | CDoubleType
-                       | CRegionType | CFnPtrType)
-       | CNamedType _ | CPointer _ | CStructType _ | CUnionType _ ->
+       | ForeignBoolean | ForeignInteger _ | ForeignSingleFloat | ForeignDoubleFloat
+       | ForeignFnPtr | ForeignAddress _ | ForeignPointer _ ->
           CVar (gen_ident n)
      in
-     let args = List.map (fun (MValueParameter (n, t)) -> make_param n t) params in
+     let args = List.map make_param signature.params in
      let funcall = CFuncall (CIdent.external_escaped underlying, args) in
      let body = CBlock [
                     ff_local_decl;
@@ -672,7 +653,7 @@ and gen_fun_decl mn decl =
   | MFunctionMonomorph (id, _, p, rt, _) ->
      let d = Desc "Function monomorph forward declaration" in
      Some [CFunctionDeclaration (d, gen_mono_id id, gen_params mn p, gen_type rt, LinkageInternal)]
-  | MForeignFunction (id, _, p, rt, _) ->
+  | MForeignFunction (id, _, p, rt, _, _) ->
      let d = Desc "Foreign function forward declaration" in
      Some [CFunctionDeclaration (d, gen_function_id id, gen_params mn p, gen_type rt, LinkageInternal)]
   | MConcreteInstance (_, _, _, ms) ->
