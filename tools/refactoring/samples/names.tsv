@@ -1,0 +1,40 @@
+# One line of OCaml per row, after the verdict the column names must give it.
+# count: a string literal on the line names something built in. skip: none does.
+count	  let name = make_ident "Option" in
+count	  make_mod_name "Austral.Memory"
+count	  | "Unit" -> Some Unit
+count	  | "Int8" | "Int16" ->
+count	  | "abort" -> true
+count	  | "Buffer" -> true
+count	  if name = "Foreign_Import" then
+count	  if s <> "Austral.Pervasive" then
+count	  if String.equal s "Unit" then
+count	  if String.equal (ident_string name) "printLn" then
+count	  if String.equal s "Buffer" then
+count	  if List.mem n ["Int32"] then
+count	  List.mem (ident_string n) ["Standard.Buffer"; "Buffer"]
+count	       | ForeignImport -> ("Foreign_Import", Some "External_Name")
+count	       | UnsafeModule -> ("Unsafe_Module", None)
+count	  let pragmas = [("Foreign_Export", ForeignExport)] in
+count	  | Add -> "trappingAdd"
+count	  if (ident_string orig) = "abort" then
+count	  if (ident_string orig) = "somethingElse" then
+count	      "trappingAdd"
+count	  if name = "Foreign_Import" then [Text "Invalid pragma."] else []
+skip	      | "plain" ->
+skip	      | "json" ->
+skip	  if String.equal format "plain" then
+skip	  if List.mem format ["plain"; "json"] then
+skip	     let first = if (String.equal (String.trim first) "") then
+skip	  | "and" { AND }
+skip	  | "Span" { SPAN_READ }
+skip	       Code "RootCapability";
+skip	       Code "Foreign_Import";
+skip	       Text "Unknown pragma ";
+skip	       Code "pragma Unsafe_Module;"
+skip	  | GenericError -> "Generic Error"
+skip	  | FreeUniverse -> "Free"
+skip	  | Unconsumed -> "LinearityCheck.Unconsumed"
+skip	  | DifferentReturnTypes -> "have different return types"
+skip	      | None -> [Break; Text "This pragma takes no arguments."])
+skip	  | ForeignImport -> (BuiltInNames.foreign_import_pragma_name, Some BuiltInNames.external_name_argument)
