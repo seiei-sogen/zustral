@@ -6,6 +6,7 @@
 *)
 open Austral_core
 open Error
+open Error.Placed
 
 type arg =
   | BoolFlag of string
@@ -32,7 +33,7 @@ let parse_arg (arg: string): arg =
        (* It's a value flag, e.g. --foo=bar *)
        ValueFlag (trim_flag name, value)
     | _ ->
-       cli_error (UnknownFlagType arg)
+       cli_error NoSpan (UnknownFlagType arg)
   else
     (* It's a positional flag. *)
     PositionalArg arg
@@ -40,7 +41,7 @@ let parse_arg (arg: string): arg =
 let parse_args (args: string list): arglist =
   (** At least one argument, the name of the binary. *)
   if ((List.length args) < 1) then
-    cli_error EmptyArgs
+    cli_error NoSpan EmptyArgs
   else
     ArgList (List.map parse_arg (List.tl args))
 
@@ -76,7 +77,7 @@ let pop_flag (arglist: arglist) (name: string): (arglist * arg) option =
      Some (args_rest, flag)
   | _::_ ->
      (* Multiple flags with the name. *)
-     cli_error (DuplicateFlags name)
+     cli_error NoSpan (DuplicateFlags name)
   | [] ->
      (* No such flag. *)
      None
@@ -88,7 +89,7 @@ let pop_bool_flag (arglist: arglist) (name: string): arglist option =
       | BoolFlag _ ->
          Some arglist
       | _ ->
-         cli_error (ExpectedBoolFlag name))
+         cli_error NoSpan (ExpectedBoolFlag name))
   | None ->
      None
 
@@ -99,7 +100,7 @@ let pop_value_flag (arglist: arglist) (name: string): (arglist * string) option 
       | ValueFlag (_, value) ->
          Some (arglist, value)
       | _ ->
-         cli_error (ExpectedValueFlag name))
+         cli_error NoSpan (ExpectedValueFlag name))
   | None ->
      None
 
@@ -111,7 +112,7 @@ let is_pos (arg: arg): bool =
 let pos_name (arg: arg): string =
   match arg with
   | PositionalArg value -> value
-  | _ -> internal_err "pos_name called with non-positional argument."
+  | _ -> internal_err NoSpan "pos_name called with non-positional argument."
 
 let pop_positional (arglist: arglist): (arglist * string list) =
   let (ArgList l) = arglist in

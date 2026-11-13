@@ -7,6 +7,7 @@
 open Austral_core
 open Unix
 open Error
+open Error.Placed
 open HtmlError
 
 let read_stream_to_string stream: string =
@@ -38,7 +39,7 @@ let write_string_to_file (path: string) (contents: string): unit =
       | Sys_error msg -> Some msg
       | _ -> None
     in
-    cli_error (WriteError { path; reason })
+    cli_error NoSpan (WriteError { path; reason })
 
 let get_exit_code = function
   | WEXITED i -> i
@@ -65,7 +66,7 @@ let compile_c_code (source_path: string) (output_path: string): command_output =
   let o = run_command cmd in
   let (CommandOutput { command; code; stdout; stderr }) = o in
   if code <> 0 then
-    cli_error (CCompilerError { command; exit_code = code; stdout; stderr })
+    cli_error NoSpan (CCompilerError { command; exit_code = code; stdout; stderr })
   else
     o
 

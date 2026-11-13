@@ -8,6 +8,7 @@ open Austral_core
 open Identifier
 open CliUtil
 open Error
+open Error.Placed
 
 type entrypoint =
   | Entrypoint of module_name * identifier
@@ -42,7 +43,7 @@ type cmd =
 
 let check_leftovers (arglist: arglist): unit =
   if (arglist_size arglist) > 0 then
-    generic_error LeftoverArguments
+    generic_error NoSpan LeftoverArguments
   else
     ()
 
@@ -54,7 +55,7 @@ let parse_mod_source (s: string): mod_source =
   | [inter_path; body_path] ->
      ModuleSource { inter_path = inter_path; body_path = body_path }
   | _ ->
-     cli_error (InvalidModuleSource s)
+     cli_error NoSpan (InvalidModuleSource s)
 
 let parse_entrypoint (s: string): entrypoint =
   let ss = String.split_on_char ':' s in
@@ -62,7 +63,7 @@ let parse_entrypoint (s: string): entrypoint =
   | [mn; i] ->
      Entrypoint (make_mod_name mn, make_ident i)
   | _ ->
-     cli_error (InvalidEntrypoint s)
+     cli_error NoSpan (InvalidEntrypoint s)
 
 let parse_executable_target (arglist: arglist): (arglist * target) =
   (* Get the --entrypoint *)
@@ -72,20 +73,20 @@ let parse_executable_target (arglist: arglist): (arglist * target) =
       | Some (arglist, bin_path) ->
          (arglist, Executable { bin_path = bin_path; entrypoint = parse_entrypoint entrypoint })
       | None ->
-         cli_error MissingOutput)
+         cli_error NoSpan MissingOutput)
   | None ->
      (match pop_bool_flag arglist "--no-entrypoint" with
       | Some _ ->
-         cli_error NoEntrypointWrongTarget
+         cli_error NoSpan NoEntrypointWrongTarget
       | None ->
-         cli_error MissingEntrypoint)
+         cli_error NoSpan MissingEntrypoint)
 
 let get_output (arglist: arglist): (arglist * string) =
   match pop_value_flag arglist "output" with
   | Some (arglist, output_path) ->
      (arglist, output_path)
   | None ->
-     cli_error MissingOutput
+     cli_error NoSpan MissingOutput
 
 let parse_c_target (arglist: arglist): (arglist * target) =
   (* Get the --entrypoint *)
@@ -101,7 +102,7 @@ let parse_c_target (arglist: arglist): (arglist * target) =
          let (arglist, output_path) = get_output arglist in
          (arglist, CStandalone { output_path = output_path; entrypoint = None })
       | None ->
-         cli_error MissingEntrypoint)
+         cli_error NoSpan MissingEntrypoint)
 
 let parse_target_type (arglist: arglist): (arglist * target) =
   match pop_value_flag arglist "target-type" with
@@ -118,7 +119,7 @@ let parse_target_type (arglist: arglist): (arglist * target) =
          (* Typecheck. *)
          (arglist, TypeCheck)
       | _ ->
-         cli_error (UnknownTarget target_value))
+         cli_error NoSpan (UnknownTarget target_value))
   | None ->
      (* The default target is to build an executable binary. This means we need
         an entrypoint. *)
@@ -136,7 +137,7 @@ let parse_error_reporting_mode (arglist: arglist): (arglist * error_reporting_mo
          (* Report errors in JSON. *)
          (arglist, ErrorReportJson)
       | _ ->
-         cli_error (UnknownErrorReportingMode value))
+         cli_error NoSpan (UnknownErrorReportingMode value))
   | None ->
      (* The default target is plain text errors. *)
      (arglist, ErrorReportPlain)
@@ -148,7 +149,7 @@ let parse_compile_command' (arglist: arglist): (arglist * cmd) =
   let (arglist, error_reporting_mode) = parse_error_reporting_mode arglist in
   (* There must be at least one module. *)
   if ((List.length modules) < 1) then
-    cli_error MissingModule
+    cli_error NoSpan MissingModule
   else
     (* Parse the target type. *)
     let (arglist, target): (arglist * target) = parse_target_type arglist in
