@@ -14,20 +14,21 @@ open Error
 
 type loop_depth = int
 
-type var_state = LinearityErrors.var_state =
+type var_state =
   | Unconsumed
   | BorrowedRead
   | BorrowedWrite
   | Consumed
+[@@deriving show]
 
-(* What `deriving show` printed while the type was defined in this module.
-   Internal errors print the state table with these names. *)
-let show_var_state (state: var_state): string =
+(* The error module is below this one and has its own names for the states
+   an error mentions. *)
+let reported_state (state: var_state): LinearityErrors.reported_state =
   match state with
-  | Unconsumed -> "LinearityCheck.Unconsumed"
-  | BorrowedRead -> "LinearityCheck.BorrowedRead"
-  | BorrowedWrite -> "LinearityCheck.BorrowedWrite"
-  | Consumed -> "LinearityCheck.Consumed"
+  | Unconsumed -> ReportedUnconsumed
+  | BorrowedRead -> ReportedBorrowedRead
+  | BorrowedWrite -> ReportedBorrowedWrite
+  | Consumed -> ReportedConsumed
 
 let universe_linear_ish = function
   | LinearUniverse -> true
@@ -325,7 +326,7 @@ let tables_are_consistent (statement: LinearityErrors.branching) (a: state_tbl) 
   (* Ensure the states are the same. *)
   List.iter (fun (name, state_a, state_b) ->
       if state_a <> state_b then
-        linearity_error (InconsistentBranches { name; statement; state_a; state_b })
+        linearity_error (InconsistentBranches { name; statement; state_a = reported_state state_a; state_b = reported_state state_b })
       else
         ())
     common
@@ -609,7 +610,7 @@ let rec check_stmt (tbl: state_tbl) (depth: loop_depth) (stmt: tstmt): state_tbl
              let tbl: state_tbl = remove_entry tbl rename in
              tbl
            else
-             linearity_error (CannotBorrow { mode; name = original; state }))
+             linearity_error (CannotBorrow { mode; name = original; state = reported_state state }))
   | TBlock (_, a, b) ->
      let tbl: state_tbl = check_stmt tbl depth a in
      let tbl: state_tbl = check_stmt tbl depth b in

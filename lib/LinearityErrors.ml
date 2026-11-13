@@ -10,19 +10,21 @@ open Common
 open Type
 open ErrorText
 
-(** The consumption state of a variable. *)
-type var_state =
-  | Unconsumed
-  | BorrowedRead
-  | BorrowedWrite
-  | Consumed
+(** The state of a variable, as an error names it. The checker's own type of
+    states is [LinearityCheck.var_state]. This module is below the checker
+    and cannot use that type, so the checker converts where it raises. *)
+type reported_state =
+  | ReportedUnconsumed
+  | ReportedBorrowedRead
+  | ReportedBorrowedWrite
+  | ReportedConsumed
 
-let humanize_state (state: var_state): string =
+let humanize_state (state: reported_state): string =
   match state with
-  | Unconsumed -> "not yet consumed"
-  | BorrowedRead -> "borrowed (read-only)"
-  | BorrowedWrite -> "borrowed (read-write)"
-  | Consumed -> "consumed"
+  | ReportedUnconsumed -> "not yet consumed"
+  | ReportedBorrowedRead -> "borrowed (read-only)"
+  | ReportedBorrowedWrite -> "borrowed (read-write)"
+  | ReportedConsumed -> "consumed"
 
 (** The statements whose branches must leave every variable in the same state. *)
 type branching =
@@ -39,13 +41,13 @@ type t =
   | FreeContainsLinear of { name: identifier; universe: universe; parameter: bool }
   | ForgotToConsume of identifier
   | ConsumedInLoop of identifier list
-  | InconsistentBranches of { name: identifier; statement: branching; state_a: var_state; state_b: var_state }
+  | InconsistentBranches of { name: identifier; statement: branching; state_a: reported_state; state_b: reported_state }
   | ConsumedMoreThanOnce of identifier
   | ConsumedWhileBorrowedRead of identifier
   | ConsumedWhileBorrowedWrite of identifier
   | AlreadyConsumed of identifier
   | AssignToUnconsumed of identifier
-  | CannotBorrow of { mode: borrow_stmt_kind; name: identifier; state: var_state }
+  | CannotBorrow of { mode: borrow_stmt_kind; name: identifier; state: reported_state }
   | NotConsumedAtReturn of identifier
   | AssignToNonFreePath of ty
 
