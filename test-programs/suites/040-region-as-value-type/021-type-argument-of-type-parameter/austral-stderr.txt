@@ -1,0 +1,27 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": " is expected to be " },
+    { "type": "code", "content": "Type" },
+    { "type": "text", "content": " but the supplied argument is " },
+    { "type": "code", "content": "Region" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/040-region-as-value-type/021-type-argument-of-type-parameter/Test.aum",
+    "startp": { "line": 6, "column": 4 },
+    "end": { "line": 9, "column": 8 }
+  },
+  "context": [
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    generic [R: Region]" ],
+    [ 7, "    function f(x: &[Int32, R], b: Box[R]): Int32 is" ],
+    [ 8, "        return 1;" ],
+    [ 9, "    end;" ],
+    [ 10, "" ],
+    [ 11, "    function main(): ExitCode is" ]
+  ]
+}

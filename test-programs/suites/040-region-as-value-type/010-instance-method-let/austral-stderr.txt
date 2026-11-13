@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Unable to find a type with the name " },
+    { "type": "code", "content": "R" },
+    { "type": "text", "content": "." },
+    { "type": "break" },
+    {
+      "type": "text",
+      "content": "Consider importing it, if it is defined in another module."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/040-region-as-value-type/010-instance-method-let/Test.aum",
+    "startp": { "line": 10, "column": 12 },
+    "end": { "line": 10, "column": 26 }
+  },
+  "context": [
+    [ 8, "        generic [R: Region]" ],
+    [ 9, "        method area(x: &[Int32, R]): Int32 is" ],
+    [ 10, "            let y: R := y;" ],
+    [ 11, "            return !x;" ],
+    [ 12, "        end;" ]
+  ]
+}

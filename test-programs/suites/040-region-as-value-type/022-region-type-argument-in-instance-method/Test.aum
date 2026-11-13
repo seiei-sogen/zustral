@@ -1,0 +1,22 @@
+module body Test is
+    record Tag[R: Region]: Free is
+        n: Int32;
+    end;
+
+    typeclass Shape(T: Type) is
+        generic [R: Region]
+        method area(x: T, y: Tag[R]): Int32;
+    end;
+
+    instance Shape(Int32) is
+        generic [R: Region]
+        method area(x: Int32, y: Tag[R]): Int32 is
+            return x;
+        end;
+    end;
+
+    function main(): ExitCode is
+        printLn("ok");
+        return ExitSuccess();
+    end;
+end module body.

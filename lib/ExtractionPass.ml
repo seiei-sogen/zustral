@@ -101,6 +101,75 @@ and extract_type_signatures' (def: combined_definition): type_signature option =
   | CInstance _ ->
      None
 
+(* The first region type variable that a value of this type holds, in the C
+   the code generator writes for it. A reference, a pointer and an address hold
+   a value of their first type; a record or a union holds its slots; a span and
+   a function pointer are one C type whatever their types are. *)
+let rec region_held_by_value (place: place) (env: env) (seen: ty list) (ty: ty): identifier option =
+  match ty with
+  | TyVar (TypeVariable (name, universe, _, _)) ->
+     (match universe with
+      | RegionUniverse -> Some name
+      | FreeUniverse | LinearUniverse | TypeUniverse -> None)
+  | ReadRef (ty, _) | WriteRef (ty, _) | Address ty | Pointer ty ->
+     region_held_by_value place env seen ty
+  | NamedType (name, args, _) ->
+     if List.exists (equal_ty ty) seen then
+       None
+     else
+       let seen = ty :: seen in
+       let in_slots (typarams: typarams) (slots: typed_slot list): identifier option =
+         let bindings = TypeBindings.bindings_from_list place (List.combine (typarams_as_list typarams) args) in
+         List.find_map
+           (fun (TypedSlot (_, slot_ty)) -> region_held_by_value place env seen (TypeBindings.replace_variables bindings slot_ty))
+           slots
+       in
+       (match get_decl_by_name place env (qident_to_sident name) with
+        | Some (Record { typarams; slots; _ }) ->
+           in_slots typarams slots
+        | Some (Union { id; typarams; _ }) ->
+           List.find_map (fun ({ slots; _ }: union_case_decl) -> in_slots typarams slots) (get_union_cases env id)
+        | Some (Constant _ | UnionCase _ | Function _ | TypeClass _ | TypeClassMethod _ | Instance _) | None ->
+           None)
+  | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _
+  | Span _ | SpanMut _ | FnPtr _ | MonoTy _ ->
+     None
+
+let definition_span (def: combined_definition): Span.span =
+  match def with
+  | CConstant (span, _, _, _, _, _) | CRecord (span, _, _, _, _, _, _) | CUnion (span, _, _, _, _, _, _)
+  | CFunction (span, _, _, _, _, _, _, _, _) | CTypeclass (span, _, _, _, _, _) | CInstance (span, _, _, _, _, _, _) ->
+     span
+
+(* The methods of an instance without type parameters are compiled as they are
+   written (Monomorphize, TInstance): nothing binds their own region
+   parameters, so a value of such a type would reach the code generator, which
+   has no C type for a region. A generic function, or a generic instance, is
+   compiled only for the types of a call. Runs after every definition of the
+   module is extracted, because a slot's type may be declared after the
+   instance. *)
+let check_instance_methods_hold_no_region (env: env) (def: combined_definition) (ldef: linked_definition): unit =
+  match ldef with
+  | LInstance (_, _, _, typarams, _, methods, _) ->
+     if typarams_size typarams = 0 then
+       let place: place = AtSpan (definition_span def) in
+       let check (ty: ty): unit =
+         match region_held_by_value place env [] ty with
+         | Some name ->
+            declaration_error place (RegionParameterUsedAsType name)
+         | None ->
+            ()
+       in
+       List.iter
+         (fun (LMethodDef (_, _, params, rt, _, _)) ->
+           List.iter (fun (ValueParameter (_, ty)) -> check ty) params;
+           check rt)
+         methods
+     else
+       ()
+  | LConstant _ | LRecord _ | LUnion _ | LFunction _ | LTypeclass _ ->
+     ()
+
 open Outcome.Syntax
 
 let rec extract (env: env) (cmodule: combined_module): (env * linked_module) Outcome.t =
@@ -134,6 +203,7 @@ let rec extract (env: env) (cmodule: combined_module): (env * linked_module) Out
   let sigs: type_signature list = extract_type_signatures cmodule in
   (* Extract all declarations from the module into the environment. *)
   let* (env, linked_defs) = extract_definitions env mod_id name sigs decls in
+  let* () = Outcome.catch (fun () -> List.iter2 (check_instance_methods_hold_no_region env) decls linked_defs) in
   (* Construct the linked module *)
   let lmod = LinkedModule {
                  mod_id = mod_id;

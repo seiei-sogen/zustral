@@ -73,6 +73,7 @@ type t =
   | TypeclassParamIsRegion of identifier
   | TypesAreNotRegions of { name: identifier; declaration: declaration_kind }
   | RegionUsedAsType of identifier
+  | RegionParameterUsedAsType of identifier
   | UnknownTypeclass of identifier
   | TyparamNotInSignature of type_parameter
   | DoubleImport of identifier
@@ -275,6 +276,14 @@ let render (error: t): err_text =
        Text " or ";
        Code "Type";
        Text " universe."
+     ]
+  | RegionParameterUsedAsType name ->
+     [
+       Text "The type parameter ";
+       Code (ident_string name);
+       Text " is used as a type, but it is declared in the ";
+       Code "Region";
+       Text " universe, and regions are not types. A region can only be the region of a reference or of a span."
      ]
   | UnknownTypeclass name ->
      [

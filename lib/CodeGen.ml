@@ -172,9 +172,11 @@ let rec gen_type (ty: mono_ty): c_ty =
   | MonoFnPtr _ ->
      fn_type
   | MonoRegionTyVar _ ->
-     (* No expression has a type in the Region universe, so no value has a
-        region type variable as its type: one is only the region of a reference,
-        which this function drops. mono_ty is one type for both places. *)
+     (* A value whose type is a region type variable reaches C only from a
+        method of an instance without type parameters, and ExtractionPass
+        rejects those (RegionParameterUsedAsType). mono_ty keeps the variable for
+        span elements, function pointers and type arguments, none of which this
+        function is called on. *)
      internal_err NoSpan "Invalid C type"
 
 (* The C type of a type that crosses the C boundary. For every type a rule of

@@ -1,0 +1,15 @@
+pragma Unsafe_Module;
+
+import Austral.Memory (Pointer, Address);
+
+module body Test is
+    generic [R: Region]
+    function f(x: &[Int32, R], p: Address[R]): Int32 is
+        return 1;
+    end;
+
+    function main(): ExitCode is
+        printLn("ok");
+        return ExitSuccess();
+    end;
+end module body.

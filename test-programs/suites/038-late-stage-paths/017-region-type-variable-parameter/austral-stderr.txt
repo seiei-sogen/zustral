@@ -1,19 +1,36 @@
 {
   "module": "Test",
-  "kind": "Internal Error",
+  "kind": "Declaration Error",
   "text": [
-    { "type": "text", "content": "Internal compiler error: " },
-    { "type": "text", "content": "Invalid C type" },
-    { "type": "break" },
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "R" },
     {
       "type": "text",
-      "content": "This is a bug in the compiler, please open an issue here: "
+      "content": " is used as a type, but it is declared in the "
     },
+    { "type": "code", "content": "Region" },
     {
-      "type": "code",
-      "content": "https://github.com/austral/austral/issues"
+      "type": "text",
+      "content": " universe, and regions are not types. A region can only be the region of a reference or of a span."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/038-late-stage-paths/017-region-type-variable-parameter/Test.aum",
+    "startp": { "line": 5, "column": 8 },
+    "end": { "line": 12, "column": 8 }
+  },
+  "context": [
+    [ 3, "        generic [R: Region]" ],
+    [ 4, "        method area(x: T, r: R): Int32;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    instance Shape(Int32) is" ],
+    [ 8, "        generic [R: Region]" ],
+    [ 9, "        method area(x: Int32, r: R): Int32 is" ],
+    [ 10, "            return x;" ],
+    [ 11, "        end;" ],
+    [ 12, "    end;" ],
+    [ 13, "" ],
+    [ 14, "    function main(): ExitCode is" ]
+  ]
 }

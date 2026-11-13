@@ -12,13 +12,13 @@ lib/CIdent.ml	41	0	0	0	0	0	1	0	0	0
 lib/CRenderer.ml	305	0	0	0	0	0	1	0	0	0
 lib/CRepr.ml	107	0	0	0	0	0	5	0	0	0
 lib/CliErrors.ml	142	0	1	0	0	0	10	0	0	0
-lib/CodeGen.ml	685	1	0	0	0	1	0	1	0	0
+lib/CodeGen.ml	687	1	0	0	0	1	0	1	0	0
 lib/CombiningPass.ml	376	17	0	0	0	2	0	0	0	0
 lib/Common.ml	69	0	0	0	0	0	3	0	0	0
 lib/Compiler.ml	145	0	0	0	0	0	0	0	0	0
 lib/Cst.ml	163	0	0	0	0	0	2	0	0	0
 lib/CstUtil.ml	173	4	0	0	0	0	0	0	0	0
-lib/DeclarationErrors.ml	361	0	0	0	0	0	1	0	0	0
+lib/DeclarationErrors.ml	370	0	0	0	0	0	1	0	0	0
 lib/DesugarBorrows.ml	244	1	0	0	0	0	0	0	0	0
 lib/DesugarPaths.ml	146	0	0	0	0	0	0	0	0	0
 lib/DesugaringPass.ml	43	0	0	0	0	0	0	0	0	0
@@ -32,7 +32,7 @@ lib/Error.ml	246	12	0	0	0	0	1	1	0	0
 lib/ErrorText.ml	57	0	0	0	0	0	2	0	0	0
 lib/Escape.ml	53	1	0	0	0	1	1	0	0	0
 lib/ExportInstantiation.ml	30	0	0	0	0	0	0	0	0	0
-lib/ExtractionPass.ml	483	14	0	0	0	1	0	0	0	0
+lib/ExtractionPass.ml	553	15	0	0	0	1	0	0	0	0
 lib/ForeignType.ml	118	2	0	0	0	0	0	0	0	0
 lib/GenericErrors.ml	239	0	0	0	0	0	0	0	0	0
 lib/HtmlError.ml	304	0	0	0	0	0	0	0	0	0

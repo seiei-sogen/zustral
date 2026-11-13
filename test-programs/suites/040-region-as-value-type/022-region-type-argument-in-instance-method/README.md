@@ -1,0 +1,1 @@
+Covers a region type parameter of an instance method given as the argument of a record's region type parameter: accepted, because the record holds no value of that type (lib/ExtractionPass.ml, region_held_by_value).
