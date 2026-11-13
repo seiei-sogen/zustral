@@ -187,6 +187,8 @@ and try_constraint (ctx: ctx) (tv: type_var) (ty: ty) (typeclass_name: sident): 
          ()
       | None ->
          type_error (UnsatisfiedConstraint { tyvar = tv; ty; typeclass = typeclass_name }))
+  (* A program reaches the next two arms: the name in a type parameter
+     constraint is not looked up where the constraint is declared (#128). *)
   | Some _ ->
      internal_err "Type parameter constraint refers to a declaration which is not a typeclass."
   | None ->

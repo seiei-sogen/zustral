@@ -94,6 +94,8 @@ let rec monomorphize_ty (env: env) (ty: stripped_ty): (mono_ty * env) =
              let (env, mono_id) = add_or_get_union_monomorph env id bindings in
              (MonoNamedType mono_id, env)
           | _ ->
+             (* A program reaches this: a union case declared after a record or
+                union of the same name is the one a lookup by name finds (#86). *)
              internal_err ("named type `" ^ (qident_debug_name name) ^ "`points to something that isn't a type"))
       | None ->
          internal_err ("Couldn't get declaration for named type `" ^ (qident_debug_name name) ^ "`."))
@@ -223,6 +225,8 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
      let meth_id: ins_meth_id =
        (match get_instance_method_from_instance_id_and_method_name env instance_id (original_name method_name) with
         | Some (InsMethRec { id; _ }) -> id
+        (* A program reaches this: an instance that leaves out a method of its
+           typeclass is accepted where it is declared (#91). *)
         | None -> internal_err ("Couldn't find instance method from instance ID `"
                                 ^ (show_decl_id instance_id)
                                 ^ "` and method name `"
@@ -656,14 +660,14 @@ and instantiate_monomorph (env: env) (mono: monomorph): (env * mdecl) =
 
 and get_record_definition (env: env) (id: decl_id): (typarams * typed_slot list) =
   match get_decl_by_id env id with
-  | Some (Record { typarams; slots; _ }) ->
+  | Record { typarams; slots; _ } ->
      (typarams, slots)
   | _ ->
      internal_err ("couldn't get record definition for ID `" ^ (show_decl_id id) ^ "`.")
 
 and get_union_typarams (env: env) (id: decl_id): typarams =
   match get_decl_by_id env id with
-  | Some (Union { typarams; _ }) ->
+  | Union { typarams; _ } ->
      typarams
   | _ ->
      internal_err ("couldn't get union typeparams for ID `" ^ (show_decl_id id) ^ "`.")
@@ -681,7 +685,7 @@ and get_union_typed_cases (env: env) (union_id: decl_id): typed_case list =
 
 and get_function_definition (env: env) (id: decl_id): (typarams * value_parameter list * ty * tstmt) =
   match get_decl_by_id env id with
-  | Some (Function { name; typarams; value_params; rt; body; _ }) ->
+  | Function { name; typarams; value_params; rt; body; _ } ->
      (match body with
       | Some body ->
          (typarams, value_params, rt, body)
@@ -691,19 +695,16 @@ and get_function_definition (env: env) (id: decl_id): (typarams * value_paramete
      internal_err ("ID `" ^ (show_decl_id id) ^ "is not a function")
 
 and get_method_definition (env: env) (id: ins_meth_id): (typarams * value_parameter list * ty * tstmt) =
-  match get_instance_method env id with
-  | Some (InsMethRec { instance_id; value_params; rt; body; _ }) ->
-     (match get_decl_by_id env instance_id with
-      | Some (Instance { typarams; _ }) ->
-         (match body with
-          | Some body ->
-             (typarams, value_params, rt, body)
-          | None ->
-             internal_err ("method with ID `" ^ (show_decl_id instance_id) ^ "` has no body"))
-      | _ ->
-         internal_err ("ID `" ^ (show_decl_id instance_id) ^ "`not an instance"))
+  let (InsMethRec { instance_id; value_params; rt; body; _ }) = get_instance_method env id in
+  match get_decl_by_id env instance_id with
+  | Instance { typarams; _ } ->
+     (match body with
+      | Some body ->
+         (typarams, value_params, rt, body)
+      | None ->
+         internal_err ("method with ID `" ^ (show_decl_id instance_id) ^ "` has no body"))
   | _ ->
-     internal_err ("ID `" ^ (show_ins_meth_id id) ^ "`not an instance method")
+     internal_err ("ID `" ^ (show_decl_id instance_id) ^ "`not an instance")
 
 and monomorphize_slot_list (env: env) (slots: typed_slot list): (env * mono_slot list) =
   let names: identifier list = List.map (fun (TypedSlot (n, _)) -> n) slots in
@@ -775,7 +776,7 @@ and mono_to_ty (ty: mono_ty): ty =
 
 let monomorphize_wrapper (env: env) (id: decl_id): env =
   match get_decl_by_id env id with
-  | Some (Function { id; _ }) ->
+  | Function { id; _ } ->
      let (env, _) = add_or_get_function_monomorph env id empty_mono_bindings in
      env
   | _ ->

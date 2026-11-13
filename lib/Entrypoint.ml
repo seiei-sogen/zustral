@@ -110,11 +110,7 @@ let get_root_capability_monomorph (env: env): mono_id =
   let sn: sident = make_sident mn n in
   match get_decl_by_name env sn with
   | Some (Record { id; _ }) ->
-     (match get_type_monomorph env id empty_mono_bindings with
-      | Some id ->
-         id
-      | _ ->
-         internal_err "No monomorph of RootCapability.")
+     get_type_monomorph env id empty_mono_bindings
   | _ ->
      internal_err "Can't find the RootCapability type in the environment."
 
@@ -124,11 +120,7 @@ let get_exit_code_monomorph (env: env): mono_id =
   let sn: sident = make_sident mn n in
   match get_decl_by_name env sn with
   | Some (Union { id; _ }) ->
-     (match get_type_monomorph env id empty_mono_bindings with
-      | Some id ->
-         id
-      | _ ->
-         internal_err "No monomorph of ExitCode.")
+     get_type_monomorph env id empty_mono_bindings
   | _ ->
      internal_err "Can't find the ExitCode type in the environment."
 

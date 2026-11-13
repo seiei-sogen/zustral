@@ -11,32 +11,21 @@ open EnvTypes
 open EnvUtils
 open Error
 
-let get_module_or_die (env: env) (id: mod_id): mod_rec =
-  match get_module_by_id env id with
-  | Some r -> r
-  | None -> internal_err "No module with ID."
-
-let get_module_name_or_die (env: env) (id: mod_id): module_name =
-  let (ModRec { name; _ }) = get_module_or_die env id in
-  name
-
 let get_decl_by_name_or_die (env: env) (name: sident): decl =
   match get_decl_by_name env name with
   | Some decl -> decl
   | None ->
+     (* A program reaches this: an instance declared before the type it is for,
+        in the same module. The orphan rule looks the type up before the type
+        is registered. *)
      internal_err ("No declaration with name `"
                    ^ ident_string (sident_name name)
                    ^ "`.")
 
 let get_decl_sident_or_die (env: env) (id: decl_id): sident =
-  match get_decl_by_id env id with
-  | Some decl ->
-     (match (decl_name decl) with
-      | Some name ->
-         make_sident (get_module_name_or_die env (decl_mod_id decl)) name
-      | None ->
-         generic_error DeclHasNoName)
+  let decl: decl = get_decl_by_id env id in
+  match (decl_name decl) with
+  | Some name ->
+     make_sident (module_name_from_id env (decl_mod_id decl)) name
   | None ->
-   internal_err ("decl with ID `" 
-                  ^ (show_decl_id id)
-                  ^ "` doesn't exist")
+     generic_error DeclHasNoName

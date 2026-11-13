@@ -257,7 +257,7 @@ and augment_callable (ctx: expr_ctx) (name: qident) (callable: callable) (assert
      augment_record_constructor ctx name typarams universe slots asserted_ty args
   | UnionConstructor { union_id; type_params; universe; case } ->
      let type_name: qident = (match get_decl_by_id (ctx_env ctx) union_id with
-                              | Some (Union { name; mod_id; _ }) ->
+                              | Union { name; mod_id; _ } ->
                                  (* TODO: constructing a fake qident *)
                                  make_qident (module_name_from_id (ctx_env ctx) mod_id, name, name)
                               | _ ->
@@ -266,7 +266,7 @@ and augment_callable (ctx: expr_ctx) (name: qident) (callable: callable) (assert
      augment_union_constructor ctx type_name type_params universe case asserted_ty args
   | MethodCallable { typeclass_id; value_parameters; return_type; _ } ->
      let param = (match get_decl_by_id (ctx_env ctx) typeclass_id with
-                  | Some (TypeClass { param; _ }) ->
+                  | TypeClass { param; _ } ->
                      param
                   | _ ->
                      internal_err ("no type parameter found for ID `" ^ (show_decl_id typeclass_id) ^ "`"))
@@ -422,6 +422,8 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: decl_id) (typaram: type_p
          let meth_id: ins_meth_id =
            (match get_instance_method_from_instance_id_and_method_name (ctx_env ctx) instance_id (original_name callable_name) with
             | Some (InsMethRec { id; _ }) -> id
+            (* A program reaches this: an instance that leaves out a method of
+               its typeclass is accepted where it is declared (#91). *)
             | None -> internal_err ("Couldn't get instance method for `"
                                     ^ (ident_string (original_name callable_name))
                                     ^ "`"))

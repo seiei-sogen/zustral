@@ -24,15 +24,22 @@ type env
 (** The empty compiler. *)
 val empty_env : env
 
+(** {1 The two kinds of lookup}
+
+    A lookup by a name returns an option. The name comes from the program being
+    compiled, and the caller knows which error to report when nothing has it.
+
+    A lookup by an ID returns what the ID stands for. This module makes an ID
+    when something is registered, so the thing exists. An ID given to an
+    environment older than the one that made it is a bug in the compiler: it
+    raises an internal error here, and callers do not handle it. *)
+
 (** {1 Module Functions} *)
 
 (** Add a module's information to the environment. *)
 val add_module : env -> mod_input -> (env * mod_id)
 
-(** Retrieve a module by its module ID. *)
-val get_module_by_id : env -> mod_id -> mod_rec option
-
-(** Retrieve a module by its name. *)
+(** Retrieve a module by its name, returning {!None} if it doesn't exist. *)
 val get_module_by_name : env -> module_name -> mod_rec option
 
 (** Return a module's name from its ID. *)
@@ -56,15 +63,16 @@ val add_exported_function : env -> decl_id -> string -> env
 
 (** {2 Retrieve} *)
 
-(** Retrieve a declaration by ID, returning {!None} if it doesn't exist. *)
-val get_decl_by_id : env -> decl_id -> decl option
+(** Retrieve a declaration by ID. *)
+val get_decl_by_id : env -> decl_id -> decl
 
 (** Retrieve a declaration by its sourced name, returning {!None} if it doesn't exist.
 
     If a module with the given name doesn't exist, raises an error. *)
 val get_decl_by_name : env -> sident -> decl option
 
-(** Find a typeclass method from its typeclass ID and name. *)
+(** Find a typeclass method from its typeclass ID and name, returning {!None} if
+    the typeclass has no method of that name. *)
 val get_method_from_typeclass_id_and_name : env -> decl_id -> identifier -> decl option
 
 (** Return all typeclass instances defined in a module. *)
@@ -76,11 +84,12 @@ val module_public_instances: env -> mod_id -> decl list
 (** Return the list of cases of a union. *)
 val get_union_cases : env -> decl_id -> decl list
 
-(** Get method from the instance ID and name. *)
+(** Get method from the instance ID and name, returning {!None} if the instance
+    does not define a method of that name. *)
 val get_instance_method_from_instance_id_and_method_name : env -> decl_id -> identifier -> ins_meth_rec option
 
 (** Get an instance method by ID. *)
-val get_instance_method : env -> ins_meth_id -> ins_meth_rec option
+val get_instance_method : env -> ins_meth_id -> ins_meth_rec
 
 (** Return a list of all exported functions in the environment, as (ID, export
     name) pairs. *)
@@ -128,18 +137,22 @@ val store_function_monomorph_definition : env -> mono_id -> mstmt -> env
 val store_instance_method_monomorph_definition : env -> mono_id -> mstmt -> env
 
 (** Given the ID of a type declaration and a set of monomorphic type arguments,
-   return the ID of the corresponding monomorph if it exists. *)
-val get_type_monomorph : env -> decl_id -> mono_type_bindings -> mono_id option
+   return the ID of the corresponding monomorph.
+
+   The monomorph must be registered: call this after monomorphization. If it
+   is not, that is a bug in the compiler, and raises an internal error here. *)
+val get_type_monomorph : env -> decl_id -> mono_type_bindings -> mono_id
 
 (** Given the ID of a function and a set of monomorphic type arguments, return
-   the ID of the corresponding monomorph if it exists. *)
-val get_function_monomorph : env -> decl_id -> mono_type_bindings -> mono_id option
+   the ID of the corresponding monomorph. Like {!get_type_monomorph}, the
+   monomorph must be registered. *)
+val get_function_monomorph : env -> decl_id -> mono_type_bindings -> mono_id
 
 (** Get all uninstantiated monomorphs. *)
 val get_uninstantiated_monomorphs : env -> monomorph list
 
 (** Get a monomorph by ID. *)
-val get_monomorph : env -> mono_id -> monomorph option
+val get_monomorph : env -> mono_id -> monomorph
 
 (** Get the type of a variable, trying first the lexenv and then the env for
     constants. *)

@@ -41,9 +41,24 @@ type env = Env of {
 let empty_env: env =
   Env { mods = []; methods = []; decls = []; monos = []; exports = []; }
 
-let get_module_by_id (env: env) (mod_id: mod_id): mod_rec option =
+(* The lookups whose key the compiler made itself return what they find, not an
+   option. This is the one place that reports a miss.
+
+   An ID is made only when something is registered in an environment, and
+   nothing is ever taken out of one. So when a lookup by ID misses, the ID was
+   made by a later environment than the one asked, which is a bug in the
+   compiler. *)
+let registered (what: unit -> string) (found: 'a option): 'a =
+  match found with
+  | Some thing ->
+     thing
+  | None ->
+     internal_err ("No " ^ (what ()) ^ " in this environment.")
+
+let get_module_by_id (env: env) (mod_id: mod_id): mod_rec =
   let (Env { mods; _ }) = env in
-  List.find_opt (fun (ModRec { id; _ }) -> equal_mod_id mod_id id) mods
+  registered (fun () -> "module with this ID")
+    (List.find_opt (fun (ModRec { id; _ }) -> equal_mod_id mod_id id) mods)
 
 let get_module_by_name (env: env) (mod_name: module_name): mod_rec option =
   let (Env { mods; _ }) = env in
@@ -57,11 +72,8 @@ let ensure_no_mod_with_name (env: env) (name: module_name): unit =
      ()
 
 let module_name_from_id (env: env) (mod_id: mod_id): module_name =
-  match get_module_by_id env mod_id with
-  | Some (ModRec { name; _ }) ->
-     name
-  | _ ->
-     internal_err "No module with this ID"
+  let (ModRec { name; _ }) = get_module_by_id env mod_id in
+  name
 
 let add_module (env: env) (input: mod_input): (env * mod_id) =
   let { name; imported_instances; imports_from } = input in
@@ -159,13 +171,15 @@ let register (type id) (env: env) (registration: id registration): (env * id) =
      let meth = InsMethRec { id; instance_id; method_id; docstring; name; typarams; value_params; rt; body } in
      (Env { mods; methods = meth :: methods; decls; monos; exports }, id)
 
-let get_decl_by_id (env: env) (id: decl_id): decl option =
+let get_decl_by_id (env: env) (id: decl_id): decl =
   let (Env { decls; _ }) = env in
-  List.find_opt (fun d -> equal_decl_id id (decl_id d)) decls
+  registered (fun () -> "declaration with ID `" ^ (show_decl_id id) ^ "`")
+    (List.find_opt (fun d -> equal_decl_id id (decl_id d)) decls)
 
-let get_instance_method_by_id (env: env) (ins_meth_id: ins_meth_id): ins_meth_rec option =
+let get_instance_method (env: env) (ins_meth_id: ins_meth_id): ins_meth_rec =
   let (Env { methods; _ }) = env in
-  List.find_opt (fun (InsMethRec { id; _ }) -> equal_ins_meth_id id ins_meth_id) methods
+  registered (fun () -> "instance method with ID `" ^ (show_ins_meth_id ins_meth_id) ^ "`")
+    (List.find_opt (fun (InsMethRec { id; _ }) -> equal_ins_meth_id id ins_meth_id) methods)
 
 let get_method_from_typeclass_id_and_name (env: env) (typeclass_id: decl_id) (name: identifier): decl option =
   let (Env { decls; _ }) = env in
@@ -218,7 +232,7 @@ let get_callable (env: env) (importing_module_name: module_name) (name: sident):
       | UnionCase { name; union_id; slots; _ } ->
          let (typarams, universe) =
            (match get_decl_by_id env union_id with
-            | Some (Union { typarams; universe; _}) -> (typarams, universe)
+            | Union { typarams; universe; _} -> (typarams, universe)
             | _ -> generic_error NoUnionWithId)
          in
          Some (
@@ -268,22 +282,14 @@ let visible_instances (env: env) (id: mod_id): decl list =
     in
     List.filter pred decls
   and instances_imported_by_module: decl list =
-    match get_module_by_id env id with
-    | Some (ModRec { imported_instances; _ }) ->
-       List.map (fun id -> Option.get (get_decl_by_id env id)) (List.of_seq (DeclIdSet.to_seq imported_instances))
-    | None ->
-       internal_err "No module with ID."
+    let (ModRec { imported_instances; _ }) = get_module_by_id env id in
+    List.map (fun id -> get_decl_by_id env id) (List.of_seq (DeclIdSet.to_seq imported_instances))
   in
   instances_defined_in_module @ instances_imported_by_module
 
 let rec store_function_body (env: env) (fn_id: decl_id) (body: tstmt): env =
   let (Env { mods; methods; decls; monos; exports }) = env in
-  let decl: decl = (match get_decl_by_id env fn_id with
-                    | Some d ->
-                       d
-                    | _ ->
-                       internal_err ("No function with this ID: " ^ (show_decl_id fn_id)))
-  in
+  let decl: decl = get_decl_by_id env fn_id in
   let new_decl: decl = replace_function_body decl body in
   let decls_without_existing_one: decl list = List.filter (fun (d: decl) -> not (equal_decl_id (decl_id d) fn_id)) decls in
   let env = Env { mods; methods; decls = new_decl :: decls_without_existing_one; monos; exports } in
@@ -302,12 +308,7 @@ and replace_function_body (decl: decl) (new_body: tstmt): decl =
 
 let rec store_method_body (env: env) (ins_meth_id: ins_meth_id) (body: tstmt): env =
   let (Env { mods; methods; decls; monos; exports }) = env in
-  let meth: ins_meth_rec = (match get_instance_method_by_id env ins_meth_id with
-                              | Some m ->
-                                 m
-                              | _ ->
-                                 internal_err ("No instance method with this ID " ^ (show_ins_meth_id ins_meth_id)))
-  in
+  let meth: ins_meth_rec = get_instance_method env ins_meth_id in
   let new_method: ins_meth_rec = replace_method_body meth body in
   let methods_without_existing_one: ins_meth_rec list = List.filter (fun (InsMethRec { id; _ }) -> not (equal_ins_meth_id id ins_meth_id)) methods in
   let env = Env { mods; methods = new_method :: methods_without_existing_one; decls; monos; exports } in
@@ -364,7 +365,12 @@ let monomorph_id (mono: monomorph): mono_id =
   | MonoFunction { id; _ } -> id
   | MonoInstanceMethod { id; _ } -> id
 
-let get_type_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): mono_id option =
+let get_monomorph (env: env) (id: mono_id): monomorph =
+  let (Env { monos; _ }) = env in
+  registered (fun () -> "monomorph with ID `" ^ (show_mono_id id) ^ "`")
+    (List.find_opt (fun mono -> equal_mono_id id (monomorph_id mono)) monos)
+
+let find_type_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): mono_id option =
   let (Env { monos; _ }) = env in
   let pred (mono: monomorph): bool =
     match mono with
@@ -382,18 +388,18 @@ let get_type_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings):
   | None -> None
 
 let add_or_get_record_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): (env * mono_id) =
-  match get_type_monomorph env decl_id args with
+  match find_type_monomorph env decl_id args with
   | Some mono_id -> (env, mono_id)
   | None ->
     add_record_monomorph env decl_id args
 
 let add_or_get_union_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): (env * mono_id) =
-  match get_type_monomorph env decl_id args with
+  match find_type_monomorph env decl_id args with
   | Some mono_id -> (env, mono_id)
   | None ->
     add_union_monomorph env decl_id args
 
-let get_function_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): mono_id option =
+let find_function_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): mono_id option =
   let (Env { monos; _ }) = env in
   let pred (mono: monomorph): bool =
     match mono with
@@ -408,12 +414,25 @@ let get_function_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindin
   | None -> None
 
 let add_or_get_function_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): (env * mono_id) =
-  match get_function_monomorph env decl_id args with
+  match find_function_monomorph env decl_id args with
   | Some mono_id -> (env, mono_id)
   | None ->
     add_function_monomorph env decl_id args
 
-let get_instance_method_monomorph (env: env) (id: ins_meth_id) (args: mono_type_bindings): mono_id option =
+(* Unlike an ID, a declaration and its type arguments can name a monomorph that
+   is not registered yet: `add_or_get_*` register it the first time. The stages
+   that call the next two functions (the entrypoint, and the wrappers of
+   exported functions) run after monomorphization has registered what they ask
+   for. *)
+let get_type_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): mono_id =
+  registered (fun () -> "monomorph of the type with ID `" ^ (show_decl_id decl_id) ^ "` and these type arguments")
+    (find_type_monomorph env decl_id args)
+
+let get_function_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): mono_id =
+  registered (fun () -> "monomorph of the function with ID `" ^ (show_decl_id decl_id) ^ "` and these type arguments")
+    (find_function_monomorph env decl_id args)
+
+let find_instance_method_monomorph (env: env) (id: ins_meth_id) (args: mono_type_bindings): mono_id option =
   let (Env { monos; _ }) = env in
   let pred (mono: monomorph): bool =
     match mono with
@@ -428,7 +447,7 @@ let get_instance_method_monomorph (env: env) (id: ins_meth_id) (args: mono_type_
   | None -> None
 
 let add_or_get_instance_method_monomorph (env: env) (method_id: ins_meth_id) (args: mono_type_bindings): (env * mono_id) =
-  match get_instance_method_monomorph env method_id args with
+  match find_instance_method_monomorph env method_id args with
   | Some mono_id -> (env, mono_id)
   | None ->
     add_instance_method_monomorph env method_id args
@@ -452,20 +471,13 @@ let get_uninstantiated_monomorphs (env: env): monomorph list =
   List.rev (List.filter pred monos)
 
 (** Find a monomorph by ID and return it, removing it from the
-   environment. Errors if it does not exist. *)
+   environment. *)
 let pop_monomorph (env: env) (id: mono_id): (env * monomorph) =
+  let mono: monomorph = get_monomorph env id in
   let (Env { mods; methods; decls; monos; exports }) = env in
-  let pred (mono: monomorph): bool =
-    let target_id: mono_id = monomorph_id mono in
-    equal_mono_id target_id id
-  in
-  match List.find_opt pred monos with
-  | Some mono ->
-    let other_monos = List.filter (fun m -> not (pred m)) monos in
-    let env = Env { mods; methods; decls; monos = other_monos; exports } in
-    (env, mono)
-  | None ->
-    internal_err ("monomorph with this ID does not exist: " ^ (show_mono_id id))
+  let other_monos = List.filter (fun m -> not (equal_mono_id (monomorph_id m) id)) monos in
+  let env = Env { mods; methods; decls; monos = other_monos; exports } in
+  (env, mono)
 
 let store_record_monomorph_definition (env: env) (id: mono_id) (new_slots: mono_slot list): env =
   let (env, mono) = pop_monomorph env id in
@@ -514,17 +526,6 @@ let store_instance_method_monomorph_definition (env: env) (id: mono_id) (new_bod
     env
   | _ ->
     internal_err ("Couldn't find monomorph instance method definition with ID: " ^ (show_mono_id id))
-
-let get_instance_method (env: env) (target_id: ins_meth_id): ins_meth_rec option =
-  let (Env { methods; _ }) = env in
-  List.find_opt (fun (InsMethRec { id; _ }) -> equal_ins_meth_id id target_id) methods
-
-let get_monomorph (env: env) (id: mono_id): monomorph option =
-  let (Env { monos; _ }) = env in
-  let pred (mono: monomorph): bool =
-    equal_mono_id id (monomorph_id mono)
-  in
-  List.find_opt pred monos
 
 let add_exported_function (env: env) (id: decl_id) (export_name: string): env =
   let (Env { mods; methods; decls; monos; exports }) = env in

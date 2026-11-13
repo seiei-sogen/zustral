@@ -465,21 +465,17 @@ let gen_method (mn: module_name) (MConcreteMethod (id, _, params, rt, body)) =
 
 let get_original_module_name (env: env) (id: mono_id): module_name =
   match get_monomorph env id with
-  | Some (MonoFunction { function_id; _ }) ->
+  | MonoFunction { function_id; _ } ->
      (match get_decl_by_id env function_id with
-      | Some (Function { mod_id; _ }) ->
-         (match get_module_by_id env mod_id with
-          | Some (ModRec { name; _ }) ->
-             name
-          | _ ->
-             internal_err "Couldn't get module record")
+      | Function { mod_id; _ } ->
+         module_name_from_id env mod_id
       | _ ->
          internal_err "Couldn't get function")
   | _ ->
      internal_err "Couldn't get monomorph"
 
 let rec mono_desc (env: env) (id: mono_id): string =
-  let mono = get_mono_or_die env id in
+  let mono = get_monomorph env id in
   match mono with
   | MonoRecordDefinition { type_id; tyargs; _ } ->
      render_mono env type_id tyargs
@@ -490,23 +486,12 @@ let rec mono_desc (env: env) (id: mono_id): string =
   | MonoInstanceMethod _ ->
      ""
 
-and get_mono_or_die (env: env) (id: mono_id): monomorph =
-  match get_monomorph env id with
-  | Some mono ->
-     mono
-  | None ->
-     internal_err "Couldn't get monomorph"
-
 and get_decl_name_or_die (env: env) (id: decl_id): string =
-  match get_decl_by_id env id with
-  | Some decl ->
-     (match (decl_name decl) with
-      | Some name ->
-         (ident_string name)
-      | None ->
-         internal_err "decl has no name")
+  match decl_name (get_decl_by_id env id) with
+  | Some name ->
+     (ident_string name)
   | None ->
-     internal_err "Couldn't find decl"
+     internal_err "decl has no name"
 
 and tyargs_string (args: mono_type_bindings): string =
   "["

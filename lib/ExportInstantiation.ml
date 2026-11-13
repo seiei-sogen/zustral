@@ -11,23 +11,18 @@ open MonoTypeBindings
 open Error
 open CodeGen
 open CRepr
-open Identifier
 
 (** Get the monomorph for an exported function. *)
 let get_export_monomorph (env: env) (id: decl_id): mono_id =
   match get_decl_by_id env id with
-  | Some (Function { id; name; _ }) ->
-     (match get_function_monomorph env id empty_mono_bindings with
-      | Some id ->
-         id
-      | _ ->
-         internal_err ("No monomorph of exported function `" ^ (ident_string name) ^ "`"))
+  | Function { id; _ } ->
+     get_function_monomorph env id empty_mono_bindings
   | _ ->
      internal_err "Can't find the exported fuction in the environment."
 
 let get_export_data (env: env) (id: decl_id): (value_parameter list * ty) =
   match get_decl_by_id env id with
-  | Some (Function { value_params; rt; _ }) ->
+  | Function { value_params; rt; _ } ->
      (value_params, rt)
   | _ ->
      internal_err "Can't find the exported fuction in the environment."
