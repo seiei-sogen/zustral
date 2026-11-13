@@ -99,123 +99,65 @@ let get_decl_by_name (env: env) (name: sident): decl option =
   | None ->
      declaration_error (UnknownModule (sident_module_name name))
 
-let ensure_no_decl_with_name (env: env) (mod_id: mod_id) (name: identifier): unit =
-  let mn: module_name = module_name_from_id env mod_id in
-  let ident: sident = make_sident mn name in
-  match get_decl_by_name env ident with
-  | Some _ ->
-     declaration_error (DeclarationAlreadyExists { name; module_name = mn })
-  | None ->
-     ()
-
-let make_const_decl (id: decl_id) (input: const_input): decl =
-  let { mod_id; vis; name; ty; docstring } = input in
-  Constant { id; mod_id; vis; name; ty; docstring }
-
-let add_constant (env: env) (input: const_input): (env * decl_id) =
-  (* Check: no other decl with this name. *)
-  let _ = ensure_no_decl_with_name env input.mod_id input.name in
+(* The one way a declaration or an instance method enters the environment. The
+   rule about names that are already taken is here and nowhere else. A kind of
+   registration that is not checked today says so in its arm, and a check for
+   it belongs in that arm. *)
+let register (type id) (env: env) (registration: id registration): (env * id) =
   let (Env { mods; methods; decls; monos; exports }) = env in
-  let id = fresh_decl_id () in
-  let decl = make_const_decl id input in
-  let env = Env { mods; methods; decls = decl :: decls; monos; exports } in
-  (env, id)
-
-let make_record_decl (id: decl_id) (input: record_input): decl =
-  let { mod_id; vis; name; docstring; typarams; universe; slots } = input in
-  Record { id; mod_id; vis; name; docstring; typarams; universe; slots }
-
-let add_record (env: env) (input: record_input): (env * decl_id) =
-  (* Check: no other decl with this name. *)
-  let _ = ensure_no_decl_with_name env input.mod_id input.name in
-  let (Env { mods; methods; decls; monos; exports }) = env in
-  let id = fresh_decl_id () in
-  let decl = make_record_decl id input in
-  let env = Env { mods; methods; decls = decl :: decls; monos; exports } in
-  (env, id)
-
-let make_union_decl (id: decl_id) (input: union_input): decl =
-  let { mod_id; vis; name; docstring; typarams; universe } = input in
-  Union { id; mod_id; vis; name; docstring; typarams; universe }
-
-let add_union (env: env) (input: union_input): (env * decl_id) =
-  (* Check: no other decl with this name. *)
-  let _ = ensure_no_decl_with_name env input.mod_id input.name in
-  let (Env { mods; methods; decls; monos; exports }) = env in
-  let id = fresh_decl_id () in
-  let decl = make_union_decl id input in
-  let env = Env { mods; methods; decls = decl :: decls; monos; exports } in
-  (env, id)
-
-let make_union_case_decl (id: decl_id) (input: union_case_input): decl =
-  let { mod_id; vis; union_id; name; docstring; slots } = input in
-  UnionCase { id; vis; mod_id; union_id; name; docstring; slots }
-
-let add_union_case (env: env) (input: union_case_input): (env * decl_id) =
-  let (Env { mods; methods; decls; monos; exports }) = env in
-  let id = fresh_decl_id () in
-  let decl = make_union_case_decl id input in
-  let env = Env { mods; methods; decls = decl :: decls; monos; exports } in
-  (env, id)
-
-let make_function_decl (id: decl_id) (input: function_input): decl =
-  let { mod_id; vis; name; docstring; typarams; value_params; rt; external_name; body } = input in
-  Function { id; mod_id; vis; name; docstring; typarams; value_params; rt; external_name; body }
-
-let add_function (env: env) (input: function_input): (env * decl_id) =
-  (* Check: no other decl with this name. *)
-  let _ = ensure_no_decl_with_name env input.mod_id input.name in
-  let (Env { mods; methods; decls; monos; exports }) = env in
-  let id = fresh_decl_id () in
-  let decl = make_function_decl id input in
-  let env = Env { mods; methods; decls = decl :: decls; monos; exports } in
-  (env, id)
-
-let make_type_class_decl (id: decl_id) (input: type_class_input): decl =
-  let { mod_id; vis; name; docstring; param } = input in
-  TypeClass { id; mod_id; vis; name; docstring; param }
-
-let add_type_class (env: env) (input: type_class_input): (env * decl_id) =
-  (* Check: no other decl with this name. *)
-  let _ = ensure_no_decl_with_name env input.mod_id input.name in
-  let (Env { mods; methods; decls; monos; exports }) = env in
-  let id = fresh_decl_id () in
-  let decl = make_type_class_decl id input in
-  let env = Env { mods; methods; decls = decl :: decls; monos; exports } in
-  (env, id)
-
-let make_type_class_method_decl (id: decl_id) (input: type_class_method_input): decl =
-  let { mod_id; vis; typeclass_id; name; docstring; typarams; value_params; rt } = input in
-  TypeClassMethod { id; mod_id; vis; typeclass_id; name; docstring; typarams; value_params; rt }
-
-let add_type_class_method (env: env) (input: type_class_method_input): (env * decl_id) =
-  let (Env { mods; methods; decls; monos; exports }) = env in
-  let id = fresh_decl_id () in
-  let decl = make_type_class_method_decl id input in
-  let env = Env { mods; methods; decls = decl :: decls; monos; exports } in
-  (env, id)
-
-let make_instance_decl (id: decl_id) (input: instance_input): decl =
-  let { mod_id; vis; typeclass_id; docstring; typarams; argument } = input in
-  Instance { id; mod_id; vis; typeclass_id; docstring; typarams; argument }
-
-let add_instance (env: env) (input: instance_input): (env * decl_id) =
-  let (Env { mods; methods; decls; monos; exports }) = env in
-  let id = fresh_decl_id () in
-  let decl = make_instance_decl id input in
-  let env = Env { mods; methods; decls = decl :: decls; monos; exports } in
-  (env, id)
-
-let make_ins_meth (id: ins_meth_id) (input: instance_method_input): ins_meth_rec =
-  let { instance_id; method_id; docstring; name; typarams; value_params; rt; body } = input in
-  InsMethRec { id; instance_id; method_id; docstring; name; typarams; value_params; rt; body }
-
-let add_instance_method (env: env) (input: instance_method_input): (env * ins_meth_id) =
-  let (Env { mods; methods; decls; monos; exports }) = env in
-  let id = fresh_ins_meth_id () in
-  let meth = make_ins_meth id input in
-  let env = Env { mods; methods = meth :: methods; decls; monos; exports } in
-  (env, id)
+  (* The duplicate rule: a name is taken if any declaration of the module has
+     it, union cases and typeclass methods included. The rule does not look at
+     the names the module imports (#28) or at the names of the built-in types
+     (#51). *)
+  let name_must_be_free (mod_id: mod_id) (name: identifier): unit =
+    let module_name: module_name = module_name_from_id env mod_id in
+    match get_decl_by_name env (make_sident module_name name) with
+    | Some _ ->
+       declaration_error (DeclarationAlreadyExists { name; module_name })
+    | None ->
+       ()
+  in
+  let add_decl (make: decl_id -> decl): (env * decl_id) =
+    let id = fresh_decl_id () in
+    (Env { mods; methods; decls = (make id) :: decls; monos; exports }, id)
+  in
+  match registration with
+  | NewConstant { mod_id; vis; name; ty; docstring } ->
+     name_must_be_free mod_id name;
+     add_decl (fun id -> Constant { id; mod_id; vis; name; ty; docstring })
+  | NewRecord { mod_id; vis; name; docstring; typarams; universe; slots } ->
+     name_must_be_free mod_id name;
+     add_decl (fun id -> Record { id; mod_id; vis; name; docstring; typarams; universe; slots })
+  | NewUnion { mod_id; vis; name; docstring; typarams; universe } ->
+     name_must_be_free mod_id name;
+     add_decl (fun id -> Union { id; mod_id; vis; name; docstring; typarams; universe })
+  | NewUnionCase { mod_id; vis; union_id; name; docstring; slots } ->
+     (* Not checked (#86): a case can take the name of another case, or of any
+        other declaration of the module. *)
+     add_decl (fun id -> UnionCase { id; vis; mod_id; union_id; name; docstring; slots })
+  | NewFunction { mod_id; vis; name; docstring; typarams; value_params; rt; external_name; body } ->
+     name_must_be_free mod_id name;
+     add_decl (fun id -> Function { id; mod_id; vis; name; docstring; typarams; value_params; rt; external_name; body })
+  | NewTypeClass { mod_id; vis; name; docstring; param } ->
+     name_must_be_free mod_id name;
+     add_decl (fun id -> TypeClass { id; mod_id; vis; name; docstring; param })
+  | NewTypeClassMethod { mod_id; vis; typeclass_id; name; docstring; typarams; value_params; rt } ->
+     (* Not checked (#86): a method can take the name of a method of another
+        typeclass, or of any other declaration of the module. *)
+     add_decl (fun id -> TypeClassMethod { id; mod_id; vis; typeclass_id; name; docstring; typarams; value_params; rt })
+  | NewInstance { mod_id; vis; typeclass_id; docstring; typarams; argument } ->
+     (* Not checked here: an instance has no name. The caller checks that it
+        overlaps no instance of its own module, and the orphan rule. The orphan
+        rule takes a built-in type to be local to every module, so instances
+        from two modules can overlap (#72). *)
+     add_decl (fun id -> Instance { id; mod_id; vis; typeclass_id; docstring; typarams; argument })
+  | NewInstanceMethod { instance_id; method_id; docstring; name; typarams; value_params; rt; body } ->
+     (* Not checked here. The caller checks that the typeclass has a method of
+        this name. Nothing checks that an instance defines every method of its
+        typeclass (#91), or that it defines a method once. *)
+     let id = fresh_ins_meth_id () in
+     let meth = InsMethRec { id; instance_id; method_id; docstring; name; typarams; value_params; rt; body } in
+     (Env { mods; methods = meth :: methods; decls; monos; exports }, id)
 
 let get_decl_by_id (env: env) (id: decl_id): decl option =
   let (Env { decls; _ }) = env in

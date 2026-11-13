@@ -268,3 +268,16 @@ type instance_method_input = {
     rt: ty;
     body: tstmt option;
   }
+
+(** Something to register in the environment: a declaration, or a method of an
+    instance. The parameter is the type of the ID that registering it returns. *)
+type _ registration =
+  | NewConstant : const_input -> decl_id registration
+  | NewRecord : record_input -> decl_id registration
+  | NewUnion : union_input -> decl_id registration
+  | NewUnionCase : union_case_input -> decl_id registration
+  | NewFunction : function_input -> decl_id registration
+  | NewTypeClass : type_class_input -> decl_id registration
+  | NewTypeClassMethod : type_class_method_input -> decl_id registration
+  | NewInstance : instance_input -> decl_id registration
+  | NewInstanceMethod : instance_method_input -> ins_meth_id registration

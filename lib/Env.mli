@@ -42,23 +42,13 @@ val module_name_from_id : env -> mod_id -> module_name
 
 (** {2 Create} *)
 
-val add_constant : env -> const_input -> (env * decl_id)
+(** Register a declaration or an instance method. Returns the environment that
+    has it, and its ID. This is the only way either enters the environment.
 
-val add_record : env -> record_input -> (env * decl_id)
-
-val add_union : env -> union_input -> (env * decl_id)
-
-val add_union_case : env -> union_case_input -> (env * decl_id)
-
-val add_function : env -> function_input -> (env * decl_id)
-
-val add_type_class : env -> type_class_input -> (env * decl_id)
-
-val add_type_class_method : env -> type_class_method_input -> (env * decl_id)
-
-val add_instance : env -> instance_input -> (env * decl_id)
-
-val add_instance_method : env -> instance_method_input -> (env * ins_meth_id)
+    Raises a declaration error if a constant, record, union, function or
+    typeclass takes a name that a declaration of its module already has. Union
+    cases, typeclass methods, instances and instance methods are not checked. *)
+val register : env -> 'id registration -> (env * 'id)
 
 (** Given a function ID, and the export name of that function, register them in
     the environment. *)
