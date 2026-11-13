@@ -5,6 +5,9 @@
 #   measure.sh --record   rewrite expected/ from the current tree
 #   measure.sh --check    fail only if a total went up; print what changed
 #   measure.sh --fragile  also count fragile matches (needs a compiler build)
+#   measure.sh --check-fragile  only the fragile matches: fail unless the totals
+#                         equal expected/fragile-totals.txt and none is on a
+#                         type of lib/Type.ml or on MonoType.mono_ty
 # Environment for --fragile:
 #   ZUSTRAL_NIX_FLAGS      extra flags for `nix develop`
 #   ZUSTRAL_BUILD_TIMEOUT  seconds allowed for the build (default 900)
@@ -12,12 +15,13 @@ set -uo pipefail
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT=$(cd "$HERE/../.." && pwd)
-RECORD=0 FRAGILE=0 CHECK=0
+RECORD=0 FRAGILE=0 CHECK=0 CHECK_FRAGILE=0
 for a in "$@"; do
   case $a in
     --record) RECORD=1 ;;
     --fragile) FRAGILE=1 ;;
     --check) CHECK=1 ;;
+    --check-fragile) CHECK_FRAGILE=1 ;;
   esac
 done
 
@@ -97,7 +101,8 @@ totals() { # metrics-file
 fragile() {
   local w="$T/tree"
   mkdir -p "$w"
-  (cd "$ROOT" && git ls-files -z lib cli bin dune-project concat_builtins.py austral.opam | xargs -0 tar -cf - ) | tar -xf - -C "$w"
+  # Untracked files are copied too: the gate runs before a new file is committed.
+  (cd "$ROOT" && git ls-files -z --cached --others --exclude-standard lib cli bin dune-project concat_builtins.py austral.opam | xargs -0 tar -cf - ) | tar -xf - -C "$w"
   read -r -a nix_flags <<< "${ZUSTRAL_NIX_FLAGS:-}"
   local build='python3 concat_builtins.py && dune build --root . --profile release ./lib ./cli 2>&1'
   if [[ -n ${IN_NIX_SHELL:-} ]]; then
@@ -120,6 +125,14 @@ fragile() {
     }' "$T/build.log" | LC_ALL=C sort | uniq -c | awk '{ print $2 "\t" $3 "\t" $1 }'
 }
 
+# type-fragile is the part on the types of lib/Type.ml and on
+# MonoType.mono_ty. R20 brought it to 0; a new type constructor must stop
+# the build at every match on these types, so it stays at 0.
+fragile_totals() { # fragile-file
+  awk -F'\t' '{ s += $3; f[$1] = 1; t[$2] += $3; if ($2 ~ /^(Type|MonoType)\./) ty += $3 }
+    END { print "fragile-matches " s + 0; print "files " length(f); print "type-fragile " ty + 0; for (k in t) print "type " k " " t[k] }' "$1" | LC_ALL=C sort
+}
+
 check() { # name
   if ((RECORD)); then
     cp "$T/$1" "$HERE/expected/$1"; echo "recorded $1"
@@ -129,6 +142,23 @@ check() { # name
     echo "MISMATCH $1"; failed=1
   fi
 }
+
+if ((CHECK_FRAGILE)); then
+  fragile > "$T/fragile.tsv" || exit 1
+  fragile_totals "$T/fragile.tsv" > "$T/fragile-totals.txt"
+  # Recording a larger number must not hide a new catch-all on these types.
+  if ! grep -qx 'type-fragile 0' "$T/fragile-totals.txt"; then
+    echo "a match on a type of lib/Type.ml or on MonoType.mono_ty has a catch-all arm:"
+    awk -F'\t' '$2 ~ /^(Type|MonoType)\./' "$T/fragile.tsv"
+    exit 1
+  fi
+  if ! diff -u "$HERE/expected/fragile-totals.txt" "$T/fragile-totals.txt"; then
+    echo "MISMATCH fragile-totals.txt (if the counts went down: measure.sh --fragile --record)"
+    exit 1
+  fi
+  echo "match fragile-totals.txt: $(grep -E '^(fragile-matches|type-fragile) ' "$T/fragile-totals.txt" | paste -sd, - | sed 's/,/, /')"
+  exit 0
+fi
 
 failed=0
 metrics > "$T/metrics.tsv"
@@ -146,11 +176,7 @@ check metrics.tsv
 check totals.txt
 if ((FRAGILE)); then
   if fragile > "$T/fragile.tsv"; then
-    # type-fragile is the part on the types of lib/Type.ml and on
-    # MonoType.mono_ty. R20 brought it to 0; a new type constructor must stop
-    # the build at every match on these types, so it stays at 0.
-    awk -F'\t' '{ s += $3; f[$1] = 1; t[$2] += $3; if ($2 ~ /^(Type|MonoType)\./) ty += $3 }
-      END { print "fragile-matches " s + 0; print "files " length(f); print "type-fragile " ty + 0; for (k in t) print "type " k " " t[k] }' "$T/fragile.tsv" | LC_ALL=C sort > "$T/fragile-totals.txt"
+    fragile_totals "$T/fragile.tsv" > "$T/fragile-totals.txt"
     check fragile.tsv
     check fragile-totals.txt
   else
