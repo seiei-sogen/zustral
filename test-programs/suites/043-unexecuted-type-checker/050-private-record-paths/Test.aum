@@ -1,0 +1,17 @@
+module body Test is
+    record Hidden: Free is
+        a: Int32;
+    end;
+
+    generic [R: Region]
+    function slot(ref: &[Hidden, R]): Int32 is
+        return ref->a;
+    end;
+
+    function main(): ExitCode is
+        let h: Hidden := Hidden(a => 5);
+        let { a: Int32 } := h;
+        printLn(a + slot(&h));
+        return ExitSuccess();
+    end;
+end module body.

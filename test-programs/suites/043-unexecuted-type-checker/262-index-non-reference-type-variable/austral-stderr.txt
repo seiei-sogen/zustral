@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "Expected the head of an array indexing operator to be a reference, but found the type "
+    },
+    { "type": "type", "content": "T" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/262-index-non-reference-type-variable/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 16 }
+  },
+  "context": [
+    [ 2, "    generic [T: Free]" ],
+    [ 3, "    function probe(x: T): Unit is" ],
+    [ 4, "        &(x[0]);" ],
+    [ 5, "        return nil;" ],
+    [ 6, "    end;" ]
+  ]
+}

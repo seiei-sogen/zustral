@@ -1,0 +1,16 @@
+module body Test is
+    typeclass Kind(T: Type) is
+        method kind(value: T): Int32;
+    end;
+
+    instance Kind(Int32) is
+        method kind(value: Int32): Int32 is
+            return value;
+        end;
+    end;
+
+    function main(): ExitCode is
+        printLn(kind(true));
+        return ExitSuccess();
+    end;
+end module body.

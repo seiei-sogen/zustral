@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The case expression has type " },
+    { "type": "type", "content": "Foo" },
+    { "type": "text", "content": " which is not a union type." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/098-case-record/Test.aum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 10, "column": 17 }
+  },
+  "context": [
+    [ 5, "" ],
+    [ 6, "    function probe(x: Foo): Unit is" ],
+    [ 7, "        case x of" ],
+    [ 8, "            when A do" ],
+    [ 9, "                skip;" ],
+    [ 10, "        end case;" ],
+    [ 11, "        return nil;" ],
+    [ 12, "    end;" ]
+  ]
+}

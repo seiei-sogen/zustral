@@ -1,0 +1,1 @@
+Covers the `TypeVisOpaque` alternative of `augment_destructure` (lib/TypingPass.ml): `RootCapability` is opaque outside its module, so destructuring it is an error. Target line(s): lib/TypingPass.ml line 224.

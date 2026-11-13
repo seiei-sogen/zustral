@@ -1,0 +1,10 @@
+module body Test is
+    function probe(x: Bool): Unit is
+        x(1);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

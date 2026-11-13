@@ -1,0 +1,1 @@
+Covers the `FnPtr` alternative of the non-reference arm of `augment_deref` (lib/TypeCheckExpr.ml): dereferencing a value of type `Fn[Int32, Int32]` is an error. Target line: lib/TypeCheckExpr.ml line 654.

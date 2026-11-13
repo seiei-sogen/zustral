@@ -1,0 +1,15 @@
+module body Test is
+    record Holder[U: Type]: Type is
+        inner: U;
+    end;
+
+    generic [T: Type, R: Region]
+    function f(w: &![Holder[T], R], value: T): Unit is
+        w->inner := value;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

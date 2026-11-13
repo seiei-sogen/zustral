@@ -1,0 +1,76 @@
+pragma Unsafe_Module;
+
+import Austral.Memory (Address, Pointer);
+
+module body Test is
+    record Foo: Free is
+        a: Int32;
+    end;
+
+    typeclass Kind(T: Type) is
+        method kind(value: T): Int32;
+    end;
+
+    generic [U: Type, R: Region]
+    instance Kind(&[U, R]) is
+        method kind(value: &[U, R]): Int32 is
+            return 1;
+        end;
+    end;
+
+    generic [U: Type, R: Region]
+    instance Kind(&![U, R]) is
+        method kind(value: &![U, R]): Int32 is
+            return 2;
+        end;
+    end;
+
+    generic [U: Type, R: Region]
+    instance Kind(Span[U, R]) is
+        method kind(value: Span[U, R]): Int32 is
+            return 3;
+        end;
+    end;
+
+    generic [U: Type, R: Region]
+    instance Kind(Span![U, R]) is
+        method kind(value: Span![U, R]): Int32 is
+            return 4;
+        end;
+    end;
+
+    generic [U: Type]
+    instance Kind(Address[U]) is
+        method kind(value: Address[U]): Int32 is
+            return 5;
+        end;
+    end;
+
+    typeclass Many(T: Type) is
+        generic [R: Region]
+        method many(value: T, u: Unit, b: Bool, f: Float32, d: Float64, n: Foo, s: Static, r: &[Int32, R]): Int32;
+    end;
+
+    instance Many(Int32) is
+        generic [R: Region]
+        method many(value: Int32, u: Unit, b: Bool, f: Float32, d: Float64, n: Foo, s: Static, r: &[Int32, R]): Int32 is
+            return value;
+        end;
+    end;
+
+    generic [R: Region]
+    function probe(r: &[Int32, R], w: &![Int32, R], sp: Span[Int32, R], sm: Span![Int32, R], a: Address[Int32], s: Static): Int32 is
+        let k1: Int32 := kind(r);
+        let k2: Int32 := kind(w);
+        let k3: Int32 := kind(sp);
+        let k4: Int32 := kind(sm);
+        let k5: Int32 := kind(a);
+        let k6: Int32 := many(6, nil, true, 1.0, 2.0, Foo(a => 1), s, r);
+        return k6;
+    end;
+
+    function main(): ExitCode is
+        printLn("ok");
+        return ExitSuccess();
+    end;
+end module body.

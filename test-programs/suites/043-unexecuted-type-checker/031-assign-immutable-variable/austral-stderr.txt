@@ -1,0 +1,21 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "Cannot assign a value to " },
+    { "type": "code", "content": "x" },
+    { "type": "text", "content": " because it is immutable." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/031-assign-immutable-variable/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 15 }
+  },
+  "context": [
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        let x: Int32 := 1;" ],
+    [ 4, "        x := 2;" ],
+    [ 5, "        return ExitSuccess();" ],
+    [ 6, "    end;" ]
+  ]
+}

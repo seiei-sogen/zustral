@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "Cannot assign to a path that ends in a type, "
+    },
+    { "type": "type", "content": "Lin" },
+    { "type": "text", "content": ", not in the Free universe." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/028-assign-through-reference-linear-slot/Test.aum",
+    "startp": { "line": 11, "column": 8 },
+    "end": { "line": 11, "column": 26 }
+  },
+  "context": [
+    [ 9, "    generic [R: Region]" ],
+    [ 10, "    function f(w: &![Holder, R], value: Lin): Unit is" ],
+    [ 11, "        w->inner := value;" ],
+    [ 12, "        return nil;" ],
+    [ 13, "    end;" ]
+  ]
+}

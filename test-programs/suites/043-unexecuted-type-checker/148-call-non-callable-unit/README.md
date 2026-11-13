@@ -1,0 +1,1 @@
+Covers the `Unit` alternative of `augment_fptr_call` (lib/TypeCheckExpr.ml): calling a variable of type `Unit`, which is not a function pointer, is an error. Target line: lib/TypeCheckExpr.ml line 233.

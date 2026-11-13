@@ -1,0 +1,27 @@
+pragma Unsafe_Module;
+
+module body Test is
+    pragma Foreign_Import(External_Name => "abs");
+    function absolute(x: Int32): Int32 is
+    end;
+
+    pragma Foreign_Export(External_Name => "exported_function");
+    function exported(x: Int32): Int32 is
+        return x;
+    end;
+
+    pragma Unsafe_Module;
+    function marked(x: Int32): Int32 is
+        return x;
+    end;
+
+    pragma Foreign_Export(External_Name => "first_name");
+    pragma Foreign_Export(External_Name => "second_name");
+    function twice(x: Int32): Int32 is
+        return x;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

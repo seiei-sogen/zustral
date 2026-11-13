@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "The type for the expression in a case statement must be a union or a reference to a union, but I got "
+    },
+    { "type": "type", "content": "Pointer[Int32]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/104-case-pointer/Test.aum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 10, "column": 17 }
+  },
+  "context": [
+    [ 5, "module body Test is" ],
+    [ 6, "    function probe(x: Pointer[Int32]): Unit is" ],
+    [ 7, "        case x of" ],
+    [ 8, "            when A do" ],
+    [ 9, "                skip;" ],
+    [ 10, "        end case;" ],
+    [ 11, "        return nil;" ],
+    [ 12, "    end;" ]
+  ]
+}

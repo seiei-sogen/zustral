@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "Cannot assign to a path that ends in a type, "
+    },
+    { "type": "type", "content": "Region<0>" },
+    { "type": "text", "content": ", not in the Free universe." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/030-assign-through-reference-region-slot/Test.aum",
+    "startp": { "line": 8, "column": 8 },
+    "end": { "line": 8, "column": 26 }
+  },
+  "context": [
+    [ 6, "    generic [R: Region]" ],
+    [ 7, "    function f(w: &![Holder, R], value: Static): Unit is" ],
+    [ 8, "        w->inner := value;" ],
+    [ 9, "        return nil;" ],
+    [ 10, "    end;" ]
+  ]
+}

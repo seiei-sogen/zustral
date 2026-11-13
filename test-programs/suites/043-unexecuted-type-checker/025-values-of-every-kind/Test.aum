@@ -1,0 +1,52 @@
+module body Test is
+    record Foo: Free is
+        a: Int32;
+    end;
+
+    constant Ten: Int32 := 10;
+
+    function same(s: Static): Static is
+        return s;
+    end;
+
+    function nothing(): Unit is
+        return nil;
+    end;
+
+    generic [R: Region]
+    function probe(s: Static, sp: Span[Int32, R], sm: Span![Int32, R], ref: &[Foo, R]): Int32 is
+        let u: Unit := nil;
+        let b: Bool := true;
+        let i: Int32 := Ten;
+        let f: Float32 := 1.5;
+        let d: Float64 := 2.5;
+        let n: Foo := Foo(a => i);
+        let s2: Static := s;
+        let sp2: Span[Int32, R] := sp;
+        let sm2: Span![Int32, R] := sm;
+        let { a: Int32 } := n;
+        same(s2);
+        nothing();
+        return a + ref->a;
+    end;
+
+    function readBorrowed(): Int32 is
+        let x: Int32 := 1;
+        borrow r: &[Int32, R] := &x do
+            return !r;
+        end borrow;
+    end;
+
+    function writeBorrowed(): Int32 is
+        var x: Int32 := 2;
+        borrow r: &![Int32, R] := &!x do
+            return 2;
+        end borrow;
+    end;
+
+    function main(): ExitCode is
+        printLn(readBorrowed());
+        printLn(writeBorrowed());
+        return ExitSuccess();
+    end;
+end module body.

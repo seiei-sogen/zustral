@@ -1,0 +1,1 @@
+Covers the `Integer` alternative of the non-record arm of `augment_slot_access` (lib/TypeCheckExpr.ml): the reference transform `&(x.a)` on `x: &[Int32, R]` is an error, because the pointed-to type is not a record. Target line: lib/TypeCheckExpr.ml line 675.

@@ -1,0 +1,11 @@
+module body Test is
+    generic [T: Type, R: Region]
+    function f(r: &[T, R], t: T): Unit is
+        !r;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

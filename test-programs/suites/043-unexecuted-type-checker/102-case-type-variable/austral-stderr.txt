@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "The type for the expression in a case statement must be a union or a reference to a union, but I got "
+    },
+    { "type": "type", "content": "T" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/102-case-type-variable/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 7, "column": 17 }
+  },
+  "context": [
+    [ 2, "    generic [T: Free]" ],
+    [ 3, "    function probe(x: T): Unit is" ],
+    [ 4, "        case x of" ],
+    [ 5, "            when A do" ],
+    [ 6, "                skip;" ],
+    [ 7, "        end case;" ],
+    [ 8, "        return nil;" ],
+    [ 9, "    end;" ]
+  ]
+}

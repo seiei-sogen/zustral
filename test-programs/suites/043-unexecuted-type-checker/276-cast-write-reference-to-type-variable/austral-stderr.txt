@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "Write references can only be casted to a read reference."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/276-cast-write-reference-to-type-variable/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 28 }
+  },
+  "context": [
+    [ 2, "    generic [T: Free, R: Region]" ],
+    [ 3, "    function probe(x: &![Int32, R], t: T): Unit is" ],
+    [ 4, "        let y: T := (x : T);" ],
+    [ 5, "        return nil;" ],
+    [ 6, "    end;" ]
+  ]
+}

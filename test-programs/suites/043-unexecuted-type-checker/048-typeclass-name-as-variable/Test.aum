@@ -1,0 +1,10 @@
+module body Test is
+    typeclass Kind(T: Type) is
+        method kind(value: T): Int32;
+    end;
+
+    function main(): ExitCode is
+        let x: Int32 := Kind;
+        return ExitSuccess();
+    end;
+end module body.

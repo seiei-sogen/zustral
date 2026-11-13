@@ -1,0 +1,19 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [ { "type": "text", "content": "Instance overlaps." } ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/022-pointer-instance-after-function-pointer/Test.aum",
+    "startp": { "line": 16, "column": 4 },
+    "end": { "line": 18, "column": 8 }
+  },
+  "context": [
+    [ 14, "    end;" ],
+    [ 15, "" ],
+    [ 16, "    generic [U: Type]" ],
+    [ 17, "    instance Kind(Pointer[U]) is" ],
+    [ 18, "    end;" ],
+    [ 19, "" ],
+    [ 20, "    function main(): ExitCode is" ]
+  ]
+}

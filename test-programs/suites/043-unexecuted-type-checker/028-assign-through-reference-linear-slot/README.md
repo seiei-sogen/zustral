@@ -1,0 +1,1 @@
+Covers the `LinearUniverse` alternative of the universe check in `augment_assign` (lib/TypingPass.ml): assigning through a mutable reference to a slot of type `Lin`, which is not in the `Free` universe, is an error. Target line(s): lib/TypingPass.ml line 288 (and the arm at line 289).

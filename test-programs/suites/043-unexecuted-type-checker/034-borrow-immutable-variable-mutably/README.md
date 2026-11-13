@@ -1,0 +1,1 @@
+Covers the `(VarLocal Immutable, Write)` arm of `augment_borrow` (lib/TypingPass.ml): borrowing a variable declared with `let` mutably is an error. Target line(s): the arm at lib/TypingPass.ml line 391.

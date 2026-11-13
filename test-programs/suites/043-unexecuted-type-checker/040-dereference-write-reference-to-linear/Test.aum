@@ -1,0 +1,14 @@
+module body Test is
+    record Lin: Linear is
+    end;
+
+    generic [R: Region]
+    function f(r: &![Lin, R]): Unit is
+        !r;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

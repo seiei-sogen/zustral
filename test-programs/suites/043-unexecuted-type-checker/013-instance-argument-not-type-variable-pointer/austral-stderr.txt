@@ -1,0 +1,33 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The type " },
+    { "type": "type", "content": "Pointer[Int32]" },
+    {
+      "type": "text",
+      "content": " is not a type parameter, but generic instances must use either all type parameters or none of them in the argument."
+    },
+    { "type": "break" },
+    {
+      "type": "text",
+      "content": "Consider adding another generic parameter with universe "
+    },
+    { "type": "code", "content": "Free" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/013-instance-argument-not-type-variable-pointer/Test.aum",
+    "startp": { "line": 15, "column": 8 },
+    "end": { "line": 18, "column": 8 }
+  },
+  "context": [
+    [ 13, "" ],
+    [ 14, "    typeclass Kind(T: Type) is" ],
+    [ 15, "    end;" ],
+    [ 16, "" ],
+    [ 17, "    instance Kind(Box[Pointer[Int32]]) is" ],
+    [ 18, "    end;" ],
+    [ 19, "" ],
+    [ 20, "    function main(): ExitCode is" ]
+  ]
+}

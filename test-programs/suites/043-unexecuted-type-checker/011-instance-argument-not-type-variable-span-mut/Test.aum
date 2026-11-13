@@ -1,0 +1,20 @@
+module body Test is
+    record Foo: Free is
+        a: Int32;
+    end;
+
+    record Box[U: Type]: Type is
+        value: U;
+    end;
+
+    typeclass Kind(T: Type) is
+    end;
+
+    generic [R: Region]
+    instance Kind(Box[Span![Int32, R]]) is
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

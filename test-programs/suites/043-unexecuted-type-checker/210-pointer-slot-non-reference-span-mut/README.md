@@ -1,0 +1,1 @@
+Covers the `SpanMut` alternative of the second non-reference arm of `augment_pointer_slot_access` (lib/TypeCheckExpr.ml): `x->a` on a value of type `Span![Int32, R]` is an error, because `->` needs a reference. Target line: lib/TypeCheckExpr.ml line 730.

@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type " },
+    { "type": "type", "content": "Pointer[Int32]" },
+    {
+      "type": "text",
+      "content": " cannot be destructured because it is not a record."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/091-destructure-pointer/Test.aum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 7, "column": 30 }
+  },
+  "context": [
+    [ 5, "module body Test is" ],
+    [ 6, "    function probe(x: Pointer[Int32]): Unit is" ],
+    [ 7, "        let { a: Int32 } := x;" ],
+    [ 8, "        return nil;" ],
+    [ 9, "    end;" ]
+  ]
+}

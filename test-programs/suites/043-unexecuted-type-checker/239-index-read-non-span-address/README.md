@@ -1,0 +1,1 @@
+Covers the `Address` alternative of the read-reference arm of `augment_array_index` (lib/TypeCheckExpr.ml): indexing `x` of type `Address[Int32]` in an expression borrows it immutably, and the pointed-to type is not a span. Target line: lib/TypeCheckExpr.ml line 785.

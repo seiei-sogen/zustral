@@ -1,0 +1,13 @@
+module body Test is
+    function probe(x: Bool): Unit is
+        case x of
+            when A do
+                skip;
+        end case;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

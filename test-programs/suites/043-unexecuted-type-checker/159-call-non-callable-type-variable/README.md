@@ -1,0 +1,1 @@
+Covers the `TyVar` alternative of `augment_fptr_call` (lib/TypeCheckExpr.ml): calling a variable of type `T`, which is not a function pointer, is an error. Target line: lib/TypeCheckExpr.ml line 234.

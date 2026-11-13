@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "The head of a reference transform expression must be of a reference type, but I got "
+    },
+    { "type": "type", "content": "Pointer[Int32]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/186-reference-slot-non-reference-pointer/Test.aum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 7, "column": 15 }
+  },
+  "context": [
+    [ 5, "module body Test is" ],
+    [ 6, "    function probe(x: Pointer[Int32]): Unit is" ],
+    [ 7, "        &(x.a);" ],
+    [ 8, "        return nil;" ],
+    [ 9, "    end;" ]
+  ]
+}

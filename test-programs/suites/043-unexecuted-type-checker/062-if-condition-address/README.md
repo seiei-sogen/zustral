@@ -1,0 +1,1 @@
+Covers the `Address` alternative of `is_boolean` (lib/TypingPass.ml): the condition of an `if` statement has the type `Address[Int32]`, and the compiler reports that it is not `Bool`. Target line: lib/TypingPass.ml line 61.

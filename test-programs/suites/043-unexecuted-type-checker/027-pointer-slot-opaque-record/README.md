@@ -1,0 +1,1 @@
+Covers the `TypeVisOpaque` alternative of `augment_pointer_slot_access` (lib/TypeCheckExpr.ml): `root->value` reads a slot of `RootCapability`, which is opaque outside its module. Target line(s): lib/TypeCheckExpr.ml line 749 (and the arm at line 755).

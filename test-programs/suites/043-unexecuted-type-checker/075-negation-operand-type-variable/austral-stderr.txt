@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The operand of a " },
+    { "type": "text", "content": "negation" },
+    {
+      "type": "text",
+      "content": " operator must be a boolean expression, but it has the type "
+    },
+    { "type": "type", "content": "T" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/075-negation-operand-type-variable/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 29 }
+  },
+  "context": [
+    [ 2, "    generic [T: Free]" ],
+    [ 3, "    function probe(x: T): Unit is" ],
+    [ 4, "        let y: Bool := not x;" ],
+    [ 5, "        return nil;" ],
+    [ 6, "    end;" ]
+  ]
+}

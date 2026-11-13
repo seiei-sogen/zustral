@@ -1,0 +1,1 @@
+Covers the `ReadRef` alternative of the non-record arm of `augment_pointer_slot_access` (lib/TypeCheckExpr.ml): `x->a` on `x: &[&[Int32, R], R]` is an error, because the pointed-to type is not a record. Target line: lib/TypeCheckExpr.ml line 738.

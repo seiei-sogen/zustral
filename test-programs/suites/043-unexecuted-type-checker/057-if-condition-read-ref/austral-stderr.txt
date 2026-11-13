@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The condition in " },
+    { "type": "code", "content": "if" },
+    { "type": "text", "content": "-" },
+    { "type": "text", "content": "statement" },
+    { "type": "text", "content": "s should be a boolean type, but is " },
+    { "type": "type", "content": "&[Int32, R]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/057-if-condition-read-ref/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 6, "column": 15 }
+  },
+  "context": [
+    [ 2, "    generic [R: Region]" ],
+    [ 3, "    function probe(x: &[Int32, R]): Unit is" ],
+    [ 4, "        if x then" ],
+    [ 5, "            skip;" ],
+    [ 6, "        end if;" ],
+    [ 7, "        return nil;" ],
+    [ 8, "    end;" ]
+  ]
+}

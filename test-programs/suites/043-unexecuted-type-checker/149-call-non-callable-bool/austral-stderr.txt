@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type " },
+    { "type": "type", "content": "Bool" },
+    {
+      "type": "text",
+      "content": " is neither a function, method or function pointer, and cannot be called."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/149-call-non-callable-bool/Test.aum",
+    "startp": { "line": 3, "column": 8 },
+    "end": { "line": 3, "column": 13 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function probe(x: Bool): Unit is" ],
+    [ 3, "        x(1);" ],
+    [ 4, "        return nil;" ],
+    [ 5, "    end;" ]
+  ]
+}

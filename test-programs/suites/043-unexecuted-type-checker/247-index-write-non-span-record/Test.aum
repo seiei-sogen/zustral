@@ -1,0 +1,15 @@
+module body Test is
+    record Foo: Free is
+        a: Int32;
+    end;
+
+    function probe(x: Foo): Unit is
+        var y: Foo := x;
+        y[0] := 1;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

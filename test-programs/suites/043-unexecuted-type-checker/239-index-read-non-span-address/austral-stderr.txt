@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "I can't use the array indexing operator here, because the type "
+    },
+    { "type": "type", "content": "Address[Int32]" },
+    { "type": "text", "content": " is not a span." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/239-index-read-non-span-address/Test.aum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 7, "column": 13 }
+  },
+  "context": [
+    [ 5, "module body Test is" ],
+    [ 6, "    function probe(x: Address[Int32]): Unit is" ],
+    [ 7, "        x[0];" ],
+    [ 8, "        return nil;" ],
+    [ 9, "    end;" ]
+  ]
+}

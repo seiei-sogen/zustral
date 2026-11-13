@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "The head of a reference transform expression must be of a reference type, but I got "
+    },
+    { "type": "type", "content": "T" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/184-reference-slot-non-reference-type-variable/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 15 }
+  },
+  "context": [
+    [ 2, "    generic [T: Free]" ],
+    [ 3, "    function probe(x: T): Unit is" ],
+    [ 4, "        &(x.a);" ],
+    [ 5, "        return nil;" ],
+    [ 6, "    end;" ]
+  ]
+}

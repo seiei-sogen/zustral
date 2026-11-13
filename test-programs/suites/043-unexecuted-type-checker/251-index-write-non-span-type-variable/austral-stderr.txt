@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "I can't use the array indexing operator here, because the type "
+    },
+    { "type": "type", "content": "T" },
+    { "type": "text", "content": " is not a span." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/251-index-write-non-span-type-variable/Test.aum",
+    "startp": { "line": 5, "column": 8 },
+    "end": { "line": 5, "column": 18 }
+  },
+  "context": [
+    [ 3, "    function probe(x: T): Unit is" ],
+    [ 4, "        var y: T := x;" ],
+    [ 5, "        y[0] := 1;" ],
+    [ 6, "        return nil;" ],
+    [ 7, "    end;" ]
+  ]
+}
