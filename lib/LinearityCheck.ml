@@ -690,8 +690,11 @@ let linearity_check (params: value_parameter list) (body: tstmt): unit =
 
 (* Linearity checking of whole modules *)
 
-let rec check_module_linearity (TypedModule (_, decls)): unit Outcome.t =
-  Outcome.map ignore
+type checked_module = CheckedModule of typed_module
+
+let rec check_module_linearity (m: typed_module): checked_module Outcome.t =
+  let (TypedModule (_, decls)) = m in
+  Outcome.map (fun (_: unit list) -> CheckedModule m)
     (Outcome.traverse (fun decl -> Outcome.catch (fun () -> check_decl_linearity decl)) decls)
 
 and check_decl_linearity (decl: typed_decl): unit =
@@ -706,3 +709,6 @@ and check_decl_linearity (decl: typed_decl): unit =
 
 and check_method_linearity (TypedMethodDef (_, _, params, _, b)) =
   linearity_check params b
+
+let as_typed_module (CheckedModule m): typed_module =
+  m

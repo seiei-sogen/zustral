@@ -6,7 +6,6 @@
 *)
 
 open Env
-open Stages.Tast
 open Stages.Mtast
 
 (** This is the entrypoint to the monomorphization pass.
@@ -31,7 +30,7 @@ open Stages.Mtast
     5. You're done.
 
 *)
-val monomorphize : env -> typed_module -> (env * mono_module) Outcome.t
+val monomorphize : env -> LinearityCheck.checked_module -> (env * mono_module) Outcome.t
 
 (** Instantiate the functions the program exports, and everything they use.
     Called once, after all modules. *)

@@ -7,8 +7,8 @@
 open Env
 open Stages.Tast
 
-let rec extract_bodies (env: env) (m: typed_module): env Outcome.t =
-  let (TypedModule (_, decls)) = m in
+let rec extract_bodies (env: env) (m: LinearityCheck.checked_module): env Outcome.t =
+  let (TypedModule (_, decls)) = LinearityCheck.as_typed_module m in
   Outcome.catch (fun () -> Util.iter_with_context extract_decl env decls)
 
 and extract_decl (env: env) (decl: typed_decl): env =

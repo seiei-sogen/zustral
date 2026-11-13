@@ -93,9 +93,9 @@ let compile_mod (c: compiler) (source: module_source): compiler Outcome.t =
      let* (combined: SmallCombined.combined_module) = DesugaringPass.desugar returning in
      let* ((env, linked): env * linked_module) = extract env combined in
      let* (typed: typed_module) = augment_module env linked in
-     let* () = check_module_linearity typed in
-     let* (env: env) = extract_bodies env typed in
-     let* ((env, mono): env * mono_module) = monomorphize env typed in
+     let* (checked: checked_module) = check_module_linearity typed in
+     let* (env: env) = extract_bodies env checked in
+     let* ((env, mono): env * mono_module) = monomorphize env checked in
      let* (unit: c_unit) = gen_module env mono in
      Ok (Compiler (env, units @ [unit])))
 

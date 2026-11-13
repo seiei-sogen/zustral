@@ -26,5 +26,13 @@ type state_tbl
 (** Represents the number of times a given variable appears in an expression in different ways. *)
 type appearances
 
+(** A module whose functions and methods all passed the linearity check. Only
+    {!check_module_linearity} makes one, so a stage that takes this type
+    cannot be given a module that skipped the check. *)
+type checked_module
+
 (** Check the linearity of all functions and methods in a module. *)
-val check_module_linearity : typed_module -> unit Outcome.t
+val check_module_linearity : typed_module -> checked_module Outcome.t
+
+(** The module that passed the check. *)
+val as_typed_module : checked_module -> typed_module

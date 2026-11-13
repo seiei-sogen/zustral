@@ -518,9 +518,9 @@ and monomorphize_method (env: env) (meth: typed_method_def): (env * concrete_met
 
 let ( let* ) = Outcome.bind
 
-let rec monomorphize (env: env) (m: typed_module): (env * mono_module) Outcome.t =
+let rec monomorphize (env: env) (m: LinearityCheck.checked_module): (env * mono_module) Outcome.t =
   (* Monomorphize what we can: concrete definitions. *)
-  let (TypedModule (module_name, decls)) = m in
+  let (TypedModule (module_name, decls)) = LinearityCheck.as_typed_module m in
   let* (env, declopts) =
     Outcome.traverse_with_context
       (fun (e, d) -> Outcome.catch (fun () -> let (d, e) = monomorphize_decl e d in (e, d)))
