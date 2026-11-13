@@ -14,6 +14,10 @@
 #                            expected/unexecuted-message-lines.txt
 #   coverage.sh --messages --record
 #                            rewrite that record
+#   coverage.sh --kinds      count the lines that no program executes, by kind (an
+#                            arm that raises an internal error, a line of or-pattern
+#                            alternatives, ...); --kinds --files adds the count of
+#                            each file. The kinds are read off the text: rough
 # Environment:
 #   ZUSTRAL_NIX_FLAGS  extra flags for `nix develop`
 #
@@ -31,6 +35,7 @@ case ${1:-} in
   --lines) MODE=lines; FILE=${2:?usage: coverage.sh --lines File.ml} ;;
   --errors) MODE=errors; [[ ${2:-} == --only ]] && ONLY=${3:?usage: coverage.sh --errors --only DIR} ;;
   --messages) MODE=messages; [[ ${2:-} == --record ]] && RECORD_MESSAGES=(--record) ;;
+  --kinds) MODE=kinds; KINDS_FILES=(); [[ ${2:-} == --files ]] && KINDS_FILES=(--files) ;;
 esac
 
 T=$(mktemp -d)
@@ -72,6 +77,12 @@ fi
 if [[ $MODE == messages ]]; then
   point_report
   python3 "$HERE/unexecuted-errors.py" --messages "${RECORD_MESSAGES[@]}" "$T/points.coverage"
+  exit $?
+fi
+
+if [[ $MODE == kinds ]]; then
+  line_report
+  python3 "$HERE/unexecuted-kinds.py" "$T/cobertura.xml" "$ROOT" "${KINDS_FILES[@]}"
   exit $?
 fi
 
