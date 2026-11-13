@@ -571,11 +571,11 @@ and instantiate_monomorph (env: env) (mono: monomorph): (env * mdecl) =
       let { typarams; slots; _ }: record_decl = get_record env type_id in
       (* Search/replace the type variables in the slot list with the type
          arguments from this monomorph. *)
+      let bindings: type_bindings = make_bindings env typarams tyargs in
       let slots: typed_slot list =
         List.map
           (fun (TypedSlot (name, ty)) ->
-            (* TODO: extract decl name, make it a qname, pass that here *)
-            TypedSlot (name, replace_type_variables env typarams tyargs ty))
+            TypedSlot (name, replace_variables bindings ty))
           slots
       in
       (* Strip and monomorphize the slot list. *)
@@ -593,13 +593,14 @@ and instantiate_monomorph (env: env) (mono: monomorph): (env * mdecl) =
      let cases: typed_case list = List.map union_case_to_typed_case (get_union_cases env type_id) in
      (* Search/replace the type variables in the case list with the type
         arguments from this monomorph. *)
+     let bindings: type_bindings = make_bindings env typarams tyargs in
      let cases: typed_case list =
        List.map
          (fun (TypedCase (name, slots)) ->
            let slots: typed_slot list =
              List.map
                (fun (TypedSlot (name, ty)) ->
-                 TypedSlot (name, replace_type_variables env typarams tyargs ty))
+                 TypedSlot (name, replace_variables bindings ty))
                slots
            in
            TypedCase (name, slots))
@@ -619,21 +620,21 @@ and instantiate_monomorph (env: env) (mono: monomorph): (env * mdecl) =
      let (typarams, params, rt, body) = get_function_definition env function_id in
      (* Search/replace the type variables in the parameter list with the type
         arguments. *)
+     let bindings: type_bindings = make_bindings env typarams tyargs in
      let params: value_parameter list =
        List.map
          (fun (ValueParameter (name, ty)) ->
-           ValueParameter (name, replace_type_variables env typarams tyargs ty))
+           ValueParameter (name, replace_variables bindings ty))
          params
      in
      (* Monomorphize the parameter list. *)
      let (env, params) = monomorphize_params env params in
      (* Search/replace the type variables in the return type. *)
-     let rt: ty = replace_type_variables env typarams tyargs rt in
+     let rt: ty = replace_variables bindings rt in
      (* Monomorphize the return type. *)
      let (rt, env) = strip_and_mono env rt in
      (* Search/replace the type variables in the body with the type
         arguments. *)
-     let bindings = make_bindings env typarams tyargs in
      let body = replace_tyvars_stmt bindings body in
      (* Monomorphize the body *)
      let (body, env) = monomorphize_stmt env body in
@@ -649,21 +650,21 @@ and instantiate_monomorph (env: env) (mono: monomorph): (env * mdecl) =
       let (typarams, params, rt, body) = get_method_definition env method_id in
       (* Search/replace the type variables in the parameter list with the type
          arguments. *)
+      let bindings: type_bindings = make_bindings env typarams tyargs in
       let params: value_parameter list =
         List.map
           (fun (ValueParameter (name, ty)) ->
-            ValueParameter (name, replace_type_variables env typarams tyargs ty))
+            ValueParameter (name, replace_variables bindings ty))
           params
       in
       (* Monomorphize the parameter list. *)
       let (env, params) = monomorphize_params env params in
       (* Search/replace the type variables in the return type. *)
-      let rt = replace_type_variables env typarams tyargs rt in
+      let rt = replace_variables bindings rt in
       (* Monomorphize the return type. *)
       let (rt, env) = strip_and_mono env rt in
       (* Search/replace the type variables in the body with the type
          arguments. *)
-      let bindings = make_bindings env typarams tyargs in
       let body = replace_tyvars_stmt bindings body in
       (* Monomorphize the body *)
       let (body, env) = monomorphize_stmt env body in
@@ -713,10 +714,6 @@ and monomorphize_case_list (env: env) (cases: typed_case list): (env * mono_case
     env
     cases
 
-and replace_type_variables (env: env) (typarams: typarams) (args: mono_type_bindings) (ty: ty): ty =
-  let bindings: type_bindings = make_bindings env typarams args in
-  replace_variables bindings ty
-
 and make_bindings (env: env) (typarams: typarams) (args: mono_type_bindings): type_bindings =
   let typarams = typarams_as_list typarams in
   if (List.length typarams) = (List.length (mono_bindings_as_list args)) then
@@ -751,7 +748,7 @@ and mono_to_ty (env: env) (ty: mono_ty): ty =
      let (mod_id, TypeSignature.TypeSignature (name, typarams, universe), tyargs) = get_type_monomorph env mono_id in
      let qname: qident = make_qident (module_name_from_id NoSpan env mod_id, name, name) in
      let params: ty list = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams) in
-     replace_type_variables env typarams tyargs (NamedType (qname, params, universe))
+     replace_variables (make_bindings env typarams tyargs) (NamedType (qname, params, universe))
   | MonoRegionTy r ->
      RegionTy r
   | MonoReadRef (ty, region) ->

@@ -48,9 +48,6 @@ type ty =
   | Address of ty
   | Pointer of ty
   | FnPtr of ty list * ty
-  (** Special case, see the `mono_to_ty` function. We need this to be able to do
-     monomorph instantiation, but this doesn't correspond to anything in the
-     code. *)
 (** The region of a reference or span type. *)
 and ref_region =
   | RefRegion of region
