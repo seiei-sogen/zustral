@@ -19,30 +19,33 @@ type mono_id = MonoId of int
 
 (* ID utilities *)
 
-let mod_counter: int ref = ref 1
+let fresh_mod_id (supply: Supply.t): mod_id * Supply.t =
+  let (number, supply) = Supply.next_mod_id supply in
+  (ModId number, supply)
 
-let fresh_mod_id _: mod_id =
-  let id = !mod_counter in
-  mod_counter := id + 1;
-  ModId id
+let fresh_decl_id (supply: Supply.t): decl_id * Supply.t =
+  let (number, supply) = Supply.next_decl_id supply in
+  (DeclId number, supply)
 
-let decl_counter: int ref = ref 1
+let fresh_ins_meth_id (supply: Supply.t): ins_meth_id * Supply.t =
+  let (number, supply) = Supply.next_ins_meth_id supply in
+  (InsMethId number, supply)
 
-let fresh_decl_id _: decl_id =
-  let id = !decl_counter in
-  decl_counter := id + 1;
-  DeclId id
+let fresh_mono_id (supply: Supply.t): mono_id * Supply.t =
+  let (number, supply) = Supply.next_mono_id supply in
+  (MonoId number, supply)
 
-let ins_meth_counter: int ref = ref 1
+let compare_mod_id (ModId a) (ModId b): int =
+  compare a b
 
-let fresh_ins_meth_id _: ins_meth_id =
-  let id = !ins_meth_counter in
-  ins_meth_counter := id + 1;
-  InsMethId id
+let compare_decl_id (DeclId a) (DeclId b): int =
+  compare a b
 
-let mono_counter: int ref = ref 1
+let decl_id_number (DeclId number): int =
+  number
 
-let fresh_mono_id _: mono_id =
-  let id = !mono_counter in
-  mono_counter := id + 1;
-  MonoId id
+let ins_meth_id_number (InsMethId number): int =
+  number
+
+let mono_id_number (MonoId number): int =
+  number

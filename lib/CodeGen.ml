@@ -106,19 +106,16 @@ let gen_sident (mn: module_name) (i: identifier): CIdent.t =
   CIdent.austral_unescaped ((gen_module_name mn) ^ "____" ^ (ident_text i))
 
 let gen_decl_id (id: decl_id): CIdent.t =
-  let (DeclId i) = id in
-  CIdent.generated (austral_prefix ^ "decl_" ^ (string_of_int i))
+  CIdent.generated (austral_prefix ^ "decl_" ^ (string_of_int (decl_id_number id)))
 
 let mono_id_text (id: mono_id): string =
-  let (MonoId i) = id in
-  austral_prefix ^ "mono_" ^ (string_of_int i)
+  austral_prefix ^ "mono_" ^ (string_of_int (mono_id_number id))
 
 let gen_mono_id (id: mono_id): CIdent.t =
   CIdent.generated (mono_id_text id)
 
 let gen_ins_meth_id (id: ins_meth_id): CIdent.t =
-  let (InsMethId i) = id in
-  CIdent.generated (austral_prefix ^ "meth_" ^ (string_of_int i))
+  CIdent.generated (austral_prefix ^ "meth_" ^ (string_of_int (ins_meth_id_number id)))
 
 (* The members of the struct that represents a union: see the notes above. *)
 let tag_slot: CIdent.t = CIdent.generated "tag"
