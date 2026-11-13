@@ -318,7 +318,7 @@ and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb
           | (Some def) ->
              match_decls module_name im bm decl (ConcreteInstanceDef def)
           | None ->
-             declaration_error (MissingInstanceBodyDefinition { name; ty = argument }))
+             declaration_error (MissingInstanceBodyDefinition { name; ty = WrittenType (typespec_string argument) }))
       | _ ->
          internal_err "Couldn't parse declaration declaration")
 

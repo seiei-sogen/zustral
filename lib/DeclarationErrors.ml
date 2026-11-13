@@ -10,6 +10,11 @@ open Type
 open TypeParameter
 open ErrorText
 
+(** A type as the user wrote it in the source text. The error modules are
+    below the syntax tree, so an error carries the text, and the code that
+    raises it prints the type specifier. *)
+type written_type = WrittenType of string
+
 (** The kinds of declaration that the wording of an error names. *)
 type declaration_kind =
   | ConstantDeclaration
@@ -50,7 +55,7 @@ type t =
   | DeclarationKindMismatch of { name: identifier; expected: declaration_kind }
   | FunctionMismatch of { name: identifier; difference: function_difference }
   | MissingBodyDefinition of identifier
-  | MissingInstanceBodyDefinition of { name: identifier; ty: Cst.typespec }
+  | MissingInstanceBodyDefinition of { name: identifier; ty: written_type }
   | ModuleNameMismatch of { interface: module_name; body: module_name }
   | MultiargTypeclass of identifier
   | DeclarationTypeMismatch of identifier
@@ -119,12 +124,12 @@ let render (error: t): err_text =
        Code (ident_string name);
        Text " has no corresponding body implementation."
      ]
-  | MissingInstanceBodyDefinition { name; ty } ->
+  | MissingInstanceBodyDefinition { name; ty = WrittenType ty } ->
      [
        Text "The instance ";
        Code (ident_string name);
        Text " with type ";
-       Code (Cst.typespec_string ty);
+       Code ty;
        Text " has no corresponding body implementation."
      ]
   | ModuleNameMismatch { interface; body } ->

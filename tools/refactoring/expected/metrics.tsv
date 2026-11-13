@@ -18,7 +18,7 @@ lib/Common.ml	69	0	0	0	0	0	3	0	0	0
 lib/Compiler.ml	151	0	0	0	0	0	6	0	0	0
 lib/Cst.ml	163	0	0	0	0	0	2	0	0	0
 lib/CstUtil.ml	162	4	0	0	0	6	0	0	0	0
-lib/DeclarationErrors.ml	334	0	0	0	0	0	0	0	0	0
+lib/DeclarationErrors.ml	339	0	0	0	0	0	1	0	0	0
 lib/DesugarBorrows.ml	244	1	0	0	0	0	0	0	0	0
 lib/DesugarPaths.ml	146	0	0	0	0	0	0	0	0	0
 lib/DesugaringPass.ml	43	0	0	0	0	0	0	0	0	0
