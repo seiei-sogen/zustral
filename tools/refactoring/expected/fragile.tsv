@@ -42,7 +42,6 @@ lib/Monomorphize.ml	EnvTypes.ins_meth_rec	2
 lib/MtastUtil.ml	MonoType.mono_ty	2
 lib/ReturnCheck.ml	Stages.Ast.aexpr	2
 lib/TastUtil.ml	Type.ty	2
-lib/Type.ml	Type.ty	32
 lib/TypeBindings.ml	Type.ty	2
 lib/TypeCheckExpr.ml	EnvTypes.decl	10
 lib/TypeCheckExpr.ml	Stages.AstDB.aexpr	4
