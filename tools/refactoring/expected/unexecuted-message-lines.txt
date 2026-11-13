@@ -47,14 +47,3 @@ lib/GenericErrors.ml	Text "is_numeric called with MonoTy argument"
 lib/ParseErrors.ml	| StringInvalidCharacter lexeme ->
 lib/ParseErrors.ml	Text "Character not allowed in string literal: ";
 lib/ParseErrors.ml	Code lexeme
-lib/TypeErrors.ml	match bound with
-lib/TypeErrors.ml	| InitialBound -> "initial"
-lib/TypeErrors.ml	| FinalBound -> "final"
-lib/TypeErrors.ml	| ForBoundsNonIntegral { bound; ty } ->
-lib/TypeErrors.ml	Text "The type of the ";
-lib/TypeErrors.ml	Text (loop_bound_word bound);
-lib/TypeErrors.ml	Text " value in the loop range is ";
-lib/TypeErrors.ml	Type ty;
-lib/TypeErrors.ml	Text " which is not ";
-lib/TypeErrors.ml	Code "Index";
-lib/TypeErrors.ml	Text "."

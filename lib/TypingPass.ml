@@ -72,9 +72,6 @@ let is_boolean = function
   | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
   | MonoTy _ -> false
 
-let is_compatible_with_index_type (place: place) (e: texpr): bool =
-  (get_type place e) = index_type
-
 type case_mode =
   | NormalCaseMode
   | ReadRefCaseMode of ref_region
@@ -379,17 +376,14 @@ and augment_while (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: spa
 and augment_for (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (name: identifier) (initial: aexpr) (final: aexpr) (body: astmt): tstmt * lexenv * Supply.t =
   let ctx = stmt_at ctx span in
   let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
+  (* Both bounds have the type Index: the lifting pass binds each to a
+     temporary whose value is a cast to Index, and the cast reports a bound of
+     another type (issue #124). *)
   (let i' = infer_expr place module_name env rm typarams lexenv initial
       and f' = infer_expr place module_name env rm typarams lexenv final in
-      if is_compatible_with_index_type place i' then
-        if is_compatible_with_index_type place f' then
-          let lexenv = push_var place lexenv name index_type (VarLocal Immutable) in
-          let (b', lexenv, supply) = augment_stmt ctx lexenv supply body in
-          (TFor (span, name, i', f', b'), remove_var lexenv name, supply)
-        else
-          type_error place (ForBoundsNonIntegral { bound = FinalBound; ty = get_type place f' })
-      else
-        type_error place (ForBoundsNonIntegral { bound = InitialBound; ty = get_type place i' }))
+      let lexenv = push_var place lexenv name index_type (VarLocal Immutable) in
+      let (b', lexenv, supply) = augment_stmt ctx lexenv supply body in
+      (TFor (span, name, i', f', b'), remove_var lexenv name, supply))
 
 and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (original: identifier) (rename: identifier) (region: identifier) (body: astmt) (mode: borrow_stmt_kind): tstmt * lexenv * Supply.t =
   let ctx = stmt_at ctx span in

@@ -39,16 +39,6 @@ type reference_difference =
   | DifferentUnderlyingRegion
   | DifferentTypeAndRegion
 
-(** The two ends of the range of a [for] loop. *)
-type loop_bound =
-  | InitialBound
-  | FinalBound
-
-let loop_bound_word (bound: loop_bound): string =
-  match bound with
-  | InitialBound -> "initial"
-  | FinalBound -> "final"
-
 type t =
   | ArithmeticIncompatibleTypes of { lhs: ty; rhs: ty }
   | ArithmeticNotNumeric of ty
@@ -72,7 +62,6 @@ type t =
   | DestructureWrongSlots of ty
   | DiscardLinear of universe
   | ExpressionNotConstant
-  | ForBoundsNonIntegral of { bound: loop_bound; ty: ty }
   | FunPointerNamedArgs
   | IfInequal of { lhs: ty; rhs: ty }
   | LogicalOperandsNotBoolean of logical_operands
@@ -249,16 +238,6 @@ let render (error: t): err_text =
   | ExpressionNotConstant ->
      [
        Text "The expression is not a valid constant expression."
-     ]
-  | ForBoundsNonIntegral { bound; ty } ->
-     [
-       Text "The type of the ";
-       Text (loop_bound_word bound);
-       Text " value in the loop range is ";
-       Type ty;
-       Text " which is not ";
-       Code "Index";
-       Text "."
      ]
   | FunPointerNamedArgs ->
      [
