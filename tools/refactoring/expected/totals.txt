@@ -1,7 +1,7 @@
-files 84
-lines 15014
-raise 336
-catch 51
+files 85
+lines 15106
+raise 333
+catch 46
 state 12
 io 50
 wildcard 196
