@@ -46,7 +46,7 @@ let rec check_entrypoint_validity (env: env) (name: qident): decl_id * entrypoin
                     entrypoint_error (WrongReturnType rt)
                 else
                   entrypoint_error (WrongParameterType pt)
-             | _ ->
+             | _ :: _ :: _ ->
                 entrypoint_error MultipleParameters
            else
              entrypoint_error NotMonomorphic
@@ -65,7 +65,11 @@ and is_root_cap_type = function
      let m = equal_module_name (source_module_name name) pervasive_module_name
      and n = equal_identifier (original_name name) (make_ident BuiltInNames.root_capability_name) in
      m && n
-  | _ ->
+  | NamedType (_, [], (FreeUniverse | TypeUniverse | RegionUniverse))
+  | NamedType (_, _ :: _, _)
+  | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
+  | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
+  | MonoTy _ ->
      false
 
 and is_exit_code_type = function
@@ -73,7 +77,11 @@ and is_exit_code_type = function
      let m = equal_module_name (source_module_name name) pervasive_module_name
      and n = equal_identifier (original_name name) (make_ident BuiltInNames.exit_code_name) in
      m && n
-  | _ ->
+  | NamedType (_, [], (LinearUniverse | TypeUniverse | RegionUniverse))
+  | NamedType (_, _ :: _, _)
+  | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
+  | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
+  | MonoTy _ ->
      false
 
 let entrypoint_code root_cap_mono_id exit_code_mono_id id =

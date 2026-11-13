@@ -87,7 +87,7 @@ let rec type_variables = function
 and any_arg_is_linear (args: ty list) =
   let is_linear = function
     | LinearUniverse -> true
-    | _ -> false
+    | FreeUniverse | TypeUniverse | RegionUniverse -> false
   in
   List.exists is_linear (List.map type_universe args)
 
@@ -96,6 +96,6 @@ and any_arg_is_linear (args: ty list) =
 and any_arg_is_type (args: ty list) =
   let is_type = function
     | TypeUniverse -> true
-    | _ -> false
+    | FreeUniverse | LinearUniverse | RegionUniverse -> false
   in
   List.exists is_type (List.map type_universe args)

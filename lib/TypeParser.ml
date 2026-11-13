@@ -161,7 +161,7 @@ and all_arguments_are_free (args: ty list): bool =
        true
     | RegionUniverse ->
        true
-    | _ ->
+    | LinearUniverse | TypeUniverse ->
        false
   in
   List.for_all is_compatible_with_free (List.map type_universe args)

@@ -84,7 +84,9 @@ let add_binding (TypeBindings m) (tp: type_parameter) (ty: ty): type_bindings =
      | MonoTy _ ->
        (* Special case! Allow `MonoTy`. See #399. *)
        TypeBindings (BindingsMap.add tp ty m)
-     | _ ->
+     | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+     | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
+     | Pointer _ | FnPtr _ ->
       if universe_compatible (typaram_universe tp) (type_universe ty) then
         TypeBindings (BindingsMap.add tp ty m)
       else

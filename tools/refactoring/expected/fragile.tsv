@@ -23,9 +23,6 @@ lib/CstUtil.ml	Cst.concrete_decl	2
 lib/CstUtil.ml	Cst.concrete_def	2
 lib/DesugarPaths.ml	Stages.AstLC.aexpr	4
 lib/Entrypoint.ml	EnvTypes.decl	6
-lib/Entrypoint.ml	Type.ty	4
-lib/Entrypoint.ml	Type.universe	4
-lib/Entrypoint.ml	Type.value_parameter	2
 lib/Env.ml	EnvTypes.decl	18
 lib/Env.ml	EnvTypes.mod_rec	2
 lib/Env.ml	EnvTypes.monomorph	14
@@ -35,14 +32,10 @@ lib/ExtractionPass.ml	Common.pragma	4
 lib/ExtractionPass.ml	EnvTypes.decl	6
 lib/LinearityCheck.ml	LinearityErrors.var_state	2
 lib/LinearityCheck.ml	Stages.Tast.typed_decl	2
-lib/LinearityCheck.ml	Type.ty	4
-lib/LinearityCheck.ml	Type.universe	2
 lib/Monomorphize.ml	EnvTypes.decl	16
 lib/Monomorphize.ml	EnvTypes.ins_meth_rec	2
 lib/MtastUtil.ml	MonoType.mono_ty	2
 lib/ReturnCheck.ml	Stages.Ast.aexpr	2
-lib/TastUtil.ml	Type.ty	2
-lib/TypeBindings.ml	Type.ty	2
 lib/TypeCheckExpr.ml	EnvTypes.decl	10
 lib/TypeCheckExpr.ml	Stages.AstDB.aexpr	4
 lib/TypeCheckExpr.ml	Stages.Tast.texpr	4
@@ -54,8 +47,6 @@ lib/TypeMatch.ml	EnvTypes.decl	4
 lib/TypeMatch.ml	Stages.Tast.texpr	6
 lib/TypeMatch.ml	Type.ty	32
 lib/TypeMatch.ml	Type.type_var	2
-lib/TypeParser.ml	Type.universe	2
-lib/TypeSystem.ml	Type.universe	4
 lib/TypingPass.ml	Common.borrow_stmt_kind	2
 lib/TypingPass.ml	Common.mutability	2
 lib/TypingPass.ml	Common.pragma	2

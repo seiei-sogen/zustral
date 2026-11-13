@@ -95,7 +95,9 @@ let rec get_type = function
          t
       | WriteRef (t, _) ->
          t
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
+      | MonoTy _ ->
          internal_err ("a dereference expression was constructed whose argument is not a reference type."))
   | TSizeOf _ ->
      Integer (Unsigned, WidthByteSize)
