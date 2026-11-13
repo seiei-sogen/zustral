@@ -604,6 +604,7 @@ OCaml のコンパイラは、match がすべての構成子を受けている�
 - **目標の形。** 検査の関数が、検査済みの型の値を返す。その型の値は、検査の関数からしか作れない。次の段は、検査済みの型を受け取る。
 - **確かめ方。** 検査の呼び出しを消した版が、型エラーでビルドに失敗する。等価性の検査が 0 本である。
 - **大きさ。** 小。
+- **結果。** 2つの検査は、検査を通ったモジュールの型を返す。return の検査は `ReturnCheck.returning_module` を、線形性の検査は `LinearityCheck.checked_module` を返す。どちらも抽象型で、作れるのは検査の関数だけである。中身は `as_combined_module` と `as_typed_module` で取り出す。脱糖は `returning_module` を受け取る。本体の取り出しと単相化は `checked_module` を受け取る。`lib/Compiler.ml` から return の検査を消すと、92 行で「`Combined.combined_module` ではなく `returning_module` が要る」という型エラーになる。線形性の検査を消すと、96 行で「`typed_module` ではなく `checked_module` が要る」という型エラーになる。どちらも、消してビルドして確かめた。20.5 節の宿題も済ませた。検査の状態の型 `var_state` は `lib/LinearityCheck.ml` に戻した。エラーのモジュールは、文面に出す状態だけを `LinearityErrors.reported_state` として持つ。等価性の検査は 1163 本で、違いは 0 本である。
 
 ### R24. 後ろの段の「ここには来ないはず」を、型でなくす（issue #117）
 
@@ -734,7 +735,7 @@ E                  拡張
 | 宿題 | 今の形 | 直す所 |
 |---|---|---|
 | エラーの型が、上の層の型に依存している | `lib/Error.ml` は、構成子が運ぶ値を通して、構文木（`Cst`）、`MonoType`、`TypeParameter`、`Common` に依存する。`Error` より下のモジュールは、型の付いたエラーを投げられない。R18 と重ねたときに、依存が輪になった | R14。投げる箇所をすべて触るので、そのときに、構成子が運ぶ型を見直す |
-| 線形性のエラーのモジュールが、検査の状態の型を持っている | `var_state` が `lib/LinearityErrors.ml` にあり、`lib/LinearityCheck.ml` が再公開している | R23。線形性の検査の出口の型を作るときに戻す |
+| 線形性のエラーのモジュールが、検査の状態の型を持っている | `var_state` が `lib/LinearityErrors.ml` にあり、`lib/LinearityCheck.ml` が再公開していた | R23 で直した。`var_state` は `lib/LinearityCheck.ml` にある |
 | C の識別子の作り方が5つある | 予約語をよけるかどうかを、呼ぶ側が選んでいる。名前の出どころは持っていない | issue #92 を直すとき。出る C が変わるので、リファクタリングの中では直さない |
 | `GenericErrors` に、内部の不変条件の破れを表す構成子がある | `MatchTypeOnMonoTy`、`IsNumericOnMonoTy`、`MinOfEmptyList`、`SplitReturnedEmpty` など。関数の名前が付いている | R24。型で表せなくするか、内部エラーに分類し直す。題名が「Generic Error」から変わるので、届かないことを確かめてから行う |
 | 数値リテラルの値に、まだ読まれない欄がある | 小数部の桁数、指数の有無、基数 | D3。Decimal のリテラルが読む |

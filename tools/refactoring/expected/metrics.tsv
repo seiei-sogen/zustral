@@ -45,8 +45,8 @@ lib/Imports.ml	63	1	0	0	0	0	0	0	0	0
 lib/LexEnv.ml	59	1	0	1	0	0	0	0	0	0
 lib/Lexer.mll	175	4	0	2	0	0	0	0	0	0
 lib/LiftControlPass.ml	205	0	0	0	0	0	0	0	0	0
-lib/LinearityCheck.ml	708	21	11	0	0	2	0	9	0	0
-lib/LinearityErrors.ml	157	0	0	0	0	0	0	0	0	0
+lib/LinearityCheck.ml	715	21	11	0	0	2	0	9	0	0
+lib/LinearityErrors.ml	159	0	0	0	0	0	0	0	0	0
 lib/ModIdSet.ml	18	0	0	0	0	0	0	0	0	0
 lib/ModuleNameSet.ml	15	0	0	0	0	0	0	0	0	0
 lib/MonoType.ml	37	0	0	0	0	0	0	0	0	0
@@ -61,7 +61,7 @@ lib/ParserInterface.ml	27	1	1	0	0	0	0	0	0	0
 lib/Qualifier.ml	30	0	0	0	0	0	0	0	0	0
 lib/Region.ml	19	0	0	1	0	0	0	0	0	0
 lib/RegionMap.ml	24	1	0	0	0	0	0	0	0	0
-lib/ReturnCheck.ml	94	2	2	0	0	2	0	0	0	0
+lib/ReturnCheck.ml	100	2	2	0	0	2	0	0	0	0
 lib/SourceContext.ml	60	0	0	0	0	0	1	0	0	0
 lib/Span.ml	64	0	0	0	0	0	1	0	0	0
 lib/Stages.ml	669	0	0	0	0	0	8	0	0	0

@@ -17,7 +17,7 @@ type Cst.cstmt 2
 type EnvTypes.decl 74
 type EnvTypes.monomorph 16
 type LexEnv.var_source 2
-type LinearityErrors.var_state 2
+type LinearityCheck.var_state 2
 type Stages.Ast.aexpr 4
 type Stages.Ast.astmt 2
 type Stages.AstDB.aexpr 8
