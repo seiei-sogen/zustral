@@ -91,7 +91,9 @@ let match_typarams_ctx (ctx: expr_ctx) (typarams: typarams) (type_args: ty list)
 let is_bool (e: texpr): bool =
   match get_type e with
   | Boolean -> true
-  | _ -> false
+  | Unit | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
+  | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
+  | MonoTy _ -> false
 
 (** Is this expression an integer constant? *)
 let is_int_constant (e: aexpr): bool =
@@ -235,7 +237,9 @@ and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (assert
   let (paramtys, rt): (ty list * ty) =
     match fn_ptr_ty with
     | FnPtr (paramtys, rt) -> (paramtys, rt)
-    | _ -> type_error (CallNonCallable fn_ptr_ty)
+    | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+    | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+    | MonoTy _ -> type_error (CallNonCallable fn_ptr_ty)
   in
   (* Then, we synthesize a parameter list from the function pointer type. The
      parameter names are fake, but this is so we can reuse the arity-checking,
@@ -403,7 +407,9 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: decl_id) (typaram: type_p
          else
            (* If it doesn't, that's an error *)
            type_error (UnconstrainedTypeParameter { typeclass = sident_name tc_name; typaram })
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _
+      | Pointer _ | FnPtr _ | MonoTy _ ->
          (* If it's not a type variable, continue normal instance resolution. *)
          let (instance, instance_bindings): decl * type_bindings =
            (match get_instance (ctx_env ctx) (ctx_module_name ctx) dispatch_ty typeclass_id with
@@ -440,7 +446,9 @@ and cast_arguments (bindings: type_bindings) (params: value_parameter list) (arg
     | Integer _ ->
        (* Cast integer types *)
        TCast (value, expected')
-    | _ ->
+    | Unit | Boolean | SingleFloat | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
+    | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
+    | MonoTy _ ->
        value
   in
   List.map2 f params arguments
@@ -644,7 +652,8 @@ and augment_deref (ctx: expr_ctx) (expr: aexpr): texpr =
         TDeref expr'
       else
         linearity_error (DereferenceNonFree ty')
-   | _ ->
+   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+   | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
       type_error (DereferenceNonReference ty))
 
 and augment_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identifier): texpr =
@@ -656,7 +665,8 @@ and augment_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identifier): t
        (ty, reg, ReadBorrow)
     | WriteRef (ty, reg) ->
        (ty, reg, WriteBorrow)
-    | _ ->
+    | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+    | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
        generic_error (RefTransformNeedsRef (get_type expr))
   in
   (* The pointed-to type is a record. *)
@@ -664,7 +674,9 @@ and augment_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identifier): t
       match ty with
       | NamedType (name, args, _) ->
          (name, args)
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
+      | MonoTy _ ->
          type_error (CantAccessSlotNotRecord { slot_name; ty })
     end
   in
@@ -701,7 +713,8 @@ and augment_pointer_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identi
        (ty2, reg)
     | WriteRef (ty2, reg) ->
        (ty2, reg)
-    | _ ->
+    | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+    | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
        generic_error (RefTransformNeedsRef (get_type expr))
   in
   (* ... to a reference... *)
@@ -711,7 +724,8 @@ and augment_pointer_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identi
        (ty3, ReadBorrow)
     | WriteRef (ty3, _) ->
        (ty3, WriteBorrow)
-    | _ ->
+    | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+    | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
        type_error (PointerAccessNotReference ty2)
   in
   (* ... to a record. *)
@@ -719,7 +733,9 @@ and augment_pointer_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identi
       match ty3 with
       | NamedType (name, args, _) ->
          (name, args)
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
+      | MonoTy _ ->
          type_error (CantAccessSlotNotRecord { slot_name; ty = ty3 })
     end
   in
@@ -759,7 +775,9 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
            ty
         | SpanMut (ty, _) ->
            ty
-        | _ ->
+        | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+        | RegionTy _ | ReadRef _ | WriteRef _ | TyVar _ | Address _ | Pointer _
+        | FnPtr _ | MonoTy _ ->
            type_error (CantIndexNotSpan ty)
       in
       (* Construct the result type. *)
@@ -772,7 +790,9 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
            ty
         | SpanMut (ty, _) ->
            ty
-        | _ ->
+        | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+        | RegionTy _ | ReadRef _ | WriteRef _ | TyVar _ | Address _ | Pointer _
+        | FnPtr _ | MonoTy _ ->
            type_error (CantIndexNotSpan ty)
       in
       (* Construct the result type. *)
@@ -782,7 +802,8 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
      TSpanIndex (expr, index_expr, ReadRef (ty, reg))
   | SpanMut (ty, reg) ->
      TSpanIndex (expr, index_expr, WriteRef (ty, reg))
-  | _ ->
+  | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+  | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
      type_error (ArrayIndexNotReference (get_type expr))
 
 
@@ -805,12 +826,15 @@ and augment_typecast (ctx: expr_ctx) (expr: aexpr) (ty: qtypespec): texpr =
 
   and is_int_type = function
     | Integer _ -> true
-    | _ -> false
+    | Unit | Boolean | SingleFloat | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
+    | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
+    | MonoTy _ -> false
 
   and is_float_type = function
     | SingleFloat -> true
     | DoubleFloat -> true
-    | _ -> false
+    | Unit | Boolean | Integer _ | NamedType _ | RegionTy _ | ReadRef _ | WriteRef _
+    | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ -> false
   in
   let target_type = parse_typespec ctx ty in
   (* By passing target_type as the asserted type we're doing point 3. *)
@@ -841,9 +865,13 @@ and augment_typecast (ctx: expr_ctx) (expr: aexpr) (ty: qtypespec): texpr =
                     different_types = not (equal_ty underlying_ty underlying_ty');
                     different_regions = not (equal_ty region region');
                   })
-           | _ ->
+           | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+           | RegionTy _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
+           | Pointer _ | FnPtr _ | MonoTy _ ->
               type_error CastWriteRefToNonRef)
-       | _ ->
+       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+       | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+       | FnPtr _ | MonoTy _ ->
           (try
              let _ = match_type_ctx ctx target_type (get_type expr') in
              expr'

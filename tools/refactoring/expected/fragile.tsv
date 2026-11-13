@@ -39,8 +39,6 @@ lib/ReturnCheck.ml	Stages.Ast.aexpr	2
 lib/TypeCheckExpr.ml	EnvTypes.decl	10
 lib/TypeCheckExpr.ml	Stages.AstDB.aexpr	4
 lib/TypeCheckExpr.ml	Stages.Tast.texpr	4
-lib/TypeCheckExpr.ml	Type.ty	34
-lib/TypeCheckExpr.ml	Type.type_var	2
 lib/TypeClasses.ml	EnvTypes.decl	2
 lib/TypeMatch.ml	EnvTypes.decl	4
 lib/TypeMatch.ml	Stages.Tast.texpr	6
