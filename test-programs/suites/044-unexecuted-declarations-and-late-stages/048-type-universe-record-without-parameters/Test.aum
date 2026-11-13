@@ -1,0 +1,13 @@
+module body Test is
+    record B: Type is
+        x: Int32;
+    end;
+
+    record R: Free is
+        b: B;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

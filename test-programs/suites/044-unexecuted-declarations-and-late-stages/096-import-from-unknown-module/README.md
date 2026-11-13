@@ -1,0 +1,1 @@
+For lib/ImportResolution.ml, module_defined_instances: the `None` of a module that the environment does not have, which an empty import list from it reaches (a list that names a declaration fails earlier, in resolve_import). Shows that the program compiles and runs.

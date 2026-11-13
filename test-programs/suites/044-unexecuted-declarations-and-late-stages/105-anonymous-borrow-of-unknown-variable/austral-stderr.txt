@@ -1,0 +1,17 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "I can't find a " },
+    { "type": "text", "content": "variable" },
+    { "type": "text", "content": " named " },
+    { "type": "code", "content": "nope" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "",
+    "startp": { "line": 0, "column": 0 },
+    "end": { "line": 0, "column": 0 }
+  },
+  "context": null
+}

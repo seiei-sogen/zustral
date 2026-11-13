@@ -1,0 +1,5 @@
+module Test is
+    function K(): Int32;
+
+    function main(): ExitCode;
+end module.

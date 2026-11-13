@@ -1,0 +1,1 @@
+Pins an existing bug: a record declared in the `Type` universe without type parameters, used as the type of a slot, stops the compiler with an OCaml assertion failure in lib/TypeParser.ml (the universe of a named type) instead of an error message. Found while writing the test for lib/ExtractionPass.ml, check_slots_are_free.

@@ -1,0 +1,5 @@
+module Test is
+    type K: Free;
+
+    function main(): ExitCode;
+end module.

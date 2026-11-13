@@ -1,0 +1,35 @@
+pragma Unsafe_Module;
+
+import Austral.Memory (Address, nullPointer);
+
+module body Test is
+    record Node: Free is
+        next: Address[Node];
+        value: Int32;
+    end;
+
+    record Token: Linear is
+        k: Int32;
+    end;
+
+    typeclass Show(T: Free) is
+        generic [A: Free, B: Linear, C: Type, R: Region, S: Region]
+        method show(x: T, a: A, b: &[B, R], c: &[C, S], n: Node): Unit;
+    end;
+
+    instance Show(Int32) is
+        generic [A: Free, B: Linear, C: Type, R: Region, S: Region]
+        method show(x: Int32, a: A, b: &[B, R], c: &[C, S], n: Node): Unit is
+            printLn(x);
+            printLn(n.value);
+            return nil;
+        end;
+    end;
+
+    function main(): ExitCode is
+        let a: Address[Node] := nullPointer();
+        let n: Node := Node(next => a, value => 2);
+        printLn(n.value);
+        return ExitSuccess();
+    end;
+end module body.

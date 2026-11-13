@@ -1,0 +1,5 @@
+module body Test is
+    typeclass C(T: Free) is
+        method main(x: T): Unit;
+    end;
+end module body.

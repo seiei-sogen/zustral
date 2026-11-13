@@ -1,0 +1,3 @@
+module Lib is
+    function f(): Int32;
+end module.

@@ -1,0 +1,20 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "Cannot find typeclass with the name " },
+    { "type": "code", "content": "Nope" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/058-instance-of-unknown-name/Test.aum",
+    "startp": { "line": 1, "column": 19 },
+    "end": { "line": 3, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    instance Nope(Int32) is" ],
+    [ 3, "    end;" ],
+    [ 4, "" ],
+    [ 5, "    function main(): ExitCode is" ]
+  ]
+}

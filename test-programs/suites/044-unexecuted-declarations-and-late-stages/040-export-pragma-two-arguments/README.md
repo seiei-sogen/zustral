@@ -1,0 +1,1 @@
+For lib/CstUtil.ml, make_pragma: the alternative `_ :: _ :: _` (two named arguments) of the arm that rejects the arguments of a `Foreign_Export` pragma. Shows that a second argument is a declaration error.

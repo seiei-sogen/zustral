@@ -1,0 +1,1 @@
+For lib/ExtractionPass.ml, reserve_definition: the alternatives `_ :: _ :: _` of the two matches that read the external name and the export name of a function with two pragmas. Neither name is taken, and the type checker then rejects the pragmas.

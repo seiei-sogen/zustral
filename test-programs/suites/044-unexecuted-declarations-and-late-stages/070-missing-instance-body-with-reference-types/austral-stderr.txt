@@ -1,0 +1,19 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The instance " },
+    { "type": "code", "content": "C" },
+    { "type": "text", "content": " with type " },
+    {
+      "type": "code",
+      "content": "Option[&[&![Span[Span![Int32, R], R], R], R]]"
+    },
+    {
+      "type": "text",
+      "content": " has no corresponding body implementation."
+    }
+  ],
+  "span": null,
+  "context": null
+}

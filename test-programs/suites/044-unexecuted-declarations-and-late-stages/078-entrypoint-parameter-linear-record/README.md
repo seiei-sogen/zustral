@@ -1,0 +1,1 @@
+For lib/Entrypoint.ml, the `else None` of root_cap_type_id: a `Linear` type without arguments that is not `RootCapability`. Shows the `WrongParameterType` error of an entrypoint whose parameter is `Token`.

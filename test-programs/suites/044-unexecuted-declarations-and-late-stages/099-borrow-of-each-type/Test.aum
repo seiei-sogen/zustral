@@ -1,0 +1,58 @@
+module body Test is
+    record P: Free is
+        x: Int32;
+    end;
+
+    function g(x: Int32): Unit is
+        printLn(x);
+        return nil;
+    end;
+
+    function region(s: Static): Unit is
+        borrow rs: &[Static, R0] := &s do
+            printLn("region");
+        end borrow;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        var u: Unit := nil;
+        borrow ru: &[Unit, R1] := &u do
+            printLn("unit");
+        end borrow;
+        var b: Bool := true;
+        borrow rb: &[Bool, R2] := &b do
+            printLn(!rb);
+        end borrow;
+        var i: Int32 := 3;
+        borrow ri: &[Int32, R3] := &i do
+            printLn(!ri);
+            borrow rr: &[&[Int32, R3], R4] := &ri do
+                printLn(!(!rr));
+            end borrow;
+        end borrow;
+        var f: Float32 := 1.5;
+        borrow rf: &[Float32, R5] := &f do
+            printLn("float32");
+        end borrow;
+        var d: Float64 := 2.5;
+        borrow rd: &[Float64, R6] := &d do
+            printLn("float64");
+        end borrow;
+        var p: P := P(x => 5);
+        borrow rq: &[P, R8] := &p do
+            printLn(rq->x);
+        end borrow;
+        var j: Int32 := 6;
+        borrow w: &![Int32, R9] := &!j do
+            borrow rw: &[&![Int32, R9], R10] := &w do
+                printLn("write reference");
+            end borrow;
+        end borrow;
+        var fp: Fn[Int32, Unit] := g;
+        borrow rp: &[Fn[Int32, Unit], R7] := &fp do
+            printLn("fnptr");
+        end borrow;
+        return ExitSuccess();
+    end;
+end module body.

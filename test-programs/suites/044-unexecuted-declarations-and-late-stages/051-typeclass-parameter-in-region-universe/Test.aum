@@ -1,0 +1,9 @@
+module body Test is
+    typeclass C(R: Region) is
+        method m(x: Int32): Unit;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

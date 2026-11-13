@@ -1,0 +1,10 @@
+module Test is
+    typeclass C(T: Free) is
+        method m(x: T): Unit;
+    end;
+
+    generic [R: Region]
+    instance C(Option[&[&![Span[Span![Int32, R], R], R], R]]);
+
+    function main(): ExitCode;
+end module.

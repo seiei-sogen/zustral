@@ -1,0 +1,8 @@
+import Nope ();
+
+module body Test is
+    function main(): ExitCode is
+        printLn("ran");
+        return ExitSuccess();
+    end;
+end module body.

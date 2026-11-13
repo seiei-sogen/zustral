@@ -1,0 +1,1 @@
+For lib/AbstractionPass.ml, abs_stmt: the alternatives `ACase`, `AWhile`, `AFor`, `ABorrow`, `ABlock`, `ADiscarding` and `AReturn` of an `else` branch that is one statement of that kind (and `ALet`, `ADestructure`, `AAssign`, `AIf`, `AWhen`). Shows which branch each `if` takes.

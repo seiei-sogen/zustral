@@ -1,0 +1,6 @@
+module body Test is
+    function main(root: RootCapability): Int32 is
+        surrenderRoot(root);
+        return 0;
+    end;
+end module body.

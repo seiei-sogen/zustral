@@ -1,0 +1,9 @@
+module body Test is
+    union K: Free is
+        case A;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

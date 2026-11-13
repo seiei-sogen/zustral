@@ -1,0 +1,5 @@
+module Lib is
+    typeclass Show(T: Free) is
+        method show(x: T): Unit;
+    end;
+end module.

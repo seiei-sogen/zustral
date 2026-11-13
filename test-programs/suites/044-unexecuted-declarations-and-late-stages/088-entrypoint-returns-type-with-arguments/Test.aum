@@ -1,0 +1,5 @@
+module body Test is
+    function main(): Option[Int32] is
+        return None();
+    end;
+end module body.

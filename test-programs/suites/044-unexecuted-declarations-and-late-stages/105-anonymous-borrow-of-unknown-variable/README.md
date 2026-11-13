@@ -1,0 +1,1 @@
+For cli/CliEngine.ml, try_adding_source_ctx: the `None` of an error whose span names a file that is not in the source map. Pins an existing bug: the anonymous borrow statement that `&nope` is desugared into has the empty span (lib/DesugarBorrows.ml, wrap_stmt_with_borrows), so the error for the unknown variable points at line 0, column 0 of the file "" and has no source context.

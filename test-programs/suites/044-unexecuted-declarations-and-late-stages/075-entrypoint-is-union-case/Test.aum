@@ -1,0 +1,5 @@
+module body Test is
+    union U: Free is
+        case main;
+    end;
+end module body.

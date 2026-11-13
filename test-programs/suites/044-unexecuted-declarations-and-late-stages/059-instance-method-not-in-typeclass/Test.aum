@@ -1,0 +1,19 @@
+module body Test is
+    typeclass C(T: Free) is
+        method m(x: T): Unit;
+    end;
+
+    instance C(Int32) is
+        method m(x: Int32): Unit is
+            return nil;
+        end;
+
+        method other(x: Int32): Unit is
+            return nil;
+        end;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

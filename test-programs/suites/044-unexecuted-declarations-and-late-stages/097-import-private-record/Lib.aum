@@ -1,0 +1,9 @@
+module body Lib is
+    record Hidden: Free is
+        x: Int32;
+    end;
+
+    function f(): Int32 is
+        return 1;
+    end;
+end module body.

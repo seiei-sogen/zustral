@@ -1,0 +1,5 @@
+module body Test is
+    function main(): Int32 is
+        return 0;
+    end;
+end module body.

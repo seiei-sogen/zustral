@@ -1,0 +1,1 @@
+For lib/CstUtil.ml, make_pragma: the alternative `CIfExpression` of the arm that rejects the argument of a `Foreign_Import` pragma that is not a string constant. Shows that `External_Name => if true then 1 else 2` is a declaration error.

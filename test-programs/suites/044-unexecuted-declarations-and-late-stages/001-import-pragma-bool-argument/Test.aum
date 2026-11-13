@@ -1,0 +1,10 @@
+module body Test is
+    pragma Foreign_Import(External_Name => true);
+    function f(): Int32 is
+        return 0;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

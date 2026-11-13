@@ -1,0 +1,9 @@
+pragma Foreign_Import(External_Name => "a");
+pragma Foreign_Export(External_Name => "b");
+
+module body Test is
+    function main(): ExitCode is
+        printLn("ran");
+        return ExitSuccess();
+    end;
+end module body.

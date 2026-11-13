@@ -1,0 +1,9 @@
+module body Test is
+    record Code: Free is
+        x: Int32;
+    end;
+
+    function main(): Code is
+        return Code(x => 0);
+    end;
+end module body.

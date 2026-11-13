@@ -1,0 +1,9 @@
+module body Test is
+    record R: Region is
+        x: Int32;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.
