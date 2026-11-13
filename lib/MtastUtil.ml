@@ -57,7 +57,7 @@ let rec get_type (e: mexpr): mono_ty =
      get_type t
   | MRecordConstructor (ty, _) ->
      ty
-  | MUnionConstructor (ty, _, _) ->
+  | MUnionConstructor (ty, _, _, _) ->
      ty
   | MEmbed (ty, _, _) ->
      ty

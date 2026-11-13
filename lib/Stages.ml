@@ -482,7 +482,9 @@ module Tast = struct
     | TAssignVar of span * qident * texpr
     | TInitialAssign of qident * texpr
     | TIf of span * texpr * tstmt * tstmt
-    | TCase of span * texpr * typed_when list * case_ref
+    | TCase of span * texpr * union_id * ty list * typed_when list * case_ref
+    (** The ID and the type arguments are those of the union the value, or the
+        reference, has as its type. *)
     | TWhile of span * texpr * tstmt
     | TFor of span * identifier * texpr * texpr * tstmt
     | TBorrow of {
@@ -543,7 +545,8 @@ module Tast = struct
     | TNegation of texpr
     | TIfExpression of texpr * texpr * texpr
     | TRecordConstructor of ty * (identifier * texpr) list
-    | TUnionConstructor of ty * identifier * (identifier * texpr) list
+    | TUnionConstructor of ty * union_id * ty list * identifier * (identifier * texpr) list
+    (** The type is the union's, with the type arguments that follow the ID. *)
     | TSlotAccessor of texpr * identifier * ty
     | TPointerSlotAccessor of texpr * identifier * ty
     | TArrayIndex of texpr * texpr * ty * ty
@@ -623,7 +626,7 @@ module Mtast = struct
     | MAssignVar of qident * mexpr
     | MInitialAssign of qident * mexpr
     | MIf of mexpr * mstmt * mstmt
-    | MCase of mexpr * mtyped_when list * Tast.case_ref
+    | MCase of mexpr * union_mono_id * mtyped_when list * Tast.case_ref
     | MWhile of mexpr * mstmt
     | MFor of identifier * mexpr * mexpr * mstmt
     | MBorrow of {
@@ -669,7 +672,7 @@ module Mtast = struct
     | MNegation of mexpr
     | MIfExpression of mexpr * mexpr * mexpr
     | MRecordConstructor of mono_ty * (identifier * mexpr) list
-    | MUnionConstructor of mono_ty * identifier * (identifier * mexpr) list
+    | MUnionConstructor of mono_ty * union_mono_id * identifier * (identifier * mexpr) list
     | MEmbed of mono_ty * string * mexpr list
     | MDeref of mexpr * mono_ty
     (** The type is the one of the value the reference points to. *)

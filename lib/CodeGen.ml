@@ -201,21 +201,6 @@ let rec gen_foreign_type (ty: mono_ty foreign_ty): c_ty =
 
 (* Expressions *)
 
-let union_type_id = function
-  | MonoNamedType id ->
-     id
-  | MonoReadRef (MonoNamedType id, _) ->
-     id
-  | MonoWriteRef (MonoNamedType id, _) ->
-     id
-  | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
-  | MonoRegionTy _ | MonoReadRef _ | MonoWriteRef _ | MonoSpan _ | MonoSpanMut _
-  | MonoAddress _ | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
-     (* The stage tree keeps the type of a union value, or of a reference to
-        one, as a mono_ty, not as the ID of the union's monomorph. The type
-        checker made that type from a union declaration. *)
-     internal_err NoSpan "Union is not a named type?"
-
 (* Given the ID of a union type, returns the name of the
    union's tag enum. *)
 let union_tag_enum_text (id: mono_id): string =
@@ -229,10 +214,10 @@ let union_tag_enum_name (id: mono_id): CIdent.t =
 let union_tag_value_name (id: mono_id) (case_name: identifier): CIdent.t =
   CIdent.generated ((union_tag_enum_text id) ^ "_" ^ (ident_text case_name))
 
-(* Given a union type and the name of a case, return the
+(* Given the ID of a union's monomorph and the name of a case, return the
    value of the tag enum for that case. *)
-let union_tag_value (ty: mono_ty) (case_name: identifier): c_expr =
-  CVar (union_tag_value_name (union_type_id ty) case_name)
+let union_tag_value (id: union_mono_id) (case_name: identifier): c_expr =
+  CVar (union_tag_value_name (mono_id_of_union id) case_name)
 
 let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
   let g = gen_exp mn in
@@ -290,10 +275,10 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
      CIfExpression (g c, g t, g f)
   | MRecordConstructor (ty, values) ->
      CCast (CStructInitializer (List.map (fun (n, v) -> (gen_member n, g v)) values), gen_type ty)
-  | MUnionConstructor (ty, case_name, values) ->
+  | MUnionConstructor (ty, id, case_name, values) ->
      let args = CStructInitializer (List.map (fun (n, v) -> (gen_member n, g v)) values) in
      CCast (CStructInitializer [
-                (tag_slot, union_tag_value ty case_name);
+                (tag_slot, union_tag_value id case_name);
                 (data_slot, CStructInitializer [(gen_member case_name, args)])
               ], gen_type ty)
   | MEmbed (ty, expr, args) ->
@@ -367,8 +352,8 @@ let rec gen_stmt (mn: module_name) (supply: Supply.t) (stmt: mstmt): c_stmt * Su
      let (fb, supply) = gs supply fb in
      let (tb, supply) = gs supply tb in
      (CIf (ge c, tb, fb), supply)
-  | MCase (e, whens, case_ref) ->
-     gen_case mn supply e whens case_ref
+  | MCase (e, id, whens, case_ref) ->
+     gen_case mn supply e id whens case_ref
   | MWhile (c, b) ->
      let (b, supply) = gs supply b in
      (CWhile (ge c, b), supply)
@@ -425,14 +410,14 @@ let rec gen_stmt (mn: module_name) (supply: Supply.t) (stmt: mstmt): c_stmt * Su
   | MReturn e ->
      (CReturn (ge e), supply)
 
-and gen_case (mn: module_name) (supply: Supply.t) (e: mexpr) (whens: mtyped_when list) (case_ref: case_ref): c_stmt * Supply.t =
+and gen_case (mn: module_name) (supply: Supply.t) (e: mexpr) (id: union_mono_id) (whens: mtyped_when list) (case_ref: case_ref): c_stmt * Supply.t =
   (* Code gen for a case statement: generate a variable, and assign the value
      being pattern-matched to that variable. Generate a switch statement over
      the tag enum. Each when statement that has bindings needs to generate some
      variable assignments for those bindings from the generated variable. *)
   let ty = get_type e
   and (var, supply) = new_variable supply in
-  let (cases, supply) = Supply.map (when_to_case mn ty var case_ref) supply whens in
+  let (cases, supply) = Supply.map (when_to_case mn id var case_ref) supply whens in
   let accessor =
     match case_ref with
     | CasePlain ->
@@ -446,9 +431,9 @@ and gen_case (mn: module_name) (supply: Supply.t) (e: mexpr) (whens: mtyped_when
       switch
     ], supply)
 
-and when_to_case (mn: module_name) (ty: mono_ty) (var: CIdent.t) (case_ref: case_ref) (supply: Supply.t) (MTypedWhen (n, bindings, body)): c_switch_case * Supply.t =
+and when_to_case (mn: module_name) (id: union_mono_id) (var: CIdent.t) (case_ref: case_ref) (supply: Supply.t) (MTypedWhen (n, bindings, body)): c_switch_case * Supply.t =
   let case_name = gen_member n
-  and tag_value = union_tag_value ty n
+  and tag_value = union_tag_value id n
   in
   let get_binding binding_name =
     match case_ref with

@@ -85,7 +85,7 @@ let rec get_type (place: place) = function
      get_type place t
   | TRecordConstructor (ty, _) ->
      ty
-  | TUnionConstructor (ty, _, _) ->
+  | TUnionConstructor (ty, _, _, _, _) ->
      ty
   | TEmbed (ty, _, _) ->
      ty

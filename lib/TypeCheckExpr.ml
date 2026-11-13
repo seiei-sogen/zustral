@@ -261,7 +261,7 @@ and augment_callable (ctx: expr_ctx) (name: qident) (callable: callable) (from_c
                                  (* TODO: constructing a fake qident *)
                                  make_qident (module_name_from_id (ctx_place ctx) (ctx_env ctx) mod_id, name, name))
      in
-     augment_union_constructor ctx type_name type_params universe case from_context args
+     augment_union_constructor ctx union_id type_name type_params universe case from_context args
   | MethodCallable { typeclass_id; value_parameters; return_type; _ } ->
      let { param; _ }: typeclass_decl = get_typeclass (ctx_place ctx) (ctx_env ctx) typeclass_id in
      augment_method_call ctx typeclass_id param name value_parameters return_type from_context args
@@ -319,7 +319,7 @@ and augment_record_constructor (ctx: expr_ctx) (name: qident) (typarams: typaram
     else
       generic_error (ctx_place ctx) ConstructorUniverseMismatch
 
-and augment_union_constructor (ctx: expr_ctx) (type_name: qident) (typarams: typarams) (universe: universe) (case: typed_case) (from_context: context_bindings) (args: typed_arglist) =
+and augment_union_constructor (ctx: expr_ctx) (union_id: union_id) (type_name: qident) (typarams: typarams) (universe: universe) (case: typed_case) (from_context: context_bindings) (args: typed_arglist) =
   let args' = (match args with
                | TPositionalArglist l ->
                   if l = [] then
@@ -341,17 +341,19 @@ and augment_union_constructor (ctx: expr_ctx) (type_name: qident) (typarams: typ
     let params = List.map (fun (TypedSlot (n, t)) -> ValueParameter (n, t)) slots in
     let bindings = check_argument_list ctx case_name params arguments in
     (* Use the bindings to get the effective return type *)
-    let rt = NamedType (type_name,
-                        List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams),
-                        universe)
-    in
+    let tyargs = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams) in
+    let rt = NamedType (type_name, tyargs, universe) in
     let rt' = replace_variables bindings rt in
     let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) case_name params rt' from_context bindings in
     (* Check: the set of bindings equals the set of type parameters *)
-    check_bindings (ctx_place ctx) typarams (merge_bindings (ctx_place ctx) bindings bindings');
+    let bindings'' = merge_bindings (ctx_place ctx) bindings bindings' in
+    check_bindings (ctx_place ctx) typarams bindings'';
+    (* The arguments of rt'': rt' replaced the variables of rt with bindings,
+       and rt'' those of rt' with bindings that bindings'' holds. *)
+    let tyargs = List.map (fun a -> replace_variables bindings'' (replace_variables bindings a)) tyargs in
     (* Check the resulting type is in the correct universe *)
     if universe_compatible universe (type_universe (ctx_place ctx) rt'') then
-      TUnionConstructor (rt'', case_name, List.map2 (fun a b -> (a, b)) slot_names arguments)
+      TUnionConstructor (rt'', union_id, tyargs, case_name, List.map2 (fun a b -> (a, b)) slot_names arguments)
     else
       generic_error (ctx_place ctx) ConstructorUniverseMismatch
 

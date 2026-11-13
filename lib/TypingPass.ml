@@ -529,7 +529,7 @@ and augment_case (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span
          | ReadRefCaseMode _ -> CaseRef
          | WriteRefCaseMode _ -> CaseRef)
       in
-      let (union_ty, cases) = get_union_type_definition place module_name env ty in
+      let (union_id, tyargs, union_ty, cases) = get_union_type_definition place module_name env ty in
       let typebindings = match_type (env, module_name, place) union_ty ty in
       let case_names = List.map (fun (TypedCase (n, _)) -> n) (List.map union_case_to_typed_case cases) in
       let when_names = List.map (fun (AbstractWhen (n, _, _)) -> n) whens in
@@ -537,14 +537,14 @@ and augment_case (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span
         (* Group the cases and whens *)
         let whens' = group_cases_whens cases whens in
         let (whens'', lexenv, supply) = augment_whens ctx lexenv supply typebindings whens' mode in
-        (TCase (span, expr', whens'', case_ref), lexenv, supply)
+        (TCase (span, expr', union_id, tyargs, whens'', case_ref), lexenv, supply)
       else
         type_error place CaseNonExhaustive)
 
-and get_union_type_definition (place: place) (importing_module: module_name) (env: env) (ty: ty): (ty * union_case_decl list) =
-  let name: qident = (match ty with
-                      | NamedType (n, _, _) ->
-                         n
+and get_union_type_definition (place: place) (importing_module: module_name) (env: env) (ty: ty): (Id.union_id * ty list * ty * union_case_decl list) =
+  let (name, tyargs): qident * ty list = (match ty with
+                      | NamedType (n, a, _) ->
+                         (n, a)
                       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat
                       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _
                       | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
@@ -563,7 +563,7 @@ and get_union_type_definition (place: place) (importing_module: module_name) (en
        in
        let ty = NamedType (n, args, universe)
        and cases = get_union_cases env id in
-       (ty, cases)
+       (id, tyargs, ty, cases)
      else
        type_error place CaseNonPublic
   | None | Some (Constant _ | Record _ | UnionCase _ | Function _ | TypeClass _
@@ -689,7 +689,7 @@ and is_constant = function
      (is_constant c) && (is_constant t) && (is_constant f)
   | TRecordConstructor (_, values) ->
      List.for_all (fun (_, v) -> is_constant v) values
-  | TUnionConstructor (_, _, values) ->
+  | TUnionConstructor (_, _, _, _, values) ->
      List.for_all (fun (_, v) -> is_constant v) values
   | TEmbed _ ->
      true

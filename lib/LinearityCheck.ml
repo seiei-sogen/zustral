@@ -249,7 +249,7 @@ let rec count (name: identifier) (expr: texpr): appearances =
      merge (c e) (merge (c t) (c f))
   | TRecordConstructor (_, args) ->
      merge_list (List.map (fun (_, e) -> c e) args)
-  | TUnionConstructor (_, _, args) ->
+  | TUnionConstructor (_, _, _, _, args) ->
      merge_list (List.map (fun (_, e) -> c e) args)
   | TEmbed (_, _, args) ->
      merge_list (List.map c args)
@@ -512,7 +512,7 @@ let rec check_stmt (place: place) (tbl: state_tbl) (depth: loop_depth) (stmt: ts
      let false_tbl: state_tbl = check_stmt place tbl depth fb in
      let _ = tables_are_consistent place IfBranching true_tbl false_tbl in
      true_tbl
-  | TCase (span, expr, whens, _) ->
+  | TCase (span, expr, _, _, whens, _) ->
      let place: place = place_inside place span in
      let tbl: state_tbl = check_expr place tbl depth expr in
      let tbls: state_tbl list = check_whens place tbl depth whens in

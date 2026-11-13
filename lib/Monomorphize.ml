@@ -137,6 +137,16 @@ let strip_and_mono_list (env: env) (tys: ty list): (mono_ty list * env) =
   let tys = List.map strip_type tys in
   monomorphize_ty_list env tys
 
+(* The monomorph of a union, from the union's ID and type arguments. The type
+   of the value the node makes or matches has these as its parts, and is
+   monomorphized first, so this registers no new monomorph. *)
+let union_monomorph (env: env) (id: union_id) (tyargs: ty list): (union_mono_id * env) =
+  let (tyargs, env) = strip_and_mono_list env tyargs in
+  let { typarams; _ }: union_decl = get_union NoSpan env id in
+  let pairs: (type_parameter * mono_ty) list = List.map2 (fun tp mt -> (tp, mt)) (typarams_as_list typarams) tyargs in
+  let (env, mono_id) = add_or_get_union_monomorph env id (mono_bindings_from_list pairs) in
+  (mono_id, env)
+
 (* Monomorphize expressions *)
 
 let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
@@ -272,10 +282,11 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
      let (ty, env) = strip_and_mono env ty in
      let (args, env) = monomorphize_named_expr_list env args in
      (MRecordConstructor (ty, args), env)
-  | TUnionConstructor (ty, case_name, args) ->
+  | TUnionConstructor (ty, id, tyargs, case_name, args) ->
      let (ty, env) = strip_and_mono env ty in
+     let (id, env) = union_monomorph env id tyargs in
      let (args, env) = monomorphize_named_expr_list env args in
-     (MUnionConstructor (ty, case_name, args), env)
+     (MUnionConstructor (ty, id, case_name, args), env)
   | TEmbed (ty, fmt, args) ->
      let (ty, env) = strip_and_mono env ty in
      let (args, env) = monomorphize_expr_list env args in
@@ -362,10 +373,11 @@ let rec monomorphize_stmt (env: env) (stmt: tstmt): (mstmt * env) =
      let (t, env) = monomorphize_stmt env t in
      let (f, env) = monomorphize_stmt env f in
      (MIf (c, t, f), env)
-  | TCase (_, value, whens, case_ref) ->
+  | TCase (_, value, id, tyargs, whens, case_ref) ->
      let (value, env) = monomorphize_expr env value in
+     let (id, env) = union_monomorph env id tyargs in
      let (whens, env) = monomorphize_whens env whens in
-     (MCase (value, whens, case_ref), env)
+     (MCase (value, id, whens, case_ref), env)
   | TWhile (_, value, body) ->
      let (value, env) = monomorphize_expr env value in
      let (body, env) = monomorphize_stmt env body in

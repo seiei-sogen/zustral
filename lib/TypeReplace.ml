@@ -89,10 +89,11 @@ let rec replace_tyvars_expr (bindings: type_bindings) (expr: texpr): texpr =
      let ty = replace_variables bindings ty
      and args = List.map (fun (n, e) -> (n, replace_tyvars_expr bindings e)) args in
      TRecordConstructor (ty, args)
-  | TUnionConstructor (ty, case_name, args) ->
+  | TUnionConstructor (ty, id, tyargs, case_name, args) ->
      let ty = replace_variables bindings ty
      and args = List.map (fun (n, e) -> (n, replace_tyvars_expr bindings e)) args in
-     TUnionConstructor (ty, case_name, args)
+     let tyargs = List.map (replace_variables bindings) tyargs in
+     TUnionConstructor (ty, id, tyargs, case_name, args)
   | TEmbed (ty, fmt, args) ->
      let ty = replace_variables bindings ty
      and args = List.map (replace_tyvars_expr bindings) args in
@@ -153,10 +154,11 @@ let rec replace_tyvars_stmt (bindings: type_bindings) (stmt: tstmt): tstmt =
      and t = replace_tyvars_stmt bindings t
      and f = replace_tyvars_stmt bindings f in
      TIf (span, c, t, f)
-  | TCase (span, value, whens, mode) ->
+  | TCase (span, value, id, tyargs, whens, mode) ->
      let value = replace_tyvars_expr bindings value
      and whens = List.map (replace_tyvars_when bindings) whens in
-     TCase (span, value, whens, mode)
+     let tyargs = List.map (replace_variables bindings) tyargs in
+     TCase (span, value, id, tyargs, whens, mode)
   | TWhile (span, value, body) ->
       let value = replace_tyvars_expr bindings value
       and body = replace_tyvars_stmt bindings body in
