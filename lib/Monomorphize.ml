@@ -297,16 +297,22 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
      let (expr, env) = monomorphize_expr env expr in
      let (ty, env) = strip_and_mono env ty in
      (MPointerSlotAccessor (expr, name, ty), env)
-  | TArrayIndex (expr, idx, ty) ->
+  | TArrayIndex (expr, idx, elem_ty, ty) ->
      let (expr, env) = monomorphize_expr env expr in
      let (idx, env) = monomorphize_expr env idx in
      let (ty, env) = strip_and_mono env ty in
-     (MArrayIndex (expr, idx, ty), env)
-   | TSpanIndex (expr, idx, ty) ->
+     (* The element type is a part of the type, monomorphized just before, so
+        this registers no new monomorph. *)
+     let (elem_ty, env) = strip_and_mono env elem_ty in
+     (MArrayIndex (expr, idx, elem_ty, ty), env)
+   | TSpanIndex (expr, idx, elem_ty, ty) ->
      let (expr, env) = monomorphize_expr env expr in
      let (idx, env) = monomorphize_expr env idx in
      let (ty, env) = strip_and_mono env ty in
-     (MSpanIndex (expr, idx, ty), env)
+     (* The element type is a part of the type, monomorphized just before, so
+        this registers no new monomorph. *)
+     let (elem_ty, env) = strip_and_mono env elem_ty in
+     (MSpanIndex (expr, idx, elem_ty, ty), env)
 
 and monomorphize_expr_list (env: env) (exprs: texpr list): (mexpr list * env) =
   match exprs with

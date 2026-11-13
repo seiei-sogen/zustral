@@ -261,9 +261,9 @@ let rec count (name: identifier) (expr: texpr): appearances =
      c e
   | TPointerSlotAccessor (e, _, _) ->
      c e
-  | TArrayIndex (e, i, _) ->
+  | TArrayIndex (e, i, _, _) ->
      merge (c e) (c i)
-  | TSpanIndex (e, i, _) ->
+  | TSpanIndex (e, i, _, _) ->
      merge (c e) (c i)
  
 (* Utilities *)

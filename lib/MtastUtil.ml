@@ -67,5 +67,5 @@ let rec get_type (e: mexpr): mono_ty =
      MonoInteger (Unsigned, Width64)
   | MSlotAccessor (_, _, ty) -> ty
   | MPointerSlotAccessor (_, _, ty) -> ty
-  | MArrayIndex (_, _, ty) -> ty
-  | MSpanIndex (_, _, ty) -> ty
+  | MArrayIndex (_, _, _, ty) -> ty
+  | MSpanIndex (_, _, _, ty) -> ty

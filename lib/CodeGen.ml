@@ -308,47 +308,17 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
   | MPointerSlotAccessor (expr, slot, _) ->
      let expr = g expr in
      CAddressOf (CPointerStructAccessor (CDeref expr, gen_member slot))
-  | MArrayIndex (expr, idx, ty) ->
+  | MArrayIndex (expr, idx, elem_ty, _) ->
      let expr = g expr
      and idx = g idx in
-     let elem_ty = begin
-         match ty with
-         | MonoReadRef (ty, _) ->
-            ty
-         | MonoWriteRef (ty, _) ->
-            ty
-         | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
-         | MonoNamedType _ | MonoRegionTy _ | MonoSpan _ | MonoSpanMut _
-         | MonoAddress _ | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
-            (* The type checker gives an index expression the type of a
-               reference to the element. The stage tree keeps that type, not the
-               element type it was made from. *)
-            internal_err NoSpan "Internal error"
-       end
-     in
      let elem_ty = gen_type elem_ty in
      CCast (
          CFuncall (CIdent.generated "au_array_index", [expr; idx; CSizeOf elem_ty]),
          CPointer elem_ty
        )
-  | MSpanIndex (expr, idx, ty) ->
+  | MSpanIndex (expr, idx, elem_ty, _) ->
      let expr = g expr
      and idx = g idx in
-     let elem_ty = begin
-         match ty with
-         | MonoReadRef (ty, _) ->
-            ty
-         | MonoWriteRef (ty, _) ->
-            ty
-         | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
-         | MonoNamedType _ | MonoRegionTy _ | MonoSpan _ | MonoSpanMut _
-         | MonoAddress _ | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
-            (* The type checker gives an index expression the type of a
-               reference to the element. The stage tree keeps that type, not the
-               element type it was made from. *)
-            internal_err NoSpan "Internal error"
-       end
-     in
      let elem_ty = gen_type elem_ty in
      CCast (
          CFuncall (CIdent.generated "au_array_index", [CAddressOf expr; idx; CSizeOf elem_ty]),

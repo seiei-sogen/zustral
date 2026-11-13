@@ -546,8 +546,10 @@ module Tast = struct
     | TUnionConstructor of ty * identifier * (identifier * texpr) list
     | TSlotAccessor of texpr * identifier * ty
     | TPointerSlotAccessor of texpr * identifier * ty
-    | TArrayIndex of texpr * texpr * ty
-    | TSpanIndex of texpr * texpr * ty
+    | TArrayIndex of texpr * texpr * ty * ty
+    | TSpanIndex of texpr * texpr * ty * ty
+    (** The first type is the element type; the second, the type of the
+        expression, is a reference to the element. *)
     | TEmbed of ty * string * texpr list
     | TDeref of texpr * ty
     (** The type is the one of the value the reference points to. *)
@@ -674,8 +676,10 @@ module Mtast = struct
     | MSizeOf of mono_ty
     | MSlotAccessor of mexpr * identifier * mono_ty
     | MPointerSlotAccessor of mexpr * identifier * mono_ty
-    | MArrayIndex of mexpr * mexpr * mono_ty
-    | MSpanIndex of mexpr * mexpr * mono_ty
+    | MArrayIndex of mexpr * mexpr * mono_ty * mono_ty
+    | MSpanIndex of mexpr * mexpr * mono_ty * mono_ty
+    (** The first type is the element type; the second, the type of the
+        expression, is a reference to the element. *)
 
   and mtyped_when =
     MTypedWhen of identifier * mono_binding list * mstmt

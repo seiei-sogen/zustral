@@ -112,16 +112,18 @@ let rec replace_tyvars_expr (bindings: type_bindings) (expr: texpr): texpr =
      let expr = replace_tyvars_expr bindings expr in
      let ty = replace_variables bindings ty in
      TPointerSlotAccessor (expr, name, ty)
-  | TArrayIndex (expr, index, ty) ->
+  | TArrayIndex (expr, index, elem_ty, ty) ->
      let expr = replace_tyvars_expr bindings expr in
      let index = replace_tyvars_expr bindings index in
      let ty = replace_variables bindings ty in
-     TArrayIndex (expr, index, ty)
-   | TSpanIndex (expr, index, ty) ->
+     let elem_ty = replace_variables bindings elem_ty in
+     TArrayIndex (expr, index, elem_ty, ty)
+   | TSpanIndex (expr, index, elem_ty, ty) ->
      let expr = replace_tyvars_expr bindings expr in
      let index = replace_tyvars_expr bindings index in
      let ty = replace_variables bindings ty in
-     TSpanIndex (expr, index, ty)
+     let elem_ty = replace_variables bindings elem_ty in
+     TSpanIndex (expr, index, elem_ty, ty)
 
 let rec replace_tyvars_stmt (bindings: type_bindings) (stmt: tstmt): tstmt =
   match stmt with

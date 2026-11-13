@@ -95,5 +95,5 @@ let rec get_type (place: place) = function
      Integer (Unsigned, WidthByteSize)
   | TSlotAccessor (_, _, ty) -> ty
   | TPointerSlotAccessor (_, _, ty) -> ty
-  | TArrayIndex (_, _, ty) -> ty
-  | TSpanIndex (_, _, ty) -> ty
+  | TArrayIndex (_, _, _, ty) -> ty
+  | TSpanIndex (_, _, _, ty) -> ty

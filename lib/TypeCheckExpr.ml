@@ -796,7 +796,7 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
            type_error (ctx_place ctx) (CantIndexNotSpan ty)
       in
       (* Construct the result type. *)
-      TArrayIndex (expr, index_expr, ReadRef (elem_ty, reg))
+      TArrayIndex (expr, index_expr, elem_ty, ReadRef (elem_ty, reg))
     end
   | WriteRef (ty, reg) -> begin
       let elem_ty: ty =
@@ -811,12 +811,12 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
            type_error (ctx_place ctx) (CantIndexNotSpan ty)
       in
       (* Construct the result type. *)
-      TArrayIndex (expr, index_expr, WriteRef (elem_ty, reg))
+      TArrayIndex (expr, index_expr, elem_ty, WriteRef (elem_ty, reg))
     end
   | Span (ty, reg) ->
-     TSpanIndex (expr, index_expr, ReadRef (ty, reg))
+     TSpanIndex (expr, index_expr, ty, ReadRef (ty, reg))
   | SpanMut (ty, reg) ->
-     TSpanIndex (expr, index_expr, WriteRef (ty, reg))
+     TSpanIndex (expr, index_expr, ty, WriteRef (ty, reg))
   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
   | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
      type_error (ctx_place ctx) (ArrayIndexNotReference (get_type (ctx_place ctx) expr))
