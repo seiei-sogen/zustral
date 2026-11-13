@@ -11,7 +11,7 @@ open Env
 open Stages.Mtast
 open CRepr
 
-val gen_decl_id : decl_id -> CIdent.t
+val gen_function_id : function_id -> CIdent.t
 
 val gen_mono_id : mono_id -> CIdent.t
 

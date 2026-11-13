@@ -69,12 +69,15 @@ val register : env -> 'id registration -> (env * 'id)
 
 (** Given a function ID, and the export name of that function, register them in
     the environment. *)
-val add_exported_function : env -> decl_id -> string -> env
+val add_exported_function : env -> function_id -> string -> env
 
 (** {2 Retrieve} *)
 
 (** Retrieve a declaration by ID. *)
 val get_decl_by_id : env -> decl_id -> decl
+
+(** Retrieve a function by its ID. *)
+val get_function : env -> function_id -> function_decl
 
 (** Retrieve a declaration by its sourced name, returning {!None} if it doesn't exist.
 
@@ -103,13 +106,13 @@ val get_instance_method : env -> ins_meth_id -> ins_meth_rec
 
 (** Return a list of all exported functions in the environment, as (ID, export
     name) pairs. *)
-val get_export_functions : env -> (decl_id * string) list
+val get_export_functions : env -> (function_id * string) list
 
 (** {2 Update} *)
 
 (** Store the given function body in the function with the given ID, returning
     the new environment. *)
-val store_function_body : env -> decl_id -> tstmt -> env
+val store_function_body : env -> function_id -> tstmt -> env
 
 (** Store the given instance method body in the instance method with the given
     ID, returning the new environment. *)
@@ -132,7 +135,7 @@ val add_or_get_union_monomorph : env -> decl_id -> mono_type_bindings -> (env * 
 
 (** Given a function's ID and a list of type arguments, register a monomorph and
    return its ID, or return the ID if it exists. *)
-val add_or_get_function_monomorph : env -> decl_id -> mono_type_bindings -> (env * mono_id)
+val add_or_get_function_monomorph : env -> function_id -> mono_type_bindings -> (env * mono_id)
 
 (** Given an instance method's ID and a list of type arguments, register a
    monomorph and return its ID, or return the ID if it exists. *)
@@ -156,7 +159,7 @@ val get_type_monomorph : env -> decl_id -> mono_type_bindings -> mono_id
 (** Given the ID of a function and a set of monomorphic type arguments, return
    the ID of the corresponding monomorph. Like {!get_type_monomorph}, the
    monomorph must be registered. *)
-val get_function_monomorph : env -> decl_id -> mono_type_bindings -> mono_id
+val get_function_monomorph : env -> function_id -> mono_type_bindings -> mono_id
 
 (** Get all uninstantiated monomorphs. *)
 val get_uninstantiated_monomorphs : env -> monomorph list

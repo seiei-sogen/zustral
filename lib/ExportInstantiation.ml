@@ -12,21 +12,6 @@ open Error
 open CodeGen
 open CRepr
 
-(** Get the monomorph for an exported function. *)
-let get_export_monomorph (env: env) (id: decl_id): mono_id =
-  match get_decl_by_id env id with
-  | Function { id; _ } ->
-     get_function_monomorph env id empty_mono_bindings
-  | _ ->
-     internal_err "Can't find the exported fuction in the environment."
-
-let get_export_data (env: env) (id: decl_id): (value_parameter list * ty) =
-  match get_decl_by_id env id with
-  | Function { value_params; rt; _ } ->
-     (value_params, rt)
-  | _ ->
-     internal_err "Can't find the exported fuction in the environment."
-
 let rec transform_ty (ty: ty): c_ty =
   match ty with
   | Unit ->
@@ -65,9 +50,9 @@ let rec transform_ty (ty: ty): c_ty =
 let transform_param (ValueParameter (name, ty)): c_param =
   CValueParam (gen_ident name, transform_ty ty)
 
-let make_wrapper (env: env) (decl_id: decl_id) (export_name: string): c_decl =
-  let mono_id: mono_id = get_export_monomorph env decl_id
-  and (params, rt): value_parameter list * ty = get_export_data env decl_id in
+let make_wrapper (env: env) (function_id: function_id) (export_name: string): c_decl =
+  let mono_id: mono_id = get_function_monomorph env function_id empty_mono_bindings
+  and { value_params = params; rt; _ }: EnvTypes.function_decl = get_function env function_id in
   CFunctionDefinition (
       Desc "Wrapper function",
       (* The name the user asked for gets the reserved-word escape (issue #92). *)

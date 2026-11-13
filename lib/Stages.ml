@@ -431,7 +431,7 @@ module Linked = struct
     | LConstant of decl_id * vis * identifier * ty * aexpr * docstring
     | LRecord of decl_id * type_vis * identifier * typarams * universe * typed_slot list * docstring
     | LUnion of decl_id * type_vis * identifier * typarams * universe * linked_case list * docstring
-    | LFunction of decl_id * vis * identifier * typarams * value_parameter list * ty * astmt * docstring * pragma list
+    | LFunction of function_id * vis * identifier * typarams * value_parameter list * ty * astmt * docstring * pragma list
     | LTypeclass of decl_id * vis * identifier * type_parameter * linked_method_decl list * docstring
     | LInstance of decl_id * vis * qident * typarams * ty * linked_method_def list * docstring
 
@@ -505,10 +505,10 @@ module Tast = struct
     | TConstVar of qident * ty
     | TParamVar of identifier * ty
     | TLocalVar of identifier * ty
-    | TFunVar of decl_id * ty * type_bindings
+    | TFunVar of function_id * ty * type_bindings
     | TTemporary of identifier * ty
     (** Represents accessing a function as a value. *)
-    | TFuncall of decl_id * qident * texpr list * ty * type_bindings
+    | TFuncall of function_id * qident * texpr list * ty * type_bindings
     | TMethodCall of ins_meth_id * qident * typarams * texpr list * ty * type_bindings
     | TVarMethodCall of {
         source_module_name: module_name;
@@ -566,8 +566,8 @@ module Tast = struct
     | TConstant of decl_id * vis * identifier * ty * texpr * docstring
     | TRecord of decl_id * type_vis * identifier * typarams * universe * typed_slot list * docstring
     | TUnion of decl_id * type_vis * identifier * typarams * universe * linked_case list * docstring
-    | TFunction of decl_id * vis * identifier * typarams * value_parameter list * ty * tstmt * docstring
-    | TForeignFunction of decl_id * vis * identifier * value_parameter list * ty * string * docstring
+    | TFunction of function_id * vis * identifier * typarams * value_parameter list * ty * tstmt * docstring
+    | TForeignFunction of function_id * vis * identifier * value_parameter list * ty * string * docstring
     | TTypeClass of decl_id * vis * identifier * type_parameter * typed_method_decl list * docstring
     | TInstance of decl_id * vis * qident * typarams * ty * typed_method_def list * docstring
 
@@ -597,9 +597,9 @@ module Mtast = struct
     | MRecordMonomorph of mono_id * mono_slot list
     | MUnion of decl_id * identifier * mono_case list
     | MUnionMonomorph of mono_id * mono_case list
-    | MFunction of decl_id * identifier * mvalue_parameter list * mono_ty * mstmt
-    | MFunctionMonomorph of mono_id * mvalue_parameter list * mono_ty * mstmt
-    | MForeignFunction of decl_id * identifier * mvalue_parameter list * mono_ty * string
+    | MFunction of function_id * identifier * mvalue_parameter list * mono_ty * mstmt
+    | MFunctionMonomorph of mono_id * function_id * mvalue_parameter list * mono_ty * mstmt
+    | MForeignFunction of function_id * identifier * mvalue_parameter list * mono_ty * string
     | MConcreteInstance of decl_id * qident * mono_ty  * concrete_method list
     | MMethodMonomorph of mono_id * mvalue_parameter list * mono_ty * mstmt
 
@@ -643,8 +643,8 @@ module Mtast = struct
     | MLocalVar of identifier * mono_ty
     | MTemporary of identifier * mono_ty
     | MGenericFunVar of mono_id * mono_ty
-    | MConcreteFunVar of decl_id * mono_ty
-    | MConcreteFuncall of decl_id * qident * mexpr list * mono_ty
+    | MConcreteFunVar of function_id * mono_ty
+    | MConcreteFuncall of function_id * qident * mexpr list * mono_ty
     (** Represents a call to a concrete function. *)
     | MGenericFuncall of mono_id * mexpr list * mono_ty
     (** Represents a call to a generic function. *)

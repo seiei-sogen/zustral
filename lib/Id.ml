@@ -11,6 +11,12 @@ type mod_id = ModId of int
 type decl_id = DeclId of int
 [@@deriving (eq, show)]
 
+(* Inside this module an ID of one kind is a declaration ID, so the two take
+   their numbers from one sequence and print the same. The interface hides
+   that: outside, the types differ. *)
+type function_id = decl_id
+[@@deriving (eq, show)]
+
 type ins_meth_id = InsMethId of int
 [@@deriving (eq, show)]
 
@@ -27,6 +33,9 @@ let fresh_decl_id (supply: Supply.t): decl_id * Supply.t =
   let (number, supply) = Supply.next_decl_id supply in
   (DeclId number, supply)
 
+let fresh_function_id: Supply.t -> function_id * Supply.t =
+  fresh_decl_id
+
 let fresh_ins_meth_id (supply: Supply.t): ins_meth_id * Supply.t =
   let (number, supply) = Supply.next_ins_meth_id supply in
   (InsMethId number, supply)
@@ -41,7 +50,10 @@ let compare_mod_id (ModId a) (ModId b): int =
 let compare_decl_id (DeclId a) (DeclId b): int =
   compare a b
 
-let decl_id_number (DeclId number): int =
+let function_decl_id (id: function_id): decl_id =
+  id
+
+let function_id_number (DeclId number: function_id): int =
   number
 
 let ins_meth_id_number (InsMethId number): int =

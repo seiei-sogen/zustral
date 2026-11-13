@@ -103,8 +103,8 @@ let gen_qident (i: qident): CIdent.t =
 let gen_sident (mn: module_name) (i: identifier): CIdent.t =
   CIdent.austral_unescaped ((gen_module_name mn) ^ "____" ^ (ident_text i))
 
-let gen_decl_id (id: decl_id): CIdent.t =
-  CIdent.generated (austral_prefix ^ "decl_" ^ (string_of_int (decl_id_number id)))
+let gen_function_id (id: function_id): CIdent.t =
+  CIdent.generated (austral_prefix ^ "decl_" ^ (string_of_int (function_id_number id)))
 
 let mono_id_text (id: mono_id): string =
   austral_prefix ^ "mono_" ^ (string_of_int (mono_id_number id))
@@ -235,9 +235,9 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
   | MGenericFunVar (id, _) ->
      CCast (CVar (gen_mono_id id), fn_type)
   | MConcreteFunVar (id, _) ->
-     CCast (CVar (gen_decl_id id), fn_type)
+     CCast (CVar (gen_function_id id), fn_type)
   | MConcreteFuncall (id, _, args, _) ->
-     CFuncall (gen_decl_id id, List.map g args)
+     CFuncall (gen_function_id id, List.map g args)
   | MGenericFuncall (id, args, _) ->
      CFuncall (gen_mono_id id, List.map g args)
   | MConcreteMethodCall (id, _, args, _) ->
@@ -484,17 +484,6 @@ let gen_method (mn: module_name) (supply: Supply.t) (MConcreteMethod (id, _, par
   let (body, supply) = gen_stmt mn supply body in
   (CFunctionDefinition (d, gen_ins_meth_id id, gen_params mn params, gen_type rt, body), supply)
 
-let get_original_module_name (env: env) (id: mono_id): module_name =
-  match get_monomorph env id with
-  | MonoFunction { function_id; _ } ->
-     (match get_decl_by_id env function_id with
-      | Function { mod_id; _ } ->
-         module_name_from_id env mod_id
-      | _ ->
-         internal_err "Couldn't get function")
-  | _ ->
-     internal_err "Couldn't get monomorph"
-
 let rec mono_desc (env: env) (id: mono_id): string =
   let mono = get_monomorph env id in
   match mono with
@@ -503,7 +492,7 @@ let rec mono_desc (env: env) (id: mono_id): string =
   | MonoUnionDefinition { type_id; tyargs; _ } ->
      render_mono env type_id tyargs
   | MonoFunction { function_id; tyargs; _ } ->
-     render_mono env function_id tyargs
+     (ident_string (get_function env function_id).name) ^ (tyargs_string tyargs)
   | MonoInstanceMethod _ ->
      ""
 
@@ -567,12 +556,12 @@ let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_de
      let d = Desc "Function" in
      let (body, supply) = gen_stmt mn supply body in
      ([
-       CFunctionDefinition (d, gen_decl_id id, gen_params mn params, gen_type rt, body)
+       CFunctionDefinition (d, gen_function_id id, gen_params mn params, gen_type rt, body)
      ], supply)
-  | MFunctionMonomorph (id, params, rt, body) ->
+  | MFunctionMonomorph (id, function_id, params, rt, body) ->
      (* Load-bearing hack: prefix parameters not with the current module name,
         but with the name of the module the monomorph's declaration is from. *)
-     let mn': module_name = get_original_module_name env id in
+     let mn': module_name = module_name_from_id env (get_function env function_id).mod_id in
      let d = Desc ("Function monomorph: " ^ (mono_desc env id)) in
      let (body, supply) = gen_stmt mn supply body in
      ([
@@ -643,7 +632,7 @@ let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_de
                     ff_local_decl;
                     CReturn funcall
                   ] in
-     let def = CFunctionDefinition (def_d, gen_decl_id id, gen_params mn params, gen_type rt, body) in
+     let def = CFunctionDefinition (def_d, gen_function_id id, gen_params mn params, gen_type rt, body) in
      ([def], supply)
   | MConcreteInstance (_, _, _, methods) ->
      Supply.map (gen_method mn) supply methods
@@ -678,13 +667,13 @@ and gen_fun_decl mn decl =
   match decl with
   | MFunction (id, _, p, rt, _) ->
      let d = Desc "Function forward declaratioon" in
-     Some [CFunctionDeclaration (d, gen_decl_id id, gen_params mn p, gen_type rt, LinkageInternal)]
-  | MFunctionMonomorph (id, p, rt, _) ->
+     Some [CFunctionDeclaration (d, gen_function_id id, gen_params mn p, gen_type rt, LinkageInternal)]
+  | MFunctionMonomorph (id, _, p, rt, _) ->
      let d = Desc "Function monomorph forward declaration" in
      Some [CFunctionDeclaration (d, gen_mono_id id, gen_params mn p, gen_type rt, LinkageInternal)]
   | MForeignFunction (id, _, p, rt, _) ->
      let d = Desc "Foreign function forward declaration" in
-     Some [CFunctionDeclaration (d, gen_decl_id id, gen_params mn p, gen_type rt, LinkageInternal)]
+     Some [CFunctionDeclaration (d, gen_function_id id, gen_params mn p, gen_type rt, LinkageInternal)]
   | MConcreteInstance (_, _, _, ms) ->
      Some (List.map (gen_method_decl mn) ms)
   | MMethodMonomorph (id, p, rt, _) ->

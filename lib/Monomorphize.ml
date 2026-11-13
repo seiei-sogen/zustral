@@ -627,7 +627,7 @@ and instantiate_monomorph (env: env) (mono: monomorph): (env * mdecl) =
      (* Store the monomorphic body in the environment. *)
      let env = store_function_monomorph_definition env id body in
      (* Construct a monomorphic record decl. *)
-     let decl: mdecl = MFunctionMonomorph (id, params, rt, body) in
+     let decl: mdecl = MFunctionMonomorph (id, function_id, params, rt, body) in
      (* Return the new environment and the declaration. *)
      (env, decl)
   | MonoInstanceMethod { id; method_id; tyargs; _ } ->
@@ -689,16 +689,13 @@ and get_union_typed_cases (env: env) (union_id: decl_id): typed_case list =
   in
   List.map mapper cases
 
-and get_function_definition (env: env) (id: decl_id): (typarams * value_parameter list * ty * tstmt) =
-  match get_decl_by_id env id with
-  | Function { name; typarams; value_params; rt; body; _ } ->
-     (match body with
-      | Some body ->
-         (typarams, value_params, rt, body)
-      | None ->
-         internal_err ("function `" ^ (ident_string name) ^ "` has no body"))
-  | _ ->
-     internal_err ("ID `" ^ (show_decl_id id) ^ "is not a function")
+and get_function_definition (env: env) (id: function_id): (typarams * value_parameter list * ty * tstmt) =
+  let { name; typarams; value_params; rt; body; _ }: function_decl = get_function env id in
+  match body with
+  | Some body ->
+     (typarams, value_params, rt, body)
+  | None ->
+     internal_err ("function `" ^ (ident_string name) ^ "` has no body")
 
 and get_method_definition (env: env) (id: ins_meth_id): (typarams * value_parameter list * ty * tstmt) =
   let (InsMethRec { instance_id; value_params; rt; body; _ }) = get_instance_method env id in
@@ -780,20 +777,14 @@ and mono_to_ty (ty: mono_ty): ty =
   | MonoRegionTyVar (name, source) ->
      TyVar (TypeVariable (name, RegionUniverse, source, []))
 
-let monomorphize_wrapper (env: env) (id: decl_id): env =
-  match get_decl_by_id env id with
-  | Function { id; _ } ->
-     let (env, _) = add_or_get_function_monomorph env id empty_mono_bindings in
-     env
-  | _ ->
-     internal_err "Didn't find wrapper in env."
-
 let monomorphize_wrappers (env: env): (env * mdecl list) Outcome.t =
   Outcome.catch (fun () ->
       (* Get the IDs of all the wrapper functions. *)
-      let ids: decl_id list = List.map (fun (id, _) -> id) (get_export_functions env) in
+      let ids: function_id list = List.map (fun (id, _) -> id) (get_export_functions env) in
       (* Monomorphize wrappers. *)
-      let env: env = Util.iter_with_context (fun env id -> monomorphize_wrapper env id) env ids in
+      let env: env =
+        Util.iter_with_context (fun env id -> fst (add_or_get_function_monomorph env id empty_mono_bindings)) env ids
+      in
       (* Instantiate monomorphs *)
       let (env, decls): (env * mdecl list) = instantiate_monomorphs_until_exhausted env in
       (env, decls))

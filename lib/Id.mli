@@ -29,10 +29,23 @@ type ins_meth_id
 type mono_id
 [@@deriving (eq, show)]
 
+(** {1 IDs that say what kind of declaration they stand for}
+
+    Each of these is a declaration ID: it takes the next number of the
+    declarations, and prints as a declaration ID does. Its type says which
+    kind of declaration the environment made it for, so the lookup that takes
+    it returns a declaration of that kind. Nothing turns a declaration ID
+    into one of these. *)
+
+(** The type of function IDs. *)
+type function_id
+[@@deriving (eq, show)]
+
 (** The next ID of each kind, and the supply to take the one after it from. *)
 
 val fresh_mod_id : Supply.t -> mod_id * Supply.t
 val fresh_decl_id : Supply.t -> decl_id * Supply.t
+val fresh_function_id : Supply.t -> function_id * Supply.t
 val fresh_ins_meth_id : Supply.t -> ins_meth_id * Supply.t
 val fresh_mono_id : Supply.t -> mono_id * Supply.t
 
@@ -41,9 +54,13 @@ val fresh_mono_id : Supply.t -> mono_id * Supply.t
 val compare_mod_id : mod_id -> mod_id -> int
 val compare_decl_id : decl_id -> decl_id -> int
 
+(** The declaration ID that an ID of one kind is. *)
+
+val function_decl_id : function_id -> decl_id
+
 (** The number of an ID. It is for the name that the generated C gives to what
     the ID identifies, and for nothing else. *)
 
-val decl_id_number : decl_id -> int
+val function_id_number : function_id -> int
 val ins_meth_id_number : ins_meth_id -> int
 val mono_id_number : mono_id -> int

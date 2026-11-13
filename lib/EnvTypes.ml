@@ -32,6 +32,22 @@ type mod_input = {
     imports_from: ModIdSet.t;
   }
 
+(** A function, as the environment holds it. *)
+type function_decl = {
+    id: function_id;
+    mod_id: mod_id;
+    vis: vis;
+    name: identifier;
+    docstring: docstring;
+    typarams: typarams;
+    value_params: value_parameter list;
+    rt: ty;
+    external_name: string option;
+    (** If this function is foreign, this is the name of the underlying function
+        that will be called. *)
+    body: tstmt option;
+  }
+
 (** A declaration record represents a declaration.
 
    The definition of declaration here is slightly different than that of the
@@ -79,20 +95,7 @@ type decl =
       docstring: docstring;
       slots: typed_slot list;
     }
-  | Function of {
-      id: decl_id;
-      mod_id: mod_id;
-      vis: vis;
-      name: identifier;
-      docstring: docstring;
-      typarams: typarams;
-      value_params: value_parameter list;
-      rt: ty;
-      external_name: string option;
-      (** If this function is foreign, this is the name of the underlying function
-          that will be called. *)
-      body: tstmt option;
-    }
+  | Function of function_decl
   | TypeClass of {
       id: decl_id;
       mod_id: mod_id;
@@ -138,7 +141,7 @@ type ins_meth_rec = InsMethRec of {
 
 (** Callable things. *)
 type callable =
-  | FunctionCallable of decl_id * typarams * value_parameter list * ty
+  | FunctionCallable of function_id * typarams * value_parameter list * ty
   | RecordConstructor of decl_id * typarams * universe * typed_slot list
   | UnionConstructor of {
       union_id: decl_id;
@@ -170,7 +173,7 @@ type monomorph =
     }
   | MonoFunction of {
       id: mono_id;
-      function_id: decl_id;
+      function_id: function_id;
       tyargs: mono_type_bindings;
       body: mstmt option;
       (** The function body, if instantiated. *)
@@ -276,7 +279,7 @@ type _ registration =
   | NewRecord : record_input -> decl_id registration
   | NewUnion : union_input -> decl_id registration
   | NewUnionCase : union_case_input -> decl_id registration
-  | NewFunction : function_input -> decl_id registration
+  | NewFunction : function_input -> function_id registration
   | NewTypeClass : type_class_input -> decl_id registration
   | NewTypeClassMethod : type_class_method_input -> decl_id registration
   | NewInstance : instance_input -> decl_id registration

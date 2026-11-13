@@ -280,7 +280,7 @@ and augment_callable (ctx: expr_ctx) (name: qident) (callable: callable) (from_c
      in
      augment_method_call ctx typeclass_id param name value_parameters return_type from_context args
 
-and augment_function_call (ctx: expr_ctx) (id: decl_id) name typarams params rt (from_context: context_bindings) args =
+and augment_function_call (ctx: expr_ctx) (id: function_id) name typarams params rt (from_context: context_bindings) args =
   (* For simplicity, and to reduce duplication of code, we convert the argument
      list to a positional list. *)
   let param_names = List.map (fun (ValueParameter (n, _)) -> n) params in

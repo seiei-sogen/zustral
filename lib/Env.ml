@@ -34,7 +34,7 @@ type env = Env of {
       methods: ins_meth_env;
       decls: decl_env;
       monos: mono_env;
-      exports: (decl_id * string) list;
+      exports: (function_id * string) list;
       (** The list of exported functions. *)
       supply: Supply.t;
       (** The numbers that have not been given out. Every ID in the
@@ -132,40 +132,40 @@ let register (type id) (env: env) (registration: id registration): (env * id) =
     | None ->
        ()
   in
-  let add_decl (make: decl_id -> decl): (env * decl_id) =
-    let (id, supply) = fresh_decl_id supply in
+  let add_decl (type kind_id) (fresh: Supply.t -> kind_id * Supply.t) (make: kind_id -> decl): (env * kind_id) =
+    let (id, supply) = fresh supply in
     (Env { mods; methods; decls = (make id) :: decls; monos; exports; supply }, id)
   in
   match registration with
   | NewConstant { mod_id; vis; name; ty; docstring } ->
      name_must_be_free mod_id name;
-     add_decl (fun id -> Constant { id; mod_id; vis; name; ty; docstring })
+     add_decl fresh_decl_id (fun id -> Constant { id; mod_id; vis; name; ty; docstring })
   | NewRecord { mod_id; vis; name; docstring; typarams; universe; slots } ->
      name_must_be_free mod_id name;
-     add_decl (fun id -> Record { id; mod_id; vis; name; docstring; typarams; universe; slots })
+     add_decl fresh_decl_id (fun id -> Record { id; mod_id; vis; name; docstring; typarams; universe; slots })
   | NewUnion { mod_id; vis; name; docstring; typarams; universe } ->
      name_must_be_free mod_id name;
-     add_decl (fun id -> Union { id; mod_id; vis; name; docstring; typarams; universe })
+     add_decl fresh_decl_id (fun id -> Union { id; mod_id; vis; name; docstring; typarams; universe })
   | NewUnionCase { mod_id; vis; union_id; name; docstring; slots } ->
      (* Not checked (#86): a case can take the name of another case, or of any
         other declaration of the module. *)
-     add_decl (fun id -> UnionCase { id; vis; mod_id; union_id; name; docstring; slots })
+     add_decl fresh_decl_id (fun id -> UnionCase { id; vis; mod_id; union_id; name; docstring; slots })
   | NewFunction { mod_id; vis; name; docstring; typarams; value_params; rt; external_name; body } ->
      name_must_be_free mod_id name;
-     add_decl (fun id -> Function { id; mod_id; vis; name; docstring; typarams; value_params; rt; external_name; body })
+     add_decl fresh_function_id (fun id -> Function { id; mod_id; vis; name; docstring; typarams; value_params; rt; external_name; body })
   | NewTypeClass { mod_id; vis; name; docstring; param } ->
      name_must_be_free mod_id name;
-     add_decl (fun id -> TypeClass { id; mod_id; vis; name; docstring; param })
+     add_decl fresh_decl_id (fun id -> TypeClass { id; mod_id; vis; name; docstring; param })
   | NewTypeClassMethod { mod_id; vis; typeclass_id; name; docstring; typarams; value_params; rt } ->
      (* Not checked (#86): a method can take the name of a method of another
         typeclass, or of any other declaration of the module. *)
-     add_decl (fun id -> TypeClassMethod { id; mod_id; vis; typeclass_id; name; docstring; typarams; value_params; rt })
+     add_decl fresh_decl_id (fun id -> TypeClassMethod { id; mod_id; vis; typeclass_id; name; docstring; typarams; value_params; rt })
   | NewInstance { mod_id; vis; typeclass_id; docstring; typarams; argument } ->
      (* Not checked here: an instance has no name. The caller checks that it
         overlaps no instance of its own module, and the orphan rule. The orphan
         rule takes a built-in type to be local to every module, so instances
         from two modules can overlap (#72). *)
-     add_decl (fun id -> Instance { id; mod_id; vis; typeclass_id; docstring; typarams; argument })
+     add_decl fresh_decl_id (fun id -> Instance { id; mod_id; vis; typeclass_id; docstring; typarams; argument })
   | NewInstanceMethod { instance_id; method_id; docstring; name; typarams; value_params; rt; body } ->
      (* Not checked here. The caller checks that the typeclass has a method of
         this name. Nothing checks that an instance defines every method of its
@@ -178,6 +178,21 @@ let get_decl_by_id (env: env) (id: decl_id): decl =
   let (Env { decls; _ }) = env in
   registered (fun () -> "declaration with ID `" ^ (show_decl_id id) ^ "`")
     (List.find_opt (fun d -> equal_decl_id id (decl_id d)) decls)
+
+(* The lookups by an ID that says its kind. Each looks only at the declarations
+   of that kind, so what it returns is one, and it misses in the one case that
+   `registered` reports. *)
+
+let function_of (decl: decl): function_decl option =
+  match decl with
+  | Function fn -> Some fn
+  | Constant _ | Record _ | Union _ | UnionCase _ | TypeClass _ | TypeClassMethod _ | Instance _ -> None
+
+let get_function (env: env) (id: function_id): function_decl =
+  let (Env { decls; _ }) = env in
+  let has_id (fn: function_decl): bool = equal_function_id fn.id id in
+  registered (fun () -> "function with ID `" ^ (show_function_id id) ^ "`")
+    (List.find_opt has_id (List.filter_map function_of decls))
 
 let get_instance_method (env: env) (ins_meth_id: ins_meth_id): ins_meth_rec =
   let (Env { methods; _ }) = env in
@@ -290,24 +305,19 @@ let visible_instances (env: env) (id: mod_id): decl list =
   in
   instances_defined_in_module @ instances_imported_by_module
 
-let rec store_function_body (env: env) (fn_id: decl_id) (body: tstmt): env =
+let store_function_body (env: env) (fn_id: function_id) (body: tstmt): env =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
-  let decl: decl = get_decl_by_id env fn_id in
-  let new_decl: decl = replace_function_body decl body in
-  let decls_without_existing_one: decl list = List.filter (fun (d: decl) -> not (equal_decl_id (decl_id d) fn_id)) decls in
+  let fn: function_decl = get_function env fn_id in
+  let new_decl: decl =
+    match fn.body with
+    | Some _ ->
+       internal_err ("function `" ^ (ident_string fn.name) ^ "` already has a body")
+    | None ->
+       Function { fn with body = Some body }
+  in
+  let decls_without_existing_one: decl list = List.filter (fun (d: decl) -> not (equal_decl_id (decl_id d) (function_decl_id fn_id))) decls in
   let env = Env { mods; methods; decls = new_decl :: decls_without_existing_one; monos; exports; supply } in
   env
-
-and replace_function_body (decl: decl) (new_body: tstmt): decl =
-  match decl with
-  | Function { id; mod_id; vis; name; docstring; typarams; value_params; rt; external_name; body } ->
-     (match body with
-      | Some _ ->
-         internal_err ("function `" ^ (ident_string name) ^ "` already has a body")
-      | None ->
-         Function { id; mod_id; vis; name; docstring; typarams; value_params; rt; external_name; body=(Some new_body) })
-  | _ ->
-     internal_err "not a function."
 
 let rec store_method_body (env: env) (ins_meth_id: ins_meth_id) (body: tstmt): env =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
@@ -347,7 +357,7 @@ let add_union_monomorph (env: env) (type_id: decl_id) (tyargs: mono_type_binding
   let env = Env { mods; methods; decls; monos = mono :: monos; exports; supply } in
   (env, id)
 
-let add_function_monomorph (env: env) (function_id: decl_id) (tyargs: mono_type_bindings): (env * mono_id) =
+let add_function_monomorph (env: env) (function_id: function_id) (tyargs: mono_type_bindings): (env * mono_id) =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
   let (id, supply) = fresh_mono_id supply in
   let mono = MonoFunction { id; function_id; tyargs; body = None } in
@@ -402,12 +412,12 @@ let add_or_get_union_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bi
   | None ->
     add_union_monomorph env decl_id args
 
-let find_function_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): mono_id option =
+let find_function_monomorph (env: env) (decl_id: function_id) (args: mono_type_bindings): mono_id option =
   let (Env { monos; _ }) = env in
   let pred (mono: monomorph): bool =
     match mono with
     | MonoFunction { function_id; tyargs; _ } ->
-      (equal_decl_id function_id decl_id)
+      (equal_function_id function_id decl_id)
       && (equal_mono_bindings tyargs args)
     | _ ->
       false
@@ -416,7 +426,7 @@ let find_function_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindi
   | Some m -> Some (monomorph_id m)
   | None -> None
 
-let add_or_get_function_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): (env * mono_id) =
+let add_or_get_function_monomorph (env: env) (decl_id: function_id) (args: mono_type_bindings): (env * mono_id) =
   match find_function_monomorph env decl_id args with
   | Some mono_id -> (env, mono_id)
   | None ->
@@ -431,8 +441,8 @@ let get_type_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings):
   registered (fun () -> "monomorph of the type with ID `" ^ (show_decl_id decl_id) ^ "` and these type arguments")
     (find_type_monomorph env decl_id args)
 
-let get_function_monomorph (env: env) (decl_id: decl_id) (args: mono_type_bindings): mono_id =
-  registered (fun () -> "monomorph of the function with ID `" ^ (show_decl_id decl_id) ^ "` and these type arguments")
+let get_function_monomorph (env: env) (decl_id: function_id) (args: mono_type_bindings): mono_id =
+  registered (fun () -> "monomorph of the function with ID `" ^ (show_function_id decl_id) ^ "` and these type arguments")
     (find_function_monomorph env decl_id args)
 
 let find_instance_method_monomorph (env: env) (id: ins_meth_id) (args: mono_type_bindings): mono_id option =
@@ -530,12 +540,12 @@ let store_instance_method_monomorph_definition (env: env) (id: mono_id) (new_bod
   | _ ->
     internal_err ("Couldn't find monomorph instance method definition with ID: " ^ (show_mono_id id))
 
-let add_exported_function (env: env) (id: decl_id) (export_name: string): env =
+let add_exported_function (env: env) (id: function_id) (export_name: string): env =
   let (Env { mods; methods; decls; monos; exports; supply }) = env in
   let env = Env { mods; methods; decls; monos; exports = (id, export_name) :: exports; supply } in
   env
 
-let get_export_functions (env: env): (decl_id * string) list =
+let get_export_functions (env: env): (function_id * string) list =
   let (Env { exports; _ }) = env in
   exports
 

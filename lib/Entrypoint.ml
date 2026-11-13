@@ -23,7 +23,7 @@ type entrypoint_kind =
 
 (** Check the entrypoint function is valid, return the decl_id of the function
     and the entrypoint kind. *)
-let rec check_entrypoint_validity (env: env) (name: qident): decl_id * entrypoint_kind =
+let rec check_entrypoint_validity (env: env) (name: qident): function_id * entrypoint_kind =
   match get_decl_by_name env (qident_to_sident name) with
   | Some decl ->
      (match decl with
@@ -85,7 +85,7 @@ and is_exit_code_type = function
      false
 
 let entrypoint_code root_cap_mono_id exit_code_mono_id id =
-  let f = CIdent.render (gen_decl_id id) in
+  let f = CIdent.render (gen_function_id id) in
   let exit_code: string = CIdent.render (gen_mono_id exit_code_mono_id) in
   ("int main(int argc, char** argv) {\n"
    ^ "    au_store_cli_args(argc, argv);\n"
@@ -98,8 +98,8 @@ let entrypoint_code root_cap_mono_id exit_code_mono_id id =
    ^ "    }\n"
    ^ "}")
 
-let empty_entrypoint_code (entrypoint_id: decl_id) (exit_code_id: mono_id): string =
-  let f = CIdent.render (gen_decl_id entrypoint_id) in
+let empty_entrypoint_code (entrypoint_id: function_id) (exit_code_id: mono_id): string =
+  let f = CIdent.render (gen_function_id entrypoint_id) in
   let exit_code: string = CIdent.render (gen_mono_id exit_code_id) in
   ("int main(int argc, char** argv) {\n"
    ^ "    au_store_cli_args(argc, argv);\n"
@@ -134,7 +134,7 @@ let get_exit_code_monomorph (env: env): mono_id =
 
 let entrypoint_code (env: env) (name: qident): CRepr.c_source Outcome.t =
   Outcome.catch (fun () ->
-      let (entrypoint_id, kind): decl_id * entrypoint_kind = check_entrypoint_validity env name in
+      let (entrypoint_id, kind): function_id * entrypoint_kind = check_entrypoint_validity env name in
       match kind with
       | EmptyEntrypoint ->
          CRepr.CSource (empty_entrypoint_code entrypoint_id (get_exit_code_monomorph env))
