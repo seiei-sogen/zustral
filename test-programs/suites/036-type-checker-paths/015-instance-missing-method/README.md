@@ -1,1 +1,1 @@
-Covers a call to a typeclass method that the instance does not define; it ends in an internal error (lib/TypeCheckExpr.ml, augment_method_call).
+A call to a typeclass method that the instance does not define is reported as a type error at the call (lib/TypeCheckExpr.ml, augment_method_call). The instance is accepted where it is declared (issue #91).

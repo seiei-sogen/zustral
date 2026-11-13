@@ -235,17 +235,16 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
      in
      let params' = List.map (fun (ValueParameter (n, t)) -> ValueParameter (n, replace_variables instance_bindings t)) params in
      let arguments' = TypeCheckExpr.cast_arguments instance_bindings params' args in
-     let { typarams; id = instance_id; _ }: instance_decl = instance in
+     let { typarams; id = instance_id; argument; _ }: instance_decl = instance in
      let meth_id: ins_meth_id =
        (match get_instance_method_from_instance_id_and_method_name env instance_id (original_name method_name) with
         | Some (InsMethRec { id; _ }) -> id
-        (* A program reaches this: an instance that leaves out a method of its
-           typeclass is accepted where it is declared (#91). *)
-        | None -> internal_err NoSpan ("Couldn't find instance method from instance ID `"
-                                ^ (show_instance_id instance_id)
-                                ^ "` and method name `"
-                                ^ (method_name |> original_name |> ident_string)
-                                ^ "`."))
+        (* An instance that leaves out a method of its typeclass is accepted
+           where it is declared (#91). The type checker reports a call on a
+           concrete type; a call on a type parameter is resolved only here. *)
+        | None ->
+           let tc_name: sident = EnvExtras.get_decl_sident_or_die NoSpan env typeclass_id in
+           type_error NoSpan (InstanceMissingMethod { typeclass = sident_name tc_name; ty = argument; method_name = original_name method_name }))
      in
      let substs = make_substs2 instance_bindings typarams in
      let mcall = TMethodCall (meth_id, method_name, typarams, arguments', rt, substs) in

@@ -1,20 +1,16 @@
 {
   "module": "Test",
-  "kind": "Internal Error",
+  "kind": "Type Error",
   "text": [
-    { "type": "text", "content": "Internal compiler error: " },
+    { "type": "text", "content": "The instance of the typeclass " },
+    { "type": "code", "content": "Shape" },
+    { "type": "text", "content": " for the type " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": " does not define the method " },
+    { "type": "code", "content": "perimeter" },
     {
       "type": "text",
-      "content": "Couldn't get instance method for `perimeter`"
-    },
-    { "type": "break" },
-    {
-      "type": "text",
-      "content": "This is a bug in the compiler, please open an issue here: "
-    },
-    {
-      "type": "code",
-      "content": "https://github.com/austral/austral/issues"
+      "content": ". An instance must define every method of its typeclass."
     }
   ],
   "span": {
