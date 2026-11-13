@@ -119,48 +119,34 @@ let empty_entrypoint_code (entrypoint_id: function_id) (exit_code_id: mono_id): 
    ^ "    }\n"
    ^ "}")
 
-let get_root_capability_monomorph (env: env): mono_id =
-  let mn: module_name = pervasive_module_name
-  and n: identifier = make_ident BuiltInNames.root_capability_name in
-  let sn: sident = make_sident mn n in
-  match get_decl_by_name NoSpan env sn with
-  | Some (Record { id; _ }) ->
-     (match get_record_monomorph env id empty_mono_bindings with
-      | Some id ->
-         mono_id_of_record id
-      | None ->
-         (* No type rules this out. The pass that monomorphized the signature
-            of the entrypoint registered the monomorph under its key, and did
-            not hand its ID over. *)
-         internal_err NoSpan "No monomorph of RootCapability.")
-  | None | Some (Constant _ | Union _ | UnionCase _ | Function _ | TypeClass _
-      | TypeClassMethod _ | Instance _) ->
-     (* No type rules this out. The compiler knows this type by the name the
-        built-in module declares it under, and by nothing else. *)
-     internal_err NoSpan "Can't find the RootCapability type in the environment."
-
-let get_exit_code_monomorph (env: env): mono_id =
-  let mn: module_name = pervasive_module_name
-  and n: identifier = make_ident BuiltInNames.exit_code_name in
-  let sn: sident = make_sident mn n in
-  match get_decl_by_name NoSpan env sn with
-  | Some (Union { id; _ }) ->
-     (match get_union_monomorph env id empty_mono_bindings with
-      | Some id ->
-         mono_id_of_union id
-      | None ->
-         (* As for RootCapability: registered by key, by an earlier pass. *)
-         internal_err NoSpan "No monomorph of ExitCode.")
-  | None | Some (Constant _ | Record _ | UnionCase _ | Function _ | TypeClass _
-      | TypeClassMethod _ | Instance _) ->
-     (* As for RootCapability: known by its name only. *)
-     internal_err NoSpan "Can't find the ExitCode type in the environment."
+(* The monomorph, for no type arguments, of a type the built-in module declares,
+   given its name. No type rules out the miss. The compiler knows these types by
+   the name the built-in module declares them under, and by nothing else; and
+   the pass that monomorphized the signature of the entrypoint registered the
+   monomorph under its key, and did not hand its ID over. *)
+let get_built_in_type_monomorph (env: env) (type_name: string): mono_id =
+  let sn: sident = make_sident pervasive_module_name (make_ident type_name) in
+  let monomorph: mono_id option =
+    match get_decl_by_name NoSpan env sn with
+    | Some (Record { id; _ }) ->
+       Option.map mono_id_of_record (get_record_monomorph env id empty_mono_bindings)
+    | Some (Union { id; _ }) ->
+       Option.map mono_id_of_union (get_union_monomorph env id empty_mono_bindings)
+    | None | Some (Constant _ | UnionCase _ | Function _ | TypeClass _
+        | TypeClassMethod _ | Instance _) ->
+       None
+  in
+  match monomorph with
+  | Some id ->
+     id
+  | None ->
+     internal_err NoSpan ("No monomorph of " ^ type_name ^ ".")
 
 let entrypoint_code (env: env) (name: qident): CRepr.c_source Outcome.t =
   Outcome.catch (fun () ->
       let (entrypoint_id, kind): function_id * entrypoint_kind = check_entrypoint_validity env name in
       match kind with
       | EmptyEntrypoint ->
-         CRepr.CSource (empty_entrypoint_code entrypoint_id (get_exit_code_monomorph env))
+         CRepr.CSource (empty_entrypoint_code entrypoint_id (get_built_in_type_monomorph env BuiltInNames.exit_code_name))
       | RootCapEntrypoint ->
-         CRepr.CSource (entrypoint_code (get_root_capability_monomorph env) (get_exit_code_monomorph env) entrypoint_id))
+         CRepr.CSource (entrypoint_code (get_built_in_type_monomorph env BuiltInNames.root_capability_name) (get_built_in_type_monomorph env BuiltInNames.exit_code_name) entrypoint_id))
