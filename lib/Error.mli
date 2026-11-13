@@ -52,8 +52,10 @@ type location =
 
 (** An Austral compiler error. The code that raises it gives the place, the
     driver adds the module name ({!add_module_name}), and the command line
-    adds the source context. *)
-type austral_error = AustralError of {
+    adds the source context. The type is private: outside this module an error
+    is read by its fields, and made only by {!make_error} or the raising
+    functions, which all take a place. *)
+type austral_error = private AustralError of {
       location: location;
       (** Where the error occurred. *)
       error: error;
@@ -73,6 +75,9 @@ val location_module_name : location -> module_name option
 
 (** The span of a location, if it has one. *)
 val location_span : location -> span option
+
+(** The error that raising [error] at [place] raises, as a value. *)
+val make_error : place -> error -> austral_error
 
 (** Raise a parse error. The lexer and the parser know the place where they
     stop. *)

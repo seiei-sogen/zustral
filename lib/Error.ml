@@ -78,8 +78,11 @@ let location_span (location: location): span option =
 (* Raising. Every function takes the place first: the code that raises
    says where the error is. *)
 
+let make_error (place: place) (error: error): austral_error =
+  AustralError { location = locate None place; error; source_ctx = None }
+
 let raise_error (place: place) (error: error): 'a =
-  raise (Austral_error (AustralError { location = locate None place; error; source_ctx = None }))
+  raise (Austral_error (make_error place error))
 
 let parse_error (place: place) (e: ParseErrors.t): 'a = raise_error place (Parse e)
 

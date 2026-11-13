@@ -103,7 +103,7 @@ let test_monomorph_key_not_registered _ =
       })
   in
   assert_equal
-    (Error [AustralError { location = Nowhere; error = Internal "No monomorph of ExitCode."; source_ctx = None }])
+    (Error [make_error NoSpan (Internal "No monomorph of ExitCode.")])
     (Austral_core.Entrypoint.entrypoint_code env (make_qident (pervasive, main, main)))
 
 let suite =

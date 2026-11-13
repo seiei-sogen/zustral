@@ -10,7 +10,7 @@ open Austral_core.Error
 
 (* An error to fail with. Which one it is does not matter to these tests. *)
 let error (message: string): austral_error =
-  AustralError { location = Nowhere; error = Internal message; source_ctx = None }
+  make_error NoSpan (Internal message)
 
 let test_catch _ =
   assert_equal (Ok 1) (Outcome.catch (fun () -> 1));

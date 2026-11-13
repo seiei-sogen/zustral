@@ -147,7 +147,7 @@ and exec_compile (modules: mod_source list) (target: target) (error_reporting_mo
      (* Nothing in the compiler fails without an error. If something ever
         does, say so: exiting with a failure status and no message is worse. *)
      let no_error: austral_error =
-       AustralError { location = Nowhere; error = Internal "The compiler failed without an error."; source_ctx = None }
+       make_error NoSpan (Internal "The compiler failed without an error.")
      in
      report_and_exit error_reporting_mode no_error
 
