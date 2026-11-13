@@ -78,41 +78,32 @@ let rec monomorphize_ty (env: env) (ty: stripped_ty): (mono_ty * env) =
   | SPointer ty ->
      let (ty, env) = monomorphize_ty env ty in
      (MonoPointer ty, env)
-  | SNamedType (name, _, args) ->
+  | SNamedType (_, id, args) ->
      let (args, env) = monomorphize_ty_list env args in
-     (match get_decl_by_name NoSpan env (qident_to_sident name) with
-      | Some decl ->
-         (match decl with
-          | Record { id; typarams; _ } ->
-             let typarams: type_parameter list = typarams_as_list typarams in
-             let pairs: (type_parameter * mono_ty) list = List.map2 (fun tp mt -> (tp, mt)) typarams args in
-             let bindings: mono_type_bindings = mono_bindings_from_list pairs in
-             let (env, mono_id) = add_or_get_record_monomorph env id bindings in
-             (MonoNamedType (mono_id_of_record mono_id), env)
-          | Union { id; typarams; _ } ->
-             let typarams: type_parameter list = typarams_as_list typarams in
-             let pairs: (type_parameter * mono_ty) list = List.map2 (fun tp mt -> (tp, mt)) typarams args in
-             let bindings: mono_type_bindings = mono_bindings_from_list pairs in
-             let (env, mono_id) = add_or_get_union_monomorph env id bindings in
-             (MonoNamedType (mono_id_of_union mono_id), env)
-          | Constant _ | UnionCase _ | Function _ | TypeClass _ | TypeClassMethod _
-          | Instance _ ->
-             (* A union case declared after a record or union of the same name
-                is registered without the check that rejects a second
-                declaration of a name (#86), and a lookup by name finds it. *)
-             declaration_error NoSpan (DeclarationAlreadyExists { name = original_name name; module_name = source_module_name name }))
-      | None ->
-         (* No type rules this out. A named type holds the name of its
-            declaration, not an ID: the type parser resolves a type of the
-            module being extracted from the signatures of that module, before
-            the declaration is registered and has an ID. *)
-         internal_err NoSpan ("Couldn't get declaration for named type `" ^ (qident_debug_name name) ^ "`."))
+     let (mono_id, env) = monomorphize_named_type env id args in
+     (MonoNamedType mono_id, env)
   | SFnPtr (args, rt) ->
      let (args, env) = monomorphize_ty_list env args in
      let (rt, env) = monomorphize_ty env rt in
      (MonoFnPtr (args, rt), env)
   | SRegionTyVar (name, source) ->
      (MonoRegionTyVar (name, source), env)
+
+(* The monomorph of a record or a union for the given type arguments,
+   registered the first time it is asked for. *)
+and monomorphize_named_type (env: env) (id: type_decl_id) (args: mono_ty list): (mono_id * env) =
+  let bindings (typarams: typarams): mono_type_bindings =
+    mono_bindings_from_list (List.map2 (fun tp mt -> (tp, mt)) (typarams_as_list typarams) args)
+  in
+  match id with
+  | RecordTypeId id ->
+     let { typarams; _ }: record_decl = get_record env id in
+     let (env, mono_id) = add_or_get_record_monomorph env id (bindings typarams) in
+     (mono_id_of_record mono_id, env)
+  | UnionTypeId id ->
+     let { typarams; _ }: union_decl = get_union NoSpan env id in
+     let (env, mono_id) = add_or_get_union_monomorph env id (bindings typarams) in
+     (mono_id_of_union mono_id, env)
 
 and monomorphize_ty_list (env: env) (tys: stripped_ty list): (mono_ty list * env) =
   match tys with
