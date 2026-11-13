@@ -7,19 +7,23 @@
 An error to the user is a constructor of one of the types in lib/*Errors.ml,
 and its wording is in that module's `render`. The pieces of a message are the
 string literals it is built from: every literal in the arm of `render` for the
-constructor, and every literal in the functions `render` calls for the words
-of an enumeration. A piece is pinned if it appears in the expected output of
-some test: the message in an `austral-stderr.txt` of the end-to-end suite, or
-an `expected.txt` of the command-line tests.
+constructor, and every literal in the other functions of the module, which
+give the words of an enumeration (`declaration_kind_word`). A piece is pinned
+if it appears in the expected output of some test: the message in an
+`austral-stderr.txt` of the end-to-end suite, or an `expected.txt` of the
+command-line tests.
 
 A piece on the recorded list is one that no program can reach, or that a known
 bug hides. Issue #124 gives the reason for each. A new piece that is not on
 the list fails the comparison: write a test for it.
 
-R11 made seven pieces visible that programs can reach and that no test expects
-yet: the four messages of the lexer in lib/ParseErrors.ml, and the words
-"disjunction", "borrow (mutably)" and "borrowed (read-only)". They are on the
-list until their tests exist.
+What this check cannot see. It looks for the text of a piece anywhere in any
+expected output, so a short piece ("method", "a case") counts as pinned when
+another message happens to contain it. Pieces shorter than four characters are
+not looked for at all. A name that `render` takes from lib/BuiltInNames.ml is
+not a literal here, so it is not a piece. `coverage.sh --messages` covers
+these: it fails when a line of lib/*Errors.ml is executed by no test. This
+check stays because it needs no instrumented build, so the gate can run it.
 """
 import json
 import pathlib
