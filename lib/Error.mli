@@ -94,6 +94,11 @@ val generic_error : GenericErrors.t -> 'a
 (** Raise an internal error. *)
 val internal_err : string -> 'a
 
+(** The value of a successful result. Raises the error of a failed one. A
+    caller that cannot go on after the failure uses this on a function that
+    returns its failure as a value. *)
+val ok_or_raise : ('a, error) result -> 'a
+
 (** Add a source context to an error if it doesn't have one. *)
 val add_source_ctx : austral_error -> source_ctx -> austral_error
 

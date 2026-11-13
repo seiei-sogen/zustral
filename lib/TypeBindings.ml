@@ -72,44 +72,51 @@ let show_type_bindings (TypeBindings m) =
 let get_binding (TypeBindings m) tp =
   BindingsMap.find_opt tp m
 
+let ( let* ) = Result.bind
+
 (* Add a binding to the map.
 
    If a binding with this name already exists, fail if the types are
    distinct. *)
-let add_binding (TypeBindings m) (tp: type_parameter) (ty: ty): type_bindings =
+let try_add_binding (TypeBindings m) (tp: type_parameter) (ty: ty): (type_bindings, error) result =
   match BindingsMap.find_opt tp m with
   | Some ty' ->
      if equal_ty ty ty' then
-       TypeBindings m
+       Ok (TypeBindings m)
      else
-       type_error (TyparamRedefinition { param = tp; was = ty'; redef = ty })
+       Error (Type (TyparamRedefinition { param = tp; was = ty'; redef = ty }))
   | None ->
      match ty with
      | MonoTy _ ->
        (* Special case! Allow `MonoTy`. See #399. *)
-       TypeBindings (BindingsMap.add tp ty m)
+       Ok (TypeBindings (BindingsMap.add tp ty m))
      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
      | Pointer _ | FnPtr _ ->
       if universe_compatible (typaram_universe tp) (type_universe ty) then
-        TypeBindings (BindingsMap.add tp ty m)
+        Ok (TypeBindings (BindingsMap.add tp ty m))
       else
-        type_error (TyparamBindingWrongUniverse {
+        Error (Type (TyparamBindingWrongUniverse {
             param = tp;
             ty;
             expected = typaram_universe tp;
             actual = type_universe ty;
-          })
+          }))
 
 (* Add multiple bindings to a bindings map. *)
-let rec add_bindings bs pairs =
+let rec try_add_bindings bs pairs =
   match pairs with
-  | (tp, ty)::rest -> add_bindings (add_binding bs tp ty) rest
-  | [] -> bs
+  | (tp, ty)::rest ->
+     let* bs = try_add_binding bs tp ty in
+     try_add_bindings bs rest
+  | [] -> Ok bs
 
-let merge_bindings (TypeBindings a) (TypeBindings b) =
-  let m = add_bindings empty_bindings (List.map (fun (tp, t) -> (tp, t)) (BindingsMap.bindings a)) in
-  add_bindings m (List.map (fun (tp, t) -> (tp, t)) (BindingsMap.bindings b))
+let try_merge_bindings (TypeBindings a) (TypeBindings b) =
+  let* m = try_add_bindings empty_bindings (List.map (fun (tp, t) -> (tp, t)) (BindingsMap.bindings a)) in
+  try_add_bindings m (List.map (fun (tp, t) -> (tp, t)) (BindingsMap.bindings b))
+
+let merge_bindings (a: type_bindings) (b: type_bindings): type_bindings =
+  ok_or_raise (try_merge_bindings a b)
 
 let rec replace_variables bindings ty =
   match ty with
@@ -164,7 +171,7 @@ let rec bindings_from_list lst =
   match lst with
   | (tp, ty)::rest ->
      let bindings = empty_bindings in
-     let bindings = add_binding bindings tp ty in
+     let bindings = ok_or_raise (try_add_binding bindings tp ty) in
      merge_bindings bindings (bindings_from_list rest)
   | [] ->
    empty_bindings

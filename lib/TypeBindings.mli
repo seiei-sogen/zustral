@@ -26,7 +26,11 @@ val bindings_from_list : (type_parameter * ty) list -> type_bindings
 
 val merge_bindings : type_bindings -> type_bindings -> type_bindings
 
-val add_binding : type_bindings -> type_parameter -> ty -> type_bindings
+(** [merge_bindings], and adding one binding, with a failure returned as a
+    value, the error that reports it. *)
+val try_merge_bindings : type_bindings -> type_bindings -> (type_bindings, Error.error) result
+
+val try_add_binding : type_bindings -> type_parameter -> ty -> (type_bindings, Error.error) result
 
 val get_binding : type_bindings -> type_parameter -> ty option
 

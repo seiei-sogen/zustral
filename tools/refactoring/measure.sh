@@ -63,8 +63,9 @@ count_names() { # file
 
 # One row per file. Columns:
 #   raise     places that raise: raise_error, type_error and the other helpers of a category, internal_err,
-#             failwith, raise, assert false
-#   internal  the part of raise that is internal_err: a state the code believes cannot happen
+#             ok_or_raise (the error of a result), failwith, raise, assert false
+#   internal  a state the code believes cannot happen: internal_err, or the same error built as a
+#             value, Error (Internal ...)
 #   adhoc     errors with no name: err with a bare string. R11 removed err, so this stays at 0
 #   catch     places that catch or re-label: try, adorn_error_with_*, with_errors
 #   state     mutable state: creating a ref cell, a Hashtbl or a top-level Buffer, declaring a mutable field
@@ -78,13 +79,13 @@ metrics() {
   sources | while read -r f; do
     printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$f" \
       "$(wc -l < "$ROOT/$f")" \
-      "$(count 'raise_error|(^|[^_a-zA-Z])(parse|cli|type|linearity|declaration|entrypoint|generic)_error(_at)? |internal_err|failwith|(^|[^_a-zA-Z])raise |assert false' "$f")" \
+      "$(count 'raise_error|ok_or_raise|(^|[^_a-zA-Z])(parse|cli|type|linearity|declaration|entrypoint|generic)_error(_at)? |internal_err|failwith|(^|[^_a-zA-Z])raise |assert false' "$f")" \
       "$(count '(^|[^_a-zA-Z])try($|[^_a-zA-Z])|adorn_error_with_[a-z_]+|with_errors' "$f")" \
       "$(count '= *ref ([a-z0-9("\[]|\[\])|^\s*ref \(|Hashtbl\.(create|add|replace)|^\s*mutable [a-z_]+ *:|^let [a-z_]+ *(: *[A-Za-z_.]+ *)?= *Buffer\.create' "$f")" \
       "$(count 'open_out|open_in|(^|[^_a-zA-Z])(print_(string|endline|newline|int|char|float|bytes)|prerr_[a-z]+|read_line|input_(line|char|value|byte)|really_input[a-z_]*|output_(string|char|bytes|value|byte))|Printf\.[a-z]*printf|Format\.[a-z]*printf|(^|[^_a-zA-Z.])exit( |$|\()|(^|[^_a-zA-Z])flush( |$|\()|In_channel|Out_channel|Sys\.|(^|[^_a-zA-Z])Unix($|[^_a-zA-Z])|Filename\.|write_string_to_file|read_file_to_string|run_command' "$f")" \
       "$(count '^\s*\| _ ->' "$f")" \
       "$(count_type_strings "$f")" \
-      "$(count 'internal_err' "$f")" \
+      "$(count 'internal_err|Error \(Internal ' "$f")" \
       "$(count '(^|[^_a-zA-Z])err [("]' "$f")" \
       "$(count_names "$f")"
   done

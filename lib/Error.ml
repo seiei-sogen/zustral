@@ -93,6 +93,11 @@ let generic_error (e: GenericErrors.t): 'a = raise_error (Generic e)
 
 let internal_err (message: string): 'a = raise_error (Internal message)
 
+let ok_or_raise (result: ('a, error) result): 'a =
+  match result with
+  | Ok value -> value
+  | Error error -> raise_error error
+
 (* Error context-augmenting functions *)
 
 let add_source_ctx (error: austral_error) (ctx: source_ctx): austral_error =
