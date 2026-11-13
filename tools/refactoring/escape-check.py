@@ -13,10 +13,12 @@ A function can raise if its text has a `raise`, or names a function that can
 raise, outside the parentheses of an `Outcome.catch (...)`. Every `raise` in
 the compiler raises `Austral_error`; the functions that build an error
 (`type_error`, `internal_err`, ...) are found through it. Names are matched as
-words across all files, so two functions of the same name in different modules
-count as one: the answer is an upper estimate, and a function it clears cannot
-raise `Austral_error`. The lexer and the parser are not OCaml files, so a
-function that names one of those two modules counts as raising.
+words. A name stands for the top-level functions of that name in the same file
+and in every module the file mentions, whether or not a local variable hides
+them: the answer is an upper estimate, and a function it clears cannot raise
+`Austral_error`. The lexer and the parser are not OCaml files, so a function
+that mentions one of those two modules counts as raising if anything in their
+sources does.
 
 Two things follow for the code. A local function that raises has to be
 defined inside the `Outcome.catch (...)` that calls it, or at the top level.
@@ -91,58 +93,63 @@ def outside_catch(body: str) -> str:
     return " ".join(kept)
 
 
+Key = tuple[str, str]  # module, function
+
+
 def word(names) -> re.Pattern:
     alternatives = "|".join(sorted(map(re.escape, names), key=len, reverse=True))
     return re.compile(r"(?<![A-Za-z0-9_'.])(?:[A-Z][A-Za-z0-9_]*\.)*(" + alternatives + r")(?![A-Za-z0-9_'])")
 
 
-def definitions() -> dict[tuple[str, str], str]:
+def sources() -> dict[str, str]:
+    """The code of every module of the compiler that is written by hand."""
+    files = [*(ROOT / "lib").glob("*.ml"), *(ROOT / "cli").glob("*.ml")]
+    code = {path.stem: code_only(path.read_text()) for path in sorted(files) if path.stem != CONSTANTS}
+    # The rules of the lexer and the parser are not OCaml: taken as they are.
+    code.update({file.split(".")[0]: (ROOT / "lib" / file).read_text() for file in GENERATED})
+    return code
+
+
+def definitions(code: dict[str, str]) -> dict[Key, str]:
     """The part of every top-level function that an exception can leave through."""
     bodies = {}
-    for path in sorted([*(ROOT / "lib").glob("*.ml"), *(ROOT / "cli").glob("*.ml")]):
-        if path.stem == CONSTANTS:
-            continue
-        text = code_only(path.read_text())
+    for module, text in code.items():
         starts = [(m.start(), m.end(), m.group(1)) for m in DEFINITION.finditer(text)]
         for (_, body_start, name), (end, _, _) in zip(starts, starts[1:] + [(len(text), 0, "")]):
-            bodies[(path.stem, name)] = outside_catch(text[body_start:end])
+            bodies[(module, name)] = outside_catch(text[body_start:end])
     return bodies
 
 
-def raising(bodies: dict[tuple[str, str], str]) -> dict[tuple[str, str], str]:
-    """Every function that can raise, with the reason: `raise`, or the function
-    or the generated module it names."""
-    why = {key: "raise" for key, body in bodies.items() if RAISE.search(body)}
-    generated = {f: (ROOT / "lib" / f).read_text() for f in GENERATED}
-    modules: set[str] = set()
+def raising(code: dict[str, str], bodies: dict[Key, str]) -> dict[Key, Key | None]:
+    """Every function that can raise, with the function it names that makes it
+    so, or None if it has a `raise` itself. A generated module is a function
+    of no name."""
+    # The modules whose functions a file can call: itself and those it mentions.
+    mentions = {module: {module} | (set(re.findall(r"\b[A-Z][A-Za-z0-9_]*\b", text)) & code.keys()) for module, text in code.items()}
+    generated = [file.split(".")[0] for file in GENERATED]
+    texts = dict(bodies) | {(module, ""): code[module] for module in generated}
+    why: dict[Key, Key | None] = {key: None for key, body in bodies.items() if RAISE.search(body)}
     changed = True
     while changed:
         changed = False
-        pattern = word({name for _, name in why})
-        for file, text in generated.items():
-            module = file.split(".")[0]
-            if module not in modules and pattern.search(text):
-                modules.add(module)
-                changed = True
-        module_use = re.compile(r"\b(" + "|".join(sorted(modules) or ["(?!)"]) + r")\.")
-        for key, body in bodies.items():
-            if key not in why and (m := pattern.search(body) or module_use.search(body)):
-                why[key] = m.group(1)
+        pattern = word({name for _, name in why if name})
+        for key, text in texts.items():
+            if key in why:
+                continue
+            functions = ((module, m.group(1)) for m in pattern.finditer(text) for module in mentions[key[0]])
+            rules = ((module, "") for module in generated if re.search(rf"\b{module}\.", text))
+            if reason := next((k for k in (*functions, *rules) if k in why and k != key), None):
+                why[key] = reason
                 changed = True
     return why
 
 
-def chain(module: str, name: str, why: dict[tuple[str, str], str]) -> str:
+def chain(key: Key, why: dict[Key, Key | None]) -> str:
     """How the function comes to raise, as far as the names tell."""
-    steps, seen = [name], set()
-    key = (module, name)
-    while key in why and key not in seen:
-        seen.add(key)
-        reason = why[key]
-        steps.append(reason)
-        # The reason is a name; any function of that name that raises explains it.
-        key = next((k for k in sorted(why) if k[1] == reason and k not in seen), None)
-    return " -> ".join(steps)
+    steps = [key[1]]
+    while (key := why[key]) is not None:
+        steps.append(".".join(filter(None, key)))
+    return " -> ".join([*steps, "raise"])
 
 
 def exported(module: str) -> list[str]:
@@ -158,8 +165,9 @@ def main() -> int:
         # Every module the driver opens or names, in the order of its first mention.
         named = re.findall(r"\b([A-Z][A-Za-z0-9_]*)\b", driver)
         stages = [m for m in dict.fromkeys(named) if m not in (DRIVER, CONSTANTS) and (ROOT / "lib" / f"{m}.ml").exists()]
-    bodies = definitions()
-    why = raising(bodies)
+    code = sources()
+    bodies = definitions(code)
+    why = raising(code, bodies)
     report: list[tuple[str, list[str]]] = []
     for module in stages:
         called = [name for name in exported(module) if word([name]).search(driver)]
@@ -181,7 +189,7 @@ def main() -> int:
         escaping += len(escapes)
         print(f"{module}: {', '.join(names)}: " + ("an error can escape" if escapes else "no error escapes"))
         for name in escapes:
-            print(f"  {chain(module, name, why)}")
+            print(f"  {chain((module, name), why)}")
     print(f"modules {len(report)}, functions {sum(len(names) for _, names in report)}, escaping {escaping}")
     return 1 if escaping else 0
 

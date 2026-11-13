@@ -8,5 +8,9 @@ open Env
 open Stages.Tast
 
 (** Given a typed module, extract the function and instance method bodies and
-    store them in the environment. *)
-val extract_bodies : env -> typed_module -> env
+    store them in the environment.
+
+    The only failures are internal errors of the environment: an ID it does
+    not know, or a body stored twice. When the environment cannot report those
+    (issue #114), this returns a plain [env]. *)
+val extract_bodies : env -> typed_module -> env Outcome.t

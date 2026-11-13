@@ -89,8 +89,8 @@ let rec compile_mod (c: compiler) (source: module_source): compiler =
       let (env, linked): (env * linked_module) = Outcome.or_raise (extract env combined) in
       let typed: typed_module = Outcome.or_raise (augment_module env linked) in
       let _ = Outcome.or_raise (check_module_linearity typed) in
-      let env: env = extract_bodies env typed in
-      let (env, mono): (env * mono_module) = monomorphize env typed in
+      let env: env = Outcome.or_raise (extract_bodies env typed) in
+      let (env, mono): (env * mono_module) = Outcome.or_raise (monomorphize env typed) in
       let unit: c_unit = gen_module env mono in
       Compiler (env, units @ [unit]))
 
@@ -105,7 +105,7 @@ let fake_mod_source (is: string) (bs: string): module_source =
 let finish (compiler: compiler) (entrypoint: (module_name * identifier) option): c_program =
   let (Compiler (env, units)) = compiler in
   (* The wrapper functions. *)
-  let (env, decls): env * mdecl list = monomorphize_wrappers env in
+  let (env, decls): env * mdecl list = Outcome.or_raise (monomorphize_wrappers env) in
   let wrapper_unit: c_unit = gen_module env (MonoModule (make_mod_name BuiltInNames.wrappers_module, decls)) in
   let wrappers: c_unit = CUnit (BuiltInNames.wrappers_unit_name, all_wrappers env) in
   let entrypoint: c_source option =

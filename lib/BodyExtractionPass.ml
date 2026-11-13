@@ -7,9 +7,9 @@
 open Env
 open Stages.Tast
 
-let rec extract_bodies (env: env) (m: typed_module): env =
+let rec extract_bodies (env: env) (m: typed_module): env Outcome.t =
   let (TypedModule (_, decls)) = m in
-  Util.iter_with_context extract_decl env decls
+  Outcome.catch (fun () -> Util.iter_with_context extract_decl env decls)
 
 and extract_decl (env: env) (decl: typed_decl): env =
   match decl with

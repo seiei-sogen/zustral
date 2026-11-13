@@ -31,6 +31,8 @@ open Stages.Mtast
     5. You're done.
 
 *)
-val monomorphize : env -> typed_module -> (env * mono_module)
+val monomorphize : env -> typed_module -> (env * mono_module) Outcome.t
 
-val monomorphize_wrappers : env -> env * mdecl list
+(** Instantiate the functions the program exports, and everything they use.
+    Called once, after all modules. *)
+val monomorphize_wrappers : env -> (env * mdecl list) Outcome.t

@@ -516,15 +516,21 @@ and monomorphize_method (env: env) (meth: typed_method_def): (env * concrete_met
 
 (* Monomorphize modules *)
 
-let rec monomorphize (env: env) (m: typed_module): (env * mono_module) =
+let ( let* ) = Outcome.bind
+
+let rec monomorphize (env: env) (m: typed_module): (env * mono_module) Outcome.t =
   (* Monomorphize what we can: concrete definitions. *)
   let (TypedModule (module_name, decls)) = m in
-  let (env, declopts) =
-    Util.map_with_context (fun (e, d) -> let (d, e) = monomorphize_decl e d in (e, d)) env decls in
+  let* (env, declopts) =
+    Outcome.traverse_with_context
+      (fun (e, d) -> Outcome.catch (fun () -> let (d, e) = monomorphize_decl e d in (e, d)))
+      env
+      decls
+  in
   let decls: mdecl list = List.filter_map (fun x -> x) declopts in
   (* Recursively collect and instantiate monomorphs until everything's instantiated. *)
-  let (env, decls'): (env * mdecl list) = instantiate_monomorphs_until_exhausted env in
-  (env, MonoModule (module_name, decls @ decls'))
+  let* (env, decls') = Outcome.catch (fun () -> instantiate_monomorphs_until_exhausted env) in
+  Ok (env, MonoModule (module_name, decls @ decls'))
 
 and instantiate_monomorphs_until_exhausted (env: env): (env * mdecl list) =
   (* Get uninstantiated monomorphs from the environment. *)
@@ -782,11 +788,12 @@ let monomorphize_wrapper (env: env) (id: decl_id): env =
   | _ ->
      internal_err "Didn't find wrapper in env."
 
-let monomorphize_wrappers (env: env): env * mdecl list =
-  (* Get the IDs of all the wrapper functions. *)
-  let ids: decl_id list = List.map (fun (id, _) -> id) (get_export_functions env) in
-  (* Monomorphize wrappers. *)
-  let env: env = Util.iter_with_context (fun env id -> monomorphize_wrapper env id) env ids in
-  (* Instantiate monomorphs *)
-  let (env, decls): (env * mdecl list) = instantiate_monomorphs_until_exhausted env in
-  (env, decls)
+let monomorphize_wrappers (env: env): (env * mdecl list) Outcome.t =
+  Outcome.catch (fun () ->
+      (* Get the IDs of all the wrapper functions. *)
+      let ids: decl_id list = List.map (fun (id, _) -> id) (get_export_functions env) in
+      (* Monomorphize wrappers. *)
+      let env: env = Util.iter_with_context (fun env id -> monomorphize_wrapper env id) env ids in
+      (* Instantiate monomorphs *)
+      let (env, decls): (env * mdecl list) = instantiate_monomorphs_until_exhausted env in
+      (env, decls))
