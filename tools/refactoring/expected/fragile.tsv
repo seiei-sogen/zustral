@@ -50,4 +50,3 @@ lib/TypingPass.ml	LexEnv.var_source	2
 lib/TypingPass.ml	Stages.AstDB.aexpr	4
 lib/TypingPass.ml	Stages.AstDB.astmt	2
 lib/TypingPass.ml	Stages.Tast.texpr	2
-lib/TypingPass.ml	Type.ty	14

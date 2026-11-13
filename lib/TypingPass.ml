@@ -58,7 +58,9 @@ let get_record_definition (env: env) (name: qident) (ty: ty): (module_name * typ
 
 let is_boolean = function
   | Boolean -> true
-  | _ -> false
+  | Unit | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
+  | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
+  | MonoTy _ -> false
 
 let is_compatible_with_index_type = function
   | TIntConstant _ ->
@@ -192,7 +194,9 @@ let rec augment_stmt (ctx: stmt_ctx) (stmt: astmt): tstmt =
                  type_error (DestructureWrongSlots rec_ty)
              else
                type_error (DestructureNotPublic rec_ty)
-          | _ ->
+          | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _
+          | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
+          | Pointer _ | FnPtr _ | MonoTy _ ->
              type_error (DestructureNonRecord rec_ty)))
   | AAssign (span, lvalue, rvalue) ->
      adorn_error_with_span span
@@ -205,7 +209,9 @@ let rec augment_stmt (ctx: stmt_ctx) (stmt: astmt): tstmt =
              match lvalue_ty with
              | WriteRef (ty, _) ->
                 ty
-             | _ ->
+             | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+             | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _
+             | Pointer _ | FnPtr _ | MonoTy _ ->
                 generic_error (AssignToNonMutableReference lvalue_ty)
            end
          in
@@ -321,7 +327,9 @@ let rec augment_stmt (ctx: stmt_ctx) (stmt: astmt): tstmt =
                   let is_mut = begin
                     match orig_ty with
                     | WriteRef _ -> true
-                    | _ -> false
+                    | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat
+                    | NamedType _ | RegionTy _ | ReadRef _ | Span _ | SpanMut _
+                    | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ -> false
                   end
                   in
                   if is_mut then
@@ -344,7 +352,9 @@ let rec augment_stmt (ctx: stmt_ctx) (stmt: astmt): tstmt =
                        match orig_ty with
                        | WriteRef (pointed_ty, _) ->
                           pointed_ty
-                       | _ ->
+                       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat
+                       | NamedType _ | RegionTy _ | ReadRef _ | Span _ | SpanMut _
+                       | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
                           generic_error (ReborrowOfNonMutableReference orig_ty)
                      end
                    in
@@ -419,7 +429,8 @@ and augment_case (ctx: stmt_ctx) (span: span) (expr: aexpr) (whens: abstract_whe
             (ty, ReadRefCaseMode r)
          | WriteRef (ty, r) ->
             (ty, WriteRefCaseMode r)
-         | _ ->
+         | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | Span _
+         | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
             type_error (CaseNotUnionOrReference ty))
       in
       let case_ref: case_ref =
@@ -444,7 +455,9 @@ and get_union_type_definition (importing_module: module_name) (env: env) (ty: ty
   let name: qident = (match ty with
                       | NamedType (n, _, _) ->
                          n
-                      | _ ->
+                      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat
+                      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _
+                      | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
                          type_error (CaseNonUnion ty)) in
   match get_decl_by_name env (qident_to_sident name) with
   | Some (Union { id; vis; name; mod_id; typarams; universe; _ }) ->
