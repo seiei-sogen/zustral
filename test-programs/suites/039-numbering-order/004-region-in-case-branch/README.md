@@ -1,0 +1,1 @@
+Pins the order in which the type checker numbers the regions of the borrows in the branches of a `case` statement: the cases of the union from last to first, whatever the order of the `when` clauses. `Dot` takes the regions 2 and 3, `Square` takes 4, and the borrow in `Circle` has the region 5, which is in the message.

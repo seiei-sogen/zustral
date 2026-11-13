@@ -1,0 +1,17 @@
+module body Test is
+    function main(): ExitCode is
+        let n: Int32 := 10;
+        if n > 0 then
+            borrow ref: &[Int32, rho] := &n do
+                let other: &[Int32, Static] := ref;
+            end borrow;
+        else
+            borrow a: &[Int32, r1] := &n do
+                borrow b: &[Int32, r2] := &n do
+                    skip;
+                end borrow;
+            end borrow;
+        end if;
+        return ExitSuccess();
+    end;
+end module body.

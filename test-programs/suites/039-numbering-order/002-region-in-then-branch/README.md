@@ -1,0 +1,1 @@
+Pins the order in which the type checker numbers the regions of the borrows in an `if` statement: the `else` branch first. The two borrows of the `else` branch take the regions 2 and 3, so the borrow in the `then` branch has the region 4, which is in the message.

@@ -1,0 +1,31 @@
+module body Test is
+    union Shape: Free is
+        case Circle is
+            radius: Int32;
+        case Square is
+            side: Int32;
+        case Dot;
+    end;
+
+    function main(): ExitCode is
+        let n: Int32 := 10;
+        let s: Shape := Dot();
+        case s of
+            when Circle(radius: Int32) do
+                borrow ref: &[Int32, rho] := &n do
+                    let other: &[Int32, Static] := ref;
+                end borrow;
+            when Square(side: Int32) do
+                borrow a: &[Int32, r1] := &n do
+                    skip;
+                end borrow;
+            when Dot do
+                borrow b: &[Int32, r2] := &n do
+                    borrow c: &[Int32, r3] := &n do
+                        skip;
+                    end borrow;
+                end borrow;
+        end case;
+        return ExitSuccess();
+    end;
+end module body.
