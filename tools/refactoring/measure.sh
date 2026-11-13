@@ -3,7 +3,6 @@
 # wants to shrink. See docs/research/functional-domain-refactoring/README.md.
 #   measure.sh            compare with expected/
 #   measure.sh --record   rewrite expected/ from the current tree
-#   measure.sh --check    fail only if a total went up; print what changed
 #   measure.sh --fragile  also count fragile matches (needs a compiler build)
 #   measure.sh --check-fragile  only the fragile matches: fail unless the totals
 #                         equal expected/fragile-totals.txt and none is on a
@@ -28,12 +27,11 @@ set -uo pipefail
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT=$(cd "$HERE/../.." && pwd)
-RECORD=0 FRAGILE=0 CHECK=0 CHECK_FRAGILE=0 SELF_TEST=0 TREE=
+RECORD=0 FRAGILE=0 CHECK_FRAGILE=0 SELF_TEST=0 TREE=
 while (($#)); do
   case $1 in
     --record) RECORD=1 ;;
     --fragile) FRAGILE=1 ;;
-    --check) CHECK=1 ;;
     --check-fragile) CHECK_FRAGILE=1 ;;
     --self-test) SELF_TEST=1 ;;
     --tree) TREE=${2:?usage: measure.sh --tree DIR}; shift ;;
@@ -245,15 +243,6 @@ failed=0
 metrics > "$T/metrics.tsv"
 totals "$T/metrics.tsv" > "$T/totals.txt"
 if [[ -n $TREE ]]; then cat "$T/totals.txt"; exit 0; fi
-if ((CHECK)); then
-  # The size of the code may grow; the things the plan wants to shrink may not.
-  awk 'NR == FNR { was[$1] = $2; next }
-    $1 == "files" || $1 == "lines" { next }
-    $2 != was[$1] { printf "%s %d -> %d\n", $1, was[$1], $2; changed = 1 }
-    $2 > was[$1] { up = 1 }
-    END { if (!changed) print "no total changed"; exit up }' "$HERE/expected/totals.txt" "$T/totals.txt" || { echo "a total went up"; exit 1; }
-  exit 0
-fi
 check metrics.tsv
 check totals.txt
 if ((FRAGILE)); then

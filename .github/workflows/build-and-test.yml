@@ -41,9 +41,11 @@ jobs:
       - name: command-line tests
         run: nix-shell --command 'python test-programs/cli-runner.py'
 
-      # The counts the refactoring plan wants to shrink (docs/refactoring-plan.md) may not grow.
-      - name: metrics must not go up
-        run: nix-shell --command 'tools/refactoring/measure.sh --check'
+      # The counts the refactoring plan wants to shrink (docs/refactoring-plan.md) equal the
+      # record in tools/refactoring/expected/. A commit that moves one, down as well as up,
+      # records it again (measure.sh --record): a record that lags lets new ones in unseen.
+      - name: metrics equal the record
+        run: nix-shell --command 'tools/refactoring/measure.sh'
 
       - name: no unused exports
         run: nix-shell --command 'tools/refactoring/unused-exports.sh'
