@@ -50,6 +50,10 @@ let check_expr (module_name: module_name) (env: env) (rm: region_map) (typarams:
   TypeCheckExpr.check ctx expr expected
 
 (** Copied from TypeCheckExpr *)
+let check_annotated_expr (module_name: module_name) (env: env) (rm: region_map) (typarams: typarams) (lexenv: lexenv) (expr: aexpr) (annotation: ty): texpr =
+  let ctx: TypeCheckExpr.expr_ctx = TypeCheckExpr.make_ctx module_name env rm typarams lexenv in
+  TypeCheckExpr.check_annotated ctx expr annotation
+
 let get_record_definition (env: env) (name: qident) (ty: ty): (module_name * type_vis * typarams * typed_slot list) =
   match get_decl_by_name env (qident_to_sident name) with
   | (Some (Record { mod_id; vis; typarams; slots; _ })) ->
@@ -316,8 +320,9 @@ and augment_assign_var (ctx: stmt_ctx) (supply: Supply.t) (span: span) (name: qi
 
 and augment_initial_assign (ctx: stmt_ctx) (supply: Supply.t) (name: qident) (ty: qtypespec) (rvalue: aexpr): tstmt * Supply.t =
   let (StmtCtx (module_name, env, rm, typarams, lexenv, _)) = ctx in
-  let rvalue: texpr = infer_expr module_name env rm typarams lexenv rvalue in
+  (* The type of the `let` annotates its value. *)
   let ty = parse_typespec env rm typarams ty in
+  let rvalue: texpr = check_annotated_expr module_name env rm typarams lexenv rvalue ty in
   let _ = match_type_with_value (env, module_name) ty rvalue in
   (TInitialAssign (name, rvalue), supply)
 
@@ -639,7 +644,7 @@ and is_constant = function
      false
   | TFptrCall _ ->
      false
-  | TCast _ ->
+  | TCast _ | TImplicitCast _ ->
      true
   | TComparison (_, lhs, rhs) ->
      (is_constant lhs) && (is_constant rhs)

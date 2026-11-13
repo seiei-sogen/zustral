@@ -35,4 +35,19 @@ val infer : expr_ctx -> aexpr -> texpr
     stays a literal. *)
 val check : expr_ctx -> aexpr -> ty -> texpr
 
+(** Type check an expression under a type annotation: `e : T`, and the value
+    of `let x: T := e`. The annotated type is the expected type of the
+    expression, as in [check], and an annotation does more than a place that
+    expects a type:
+
+    - it gives an integer or a float literal its type. The result is a cast
+      of the literal, and an integer has to fit the type
+    - it turns a write reference into a read reference to the same type in
+      the same region. The result is a cast too
+
+    Any other expression has to have the annotated type, and is returned as
+    it is. If it does not have it, the error says that the cast is not
+    valid. *)
+val check_annotated : expr_ctx -> aexpr -> ty -> texpr
+
 val cast_arguments : type_bindings -> value_parameter list -> texpr list -> texpr list

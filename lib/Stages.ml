@@ -522,6 +522,15 @@ module Tast = struct
       }
     | TFptrCall of identifier * texpr list * ty
     | TCast of texpr * ty
+    (** A type annotation that changed the expression: it gave a literal its
+        type, or it turned a write reference into a read reference. The
+        annotation is one the user wrote (`e : T`, or the type of a `let`,
+        which annotates the value), or the `Index` that `LiftControlPass`
+        puts around the bounds of a `for`. *)
+    | TImplicitCast of texpr * ty
+    (** A cast the type checker adds: around an argument whose parameter has
+        an integer type, and around the operands of an arithmetic expression,
+        to the type of the operation. *)
     | TComparison of comparison_operator * texpr * texpr
     | TConjunction of texpr * texpr
     | TDisjunction of texpr * texpr

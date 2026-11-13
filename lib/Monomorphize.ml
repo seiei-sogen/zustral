@@ -240,7 +240,7 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
      let (args, env) = monomorphize_expr_list env args in
      let (ty, env) = strip_and_mono env ty in
      (MFptrCall (name, args, ty), env)
-  | TCast (expr, ty) ->
+  | TCast (expr, ty) | TImplicitCast (expr, ty) ->
      let (ty, env) = strip_and_mono env ty in
      let (expr, env) = monomorphize_expr env expr in
      (MCast (expr, ty), env)

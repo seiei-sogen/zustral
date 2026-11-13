@@ -448,7 +448,7 @@ and cast_arguments (bindings: type_bindings) (params: value_parameter list) (arg
     match expected' with
     | Integer _ ->
        (* Cast integer types *)
-       TCast (value, expected')
+       TImplicitCast (value, expected')
     | Unit | Boolean | SingleFloat | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
     | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
     | MonoTy _ ->
@@ -529,7 +529,7 @@ let rec infer (ctx: expr_ctx) (expr: aexpr): texpr =
   | Deref expr ->
      augment_deref ctx expr
   | Typecast (expr, ty) ->
-     augment_typecast ctx expr ty
+     check_annotated ctx expr (parse_typespec ctx ty)
   | SizeOf ty ->
      TSizeOf (parse_typespec ctx ty)
   | SlotAccessor (expr, slot_name) ->
@@ -822,8 +822,8 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
      type_error (ArrayIndexNotReference (get_type expr))
 
 
-and augment_typecast (ctx: expr_ctx) (expr: aexpr) (ty: qtypespec): texpr =
-  (* The typecast operator has four uses:
+and check_annotated (ctx: expr_ctx) (expr: aexpr) (target_type: ty): texpr =
+  (* A type annotation has three uses:
 
      1. Clarifying the type of integer and floating point literals.
 
@@ -832,7 +832,6 @@ and augment_typecast (ctx: expr_ctx) (expr: aexpr) (ty: qtypespec): texpr =
      3. Clarifying the type of return type polymorphic functions.
 
    *)
-  let target_type = parse_typespec ctx ty in
   (* By giving target_type as the expected type we're doing point 3. *)
   let expr' = infer_with_expected ctx expr target_type in
   (* For 1: if the expression is an int literal and the target type is an
@@ -910,8 +909,8 @@ and augment_arithmetic (ctx: expr_ctx) (op: arithmetic_operator) (lhs: aexpr) (r
     let op_name = BuiltInNames.arithmetic_method_name op in
     let op_qname = make_qident (pervasive_module_name, make_ident op_name, make_ident op_name) in
     let args: typed_arglist = TPositionalArglist [
-                                  TCast (lhs', operand_ty);
-                                  TCast (rhs', operand_ty);
+                                  TImplicitCast (lhs', operand_ty);
+                                  TImplicitCast (rhs', operand_ty);
                                 ]
     in
     augment_call ctx op_qname args from_context

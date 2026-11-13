@@ -61,6 +61,10 @@ let rec replace_tyvars_expr (bindings: type_bindings) (expr: texpr): texpr =
      let expr = replace_tyvars_expr bindings expr
      and ty = replace_variables bindings ty in
      TCast (expr, ty)
+  | TImplicitCast (expr, ty) ->
+     let expr = replace_tyvars_expr bindings expr
+     and ty = replace_variables bindings ty in
+     TImplicitCast (expr, ty)
   | TComparison (oper, lhs, rhs) ->
      let lhs = replace_tyvars_expr bindings lhs
      and rhs = replace_tyvars_expr bindings rhs in

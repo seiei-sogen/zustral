@@ -75,7 +75,7 @@ let rec get_type = function
      rt
   | TFptrCall (_, _, rt) ->
      rt
-  | TCast (_, ty) ->
+  | TCast (_, ty) | TImplicitCast (_, ty) ->
      ty
   | TComparison _ ->
      Boolean

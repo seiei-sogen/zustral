@@ -225,7 +225,7 @@ let rec count (name: identifier) (expr: texpr): appearances =
      merge_list (List.map c args)
   | TFptrCall (_, args, _) ->
      merge_list (List.map c args)
-  | TCast (e, _) ->
+  | TCast (e, _) | TImplicitCast (e, _) ->
      c e
   | TComparison (_, lhs, rhs) ->
      merge (c lhs) (c rhs)

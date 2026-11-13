@@ -94,7 +94,7 @@ let test_variable _ =
 
 let test_function_pointer_call _ =
   let call: aexpr = FunctionCall (named "isZero", Positional [Variable (named "x")]) in
-  let expected: texpr = TFptrCall (make_ident "isZero", [TCast (TLocalVar (make_ident "x", int32), int32)], Boolean) in
+  let expected: texpr = TFptrCall (make_ident "isZero", [TImplicitCast (TLocalVar (make_ident "x", int32), int32)], Boolean) in
   assert_equal expected (TypeCheckExpr.infer ctx call);
   assert_equal expected (TypeCheckExpr.check ctx call Boolean)
 
@@ -119,13 +119,36 @@ let test_expected_type_stops_at_operands _ =
     (Some (Type (UnconstrainedGenericFunction (make_ident "make"))))
     (error_of (fun () -> TypeCheckExpr.check ctx comparison Boolean))
 
+(* An annotation gives a literal its type with a cast, which a place that
+   expects a type does not. `e : T` and the type of a `let` are the same
+   annotation. *)
+let test_annotation _ =
+  let literal: aexpr = IntConstant three_hundred
+  and nat16: ty = Integer (Unsigned, Width16) in
+  let nat16_spec: qtypespec =
+    let name: identifier = make_ident (BuiltInNames.type_name BuiltInNames.Nat16) in
+    Stages.Ast.QTypeSpecifier (make_qident (BuiltIn.pervasive_module_name, name, name), [])
+  in
+  assert_equal (TCast (TIntConstant three_hundred, nat16)) (TypeCheckExpr.check_annotated ctx literal nat16);
+  assert_equal (TCast (TIntConstant three_hundred, nat16)) (TypeCheckExpr.infer ctx (Typecast (literal, nat16_spec)));
+  assert_equal
+    (Some (Type (IntegerDoesNotFit { literal = three_hundred; ty = Integer (Unsigned, Width8) })))
+    (error_of (fun () -> TypeCheckExpr.check_annotated ctx literal (Integer (Unsigned, Width8))));
+  (* An expression that is not a literal has to have the type, and stays as it is. *)
+  let x: aexpr = Variable (named "x") in
+  assert_equal (TLocalVar (make_ident "x", int32)) (TypeCheckExpr.check_annotated ctx x int32);
+  assert_equal
+    (Some (Type (CastInvalid { target = Boolean; source = int32 })))
+    (error_of (fun () -> TypeCheckExpr.check_annotated ctx x Boolean))
+
 let suite =
   "TypeCheckExpr" >::: [
       "a literal" >:: test_literal;
       "a variable" >:: test_variable;
       "a call through a function pointer" >:: test_function_pointer_call;
       "a call that needs the expected type" >:: test_call_that_needs_the_expected_type;
-      "the expected type stops at operands" >:: test_expected_type_stops_at_operands
+      "the expected type stops at operands" >:: test_expected_type_stops_at_operands;
+      "an annotation" >:: test_annotation
     ]
 
 let _ = run_test_tt_main suite

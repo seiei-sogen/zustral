@@ -37,8 +37,9 @@ val is_numeric_literal : Stages.AstDB.aexpr -> bool
       type: if it does not, this raises the error that says so
     - a float literal where a float type is expected
 
-    A literal under a cast is a literal here. [false] means that the rules say
-    nothing about the value, and its type has to match the expected one. *)
+    A literal under a cast is a literal here, whether the cast is an annotation
+    or one the type checker added. [false] means that the rules say nothing
+    about the value, and its type has to match the expected one. *)
 val literal_matches : ty -> texpr -> bool
 
 (** Whether a type annotation gives the value its type: an integer literal

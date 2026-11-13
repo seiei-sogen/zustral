@@ -93,19 +93,14 @@ let literal_matches (ty: ty) (expr: texpr): bool =
   match ty with
   | Integer (signedness, width) ->
      (match expr with
-      | TIntConstant value ->
-         check_int_literal_fits signedness width value;
-         true
-      | TCast (TIntConstant value, _) ->
+      | TIntConstant value | TCast (TIntConstant value, _) | TImplicitCast (TIntConstant value, _) ->
          check_int_literal_fits signedness width value;
          true
       | _ ->
          false)
   | SingleFloat | DoubleFloat ->
      (match expr with
-      | TFloatConstant _ ->
-         true
-      | TCast (TFloatConstant _, _) ->
+      | TFloatConstant _ | TCast (TFloatConstant _, _) | TImplicitCast (TFloatConstant _, _) ->
          true
       | _ ->
          false)
