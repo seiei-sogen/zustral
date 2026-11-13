@@ -65,13 +65,13 @@ let rec type_variables = function
   | RegionTy _ ->
      TypeVarSet.empty
   | ReadRef (ty, r) ->
-     TypeVarSet.union (type_variables ty) (type_variables r)
+     TypeVarSet.union (type_variables ty) (type_variables (ty_of_ref_region r))
   | WriteRef (ty, r) ->
-     TypeVarSet.union (type_variables ty) (type_variables r)
+     TypeVarSet.union (type_variables ty) (type_variables (ty_of_ref_region r))
   | Span (ty, r) ->
-     TypeVarSet.union (type_variables ty) (type_variables r)
+     TypeVarSet.union (type_variables ty) (type_variables (ty_of_ref_region r))
   | SpanMut (ty, r) ->
-     TypeVarSet.union (type_variables ty) (type_variables r)
+     TypeVarSet.union (type_variables ty) (type_variables (ty_of_ref_region r))
   | TyVar v ->
      TypeVarSet.singleton v
   | Address ty ->

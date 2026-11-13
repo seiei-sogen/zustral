@@ -835,7 +835,7 @@ and check_annotated (ctx: expr_ctx) (expr: aexpr) (target_type: ty): texpr =
      | WriteRef (underlying_ty, region) ->
         (match target_type with
          | ReadRef (underlying_ty', region') ->
-            (match (equal_ty underlying_ty underlying_ty', equal_ty region region') with
+            (match (equal_ty underlying_ty underlying_ty', equal_ty (ty_of_ref_region region) (ty_of_ref_region region')) with
              | (true, true) ->
                 TCast (expr', target_type)
              | (false, true) ->

@@ -41,10 +41,10 @@ type ty =
   | DoubleFloat
   | NamedType of qident * ty list * universe
   | RegionTy of region
-  | ReadRef of ty * ty
-  | WriteRef of ty * ty
-  | Span of ty * ty
-  | SpanMut of ty * ty
+  | ReadRef of ty * ref_region
+  | WriteRef of ty * ref_region
+  | Span of ty * ref_region
+  | SpanMut of ty * ref_region
   | TyVar of type_var
   | Address of ty
   | Pointer of ty
@@ -53,6 +53,14 @@ type ty =
   (** Special case, see the `mono_to_ty` function. We need this to be able to do
      monomorph instantiation, but this doesn't correspond to anything in the
      code. *)
+(** The region of a reference or span type. *)
+and ref_region =
+  | RefRegion of region
+  | RefRegionVar of type_var
+  (** A type variable of the Region universe. *)
+  | NotARegion of ty
+  (** Whatever else the program wrote in the region position: the type parser
+      does not check it, so [&\[Int32, Int32\]] is accepted (#90). *)
 [@@deriving show]
 
 type typed_slot = TypedSlot of identifier * ty
@@ -61,6 +69,13 @@ type typed_case = TypedCase of identifier * typed_slot list
 
 type value_parameter = ValueParameter of identifier * ty
 [@@deriving show]
+
+(** The region field as a type. *)
+val ty_of_ref_region : ref_region -> ty
+
+(** A type in the region position: a region, a region variable, or anything
+    else as it was written (#90). *)
+val ref_region_of_ty : ty -> ref_region
 
 val universe_string : universe -> string
 

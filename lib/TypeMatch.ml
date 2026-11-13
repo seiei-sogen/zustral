@@ -117,7 +117,7 @@ let rec try_match_type (ctx: ctx) (a: ty) (b: ty): (type_bindings, error) result
      (match b with
       | ReadRef (t', r') ->
          let* bindings = try_match_type ctx t t' in
-         let* bindings' = try_match_type ctx r r' in
+         let* bindings' = try_match_type ctx (ty_of_ref_region r) (ty_of_ref_region r') in
          try_merge_bindings bindings bindings'
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
@@ -127,7 +127,7 @@ let rec try_match_type (ctx: ctx) (a: ty) (b: ty): (type_bindings, error) result
      (match b with
       | WriteRef (t', r') ->
          let* bindings = try_match_type ctx t t' in
-         let* bindings' = try_match_type ctx r r' in
+         let* bindings' = try_match_type ctx (ty_of_ref_region r) (ty_of_ref_region r') in
          try_merge_bindings bindings bindings'
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
@@ -137,7 +137,7 @@ let rec try_match_type (ctx: ctx) (a: ty) (b: ty): (type_bindings, error) result
      (match b with
       | Span (t', r') ->
          let* bindings = try_match_type ctx t t' in
-         let* bindings' = try_match_type ctx r r' in
+         let* bindings' = try_match_type ctx (ty_of_ref_region r) (ty_of_ref_region r') in
          try_merge_bindings bindings bindings'
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | SpanMut _ | TyVar _ | Address _
@@ -147,7 +147,7 @@ let rec try_match_type (ctx: ctx) (a: ty) (b: ty): (type_bindings, error) result
      (match b with
       | SpanMut (t', r') ->
          let* bindings = try_match_type ctx t t' in
-         let* bindings' = try_match_type ctx r r' in
+         let* bindings' = try_match_type ctx (ty_of_ref_region r) (ty_of_ref_region r') in
          try_merge_bindings bindings bindings'
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | TyVar _ | Address _ | Pointer _

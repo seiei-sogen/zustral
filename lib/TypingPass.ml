@@ -75,8 +75,8 @@ let is_compatible_with_index_type = function
 
 type case_mode =
   | NormalCaseMode
-  | ReadRefCaseMode of ty
-  | WriteRefCaseMode of ty
+  | ReadRefCaseMode of ref_region
+  | WriteRefCaseMode of ref_region
 
 let check_var_doesnt_collide_with_decl (ctx: stmt_ctx) (name: identifier) =
   let (StmtCtx (module_name, env, _, _, _)) = ctx in
@@ -421,9 +421,9 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
           let refty =
             (match mode with
              | Read ->
-                ReadRef (orig_ty, RegionTy region_obj)
+                ReadRef (orig_ty, RefRegion region_obj)
              | Write ->
-                WriteRef (orig_ty, RegionTy region_obj)
+                WriteRef (orig_ty, RefRegion region_obj)
              | Reborrow ->
                 let pointed_ty = begin
                     match orig_ty with
@@ -435,7 +435,7 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
                        generic_error (ReborrowOfNonMutableReference orig_ty)
                   end
                 in
-                WriteRef (pointed_ty, RegionTy region_obj))
+                WriteRef (pointed_ty, RefRegion region_obj))
           in
           let lexenv = push_var lexenv rename refty (VarLocal Immutable) in
           let rm' = add_region rm region region_obj in

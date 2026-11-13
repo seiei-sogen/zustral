@@ -729,13 +729,13 @@ and mono_to_ty (ty: mono_ty): ty =
   | MonoRegionTy r ->
      RegionTy r
   | MonoReadRef (ty, region) ->
-     ReadRef (r ty, r region)
+     ReadRef (r ty, ref_region_of_ty (r region))
   | MonoWriteRef (ty, region) ->
-     WriteRef (r ty, r region)
+     WriteRef (r ty, ref_region_of_ty (r region))
   | MonoSpan (ty, region) ->
-     Span (r ty, r region)
+     Span (r ty, ref_region_of_ty (r region))
   | MonoSpanMut (ty, region) ->
-     SpanMut (r ty, r region)
+     SpanMut (r ty, ref_region_of_ty (r region))
   | MonoAddress ty ->
      Address (r ty)
   | MonoPointer ty ->

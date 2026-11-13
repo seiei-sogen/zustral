@@ -151,13 +151,13 @@ let rec replace_variables bindings ty =
   | RegionTy r ->
      RegionTy r
   | ReadRef (ty, region) ->
-     ReadRef (replace_variables bindings ty, replace_variables bindings region)
+     ReadRef (replace_variables bindings ty, ref_region_of_ty (replace_variables bindings (ty_of_ref_region region)))
   | WriteRef (ty, region) ->
-     WriteRef (replace_variables bindings ty, replace_variables bindings region)
+     WriteRef (replace_variables bindings ty, ref_region_of_ty (replace_variables bindings (ty_of_ref_region region)))
   | Span (ty, region) ->
-     Span (replace_variables bindings ty, replace_variables bindings region)
+     Span (replace_variables bindings ty, ref_region_of_ty (replace_variables bindings (ty_of_ref_region region)))
   | SpanMut (ty, region) ->
-     SpanMut (replace_variables bindings ty, replace_variables bindings region)
+     SpanMut (replace_variables bindings ty, ref_region_of_ty (replace_variables bindings (ty_of_ref_region region)))
   | Address ty ->
      Address (replace_variables bindings ty)
   | Pointer ty ->

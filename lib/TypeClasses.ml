@@ -64,19 +64,19 @@ let check_instance_argument_has_right_shape (typarams: typarams) (arg: ty): unit
   | RegionTy _ ->
      declaration_error InstanceArgumentRegion
   | ReadRef (ty, r) ->
-     let _ = all_distinct [is_tyvar ty; is_tyvar r] in
+     let _ = all_distinct [is_tyvar ty; is_tyvar (ty_of_ref_region r)] in
      let _ = no_leftovers 2 in
      ()
   | WriteRef (ty, r) ->
-     let _ = all_distinct [is_tyvar ty; is_tyvar r] in
+     let _ = all_distinct [is_tyvar ty; is_tyvar (ty_of_ref_region r)] in
      let _ = no_leftovers 2 in
      ()
   | Span (ty, r) ->
-     let _ = all_distinct [is_tyvar ty; is_tyvar r] in
+     let _ = all_distinct [is_tyvar ty; is_tyvar (ty_of_ref_region r)] in
      let _ = no_leftovers 2 in
      ()
   | SpanMut (ty, r) ->
-     let _ = all_distinct [is_tyvar ty; is_tyvar r] in
+     let _ = all_distinct [is_tyvar ty; is_tyvar (ty_of_ref_region r)] in
      let _ = no_leftovers 2 in
      ()
   | TyVar _ ->

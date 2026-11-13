@@ -53,19 +53,19 @@ let rec strip_type (ty: ty): stripped_ty =
      SRegionTy r
   | ReadRef (ty, r) ->
      let ty = strip_type ty in
-     let r = strip_type r in
+     let r = strip_type (ty_of_ref_region r) in
      SReadRef (ty, r)
   | WriteRef (ty, r) ->
      let ty = strip_type ty in
-     let r = strip_type r in
+     let r = strip_type (ty_of_ref_region r) in
      SWriteRef (ty, r)
   | Span (ty, r) ->
      let ty = strip_type ty in
-     let r = strip_type r in
+     let r = strip_type (ty_of_ref_region r) in
      SSpan (ty, r)
   | SpanMut (ty, r) ->
      let ty = strip_type ty in
-     let r = strip_type r in
+     let r = strip_type (ty_of_ref_region r) in
      SSpanMut (ty, r)
   | TyVar (TypeVariable (name, u, source, _)) ->
      if u = RegionUniverse then

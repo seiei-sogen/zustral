@@ -45,15 +45,23 @@ type ty =
   | DoubleFloat
   | NamedType of qident * ty list * universe
   | RegionTy of region
-  | ReadRef of ty * ty
-  | WriteRef of ty * ty
-  | Span of ty * ty
-  | SpanMut of ty * ty
+  | ReadRef of ty * ref_region
+  | WriteRef of ty * ref_region
+  | Span of ty * ref_region
+  | SpanMut of ty * ref_region
   | TyVar of type_var
   | Address of ty
   | Pointer of ty
   | FnPtr of ty list * ty
   | MonoTy of mono_id
+(* The region of a reference or span type. *)
+and ref_region =
+  | RefRegion of region
+  | RefRegionVar of type_var
+  (* A type variable of the Region universe. *)
+  | NotARegion of ty
+  (* Whatever else the program wrote in the region position: the type parser
+     does not check it, so `&[Int32, Int32]` is accepted (#90). *)
 [@@deriving show]
 
 type typed_slot = TypedSlot of identifier * ty
@@ -62,6 +70,28 @@ type typed_case = TypedCase of identifier * typed_slot list
 
 type value_parameter = ValueParameter of identifier * ty
 [@@deriving show]
+
+(* Matching, equality, substitution and printing see the region field as a
+   type, so that a NotARegion behaves as the type it holds (#90). *)
+let ty_of_ref_region (r: ref_region): ty =
+  match r with
+  | RefRegion r -> RegionTy r
+  | RefRegionVar tv -> TyVar tv
+  | NotARegion ty -> ty
+
+let ref_region_of_ty (ty: ty): ref_region =
+  match ty with
+  | RegionTy r ->
+     RefRegion r
+  | TyVar (TypeVariable (_, universe, _, _) as tv) ->
+     (match universe with
+      | RegionUniverse ->
+         RefRegionVar tv
+      | FreeUniverse | LinearUniverse | TypeUniverse ->
+         NotARegion ty)
+  | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | ReadRef _
+  | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
+     NotARegion ty
 
 let universe_string = function
   | FreeUniverse -> "Free"
@@ -99,13 +129,13 @@ let rec type_string = function
   | RegionTy r ->
      "Region<" ^ (string_of_int (region_id r)) ^ ">"
   | ReadRef (t, r) ->
-     BuiltInNames.read_ref_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string r) ^ "]"
+     BuiltInNames.read_ref_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string (ty_of_ref_region r)) ^ "]"
   | WriteRef (t, r) ->
-     BuiltInNames.write_ref_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string r) ^ "]"
+     BuiltInNames.write_ref_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string (ty_of_ref_region r)) ^ "]"
   | Span (t, r) ->
-     BuiltInNames.span_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string r) ^ "]"
+     BuiltInNames.span_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string (ty_of_ref_region r)) ^ "]"
   | SpanMut (t, r) ->
-     BuiltInNames.span_mut_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string r) ^ "]"
+     BuiltInNames.span_mut_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string (ty_of_ref_region r)) ^ "]"
   | TyVar (TypeVariable (n, _, _, _)) ->
      ident_string n
   | Address ty ->
@@ -130,7 +160,7 @@ and args_string = function
 
 let index_type = Integer (Unsigned, WidthIndex)
 
-let string_type = Span (Integer (Unsigned, Width8), RegionTy static_region)
+let string_type = Span (Integer (Unsigned, Width8), RefRegion static_region)
 
 let rec equal_ty a b =
   match a with
@@ -195,7 +225,7 @@ let rec equal_ty a b =
   | ReadRef (ty, r) ->
      (match b with
       | ReadRef (ty', r') ->
-         (equal_ty ty ty') && (equal_ty r r')
+         (equal_ty ty ty') && (equal_ty (ty_of_ref_region r) (ty_of_ref_region r'))
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
       | FnPtr _ | MonoTy _ ->
@@ -203,7 +233,7 @@ let rec equal_ty a b =
   | WriteRef (ty, r) ->
      (match b with
       | WriteRef (ty', r') ->
-         (equal_ty ty ty') && (equal_ty r r')
+         (equal_ty ty ty') && (equal_ty (ty_of_ref_region r) (ty_of_ref_region r'))
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
       | FnPtr _ | MonoTy _ ->
@@ -211,7 +241,7 @@ let rec equal_ty a b =
     | Span (ty, r) ->
      (match b with
       | Span (ty', r') ->
-         (equal_ty ty ty') && (equal_ty r r')
+         (equal_ty ty ty') && (equal_ty (ty_of_ref_region r) (ty_of_ref_region r'))
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | SpanMut _ | TyVar _ | Address _
       | Pointer _ | FnPtr _ | MonoTy _ ->
@@ -219,7 +249,7 @@ let rec equal_ty a b =
   | SpanMut (ty, r) ->
      (match b with
       | SpanMut (ty', r') ->
-         (equal_ty ty ty') && (equal_ty r r')
+         (equal_ty ty ty') && (equal_ty (ty_of_ref_region r) (ty_of_ref_region r'))
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | TyVar _ | Address _ | Pointer _
       | FnPtr _ | MonoTy _ ->
