@@ -30,4 +30,4 @@ val compile_multiple : compiler -> module_source list -> compiler
 (** Generate the wrapper functions and, if asked for, the entrypoint, and
     return the whole C program. The entrypoint is a module name and the name
     of a function in it. *)
-val finish : compiler -> (module_name * identifier) option -> c_program
+val finish : compiler -> (module_name * identifier) option -> c_program Outcome.t

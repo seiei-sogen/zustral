@@ -732,10 +732,11 @@ let detail_compare decls a b =
 
 (* end declaration sorting code *)
 
-let gen_module (env: env) (MonoModule (name, decls)) =
-  let type_decls = gen_type_decls decls
-  and fun_decls = List.concat (gen_fun_decls name decls)
-  and decls = List.concat (List.map (gen_decl env name) decls) in
-  let decls = List.concat [type_decls; fun_decls; decls] in
-  let sorted_decls = List.sort (detail_compare decls) decls in
-  CUnit (mod_name_string name, sorted_decls)
+let gen_module (env: env) (MonoModule (name, decls)): c_unit Outcome.t =
+  Outcome.catch (fun () ->
+      let type_decls = gen_type_decls decls
+      and fun_decls = List.concat (gen_fun_decls name decls)
+      and decls = List.concat (List.map (gen_decl env name) decls) in
+      let decls = List.concat [type_decls; fun_decls; decls] in
+      let sorted_decls = List.sort (detail_compare decls) decls in
+      CUnit (mod_name_string name, sorted_decls))

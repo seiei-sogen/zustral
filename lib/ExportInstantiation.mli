@@ -9,4 +9,4 @@ open Env
 open CRepr
 
 (** Make wrappers for all exported functions. *)
-val all_wrappers : env -> c_decl list
+val all_wrappers : env -> c_decl list Outcome.t

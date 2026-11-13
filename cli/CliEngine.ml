@@ -182,4 +182,4 @@ and compile_to_c (mods: module_source list) (entrypoint: entrypoint option): str
   let entrypoint =
     Option.map (fun (Entrypoint (module_name, name): entrypoint) -> (module_name, name)) entrypoint
   in
-  render_program (finish compiler entrypoint)
+  render_program (Outcome.or_raise (finish compiler entrypoint))

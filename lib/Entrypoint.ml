@@ -124,10 +124,11 @@ let get_exit_code_monomorph (env: env): mono_id =
   | _ ->
      internal_err "Can't find the ExitCode type in the environment."
 
-let entrypoint_code (env: env) (name: qident): CRepr.c_source =
-  let (entrypoint_id, kind): decl_id * entrypoint_kind = check_entrypoint_validity env name in
-  match kind with
-  | EmptyEntrypoint ->
-     CRepr.CSource (empty_entrypoint_code entrypoint_id (get_exit_code_monomorph env))
-  | RootCapEntrypoint ->
-     CRepr.CSource (entrypoint_code (get_root_capability_monomorph env) (get_exit_code_monomorph env) entrypoint_id)
+let entrypoint_code (env: env) (name: qident): CRepr.c_source Outcome.t =
+  Outcome.catch (fun () ->
+      let (entrypoint_id, kind): decl_id * entrypoint_kind = check_entrypoint_validity env name in
+      match kind with
+      | EmptyEntrypoint ->
+         CRepr.CSource (empty_entrypoint_code entrypoint_id (get_exit_code_monomorph env))
+      | RootCapEntrypoint ->
+         CRepr.CSource (entrypoint_code (get_root_capability_monomorph env) (get_exit_code_monomorph env) entrypoint_id))

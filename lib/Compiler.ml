@@ -91,7 +91,7 @@ let rec compile_mod (c: compiler) (source: module_source): compiler =
       let _ = Outcome.or_raise (check_module_linearity typed) in
       let env: env = Outcome.or_raise (extract_bodies env typed) in
       let (env, mono): (env * mono_module) = Outcome.or_raise (monomorphize env typed) in
-      let unit: c_unit = gen_module env mono in
+      let unit: c_unit = Outcome.or_raise (gen_module env mono) in
       Compiler (env, units @ [unit]))
 
 let rec compile_multiple c modules =
@@ -102,16 +102,22 @@ let rec compile_multiple c modules =
 let fake_mod_source (is: string) (bs: string): module_source =
   TwoFileModuleSource { int_filename = ""; int_code = is; body_filename = ""; body_code = bs }
 
-let finish (compiler: compiler) (entrypoint: (module_name * identifier) option): c_program =
+let ( let* ) = Outcome.bind
+
+let finish (compiler: compiler) (entrypoint: (module_name * identifier) option): c_program Outcome.t =
   let (Compiler (env, units)) = compiler in
   (* The wrapper functions. *)
-  let (env, decls): env * mdecl list = Outcome.or_raise (monomorphize_wrappers env) in
-  let wrapper_unit: c_unit = gen_module env (MonoModule (make_mod_name BuiltInNames.wrappers_module, decls)) in
-  let wrappers: c_unit = CUnit (BuiltInNames.wrappers_unit_name, all_wrappers env) in
-  let entrypoint: c_source option =
-    Option.map (fun (mn, i) -> entrypoint_code env (make_qident (mn, i, i))) entrypoint
+  let* (env, decls) = monomorphize_wrappers env in
+  let* wrapper_unit = gen_module env (MonoModule (make_mod_name BuiltInNames.wrappers_module, decls)) in
+  let* wrappers = Outcome.map (fun decls -> CUnit (BuiltInNames.wrappers_unit_name, decls)) (all_wrappers env) in
+  let* entrypoint =
+    match entrypoint with
+    | Some (mn, i) ->
+       Outcome.map Option.some (entrypoint_code env (make_qident (mn, i, i)))
+    | None ->
+       Ok None
   in
-  CProgram { prelude = CSource prelude_c; units = units @ [wrapper_unit; wrappers]; entrypoint }
+  Ok (CProgram { prelude = CSource prelude_c; units = units @ [wrapper_unit; wrappers]; entrypoint })
 
 let empty_compiler (): compiler =
   (* We have to compile the Austral.Pervasive module, followed by

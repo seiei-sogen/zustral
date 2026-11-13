@@ -79,5 +79,6 @@ let make_wrapper (env: env) (decl_id: decl_id) (export_name: string): c_decl =
       ]
     )
 
-let all_wrappers (env: env): c_decl list =
-  List.map (fun (id, name) -> make_wrapper env id name) (get_export_functions env)
+let all_wrappers (env: env): c_decl list Outcome.t =
+  Outcome.catch (fun () ->
+      List.map (fun (id, name) -> make_wrapper env id name) (get_export_functions env))
