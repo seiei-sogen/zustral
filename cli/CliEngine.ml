@@ -136,7 +136,9 @@ and print_compile_usage _: unit =
 and exec_compile (modules: mod_source list) (target: target) (error_reporting_mode: error_reporting_mode): unit =
   (* Parse source files *)
   let (mods, source_map): (module_source list * source_map) = parse_source_files modules in
-  match exec_target mods target with
+  (* No error leaves the compiler as an exception. If a bug in it lets one
+     out, it is reported here like a returned one, in the format asked for. *)
+  match Result.join (Outcome.catch (fun () -> exec_target mods target)) with
   | Ok () ->
      ()
   | Error (first :: _) ->
