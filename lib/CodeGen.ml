@@ -187,7 +187,9 @@ let union_type_id = function
      id
   | MonoWriteRef (MonoNamedType id, _) ->
      id
-  | _ ->
+  | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
+  | MonoRegionTy _ | MonoReadRef _ | MonoWriteRef _ | MonoSpan _ | MonoSpanMut _
+  | MonoAddress _ | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
      internal_err "Union is not a named type?"
 
 (* Given the ID of a union type, returns the name of the
@@ -291,7 +293,9 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
             ty
          | MonoWriteRef (ty, _) ->
             ty
-         | _ ->
+         | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
+         | MonoNamedType _ | MonoRegionTy _ | MonoSpan _ | MonoSpanMut _
+         | MonoAddress _ | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
             internal_err "Internal error"
        end
      in
@@ -309,7 +313,9 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
             ty
          | MonoWriteRef (ty, _) ->
             ty
-         | _ ->
+         | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
+         | MonoNamedType _ | MonoRegionTy _ | MonoSpan _ | MonoSpanMut _
+         | MonoAddress _ | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
             internal_err "Internal error"
        end
      in
@@ -365,7 +371,9 @@ let rec gen_stmt (mn: module_name) (stmt: mstmt): c_stmt =
        (match orig_type with
         | MonoAddress _ ->
            true
-        | _ ->
+        | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
+        | MonoNamedType _ | MonoRegionTy _ | MonoReadRef _ | MonoWriteRef _
+        | MonoSpan _ | MonoSpanMut _ | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
            false)
      in
      if is_pointer then

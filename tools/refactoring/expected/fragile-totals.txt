@@ -1,5 +1,5 @@
-files 21
-fragile-matches 220
+files 20
+fragile-matches 210
 type CRepr.c_decl 4
 type CliUtil.arg 10
 type Common.borrow_stmt_kind 2
@@ -20,7 +20,6 @@ type EnvTypes.mod_rec 4
 type EnvTypes.monomorph 16
 type LexEnv.var_source 2
 type LinearityErrors.var_state 2
-type MonoType.mono_ty 10
 type Stages.Ast.aexpr 4
 type Stages.Ast.astmt 2
 type Stages.AstDB.aexpr 8
@@ -29,4 +28,4 @@ type Stages.AstLC.aexpr 4
 type Stages.Mtast.mdecl 2
 type Stages.Tast.texpr 12
 type Stages.Tast.typed_decl 4
-type-fragile 10
+type-fragile 0

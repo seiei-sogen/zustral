@@ -8,7 +8,6 @@ lib/CodeGen.ml	CRepr.c_decl	4
 lib/CodeGen.ml	EnvTypes.decl	2
 lib/CodeGen.ml	EnvTypes.mod_rec	2
 lib/CodeGen.ml	EnvTypes.monomorph	2
-lib/CodeGen.ml	MonoType.mono_ty	8
 lib/CodeGen.ml	Stages.Mtast.mdecl	2
 lib/CombiningPass.ml	Cst.concrete_decl	6
 lib/CombiningPass.ml	Cst.concrete_def	10
@@ -34,7 +33,6 @@ lib/LinearityCheck.ml	LinearityErrors.var_state	2
 lib/LinearityCheck.ml	Stages.Tast.typed_decl	2
 lib/Monomorphize.ml	EnvTypes.decl	16
 lib/Monomorphize.ml	EnvTypes.ins_meth_rec	2
-lib/MtastUtil.ml	MonoType.mono_ty	2
 lib/ReturnCheck.ml	Stages.Ast.aexpr	2
 lib/TypeCheckExpr.ml	EnvTypes.decl	10
 lib/TypeCheckExpr.ml	Stages.AstDB.aexpr	4
