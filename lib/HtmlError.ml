@@ -263,7 +263,10 @@ let code_to_html_table (span: span option) (ctx: source_ctx option): string =
 
 
 let render_error_to_html (error: austral_error): string =
-    let (AustralError { span; error = cause; source_ctx; module_name }) = error
+    let (AustralError { location; error = cause; source_ctx }) = error
+    in
+    let span: span option = location_span location
+    and module_name: module_name option = location_module_name location
     in
     let main: string = "
     <div id='main'>

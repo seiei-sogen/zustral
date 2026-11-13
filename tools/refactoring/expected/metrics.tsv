@@ -28,13 +28,13 @@ lib/Env.ml	584	10	0	0	0	9	1	7	0	0
 lib/EnvExtras.ml	26	1	0	0	0	0	0	1	0	0
 lib/EnvTypes.ml	305	0	0	0	0	0	1	0	0	0
 lib/EnvUtils.ml	55	0	0	0	0	0	0	0	0	0
-lib/Error.ml	231	17	2	0	0	0	1	1	0	0
+lib/Error.ml	292	30	2	0	0	0	1	2	0	0
 lib/ErrorText.ml	57	0	0	0	0	0	2	0	0	0
 lib/Escape.ml	53	1	0	0	0	1	1	0	0	0
 lib/ExportInstantiation.ml	66	10	0	0	0	0	0	0	0	0
 lib/ExtractionPass.ml	471	14	6	0	0	5	0	0	0	0
 lib/GenericErrors.ml	239	0	0	0	0	0	0	0	0	0
-lib/HtmlError.ml	301	0	0	0	0	0	0	0	0	0
+lib/HtmlError.ml	304	0	0	0	0	0	0	0	0	0
 lib/Id.ml	81	0	0	0	0	0	0	0	0	0
 lib/Identifier.ml	62	0	0	0	0	0	2	0	0	0
 lib/IdentifierMap.ml	24	0	0	0	0	0	0	0	0	0

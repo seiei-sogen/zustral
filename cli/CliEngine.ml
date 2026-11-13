@@ -148,18 +148,18 @@ and exec_compile (modules: mod_source list) (target: target) (error_reporting_mo
      (* Nothing in the compiler fails without an error. If something ever
         does, say so: exiting with a failure status and no message is worse. *)
      let no_error: austral_error =
-       AustralError { module_name = None; error = Internal "The compiler failed without an error."; span = None; source_ctx = None }
+       AustralError { location = Nowhere; error = Internal "The compiler failed without an error."; source_ctx = None }
      in
      report_and_exit error_reporting_mode no_error
 
 and try_adding_source_ctx (error: austral_error) (source_map: source_map): austral_error =
-  let (AustralError { span; source_ctx; _ }) = error in
+  let (AustralError { location; source_ctx; _ }) = error in
   match source_ctx with
   | Some _ ->
      (* Already have a context. *)
      error
   | None ->
-     (match span with
+     (match location_span location with
       | Some span ->
          let (Span { filename; _ }) = span in
          (match (SourceMap.find_opt filename source_map) with

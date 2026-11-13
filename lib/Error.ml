@@ -21,10 +21,18 @@ type error =
   | Generic of GenericErrors.t
   | Internal of string
 
+type place =
+  | AtSpan of span
+  | NoSpan
+
+type location =
+  | At of { module_name: module_name option; span: span }
+  | InModule of module_name
+  | Nowhere
+
 type austral_error = AustralError of {
-      module_name: module_name option;
+      location: location;
       error: error;
-      span: span option;
       source_ctx: source_ctx option;
     }
 
@@ -48,15 +56,34 @@ let error_text (error: error): err_text =
        Code "https://github.com/austral/austral/issues"
      ]
 
+(* Locations *)
+
+let locate (module_name: module_name option) (place: place): location =
+  match (place, module_name) with
+  | (AtSpan span, _) -> At { module_name; span }
+  | (NoSpan, Some module_name) -> InModule module_name
+  | (NoSpan, None) -> Nowhere
+
+let location_module_name (location: location): module_name option =
+  match location with
+  | At { module_name; _ } -> module_name
+  | InModule module_name -> Some module_name
+  | Nowhere -> None
+
+let location_span (location: location): span option =
+  match location with
+  | At { span; _ } -> Some span
+  | InModule _ | Nowhere -> None
+
 (* Raising *)
 
 let raise_error (error: error): 'a =
-  raise (Austral_error (AustralError { module_name = None; error; span = None; source_ctx = None }))
+  raise (Austral_error (AustralError { location = Nowhere; error; source_ctx = None }))
 
 let parse_error (e: ParseErrors.t): 'a = raise_error (Parse e)
 
 let parse_error_at (span: span) (e: ParseErrors.t): 'a =
-  raise (Austral_error (AustralError { module_name = None; error = Parse e; span = Some span; source_ctx = None }))
+  raise (Austral_error (AustralError { location = locate None (AtSpan span); error = Parse e; source_ctx = None }))
 
 let cli_error (e: CliErrors.t): 'a = raise_error (Cli e)
 
@@ -77,43 +104,77 @@ let ok_or_raise (result: ('a, error) result): 'a =
   | Ok value -> value
   | Error error -> raise_error error
 
+(* The raising functions that take the place. A converted file opens this
+   module after [Error], so that it cannot raise without saying where. The
+   functions above serve the files whose errors still get their span from a
+   handler on the way up; when the last of those is converted (issue #107),
+   these take their names. *)
+module Placed = struct
+  let raise_error (place: place) (error: error): 'a =
+    raise (Austral_error (AustralError { location = locate None place; error; source_ctx = None }))
+
+  let parse_error (place: place) (e: ParseErrors.t): 'a = raise_error place (Parse e)
+
+  let cli_error (place: place) (e: CliErrors.t): 'a = raise_error place (Cli e)
+
+  let type_error (place: place) (e: TypeErrors.t): 'a = raise_error place (Type e)
+
+  let linearity_error (place: place) (e: LinearityErrors.t): 'a = raise_error place (Linearity e)
+
+  let declaration_error (place: place) (e: DeclarationErrors.t): 'a = raise_error place (Declaration e)
+
+  let entrypoint_error (place: place) (e: EntrypointErrors.t): 'a = raise_error place (Entrypoint e)
+
+  let generic_error (place: place) (e: GenericErrors.t): 'a = raise_error place (Generic e)
+
+  let internal_err (place: place) (message: string): 'a = raise_error place (Internal message)
+
+  let ok_or_raise (place: place) (result: ('a, error) result): 'a =
+    match result with
+    | Ok value -> value
+    | Error error -> raise_error place error
+end
+
 (* Error context-augmenting functions *)
 
 let add_source_ctx (error: austral_error) (ctx: source_ctx): austral_error =
-  let (AustralError { module_name; error = cause; span; source_ctx }) = error in
+  let (AustralError { location; error = cause; source_ctx }) = error in
   match source_ctx with
   | Some _ ->
      error
   | None ->
-     AustralError { module_name; error = cause; span; source_ctx = Some ctx; }
+     AustralError { location; error = cause; source_ctx = Some ctx; }
 
 let add_module_name (error: austral_error) (new_module_name: module_name): austral_error =
-  let (AustralError { module_name; error = cause; span; source_ctx }) = error in
-  match module_name with
-  | Some _ ->
+  let (AustralError { location; error = cause; source_ctx }) = error in
+  match location with
+  | At { module_name = Some _; _ } | InModule _ ->
      error
-  | None ->
-     AustralError { module_name = Some new_module_name; error = cause; span; source_ctx }
+  | At { module_name = None; span } ->
+     AustralError { location = locate (Some new_module_name) (AtSpan span); error = cause; source_ctx }
+  | Nowhere ->
+     AustralError { location = locate (Some new_module_name) NoSpan; error = cause; source_ctx }
 
 let adorn_error_with_span (new_span: span) (f: unit -> 'a): 'a =
   try
     f ()
   with Austral_error error ->
-    let (AustralError { module_name; error = cause; span; source_ctx }) = error in
-    match span with
+    let (AustralError { location; error = cause; source_ctx }) = error in
+    let with_new_span (): austral_error =
+      AustralError { location = locate (location_module_name location) (AtSpan new_span); error = cause; source_ctx }
+    in
+    match location_span location with
     | Some span' ->
        (* The error already has a span. *)
        if span' = empty_span then
          (* The error has the empty span, add ours. *)
-         let new_err = AustralError { module_name; error = cause; span = Some new_span; source_ctx } in
-         raise (Austral_error new_err)
+         raise (Austral_error (with_new_span ()))
        else
          (* The error has a non-empty span, reraise. *)
          raise (Austral_error error)
     | None ->
        (* Add the span *)
-       let new_err = AustralError { module_name; error = cause; span = Some new_span; source_ctx } in
-       raise (Austral_error new_err)
+       raise (Austral_error (with_new_span ()))
 
 (* Error rendering to plain text *)
 
@@ -141,9 +202,9 @@ let indent_text (text: string) (indent: int): string =
   String.concat "\n" lines
 
 let render_error_to_plain (error: austral_error): string =
-  let (AustralError { span; error = cause; source_ctx; module_name }) = error in
+  let (AustralError { location; error = cause; source_ctx }) = error in
   let mn_text: string =
-    match module_name with
+    match location_module_name location with
     | Some mn ->
        "  Module:\n"
        ^ "    " ^ (mod_name_string mn) ^ "\n"
@@ -153,7 +214,7 @@ let render_error_to_plain (error: austral_error): string =
   in
   let title: string = error_title cause in
   let span_text =
-    match span with
+    match location_span location with
     | Some (Span { filename; startp; endp }) ->
        "  Location:\n"
        ^ "    Filename: '" ^ filename ^ "'\n"
@@ -204,15 +265,15 @@ let source_ctx_json (ctx: source_ctx): Yojson.Basic.t =
 
 let render_error_to_json (error: austral_error): Yojson.Basic.t =
   (* Break up the error. *)
-  let (AustralError { span; error = cause; source_ctx; module_name }) = error in
+  let (AustralError { location; error = cause; source_ctx }) = error in
   (* Render components to JSON. *)
   let module_name: Yojson.Basic.t =
-    match module_name with
+    match location_module_name location with
     | Some mn -> `String (mod_name_string mn)
     | None -> `Null
   in
   let span: Yojson.Basic.t =
-    match span with
+    match location_span location with
     | Some span -> span_json span
     | None -> `Null
   in
