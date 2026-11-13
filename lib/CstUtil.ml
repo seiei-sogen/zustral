@@ -8,6 +8,7 @@ open Identifier
 open Common
 open Cst
 open Error
+open Error.Placed
 
 let make_module_body (name: module_name) (imports: concrete_import_list list) (pragmas: pragma list) (defs: concrete_def list) (docstring: docstring) =
   let is_unsafe_module p =
@@ -84,7 +85,7 @@ let make_pragma name args =
   let s = ident_string name in
   if s = BuiltInNames.foreign_import_pragma_name then
     let raise_err () =
-      declaration_error (PragmaArgumentError ForeignImport)
+      declaration_error NoSpan (PragmaArgumentError ForeignImport)
     in
     match args with
     | ConcreteNamedArgs [(a, CStringConstant (_, f))] ->
@@ -97,7 +98,7 @@ let make_pragma name args =
   else
     if s = BuiltInNames.foreign_export_pragma_name then
       let raise_err () =
-        declaration_error (PragmaArgumentError ForeignExport)
+        declaration_error NoSpan (PragmaArgumentError ForeignExport)
       in
       match args with
       | ConcreteNamedArgs [(a, CStringConstant (_, f))] ->
@@ -110,7 +111,7 @@ let make_pragma name args =
     else
       if s = BuiltInNames.unsafe_module_pragma_name then
         let raise_err () =
-          declaration_error (PragmaArgumentError UnsafeModule)
+          declaration_error NoSpan (PragmaArgumentError UnsafeModule)
         in
         match args with
         | ConcretePositionalArgs [] ->
@@ -118,7 +119,7 @@ let make_pragma name args =
         | _ ->
            raise_err ()
       else
-        declaration_error (UnknownPragma name)
+        declaration_error NoSpan (UnknownPragma name)
 
 let mod_int_name (inter: concrete_module_interface): module_name =
   let (ConcreteModuleInterface (name, _, _, _)) = inter in

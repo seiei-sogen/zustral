@@ -8,6 +8,7 @@
 open Cst
 open Span
 open Error
+open Error.Placed
 
 let parse' f (code: string) (filename: string) =
   let lexbuf = Lexing.from_string code in
@@ -15,7 +16,7 @@ let parse' f (code: string) (filename: string) =
   try
     f Lexer.token lexbuf
   with Parser.Error ->
-        parse_error_at (from_lexbuf lexbuf) SyntaxError
+        parse_error (AtSpan (from_lexbuf lexbuf)) SyntaxError
 
 let parse_module_int (s:string) (filename: string): concrete_module_interface Outcome.t =
   Outcome.catch (fun () -> parse' Parser.module_int s filename)

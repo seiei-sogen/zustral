@@ -82,9 +82,6 @@ let raise_error (error: error): 'a =
 
 let parse_error (e: ParseErrors.t): 'a = raise_error (Parse e)
 
-let parse_error_at (span: span) (e: ParseErrors.t): 'a =
-  raise (Austral_error (AustralError { location = locate None (AtSpan span); error = Parse e; source_ctx = None }))
-
 let cli_error (e: CliErrors.t): 'a = raise_error (Cli e)
 
 let type_error (e: TypeErrors.t): 'a = raise_error (Type e)
@@ -134,6 +131,11 @@ module Placed = struct
     | Ok value -> value
     | Error error -> raise_error place error
 end
+
+(* What a file that is not converted yet passes to a converted function. The
+   error leaves with no span, and the handler around the call fills it in, as
+   it does for the file's own errors. *)
+let place_from_adorn: place = NoSpan
 
 (* Error context-augmenting functions *)
 

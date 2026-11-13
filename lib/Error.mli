@@ -77,10 +77,6 @@ val location_span : location -> span option
 (** Raise a parse error. *)
 val parse_error : ParseErrors.t -> 'a
 
-(** Raise a parse error at a place in the source text. The lexer and the
-    parser know the place where they stop. *)
-val parse_error_at : span -> ParseErrors.t -> 'a
-
 (** Raise an error with the user's command line arguments. *)
 val cli_error : CliErrors.t -> 'a
 
@@ -141,6 +137,12 @@ module Placed : sig
       on a function that returns its failure as a value. *)
   val ok_or_raise : place -> ('a, error) result -> 'a
 end
+
+(** The place that a file not converted yet passes to a converted function:
+    the span of the error still comes from the {!adorn_error_with_span} around
+    the call. It is not {!NoSpan}, which says that the error has no span. Goes
+    away with {!adorn_error_with_span}. *)
+val place_from_adorn : place
 
 (** Add a source context to an error if it doesn't have one. *)
 val add_source_ctx : austral_error -> source_ctx -> austral_error

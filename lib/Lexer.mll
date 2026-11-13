@@ -8,6 +8,7 @@
 {
 open Lexing
 open Error
+open Error.Placed
 open Parser
 
 let advance_line lexbuf =
@@ -153,7 +154,7 @@ rule token = parse
   | newline { advance_line lexbuf; token lexbuf }
   | eof { EOF }
   | _ {
-    parse_error_at (Span.from_lexbuf lexbuf) (InvalidCharacter (Lexing.lexeme lexbuf))
+    parse_error (AtSpan (Span.from_lexbuf lexbuf)) (InvalidCharacter (Lexing.lexeme lexbuf))
   }
 
 (* `acc` holds the characters of the literal read so far. Each literal gets a
@@ -163,12 +164,12 @@ and read_string acc = parse
   | '"' { STRING_CONSTANT (Buffer.contents acc) }
   | '\\' '"' { Buffer.add_char acc '"'; read_string acc lexbuf }
   | [^ '"'] { Buffer.add_string acc (Lexing.lexeme lexbuf); read_string acc lexbuf }
-  | eof { parse_error_at (Span.from_lexbuf lexbuf) StringEof }
-  | _ { parse_error_at (Span.from_lexbuf lexbuf) (StringInvalidCharacter (Lexing.lexeme lexbuf)) }
+  | eof { parse_error (AtSpan (Span.from_lexbuf lexbuf)) StringEof }
+  | _ { parse_error (AtSpan (Span.from_lexbuf lexbuf)) (StringInvalidCharacter (Lexing.lexeme lexbuf)) }
 
 and read_triple_string acc = parse
   | "\"\"\"" { TRIPLE_STRING_CONSTANT (Buffer.contents acc) }
   | '\n' { advance_line lexbuf; Buffer.add_string acc "\n"; read_triple_string acc lexbuf }
   | '\\' "\"\"\"" { Buffer.add_string acc "\"\"\""; read_triple_string acc lexbuf }
-  | eof { parse_error_at (Span.from_lexbuf lexbuf) TripleStringEof }
+  | eof { parse_error (AtSpan (Span.from_lexbuf lexbuf)) TripleStringEof }
   | _ { Buffer.add_string acc (Lexing.lexeme lexbuf); read_triple_string acc lexbuf }

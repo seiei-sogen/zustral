@@ -17,7 +17,7 @@ lib/CombiningPass.ml	382	19	4	0	0	10	0	2	0	0
 lib/Common.ml	69	0	0	0	0	0	3	0	0	0
 lib/Compiler.ml	151	0	0	0	0	0	6	0	0	0
 lib/Cst.ml	163	0	0	0	0	0	2	0	0	0
-lib/CstUtil.ml	162	4	0	0	0	6	0	0	0	0
+lib/CstUtil.ml	163	4	0	0	0	6	0	0	0	0
 lib/DeclarationErrors.ml	339	0	0	0	0	0	1	0	0	0
 lib/DesugarBorrows.ml	244	1	0	0	0	0	0	0	0	0
 lib/DesugarPaths.ml	146	0	0	0	0	0	0	0	0	0
@@ -28,7 +28,7 @@ lib/Env.ml	584	10	0	0	0	9	1	7	0	0
 lib/EnvExtras.ml	26	1	0	0	0	0	0	1	0	0
 lib/EnvTypes.ml	305	0	0	0	0	0	1	0	0	0
 lib/EnvUtils.ml	55	0	0	0	0	0	0	0	0	0
-lib/Error.ml	292	30	2	0	0	0	1	2	0	0
+lib/Error.ml	294	28	2	0	0	0	1	2	0	0
 lib/ErrorText.ml	57	0	0	0	0	0	2	0	0	0
 lib/Escape.ml	53	1	0	0	0	1	1	0	0	0
 lib/ExportInstantiation.ml	66	10	0	0	0	0	0	0	0	0
@@ -43,7 +43,7 @@ lib/ImportResolution.ml	95	4	0	0	0	0	0	0	0	0
 lib/Imports.ml	56	1	0	0	0	0	0	0	0	0
 lib/InstanceIdSet.ml	15	0	0	0	0	0	0	0	0	0
 lib/LexEnv.ml	53	1	0	0	0	0	0	0	0	0
-lib/Lexer.mll	174	4	0	0	0	0	0	0	0	0
+lib/Lexer.mll	175	4	0	0	0	0	0	0	0	0
 lib/LiftControlPass.ml	227	0	0	0	0	0	0	0	0	0
 lib/LinearityCheck.ml	715	21	11	0	0	2	0	9	0	0
 lib/LinearityErrors.ml	159	0	0	0	0	0	0	0	0	0
@@ -56,7 +56,7 @@ lib/NumberLiteral.ml	92	0	0	0	0	0	2	0	0	0
 lib/Outcome.ml	53	0	1	0	0	0	0	0	0	0
 lib/ParseErrors.ml	52	0	0	0	0	0	3	0	0	0
 lib/Parser.mly	570	0	0	0	0	0	0	0	0	0
-lib/ParserInterface.ml	27	1	1	0	0	0	0	0	0	0
+lib/ParserInterface.ml	28	1	1	0	0	0	0	0	0	0
 lib/Qualifier.ml	30	0	0	0	0	0	0	0	0	0
 lib/Region.ml	16	0	0	0	0	0	0	0	0	0
 lib/RegionMap.ml	24	1	0	0	0	0	0	0	0	0
@@ -82,5 +82,5 @@ lib/TypeStripping.ml	88	1	0	0	0	0	0	0	0	0
 lib/TypeSystem.ml	105	2	0	0	0	0	0	1	0	0
 lib/TypeVarSet.ml	15	0	0	0	0	0	0	0	0	0
 lib/TypingPass.ml	758	34	13	0	0	5	0	1	0	0
-lib/Util.ml	139	5	0	0	0	3	1	4	0	0
+lib/Util.ml	140	5	0	0	0	3	1	4	0	0
 lib/Version.ml	18	0	0	0	0	0	0	0	0	0

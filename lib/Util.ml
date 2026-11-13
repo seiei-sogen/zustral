@@ -7,6 +7,7 @@
 
 open Identifier
 open Error
+open Error.Placed
 
 let string_explode (s: string): char list =
   List.init (String.length s) (String.get s)
@@ -51,7 +52,7 @@ let parse_ascii_char (s: string): int =
       | [c] ->
          Char.code c
       | _ ->
-         parse_error (LongCharacter s))
+         parse_error NoSpan (LongCharacter s))
 
 let rec count_leading_whitespace (s: string): int =
   let chars = string_explode s in
@@ -68,7 +69,7 @@ let min_list (l: int list): int =
   | [] ->
      (* Its one caller passes one number per line of a result of
         String.split_on_char, which is never empty. *)
-     internal_err "empty list passed to min_list"
+     internal_err NoSpan "empty list passed to min_list"
 
 let trim_common_whitespace (s: string): string =
   let lines = String.split_on_char '\n' s in
@@ -99,7 +100,7 @@ let process_triple_string (s: string): string =
          first)
   | [] ->
      (* String.split_on_char never returns an empty list. *)
-     internal_err "split_on_char returned empty"
+     internal_err NoSpan "split_on_char returned empty"
 
 let ident_set_eq a b =
   let sorter a b = compare (ident_string a) (ident_string b) in
@@ -122,18 +123,18 @@ let rec iter_with_context (f: ('c -> 'a -> 'c)) (ctx: 'c) (list: 'a list): 'c =
   | [] ->
      ctx
 
-let last (lst: 'a list): 'a =
+let last (place: place) (lst: 'a list): 'a =
   let lst: 'a list = List.rev lst in
   match lst with
   | first::_ ->
      first
   | [] ->
-     internal_err "Util.last called with an empty list."
+     internal_err place "Util.last called with an empty list."
 
-let butlast (lst: 'a list): 'a list =
+let butlast (place: place) (lst: 'a list): 'a list =
   let lst: 'a list = List.rev lst in
   match lst with
   | _::rest ->
      rest
   | [] ->
-     internal_err "Util.butlast called with an empty list."
+     internal_err place "Util.butlast called with an empty list."

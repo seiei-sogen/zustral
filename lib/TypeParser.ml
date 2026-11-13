@@ -49,8 +49,8 @@ let parse_function_pointer (args: ty list): ty =
   | [r] ->
      FnPtr ([], r)
   | _ ->
-     let args: ty list = Util.butlast args
-     and rt: ty = Util.last args in
+     let args: ty list = Util.butlast place_from_adorn args
+     and rt: ty = Util.last place_from_adorn args in
      FnPtr (args, rt)
 
 let parse_built_in_type (name: qident) (args: ty list): ty option =
