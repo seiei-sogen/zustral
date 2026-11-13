@@ -5,8 +5,8 @@
 
 coverage.sh --kinds calls it. The kinds are told apart by the text of the line
 and of the three lines after it, so the counts are rough: they say where the
-unexecuted code is, not exactly what it is. A line counts as executed when any
-of its points is.
+unexecuted code is, not exactly what it is. A line counts as executed when
+every point on it is (see unexecuted-lines.py).
 """
 import collections
 import pathlib

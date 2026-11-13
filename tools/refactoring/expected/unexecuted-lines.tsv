@@ -1,2 +1,2 @@
-# One row per line that no program can execute: file, top-level definition, text of the line, reason.
+# One row per line that no program can execute: file, top-level definition, which line with that text in the definition (1 = first), text of the line, reason.
 # Tabs between the columns. Checked by `tools/refactoring/coverage.sh --unexecuted --check`.
