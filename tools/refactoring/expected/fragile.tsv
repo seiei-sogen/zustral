@@ -45,8 +45,6 @@ lib/TypeClasses.ml	EnvTypes.decl	2
 lib/TypeClasses.ml	Type.ty	28
 lib/TypeMatch.ml	EnvTypes.decl	4
 lib/TypeMatch.ml	Stages.Tast.texpr	6
-lib/TypeMatch.ml	Type.ty	32
-lib/TypeMatch.ml	Type.type_var	2
 lib/TypingPass.ml	Common.borrow_stmt_kind	2
 lib/TypingPass.ml	Common.mutability	2
 lib/TypingPass.ml	Common.pragma	2

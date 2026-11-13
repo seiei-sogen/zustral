@@ -30,13 +30,17 @@ let rec match_type (ctx: ctx) (a: ty) (b: ty): type_bindings =
      (match b with
       | Unit ->
          empty_bindings
-      | _ ->
+      | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+      | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ | MonoTy _ ->
          type_error (TypeMismatch { expected = a; actual = b }))
   | Boolean ->
      (match b with
       | Boolean ->
          empty_bindings
-      | _ ->
+      | Unit | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+      | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ | MonoTy _ ->
          type_error (TypeMismatch { expected = a; actual = b }))
   | Integer (s, w) ->
      (match b with
@@ -45,19 +49,25 @@ let rec match_type (ctx: ctx) (a: ty) (b: ty): type_bindings =
            empty_bindings
          else
            type_error (TypeMismatch { expected = a; actual = b })
-      | _ ->
+      | Unit | Boolean | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+      | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ | MonoTy _ ->
          type_error (TypeMismatch { expected = a; actual = b }))
   | SingleFloat ->
      (match b with
       | SingleFloat ->
          empty_bindings
-      | _ ->
+      | Unit | Boolean | Integer _ | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
+      | MonoTy _ ->
          type_error (TypeMismatch { expected = a; actual = b }))
   | DoubleFloat ->
      (match b with
       | DoubleFloat ->
          empty_bindings
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | NamedType _ | RegionTy _ | ReadRef _
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
+      | MonoTy _ ->
          type_error (TypeMismatch { expected = a; actual = b }))
   | NamedType (n, args, _) ->
      (match b with
@@ -67,7 +77,9 @@ let rec match_type (ctx: ctx) (a: ty) (b: ty): type_bindings =
            match_type_list ctx args args'
          else
            type_error (TypeMismatch { expected = a; actual = b })
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
+      | MonoTy _ ->
          type_error (TypeMismatch { expected = a; actual = b }))
   | RegionTy r ->
      (match b with
@@ -76,7 +88,9 @@ let rec match_type (ctx: ctx) (a: ty) (b: ty): type_bindings =
            empty_bindings
          else
            type_error (TypeMismatch { expected = a; actual = b })
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ | MonoTy _ ->
          type_error (TypeMismatch { expected = a; actual = b }))
   | ReadRef (t, r) ->
      (match b with
@@ -84,7 +98,9 @@ let rec match_type (ctx: ctx) (a: ty) (b: ty): type_bindings =
          let bindings = match_type ctx t t' in
          let bindings' = match_type ctx r r' in
          merge_bindings bindings bindings'
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ | MonoTy _ ->
          type_error (TypeMismatch { expected = a; actual = b }))
   | WriteRef (t, r) ->
      (match b with
@@ -92,7 +108,9 @@ let rec match_type (ctx: ctx) (a: ty) (b: ty): type_bindings =
          let bindings = match_type ctx t t' in
          let bindings' = match_type ctx r r' in
          merge_bindings bindings bindings'
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ | MonoTy _ ->
          type_error (TypeMismatch { expected = a; actual = b }))
   | Span (t, r) ->
      (match b with
@@ -100,7 +118,9 @@ let rec match_type (ctx: ctx) (a: ty) (b: ty): type_bindings =
          let bindings = match_type ctx t t' in
          let bindings' = match_type ctx r r' in
          merge_bindings bindings bindings'
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | SpanMut _ | TyVar _ | Address _
+      | Pointer _ | FnPtr _ | MonoTy _ ->
          type_error (TypeMismatch { expected = a; actual = b }))
   | SpanMut (t, r) ->
      (match b with
@@ -108,7 +128,9 @@ let rec match_type (ctx: ctx) (a: ty) (b: ty): type_bindings =
          let bindings = match_type ctx t t' in
          let bindings' = match_type ctx r r' in
          merge_bindings bindings bindings'
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ | MonoTy _ ->
          type_error (TypeMismatch { expected = a; actual = b }))
   | TyVar tyvar ->
      match_type_var ctx tyvar b
@@ -116,19 +138,25 @@ let rec match_type (ctx: ctx) (a: ty) (b: ty): type_bindings =
      (match b with
       | Address t' ->
          match_type ctx t t'
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Pointer _
+      | FnPtr _ | MonoTy _ ->
          type_error (TypeMismatch { expected = a; actual = b }))
   | Pointer t ->
      (match b with
       | Pointer t' ->
          match_type ctx t t'
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
+      | FnPtr _ | MonoTy _ ->
          type_error (TypeMismatch { expected = a; actual = b }))
   | FnPtr (args, rt) ->
      (match b with
       | FnPtr (args', rt') ->
          match_type_list ctx (rt :: args) (rt' :: args')
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
+      | Pointer _ | MonoTy _ ->
          type_error (TypeMismatch { expected = a; actual = b }))
   | MonoTy _ ->
      generic_error MatchTypeOnMonoTy
@@ -154,7 +182,9 @@ and match_type_var (ctx: ctx) (tv: type_var) (ty: ty): type_bindings =
           function call `f(x)`, then the parameter type is `T` and the argument
           type is `U`, so we create a binding `T -> U`.  *)
        add_binding empty_bindings (tyvar_to_typaram tv) ty
-  | _ ->
+  | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+  | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _
+  | MonoTy _ ->
      (* Check that the type implements the type variable's constraints, if any. *)
      check_type_implements_constraints ctx tv ty constraints;
      (* If the constraints are satisfied, add a straightforward binding. *)
@@ -289,5 +319,6 @@ let match_type_with_value (ctx: ctx) (ty: ty) (expr: texpr): type_bindings =
          empty_bindings
       | _ ->
          match_type ctx ty (get_type expr))
-  | _ ->
+  | Unit | Boolean | NamedType _ | RegionTy _ | ReadRef _ | WriteRef _ | Span _
+  | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
      match_type ctx ty (get_type expr)
