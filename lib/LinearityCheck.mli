@@ -27,4 +27,4 @@ type state_tbl
 type appearances
 
 (** Check the linearity of all functions and methods in a module. *)
-val check_module_linearity : typed_module -> unit
+val check_module_linearity : typed_module -> unit Outcome.t
