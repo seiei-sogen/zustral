@@ -116,14 +116,25 @@ let finish: Pipeline.finish = fun (env: env) (units: c_unit list) (entrypoint: e
     with_supply env (fun supply -> gen_module env supply (MonoModule (make_mod_name BuiltInNames.wrappers_module, decls)))
   in
   let* wrappers = Outcome.map (fun decls -> CUnit (BuiltInNames.wrappers_unit_name, decls)) (all_wrappers exported) in
-  let* entrypoint =
+  let* (entrypoint, entrypoint_units) =
     match entrypoint with
     | Some (mn, i) ->
-       Outcome.map Option.some (entrypoint_code env (make_qident (mn, i, i)))
+       let* (env, decls, code) = entrypoint_code env (make_qident (mn, i, i)) in
+       (* The monomorphs of the entrypoint's signature that no module had
+          registered. The module of the entrypoint registers them, so there are
+          none in a program, and no unit. *)
+       (match decls with
+        | [] ->
+           Ok (Some code, [])
+        | _ :: _ ->
+           let* (_, unit) =
+             with_supply env (fun supply -> gen_module env supply (MonoModule (make_mod_name BuiltInNames.wrappers_module, decls)))
+           in
+           Ok (Some code, [unit]))
     | None ->
-       Ok None
+       Ok (None, [])
   in
-  Ok (CProgram { prelude = CSource prelude_c; units = units @ [wrapper_unit; wrappers]; entrypoint })
+  Ok (CProgram { prelude = CSource prelude_c; units = units @ [wrapper_unit; wrappers] @ entrypoint_units; entrypoint })
 
 let empty_compiler (): compiler Outcome.t =
   (* We have to compile the Austral.Pervasive module, followed by

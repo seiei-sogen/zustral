@@ -33,6 +33,14 @@ open Stages.Mtast
 *)
 val monomorphize : Pipeline.monomorphize
 
+(** The monomorph of a record or a union for the given type arguments, as every
+    use of a type asks for it: registered the first time it is asked for. *)
+val monomorphize_named_type : env -> type_decl_id -> MonoType.mono_ty list -> (mono_id * env)
+
+(** Instantiate the monomorphs that are registered and not instantiated, and
+    those they register, until none is left. Returns their declarations. *)
+val instantiate_monomorphs_until_exhausted : env -> (env * mdecl list)
+
 (** Instantiate the functions the program exports, and everything they use.
     Called once, after all modules. Returns the declarations, and for each
     exported function, in the order the environment lists them, its export

@@ -13,14 +13,17 @@ open TypeParameters
 open Error
 open BuiltIn
 open CodeGen
-open MonoTypeBindings
+open Monomorphize
+open Stages.Mtast
 
-(** The kind of entrypoint function we have. *)
+(** The kind of entrypoint function we have, with the IDs of the types its
+    signature names. *)
 type entrypoint_kind =
-  | EmptyEntrypoint
-  (** Zero-parameter entrypoint function. *)
-  | RootCapEntrypoint
-  (** Single-parameter entrypoint function with a root capability argument. *)
+  | EmptyEntrypoint of type_decl_id
+  (** Zero-parameter entrypoint function, and the ID of `ExitCode`. *)
+  | RootCapEntrypoint of type_decl_id * type_decl_id
+  (** Single-parameter entrypoint function with a root capability argument,
+      and the IDs of `RootCapability` and `ExitCode`. *)
 
 (** Check the entrypoint function is valid, return the ID of the function
     and the entrypoint kind. *)
@@ -39,19 +42,22 @@ let rec check_entrypoint_validity (env: env) (name: qident): function_id * entry
              match value_params with
              | [] ->
                (* Empty parameter list case *)
-                if is_exit_code_type rt then
-                  (id, EmptyEntrypoint)
-                else
-                  entrypoint_error NoSpan (WrongReturnType rt)
+                (match exit_code_type_id rt with
+                 | Some exit_code ->
+                    (id, EmptyEntrypoint exit_code)
+                 | None ->
+                    entrypoint_error NoSpan (WrongReturnType rt))
              | [ValueParameter (_, pt)] ->
                 (* Single parameter case: the `root` parameter. *)
-                if is_root_cap_type pt then
-                  if is_exit_code_type rt then
-                    (id, RootCapEntrypoint)
-                  else
-                    entrypoint_error NoSpan (WrongReturnType rt)
-                else
-                  entrypoint_error NoSpan (WrongParameterType pt)
+                (match root_cap_type_id pt with
+                 | Some root_cap ->
+                    (match exit_code_type_id rt with
+                     | Some exit_code ->
+                        (id, RootCapEntrypoint (root_cap, exit_code))
+                     | None ->
+                        entrypoint_error NoSpan (WrongReturnType rt))
+                 | None ->
+                    entrypoint_error NoSpan (WrongParameterType pt))
              | _ :: _ :: _ ->
                 entrypoint_error NoSpan MultipleParameters
            else
@@ -67,27 +73,27 @@ let rec check_entrypoint_validity (env: env) (name: qident): function_id * entry
           module_name = source_module_name name;
         })
 
-and is_root_cap_type = function
-  | NamedType (name, _, [], LinearUniverse) ->
+and root_cap_type_id = function
+  | NamedType (name, id, [], LinearUniverse) ->
      let m = equal_module_name (source_module_name name) pervasive_module_name
      and n = equal_identifier (original_name name) (make_ident BuiltInNames.root_capability_name) in
-     m && n
+     if m && n then Some id else None
   | NamedType (_, _, [], (FreeUniverse | TypeUniverse | RegionUniverse))
   | NamedType (_, _, _ :: _, _)
   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
   | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
-     false
+     None
 
-and is_exit_code_type = function
-  | NamedType (name, _, [], FreeUniverse) ->
+and exit_code_type_id = function
+  | NamedType (name, id, [], FreeUniverse) ->
      let m = equal_module_name (source_module_name name) pervasive_module_name
      and n = equal_identifier (original_name name) (make_ident BuiltInNames.exit_code_name) in
-     m && n
+     if m && n then Some id else None
   | NamedType (_, _, [], (LinearUniverse | TypeUniverse | RegionUniverse))
   | NamedType (_, _, _ :: _, _)
   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
   | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
-     false
+     None
 
 let entrypoint_code root_cap_mono_id exit_code_mono_id id =
   let f = CIdent.render (gen_function_id id) in
@@ -117,34 +123,23 @@ let empty_entrypoint_code (entrypoint_id: function_id) (exit_code_id: mono_id): 
    ^ "    }\n"
    ^ "}")
 
-(* The monomorph, for no type arguments, of a type the built-in module declares,
-   given its name. No type rules out the miss. The compiler knows these types by
-   the name the built-in module declares them under, and by nothing else; and
-   the pass that monomorphized the signature of the entrypoint registered the
-   monomorph under its key, and did not hand its ID over. *)
-let get_built_in_type_monomorph (env: env) (type_name: string): mono_id =
-  let sn: sident = make_sident pervasive_module_name (make_ident type_name) in
-  let monomorph: mono_id option =
-    match get_decl_by_name NoSpan env sn with
-    | Some (Record { id; _ }) ->
-       Option.map mono_id_of_record (get_record_monomorph env id empty_mono_bindings)
-    | Some (Union { id; _ }) ->
-       Option.map mono_id_of_union (get_union_monomorph env id empty_mono_bindings)
-    | None | Some (Constant _ | UnionCase _ | Function _ | TypeClass _
-        | TypeClassMethod _ | Instance _) ->
-       None
-  in
-  match monomorph with
-  | Some id ->
-     id
-  | None ->
-     internal_err NoSpan ("No monomorph of " ^ type_name ^ ".")
-
-let entrypoint_code (env: env) (name: qident): CRepr.c_source Outcome.t =
+(* The monomorphs of the types the signature names are asked for as every
+   use of a type asks. The monomorphization of the entrypoint's module
+   registered them, so in a program the environment has them and nothing is
+   instantiated here; the declarations of any it did not have come back to be
+   generated. *)
+let entrypoint_code (env: env) (name: qident): (env * mdecl list * CRepr.c_source) Outcome.t =
   Outcome.catch (fun () ->
       let (entrypoint_id, kind): function_id * entrypoint_kind = check_entrypoint_validity env name in
-      match kind with
-      | EmptyEntrypoint ->
-         CRepr.CSource (empty_entrypoint_code entrypoint_id (get_built_in_type_monomorph env BuiltInNames.exit_code_name))
-      | RootCapEntrypoint ->
-         CRepr.CSource (entrypoint_code (get_built_in_type_monomorph env BuiltInNames.root_capability_name) (get_built_in_type_monomorph env BuiltInNames.exit_code_name) entrypoint_id))
+      let (env, code): env * string =
+        match kind with
+        | EmptyEntrypoint exit_code ->
+           let (exit_code, env) = monomorphize_named_type env exit_code [] in
+           (env, empty_entrypoint_code entrypoint_id exit_code)
+        | RootCapEntrypoint (root_cap, exit_code) ->
+           let (root_cap, env) = monomorphize_named_type env root_cap [] in
+           let (exit_code, env) = monomorphize_named_type env exit_code [] in
+           (env, entrypoint_code root_cap exit_code entrypoint_id)
+      in
+      let (env, decls): env * mdecl list = instantiate_monomorphs_until_exhausted env in
+      (env, decls, CRepr.CSource code))

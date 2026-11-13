@@ -52,8 +52,9 @@ val with_supply : env -> (Supply.t -> ('a * Supply.t) Outcome.t) -> (env * 'a) O
     raises an internal error here, and callers do not handle it.
 
     A monomorph has an ID, and also a key: what it is a monomorph of, and the
-    type arguments. A lookup by the key returns an option, because a key can
-    name a monomorph that no pass has registered. *)
+    type arguments. A key can name a monomorph that no pass has registered, so
+    a monomorph is asked for by its key ([add_or_get_*_monomorph]), which
+    registers it the first time. *)
 
 (** {1 Module Functions} *)
 
@@ -186,14 +187,6 @@ val store_union_monomorph_definition : env -> union_mono_id -> mono_case list ->
 val store_function_monomorph_definition : env -> function_mono_id -> mstmt -> env
 
 val store_instance_method_monomorph_definition : env -> method_mono_id -> mstmt -> env
-
-(** Given the ID of a record and a set of monomorphic type arguments, return
-   the ID of the corresponding monomorph, or {!None} if no pass has registered
-   it. *)
-val get_record_monomorph : env -> record_id -> mono_type_bindings -> record_mono_id option
-
-(** {!get_record_monomorph} for a union. *)
-val get_union_monomorph : env -> union_id -> mono_type_bindings -> union_mono_id option
 
 (** Get all uninstantiated monomorphs. *)
 val get_uninstantiated_monomorphs : env -> monomorph list

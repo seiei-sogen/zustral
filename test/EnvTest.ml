@@ -69,7 +69,7 @@ let test_id_from_another_lineage _ =
    it is a monomorph of, and the type arguments. A key is not an ID, so an
    environment can have the type and not the monomorph. Here nothing has
    monomorphized the entrypoint, and the stage that asks for the monomorph of
-   its return type reports the miss and names the type. *)
+   its return type registers it, and returns its declaration to be generated. *)
 let test_monomorph_key_not_registered _ =
   let pervasive = Austral_core.BuiltIn.pervasive_module_name
   and exit_code = make_ident Austral_core.BuiltInNames.exit_code_name
@@ -104,15 +104,21 @@ let test_monomorph_key_not_registered _ =
         impl = BodyNotAttached
       })
   in
-  assert_equal
-    (Error [make_error NoSpan (Internal "No monomorph of ExitCode.")])
-    (Austral_core.Entrypoint.entrypoint_code env (make_qident (pervasive, main, main)))
+  let entrypoint_code (env: Env.env) =
+    match Austral_core.Entrypoint.entrypoint_code env (make_qident (pervasive, main, main)) with
+    | Ok (env, decls, _) -> (env, decls)
+    | Error _ -> assert_failure "the entrypoint is valid"
+  in
+  let (env, decls) = entrypoint_code env in
+  assert_equal ~printer:string_of_int ~msg:"the monomorph of the return type, instantiated" 1 (List.length decls);
+  let (_, decls) = entrypoint_code env in
+  assert_equal ~printer:string_of_int ~msg:"the second time, the monomorph is found" 0 (List.length decls)
 
 let suite =
   "Env" >::: [
       "an ID from a later environment" >:: test_id_from_a_later_environment;
       "an ID from another lineage of environments" >:: test_id_from_another_lineage;
-      "a monomorph whose key is not registered" >:: test_monomorph_key_not_registered
+      "the entrypoint asks for a monomorph whose key is not registered" >:: test_monomorph_key_not_registered
     ]
 
 let _ = run_test_tt_main suite
