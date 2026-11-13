@@ -10,4 +10,4 @@ open Env
 
 (** Extract a combined module's declarations and put them in the environment,
     and returned a linked module. *)
-val extract : env -> combined_module -> (env * linked_module)
+val extract : env -> combined_module -> (env * linked_module) Outcome.t

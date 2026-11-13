@@ -30,6 +30,11 @@ val map : ('a -> 'b) -> 'a t -> 'b t
     stops at the first failure: the elements after it are not looked at. *)
 val traverse : ('a -> 'b t) -> 'a list -> 'b list t
 
+(** {!traverse} for a loop whose steps hand a context on, the way the
+    declarations of a module hand on the environment. It cannot go on after a
+    failure: the next step needs the context the failed one did not return. *)
+val traverse_with_context : ('c * 'a -> ('c * 'b) t) -> 'c -> 'a list -> ('c * 'b list) t
+
 (** The result, or the first error raised again. For the driver, until it
     chains the stages by their values. *)
 val or_raise : 'a t -> 'a

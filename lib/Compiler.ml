@@ -85,8 +85,8 @@ let rec compile_mod (c: compiler) (source: module_source): compiler =
   adorn_error_with_module_name name
     (fun _ ->
       let _ = Outcome.or_raise (check_ends_in_return combined) in
-      let combined: SmallCombined.combined_module = DesugaringPass.desugar combined in
-      let (env, linked): (env * linked_module) = extract env combined in
+      let combined: SmallCombined.combined_module = Outcome.or_raise (DesugaringPass.desugar combined) in
+      let (env, linked): (env * linked_module) = Outcome.or_raise (extract env combined) in
       let typed: typed_module = augment_module env linked in
       let _ = check_module_linearity typed in
       let env: env = extract_bodies env typed in

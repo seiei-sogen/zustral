@@ -32,6 +32,14 @@ let rec traverse (f: 'a -> 'b t) (list: 'a list): 'b list t =
             function changes: the callers already take a list of errors. *)
          Error errors)
 
+let rec traverse_with_context (f: ('c * 'a) -> ('c * 'b) t) (ctx: 'c) (list: 'a list): ('c * 'b list) t =
+  match list with
+  | [] ->
+     Ok (ctx, [])
+  | first :: rest ->
+     bind (f (ctx, first)) (fun (ctx, first) ->
+         map (fun (ctx, rest) -> (ctx, first :: rest)) (traverse_with_context f ctx rest))
+
 let or_raise (outcome: 'a t): 'a =
   match outcome with
   | Ok value ->

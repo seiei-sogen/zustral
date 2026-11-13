@@ -102,7 +102,9 @@ and extract_type_signatures' (def: combined_definition): type_signature option =
   | CInstance _ ->
      None
 
-let rec extract (env: env) (cmodule: combined_module): (env * linked_module) =
+let ( let* ) = Outcome.bind
+
+let rec extract (env: env) (cmodule: combined_module): (env * linked_module) Outcome.t =
   let (CombinedModule {
            name;
            kind;
@@ -113,38 +115,41 @@ let rec extract (env: env) (cmodule: combined_module): (env * linked_module) =
            decls;
            _
       }) = cmodule in
-  (* Find the set of modules we're importing from. *)
-  let imports_from: ModIdSet.t =
-    let module_names: ModuleNameSet.t =
-      ModuleNameSet.union
-        (modules_imported_from interface_imports)
-        (modules_imported_from body_imports)
-    in
-    ModIdSet.of_list
-      (List.map (fun mn ->
-           match get_module_by_name env mn with
-           | Some (ModRec { id; _ }) -> id
-           | None -> internal_err ("Couldn't find module `" ^ (mod_name_string mn) ^ "`."))
-         (List.of_seq (ModuleNameSet.to_seq module_names)))
+  let* (env, mod_id) =
+    Outcome.catch (fun () ->
+        (* Find the set of modules we're importing from. *)
+        let imports_from: ModIdSet.t =
+          let module_names: ModuleNameSet.t =
+            ModuleNameSet.union
+              (modules_imported_from interface_imports)
+              (modules_imported_from body_imports)
+          in
+          ModIdSet.of_list
+            (List.map (fun mn ->
+                 match get_module_by_name env mn with
+                 | Some (ModRec { id; _ }) -> id
+                 | None -> internal_err ("Couldn't find module `" ^ (mod_name_string mn) ^ "`."))
+               (List.of_seq (ModuleNameSet.to_seq module_names)))
+        in
+        (* Add the module to the environment. *)
+        let imported_instances: DeclIdSet.t =
+          DeclIdSet.union
+            (DeclIdSet.of_list (imported_instances interface_imports))
+            (DeclIdSet.of_list (imported_instances body_imports))
+        in
+        let input: mod_input = {
+            name;
+            imported_instances;
+            imports_from;
+          }
+        in
+        add_module env input)
   in
-  (* Add the module to the environment. *)
-  let imported_instances: DeclIdSet.t =
-    DeclIdSet.union
-      (DeclIdSet.of_list (imported_instances interface_imports))
-      (DeclIdSet.of_list (imported_instances body_imports))
-  in
-  let input: mod_input = {
-      name;
-      imported_instances;
-      imports_from;
-    }
-  in
-  let (env, mod_id) = add_module env input in
   (* Extract the list of local type signatures. This lets us parse type
      specifiers without reference to the environment. *)
   let sigs: type_signature list = extract_type_signatures cmodule in
   (* Extract all declarations from the module into the environment. *)
-  let (env, linked_defs): (env * linked_definition list) = extract_definitions env mod_id name sigs decls in
+  let* (env, linked_defs) = extract_definitions env mod_id name sigs decls in
   (* Construct the linked module *)
   let lmod = LinkedModule {
                  mod_id = mod_id;
@@ -157,16 +162,16 @@ let rec extract (env: env) (cmodule: combined_module): (env * linked_module) =
                  decls = linked_defs
                }
   in
-  (env, lmod)
+  Ok (env, lmod)
 
 (** Given the environment, the ID of the module we're extracting, the list of
     local type signatures, and a list of combined definitions, add all relevant
     decls to the environment, and return all corresponding linked decls. *)
-and extract_definitions (env: env) (mod_id: mod_id) (mn: module_name) (local_types: type_signature list) (defs: combined_definition list): (env * (linked_definition list)) =
-  let f ((env, comb_def): (env * combined_definition)): (env * linked_definition) =
-    extract_definition env mod_id mn local_types comb_def
+and extract_definitions (env: env) (mod_id: mod_id) (mn: module_name) (local_types: type_signature list) (defs: combined_definition list): (env * (linked_definition list)) Outcome.t =
+  let f ((env, comb_def): (env * combined_definition)): (env * linked_definition) Outcome.t =
+    Outcome.catch (fun () -> extract_definition env mod_id mn local_types comb_def)
   in
-  map_with_context f env defs
+  Outcome.traverse_with_context f env defs
 
 (** Given the environment, the ID of the module we're extracting, the list of
     local type signatures, and a combined definition, add all relevant decls to
