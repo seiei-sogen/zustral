@@ -26,16 +26,18 @@ let aggregate_word (aggregate: aggregate): string =
   | RecordAggregate -> "record"
   | UnionAggregate -> "union"
 
-type logical_operator =
-  | ConjunctionOperator
-  | DisjunctionOperator
-  | NegationOperator
+(** The operands of a logical operator, under the operator: negation has one,
+    conjunction and disjunction have two. *)
+type logical_operands =
+  | NegationOperand of ty
+  | ConjunctionOperands of ty * ty
+  | DisjunctionOperands of ty * ty
 
-let logical_operator_word (operator: logical_operator): string =
-  match operator with
-  | ConjunctionOperator -> "conjunction"
-  | DisjunctionOperator -> "disjunction"
-  | NegationOperator -> "negation"
+(** How the reference a cast asks for differs from the reference it is given. *)
+type reference_difference =
+  | DifferentUnderlyingType
+  | DifferentUnderlyingRegion
+  | DifferentTypeAndRegion
 
 (** The two ends of the range of a [for] loop. *)
 type loop_bound =
@@ -58,7 +60,7 @@ type t =
   | CaseNonPublic
   | CaseNonUnion of ty
   | CaseWrongSlots of { binding_names: identifier list; slot_names: identifier list }
-  | CastDifferentReferences of { different_types: bool; different_regions: bool }
+  | CastDifferentReferences of reference_difference
   | CastInvalid of { target: ty; source: ty }
   | CastWriteRefToNonRef
   | ConditionNotBoolean of { condition: condition; ty: ty }
@@ -73,7 +75,7 @@ type t =
   | ForBoundsNonIntegral of { bound: loop_bound; ty: ty }
   | FunPointerNamedArgs
   | IfInequal of { lhs: ty; rhs: ty }
-  | LogicalOperandsNotBoolean of { operator: logical_operator; types: ty list }
+  | LogicalOperandsNotBoolean of logical_operands
   | NoSuchSlot of { type_name: identifier; slot_name: identifier }
   | NoSuitableInstance of { typeclass: identifier; ty: ty }
   | PathNotPublic of { type_name: identifier; slot_name: identifier }
@@ -167,15 +169,15 @@ let render (error: t): err_text =
        Code (String.concat ", " (List.map ident_string slot_names));
        Text ")."
      ]
-  | CastDifferentReferences { different_types; different_regions } ->
-     (match different_types, different_regions with
-      | true, false -> [
+  | CastDifferentReferences difference ->
+     (match difference with
+      | DifferentUnderlyingType -> [
           Text "Cannot cast a reference to one with a different underlying type."
         ]
-      | false, true -> [
+      | DifferentUnderlyingRegion -> [
           Text "Cannot cast a reference to one with a different underlying region."
         ]
-      | _ -> [
+      | DifferentTypeAndRegion -> [
           Text "Cannot cast to a different region"
         ])
   | CastInvalid { target; source } ->
@@ -271,28 +273,31 @@ let render (error: t): err_text =
        Text " and ";
        Type rhs
      ]
-  | LogicalOperandsNotBoolean { operator; types } ->
-     (match types with
-      | [ty] ->
+  | LogicalOperandsNotBoolean operands ->
+     (* The operator's word is a piece of text of its own: the JSON form of a
+        message lists its pieces. *)
+     let both_operands (operator: string) (first: ty) (second: ty): err_text =
+       [
+         Text "Both operands of a ";
+         Text operator;
+         Text " operator must be boolean expressions, but they have types ";
+         Type first;
+         Text " and ";
+         Type second
+       ]
+     in
+     (match operands with
+      | NegationOperand ty ->
          [
            Text "The operand of a ";
-           Text (logical_operator_word operator);
+           Text "negation";
            Text " operator must be a boolean expression, but it has the type ";
            Type ty
          ]
-      | [first; second] ->
-         [
-           Text "Both operands of a ";
-           Text (logical_operator_word operator);
-           Text " operator must be boolean expressions, but they have types ";
-           Type first;
-           Text " and ";
-           Type second
-         ]
-      | _ ->
-         [
-           Text "All operands of a logical operator must be boolean expressions."
-         ])
+      | ConjunctionOperands (first, second) ->
+         both_operands "conjunction" first second
+      | DisjunctionOperands (first, second) ->
+         both_operands "disjunction" first second)
   | NoSuchSlot { type_name; slot_name } ->
      [
        Text "The type ";

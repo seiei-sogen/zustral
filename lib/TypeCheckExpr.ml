@@ -601,10 +601,7 @@ and augment_conjunction ctx lhs rhs =
   if ((is_bool lhs') && (is_bool rhs')) then
     TConjunction (lhs', rhs')
   else
-    type_error (LogicalOperandsNotBoolean {
-        operator = ConjunctionOperator;
-        types = [get_type lhs'; get_type rhs'];
-      })
+    type_error (LogicalOperandsNotBoolean (ConjunctionOperands (get_type lhs', get_type rhs')))
 
 and augment_disjunction ctx lhs rhs =
   let lhs': texpr = aug ctx lhs
@@ -612,17 +609,14 @@ and augment_disjunction ctx lhs rhs =
   if ((is_bool lhs') && (is_bool rhs')) then
     TDisjunction (lhs', rhs')
   else
-    type_error (LogicalOperandsNotBoolean {
-        operator = DisjunctionOperator;
-        types = [get_type lhs'; get_type rhs'];
-      })
+    type_error (LogicalOperandsNotBoolean (DisjunctionOperands (get_type lhs', get_type rhs')))
 
 and augment_negation ctx e =
   let e' = aug ctx e in
   if is_bool e' then
     TNegation e'
   else
-    type_error (LogicalOperandsNotBoolean { operator = NegationOperator; types = [get_type e'] })
+    type_error (LogicalOperandsNotBoolean (NegationOperand (get_type e')))
 
 and augment_if_expr ctx c t f =
   let c' = aug ctx c
@@ -858,13 +852,15 @@ and augment_typecast (ctx: expr_ctx) (expr: aexpr) (ty: qtypespec): texpr =
        | WriteRef (underlying_ty, region) ->
           (match target_type with
            | ReadRef (underlying_ty', region') ->
-              if ((equal_ty underlying_ty underlying_ty') && (equal_ty region region')) then
-                TCast (expr', target_type)
-              else
-                type_error (CastDifferentReferences {
-                    different_types = not (equal_ty underlying_ty underlying_ty');
-                    different_regions = not (equal_ty region region');
-                  })
+              (match (equal_ty underlying_ty underlying_ty', equal_ty region region') with
+               | (true, true) ->
+                  TCast (expr', target_type)
+               | (false, true) ->
+                  type_error (CastDifferentReferences DifferentUnderlyingType)
+               | (true, false) ->
+                  type_error (CastDifferentReferences DifferentUnderlyingRegion)
+               | (false, false) ->
+                  type_error (CastDifferentReferences DifferentTypeAndRegion))
            | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
            | RegionTy _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
            | Pointer _ | FnPtr _ | MonoTy _ ->

@@ -309,7 +309,7 @@ and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb
           | (Some def) ->
              match_decls module_name im bm decl def
           | None ->
-             declaration_error (MissingBodyDefinition { name; declaration = None })))
+             declaration_error (MissingBodyDefinition name)))
   | None ->
      (match decl with
       | ConcreteInstanceDecl (_, name, typarams, argument, _) ->

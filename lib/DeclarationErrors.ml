@@ -49,7 +49,7 @@ type t =
   | FunInvalidPragmas
   | DeclarationKindMismatch of { name: identifier; expected: declaration_kind }
   | FunctionMismatch of { name: identifier; difference: function_difference }
-  | MissingBodyDefinition of { name: identifier; declaration: declaration_kind option }
+  | MissingBodyDefinition of identifier
   | MissingInstanceBodyDefinition of { name: identifier; ty: Cst.typespec }
   | ModuleNameMismatch of { interface: module_name; body: module_name }
   | MultiargTypeclass of identifier
@@ -114,21 +114,11 @@ let render (error: t): err_text =
        Text " and its implementation ";
        Text message
      ]
-  | MissingBodyDefinition { name; declaration } ->
-     (match declaration with
-      | Some declaration ->
-         [
-           Text "The ";
-           Text (declaration_kind_word declaration);
-           Text " ";
-           Code (ident_string name);
-           Text " has no corresponding body implementation."
-         ]
-      | None ->
-         [
-           Code (ident_string name);
-           Text " has no corresponding body implementation."
-         ])
+  | MissingBodyDefinition name ->
+     [
+       Code (ident_string name);
+       Text " has no corresponding body implementation."
+     ]
   | MissingInstanceBodyDefinition { name; ty } ->
      [
        Text "The instance ";

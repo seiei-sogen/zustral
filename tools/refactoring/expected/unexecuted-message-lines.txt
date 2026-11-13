@@ -5,12 +5,6 @@ lib/CliErrors.ml	Text "Failed to write to file ";
 lib/CliErrors.ml	Code path
 lib/DeclarationErrors.ml	| InstanceDeclaration -> "instance"
 lib/DeclarationErrors.ml	| OtherDifference -> "are different."
-lib/DeclarationErrors.ml	| Some declaration ->
-lib/DeclarationErrors.ml	Text "The ";
-lib/DeclarationErrors.ml	Text (declaration_kind_word declaration);
-lib/DeclarationErrors.ml	Text " ";
-lib/DeclarationErrors.ml	Code (ident_string name);
-lib/DeclarationErrors.ml	Text " has no corresponding body implementation."
 lib/DeclarationErrors.ml	| MultiargTypeclass name ->
 lib/DeclarationErrors.ml	Text "The typeclass ";
 lib/DeclarationErrors.ml	Code (ident_string name);
@@ -78,5 +72,3 @@ lib/TypeErrors.ml	Type ty;
 lib/TypeErrors.ml	Text " which is not ";
 lib/TypeErrors.ml	Code "Index";
 lib/TypeErrors.ml	Text "."
-lib/TypeErrors.ml	| _ ->
-lib/TypeErrors.ml	Text "All operands of a logical operator must be boolean expressions."
