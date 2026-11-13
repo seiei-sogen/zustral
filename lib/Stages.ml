@@ -573,7 +573,7 @@ module Tast = struct
     | TRecord of record_id * type_vis * identifier * typarams * universe * typed_slot list * docstring
     | TUnion of union_id * type_vis * identifier * typarams * universe * linked_case list * docstring
     | TFunction of function_id * vis * identifier * typarams * value_parameter list * ty * tstmt * docstring
-    | TForeignFunction of function_id * vis * identifier * value_parameter list * ty * string * docstring
+    | TForeignFunction of function_id * vis * identifier * value_parameter list * ty * string * ty ForeignType.foreign_signature * docstring
     | TTypeClass of typeclass_id * vis * identifier * type_parameter * typed_method_decl list * docstring
     | TInstance of instance_id * vis * qident * typarams * ty * typed_method_def list * docstring
 

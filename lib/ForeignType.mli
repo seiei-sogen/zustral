@@ -19,8 +19,10 @@ type direction =
 
 (** A type that may cross the C boundary, by what C sees. ['leaf] is the
     Austral type a pointer points to: {!Type.ty} when the signature is checked,
-    {!MonoType.mono_ty} after monomorphization. *)
-type 'leaf foreign_ty =
+    {!MonoType.mono_ty} after monomorphization. The type is private: a value
+    comes from {!check_signature}, or from {!map_signature} on one that did,
+    so a signature that is not allowed cannot be built. *)
+type 'leaf foreign_ty = private
   | ForeignBoolean
   | ForeignInteger of signedness * integer_width
   | ForeignSingleFloat
@@ -34,7 +36,7 @@ type 'leaf foreign_ty =
   (** An imported span, of anything: C receives a pointer to its elements. *)
 
 (** The signature of a function that crosses the C boundary. *)
-type 'leaf foreign_signature = {
+type 'leaf foreign_signature = private {
     params: (identifier * 'leaf foreign_ty) list;
     rt: 'leaf foreign_ty;
   }
@@ -44,3 +46,8 @@ type 'leaf foreign_signature = {
     [Not allowed] for an import, {!TypeErrors.ExportDisallowedType} for an
     export. *)
 val check_signature : place -> direction -> value_parameter list -> ty -> ty foreign_signature
+
+(** Replace each pointee of a signature, the return type's first, then the
+    parameters' in order. [f] gets the state and the pointee, and returns the
+    new pointee with the state for the next one. *)
+val map_signature : ('state -> 'leaf -> 'mapped * 'state) -> 'state -> 'leaf foreign_signature -> 'mapped foreign_signature * 'state

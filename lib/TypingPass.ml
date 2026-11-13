@@ -711,23 +711,30 @@ let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (
      let _ =
        List.map (fun (ValueParameter (name, _)) -> check_var_doesnt_collide_with_decl ctx name) params
      in
-     (match pragmas with
-      | [ForeignImportPragma s] ->
-         if typarams_size typarams = 0 then
-           if kind = UnsafeModule then
-             (TForeignFunction (decl_id, vis, name, params, rt, s, doc), supply)
-           else
-             declaration_error NoSpan ForeignInSafeModule
+     (* Whether the function is foreign was decided when it was registered
+        (ExtractionPass), from its pragmas, and the environment keeps it. *)
+     let { impl; _ }: function_decl = get_function env decl_id in
+     (match impl with
+      | Foreign (s, signature) ->
+         if kind = UnsafeModule then
+           (TForeignFunction (decl_id, vis, name, params, rt, s, signature, doc), supply)
          else
-           declaration_error NoSpan ForeignTypeParameters
-      | [ForeignExportPragma _] ->
-         let (body', _, supply) = augment_stmt ctx lexenv supply body in
-         (TFunction (decl_id, vis, name, typarams, params, rt, body', doc), supply)
-      | [] ->
-         let (body', _, supply) = augment_stmt ctx lexenv supply body in
-         (TFunction (decl_id, vis, name, typarams, params, rt, body', doc), supply)
-      | [UnsafeModulePragma] | _ :: _ :: _ ->
-         declaration_error NoSpan FunInvalidPragmas)
+           declaration_error NoSpan ForeignInSafeModule
+      | ForeignGeneric ->
+         declaration_error NoSpan ForeignTypeParameters
+      | BodyNotAttached | Body _ ->
+         (* One Foreign_Import pragma made the function foreign, so here
+            [ForeignImportPragma _] stands alone only with type parameters,
+            which ForeignGeneric took. *)
+         (match pragmas with
+          | [ForeignExportPragma _] ->
+             let (body', _, supply) = augment_stmt ctx lexenv supply body in
+             (TFunction (decl_id, vis, name, typarams, params, rt, body', doc), supply)
+          | [] ->
+             let (body', _, supply) = augment_stmt ctx lexenv supply body in
+             (TFunction (decl_id, vis, name, typarams, params, rt, body', doc), supply)
+          | [ForeignImportPragma _] | [UnsafeModulePragma] | _ :: _ :: _ ->
+             declaration_error NoSpan FunInvalidPragmas))
   | LTypeclass (decl_id, vis, name, typaram, methods, doc) ->
      (TTypeClass (decl_id, vis, name, typaram, List.map (augment_method_decl env rm typaram) methods, doc), supply)
   | LInstance (decl_id, vis, name, typarams, arg, methods, doc) ->

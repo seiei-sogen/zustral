@@ -82,3 +82,37 @@ let check_signature (place: place) (direction: direction) (params: value_paramet
   let rt = check_ty place direction rt in
   let params = List.map (fun (ValueParameter (name, ty)) -> (name, check_ty place direction ty)) params in
   { params; rt }
+
+let rec map_ty (f: 'state -> 'leaf -> 'mapped * 'state) (state: 'state) (ty: 'leaf foreign_ty): 'mapped foreign_ty * 'state =
+  match ty with
+  | ForeignBoolean ->
+     (ForeignBoolean, state)
+  | ForeignInteger (s, w) ->
+     (ForeignInteger (s, w), state)
+  | ForeignSingleFloat ->
+     (ForeignSingleFloat, state)
+  | ForeignDoubleFloat ->
+     (ForeignDoubleFloat, state)
+  | ForeignFnPtr ->
+     (ForeignFnPtr, state)
+  | ForeignAddress t ->
+     let (t, state) = map_ty f state t in
+     (ForeignAddress t, state)
+  | ForeignPointer t ->
+     let (t, state) = f state t in
+     (ForeignPointer t, state)
+  | ForeignSpan t ->
+     let (t, state) = f state t in
+     (ForeignSpan t, state)
+
+let map_signature (f: 'state -> 'leaf -> 'mapped * 'state) (state: 'state) ({ params; rt }: 'leaf foreign_signature): 'mapped foreign_signature * 'state =
+  let (rt, state) = map_ty f state rt in
+  let (state, params) =
+    Util.map_with_context
+      (fun (state, (name, ty)) ->
+        let (ty, state) = map_ty f state ty in
+        (state, (name, ty)))
+      state
+      params
+  in
+  ({ params; rt }, state)

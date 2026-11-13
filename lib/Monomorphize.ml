@@ -129,47 +129,8 @@ let strip_and_mono (env: env) (ty: ty): (mono_ty * env) =
 
 (* The types a foreign signature points to are parts of the parameter and return
    types, which are monomorphized first, so this registers no new monomorph. *)
-let rec monomorphize_foreign_ty (env: env) (ty: ty foreign_ty): (mono_ty foreign_ty * env) =
-  match ty with
-  | ForeignBoolean ->
-     (ForeignBoolean, env)
-  | ForeignInteger (s, w) ->
-     (ForeignInteger (s, w), env)
-  | ForeignSingleFloat ->
-     (ForeignSingleFloat, env)
-  | ForeignDoubleFloat ->
-     (ForeignDoubleFloat, env)
-  | ForeignFnPtr ->
-     (ForeignFnPtr, env)
-  | ForeignAddress t ->
-     let (t, env) = monomorphize_foreign_ty env t in
-     (ForeignAddress t, env)
-  | ForeignPointer t ->
-     let (t, env) = strip_and_mono env t in
-     (ForeignPointer t, env)
-  | ForeignSpan t ->
-     let (t, env) = strip_and_mono env t in
-     (ForeignSpan t, env)
-
-let monomorphize_foreign_signature (env: env) ({ params; rt }: ty foreign_signature): (mono_ty foreign_signature * env) =
-  let (rt, env) = monomorphize_foreign_ty env rt in
-  let (env, params) =
-    Util.map_with_context
-      (fun (env, (name, ty)) ->
-        let (ty, env) = monomorphize_foreign_ty env ty in
-        (env, (name, ty)))
-      env
-      params
-  in
-  ({ params; rt }, env)
-
-let get_foreign_signature (env: env) (id: function_id): ty foreign_signature =
-  let { name; impl; _ }: function_decl = get_function env id in
-  match impl with
-  | Foreign (_, signature) ->
-     signature
-  | BodyNotAttached | Body _ | ForeignGeneric ->
-     internal_err NoSpan ("function `" ^ (ident_string name) ^ "` is typed as foreign but was not registered as a checked foreign function")
+let monomorphize_foreign_signature (env: env) (signature: ty foreign_signature): (mono_ty foreign_signature * env) =
+  map_signature strip_and_mono env signature
 
 let strip_and_mono_list (env: env) (tys: ty list): (mono_ty list * env) =
   let tys = List.map strip_type tys in
@@ -505,11 +466,11 @@ let rec monomorphize_decl (env: env) (decl: typed_decl): (mdecl option * env) =
         (Some decl, env)
       else
         (None, env))
-  | TForeignFunction (id, _, name, params, rt, underlying, _) ->
+  | TForeignFunction (id, _, name, params, rt, underlying, signature, _) ->
      (* Foreign functions are intrinsically monomorphic. *)
      let (env, params) = monomorphize_params env params in
      let (rt, env) = strip_and_mono env rt in
-     let (signature, env) = monomorphize_foreign_signature env (get_foreign_signature env id) in
+     let (signature, env) = monomorphize_foreign_signature env signature in
      let decl = MForeignFunction (id, name, params, rt, signature, underlying) in
      (Some decl, env)
   | TTypeClass _ ->
