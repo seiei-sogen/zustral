@@ -6,5 +6,6 @@
   CliUtilTest
   CliParserTest
   CRendererTest
-  EnvTest)
+  EnvTest
+  OutcomeTest)
  (libraries austral_core austral_cli ounit2))

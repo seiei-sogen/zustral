@@ -34,7 +34,3 @@ val traverse : ('a -> 'b t) -> 'a list -> 'b list t
     declarations of a module hand on the environment. It cannot go on after a
     failure: the next step needs the context the failed one did not return. *)
 val traverse_with_context : ('c * 'a -> ('c * 'b) t) -> 'c -> 'a list -> ('c * 'b list) t
-
-(** The result, or the first error raised again. For the driver, until it
-    chains the stages by their values. *)
-val or_raise : 'a t -> 'a

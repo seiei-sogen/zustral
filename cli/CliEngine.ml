@@ -84,6 +84,8 @@ let report_and_exit (mode: error_reporting_mode) (error: austral_error): 'a =
   html_error_dump error;
   exit (-1)
 
+let ( let* ) = Outcome.bind
+
 let rec exec (cmd: cmd): unit =
   match cmd with
   | HelpCommand ->
@@ -134,11 +136,19 @@ and print_compile_usage _: unit =
 and exec_compile (modules: mod_source list) (target: target) (error_reporting_mode: error_reporting_mode): unit =
   (* Parse source files *)
   let (mods, source_map): (module_source list * source_map) = parse_source_files modules in
-  (* Error handling setup *)
-  try
-    exec_target mods target
-  with Austral_error error ->
-    report_and_exit error_reporting_mode (try_adding_source_ctx error source_map)
+  match exec_target mods target with
+  | Ok () ->
+     ()
+  | Error (first :: _) ->
+     (* The compiler stops at its first error (issue #57), so there is one. *)
+     report_and_exit error_reporting_mode (try_adding_source_ctx first source_map)
+  | Error [] ->
+     (* Nothing in the compiler fails without an error. If something ever
+        does, say so: exiting with a failure status and no message is worse. *)
+     let no_error: austral_error =
+       AustralError { module_name = None; error = Internal "The compiler failed without an error."; span = None; source_ctx = None }
+     in
+     report_and_exit error_reporting_mode no_error
 
 and try_adding_source_ctx (error: austral_error) (source_map: source_map): austral_error =
   let (AustralError { span; source_ctx; _ }) = error in
@@ -158,28 +168,31 @@ and try_adding_source_ctx (error: austral_error) (source_map: source_map): austr
       | None ->
          error)
 
-and exec_target (mods: module_source list) (target: target): unit =
+(** Compile the modules and write what the target asks for. The errors of the
+    compiler, and those of writing the output and running `cc`, are in the
+    result. *)
+and exec_target (mods: module_source list) (target: target): unit Outcome.t =
   match target with
   | TypeCheck ->
      (* Compile everything, emit no code. *)
-     let _ = compile_multiple (empty_compiler ()) mods in
-     ()
+     Compiler.check mods
   | Executable { bin_path; entrypoint; } ->
-     let code: string = compile_to_c mods (Some entrypoint) in
-     (* Write the output to a temporary file. *)
-     let cfile: string = Filename.temp_file "austral_" ".c" in
-     write_string_to_file cfile code;
-     (* Invoke `cc`. *)
-     let _ = compile_c_code cfile bin_path in
-     ()
+     let* (code: string) = compile_to_c mods (Some entrypoint) in
+     Outcome.catch (fun () ->
+         (* Write the output to a temporary file. *)
+         let cfile: string = Filename.temp_file "austral_" ".c" in
+         write_string_to_file cfile code;
+         (* Invoke `cc`. *)
+         let _ = compile_c_code cfile bin_path in
+         ())
   | CStandalone { output_path; entrypoint; } ->
-     write_string_to_file output_path (compile_to_c mods entrypoint)
+     let* (code: string) = compile_to_c mods entrypoint in
+     Outcome.catch (fun () -> write_string_to_file output_path code)
 
 (** Compile the modules to C. Without an entrypoint, the result is a
     library. *)
-and compile_to_c (mods: module_source list) (entrypoint: entrypoint option): string =
-  let compiler = compile_multiple (empty_compiler ()) mods in
+and compile_to_c (mods: module_source list) (entrypoint: entrypoint option): string Outcome.t =
   let entrypoint =
     Option.map (fun (Entrypoint (module_name, name): entrypoint) -> (module_name, name)) entrypoint
   in
-  render_program (Outcome.or_raise (finish compiler entrypoint))
+  Outcome.map render_program (Compiler.compile mods entrypoint)

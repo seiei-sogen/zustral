@@ -7,12 +7,6 @@
 open Identifier
 open CRepr
 
-type compiler
-
-(** The compiler after compiling the built-in modules. Raises [Austral_error]
-    if a built-in module does not compile. *)
-val empty_compiler : unit -> compiler
-
 type module_source =
   | TwoFileModuleSource of {
       int_filename: string;
@@ -25,9 +19,17 @@ type module_source =
       body_code: string
     }
 
-val compile_multiple : compiler -> module_source list -> compiler
+(** Compile the built-in modules and then the given modules, in order, and
+    return the whole C program: a unit per module, the wrappers of the
+    exported functions and, if asked for, the entrypoint. The entrypoint is a
+    module name and the name of a function in it.
 
-(** Generate the wrapper functions and, if asked for, the entrypoint, and
-    return the whole C program. The entrypoint is a module name and the name
-    of a function in it. *)
-val finish : compiler -> (module_name * identifier) option -> c_program Outcome.t
+    This reads no file, writes none, and raises no [Austral_error]: the error
+    that stopped it is in the result. *)
+val compile : module_source list -> (module_name * identifier) option -> c_program Outcome.t
+
+(** What the type-check mode of the command line runs: every stage of
+    {!compile} on every module, with the C thrown away. The step after the
+    modules does not run, so an error that only the wrappers or the entrypoint
+    would find is not reported. *)
+val check : module_source list -> unit Outcome.t

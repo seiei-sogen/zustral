@@ -39,18 +39,3 @@ let rec traverse_with_context (f: ('c * 'a) -> ('c * 'b) t) (ctx: 'c) (list: 'a 
   | first :: rest ->
      bind (f (ctx, first)) (fun (ctx, first) ->
          map (fun (ctx, rest) -> (ctx, first :: rest)) (traverse_with_context f ctx rest))
-
-let or_raise (outcome: 'a t): 'a =
-  match outcome with
-  | Ok value ->
-     value
-  | Error errors ->
-     let error: austral_error =
-       match errors with
-       | first :: _ ->
-          first
-       | [] ->
-          (* No stage returns a failure without an error. *)
-          AustralError { module_name = None; error = Internal "A stage failed without an error."; span = None; source_ctx = None }
-     in
-     raise (Austral_error error)

@@ -103,19 +103,13 @@ let add_source_ctx (error: austral_error) (ctx: source_ctx): austral_error =
   | None ->
      AustralError { module_name; error = cause; span; source_ctx = Some ctx; }
 
-let adorn_error_with_module_name (new_module_name: module_name) (f: unit -> 'a): 'a =
-  try
-    f ()
-  with Austral_error error ->
-    let (AustralError { module_name; error = cause; span; source_ctx }) = error in
-    match module_name with
-    | Some _ ->
-       (* The error already has a module name, do nothing. *)
-       raise (Austral_error error)
-    | None ->
-       (* Add the span *)
-       let new_err = AustralError { module_name = Some new_module_name; error = cause; span; source_ctx } in
-       raise (Austral_error new_err)
+let add_module_name (error: austral_error) (new_module_name: module_name): austral_error =
+  let (AustralError { module_name; error = cause; span; source_ctx }) = error in
+  match module_name with
+  | Some _ ->
+     error
+  | None ->
+     AustralError { module_name = Some new_module_name; error = cause; span; source_ctx }
 
 let adorn_error_with_span (new_span: span) (f: unit -> 'a): 'a =
   try

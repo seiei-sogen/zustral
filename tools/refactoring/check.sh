@@ -102,7 +102,6 @@ if ((failed)); then python3 "$HERE/equivalence.py" compare "${NORMALIZE[@]}" "$T
 step "metrics" "$HERE/measure.sh" --check
 step "unused exports" "$HERE/unused-exports.sh"
 step "error messages have tests" python3 "$HERE/unpinned-messages.py"
-# R13 moves the stages one at a time; these are the ones that return values.
-step "no error escapes a stage" python3 "$HERE/escape-check.py" ParserInterface CombiningPass ReturnCheck DesugaringPass ExtractionPass TypingPass LinearityCheck BodyExtractionPass Monomorphize CodeGen Entrypoint ExportInstantiation
+step "no error escapes a stage" python3 "$HERE/escape-check.py"
 
 exit "$failed"

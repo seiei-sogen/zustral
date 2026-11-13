@@ -51,6 +51,10 @@ jobs:
       - name: every error message has a test
         run: nix-shell --command 'python tools/refactoring/unpinned-messages.py'
 
+      # The functions the driver calls return their errors as values (lib/Outcome.ml).
+      - name: no error escapes a stage
+        run: nix-shell --command 'python tools/refactoring/escape-check.py'
+
       # Compiles every program in the repository with the base branch's compiler and with
       # this one. A refactoring pull request must show 0 differing programs. A bug fix
       # shows the programs it changes, so a difference is reported and does not fail the job.
