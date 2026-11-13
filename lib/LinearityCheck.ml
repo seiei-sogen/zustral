@@ -161,9 +161,10 @@ let is_pending (tbl: state_tbl) (name: identifier): bool =
 let mark_pending (place: place) (tbl: state_tbl) (name: identifier): state_tbl =
   let (StateTable (rows, pending)) = tbl in
   if is_pending tbl name then
-    (* Depends on the order of the checks: a variable is marked pending when it
-       is consumed inside a loop, consuming it again is reported first
-       (error_already_consumed), and assigning to it removes the mark. *)
+    (* A user program reaches this (test 038-late-stage-paths/009): the end of a
+       nested read borrow marks a variable consumed in the loop as unconsumed
+       again, so it is consumed and marked a second time. Marking twice is not
+       made idempotent: that would hide that bug behind a different outcome. *)
     internal_err place "Identifier twice marked pending."
   else
     StateTable (rows, name :: pending)
@@ -287,19 +288,16 @@ type partitions =
   | One
   | MoreThanOne
 
-let partition (place: place) (n: int): partitions =
+(* The argument counts appearances: a sum of zeros and ones, so never
+   negative. Everything below one is Zero. *)
+let partition (n: int): partitions =
   if n > 1 then
     MoreThanOne
   else
     if n = 1 then
       One
     else
-      if n = 0 then
-        Zero
-      else
-        (* The argument counts appearances, so it is not negative. OCaml has no
-           type of natural numbers. *)
-        internal_err place "Impossible"
+      Zero
 
 (* Table consistency *)
 
@@ -344,7 +342,7 @@ let rec check_var_in_expr (place: place) (tbl: state_tbl) (depth: loop_depth) (n
   (* What is the current state of this variable? *)
   let state: var_state = get_state place tbl name in
   (* Make a tuple with the variable's state, and the partitioned appearances. *)
-  let tup = (state, partition place consumed) in
+  let tup = (state, partition consumed) in
   match tup with
   (*       State        Consumed  *)
   (* ---------------|-------------*)
