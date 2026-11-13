@@ -157,11 +157,13 @@ def snapshot(compiler: str, outdir: pathlib.Path) -> None:
         shutil.rmtree(outdir)
     outdir.mkdir(parents=True)
     commands = [*suite_commands(), standard_command(), *example_commands(), *cli_commands()]
-    # coverage.sh --errors --only DIR runs one suite, to see what its tests reach.
+    # coverage.sh --only DIR runs one suite (in both modes), or the command-line
+    # tests (DIR is test-programs/cli), to see what those tests reach.
     only = os.environ.get("ZUSTRAL_EQUIVALENCE_ONLY")
     if only:
-        prefix = "suites/" + pathlib.Path(only).name + "/"
-        commands = [c for c in commands if c[0].startswith(prefix)]
+        directory = pathlib.Path(only).name
+        prefixes = ("cli/",) if directory == "cli" else (f"suites/{directory}/", f"typecheck/{directory}/")
+        commands = [c for c in commands if c[0].startswith(prefixes)]
     if not commands:
         sys.exit("no programs to run: nothing would be compared")
     with concurrent.futures.ThreadPoolExecutor(max_workers=os.cpu_count() or 4) as pool:

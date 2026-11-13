@@ -14,6 +14,15 @@
 #                            expected/unexecuted-message-lines.txt
 #   coverage.sh --messages --record
 #                            rewrite that record
+#   coverage.sh --unexecuted list every line that no program executes: file, line,
+#                            definition, text
+#   coverage.sh --unexecuted --check
+#                            fail if one of them has no reason on the record,
+#                            expected/unexecuted-lines.tsv, or if a row of the
+#                            record is executed or gone
+#   coverage.sh --unexecuted --only DIR
+#                            the list when only the programs under DIR run (to see
+#                            which lines a new test executes)
 #   coverage.sh --kinds      count the lines that no program executes, by kind (an
 #                            arm that raises an internal error, a line of or-pattern
 #                            alternatives, ...); --kinds --files adds the count of
@@ -36,6 +45,10 @@ case ${1:-} in
   --errors) MODE=errors; [[ ${2:-} == --only ]] && ONLY=${3:?usage: coverage.sh --errors --only DIR} ;;
   --messages) MODE=messages; [[ ${2:-} == --record ]] && RECORD_MESSAGES=(--record) ;;
   --kinds) MODE=kinds; KINDS_FILES=(); [[ ${2:-} == --files ]] && KINDS_FILES=(--files) ;;
+  --unexecuted)
+    MODE=unexecuted; UNEXECUTED_CHECK=()
+    [[ ${2:-} == --check ]] && UNEXECUTED_CHECK=(--check)
+    [[ ${2:-} == --only ]] && ONLY=${3:?usage: coverage.sh --unexecuted --only DIR} ;;
 esac
 
 T=$(mktemp -d)
@@ -77,6 +90,12 @@ fi
 if [[ $MODE == messages ]]; then
   point_report
   python3 "$HERE/unexecuted-errors.py" --messages "${RECORD_MESSAGES[@]}" "$T/points.coverage"
+  exit $?
+fi
+
+if [[ $MODE == unexecuted ]]; then
+  line_report
+  python3 "$HERE/unexecuted-lines.py" "${UNEXECUTED_CHECK[@]}" "$T/cobertura.xml" "$ROOT"
   exit $?
 fi
 
