@@ -1,0 +1,1 @@
+lib/TypeBindings.ml line 31, universe_compatible, the `TypeUniverse` alternative for a `Linear` parameter: a call binds a type parameter of universe `Linear` to a type of universe `Type` (`U`), and try_add_binding reports it.

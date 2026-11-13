@@ -1,0 +1,11 @@
+module body Test is
+    generic [R: Region]
+    function annotate(r: &[Int32, R]): Unit is
+        let w: &![Int32, R] := (r : &![Int32, R]);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,1 @@
+lib/TypeParser.ml line 316, universe_compatible, the `TypeUniverse` alternative for a `Linear` parameter: a type specifier gives a record whose type parameter is `Linear` the argument `U`, of universe `Type`, and the type parser reports it.

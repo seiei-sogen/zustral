@@ -1,0 +1,1 @@
+lib/LiteralTyping.ml line 108, literal_matches, the `TUnionConstructor` alternative of the `Integer` arm. The expression `Some(value => 1)` is passed to a function that takes `Int32`: match_type_with_value asks literal_matches first, which answers no for this expression, and the types are then compared and differ.

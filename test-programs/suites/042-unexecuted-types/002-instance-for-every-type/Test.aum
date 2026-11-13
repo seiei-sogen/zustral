@@ -1,0 +1,144 @@
+pragma Unsafe_Module;
+
+import Austral.Memory (Address, Pointer, nullPointer);
+
+module body Test is
+    record Tag: Free is
+        x: Int32;
+    end;
+
+    typeclass Probe(P: Type) is
+        method probe(x: P): Unit;
+    end;
+
+    generic [T: Type]
+    instance Probe(Pointer[T]) is
+        method probe(x: Pointer[T]): Unit is
+            printLn("Pointer[T]");
+            return nil;
+        end;
+    end;
+
+    instance Probe(Unit) is
+        method probe(x: Unit): Unit is
+            printLn("Unit");
+            return nil;
+        end;
+    end;
+
+    instance Probe(Bool) is
+        method probe(x: Bool): Unit is
+            printLn("Bool");
+            return nil;
+        end;
+    end;
+
+    instance Probe(Int32) is
+        method probe(x: Int32): Unit is
+            printLn("Int32");
+            return nil;
+        end;
+    end;
+
+    instance Probe(Float32) is
+        method probe(x: Float32): Unit is
+            printLn("Float32");
+            return nil;
+        end;
+    end;
+
+    instance Probe(Float64) is
+        method probe(x: Float64): Unit is
+            printLn("Float64");
+            return nil;
+        end;
+    end;
+
+    instance Probe(Tag) is
+        method probe(x: Tag): Unit is
+            printLn("Tag");
+            return nil;
+        end;
+    end;
+
+    generic [T: Type, R: Region]
+    instance Probe(&[T, R]) is
+        method probe(x: &[T, R]): Unit is
+            printLn("&[T, R]");
+            return nil;
+        end;
+    end;
+
+    generic [T: Type, R: Region]
+    instance Probe(&![T, R]) is
+        method probe(x: &![T, R]): Unit is
+            printLn("&![T, R]");
+            return nil;
+        end;
+    end;
+
+    generic [T: Type, R: Region]
+    instance Probe(Span[T, R]) is
+        method probe(x: Span[T, R]): Unit is
+            printLn("Span[T, R]");
+            return nil;
+        end;
+    end;
+
+    generic [T: Type, R: Region]
+    instance Probe(Span![T, R]) is
+        method probe(x: Span![T, R]): Unit is
+            printLn("Span![T, R]");
+            return nil;
+        end;
+    end;
+
+    generic [T: Type]
+    instance Probe(Address[T]) is
+        method probe(x: Address[T]): Unit is
+            printLn("Address[T]");
+            return nil;
+        end;
+    end;
+
+    generic [T: Type, U: Type]
+    instance Probe(Fn[T, U]) is
+        method probe(x: Fn[T, U]): Unit is
+            printLn("Fn[T, U]");
+            return nil;
+        end;
+    end;
+
+    function inc(x: Int32): Int32 is
+        return x + 1;
+    end;
+
+    generic [R: Region]
+    function dispatchPointers(w: &![Int32, R], m: Span![Int32, R], p: Pointer[Int32]): Unit is
+        probe(w);
+        probe(m);
+        probe(p);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        let i: Int32 := 1;
+        let f: Float32 := 1.5;
+        let d: Float64 := 2.5;
+        let a: Address[Int32] := nullPointer();
+        let g: Fn[Int32, Int32] := inc;
+        var v: Int32 := 3;
+        probe(nil);
+        probe(true);
+        probe(i);
+        probe(f);
+        probe(d);
+        probe(Tag(x => 4));
+        probe(&v);
+        probe(&!v);
+        probe("span");
+        probe(a);
+        probe(g);
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,30 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Unable to find a type with the name " },
+    { "type": "code", "content": "m" },
+    { "type": "text", "content": "." },
+    { "type": "break" },
+    {
+      "type": "text",
+      "content": "Consider importing it, if it is defined in another module."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/083-type-named-by-type-class-method/Test.aum",
+    "startp": { "line": 15, "column": 8 },
+    "end": { "line": 19, "column": 8 }
+  },
+  "context": [
+    [ 13, "    typeclass TC(P: Free) is" ],
+    [ 14, "        method m(x: P): Unit;" ],
+    [ 15, "    end;" ],
+    [ 16, "" ],
+    [ 17, "    function f(x: m): Unit is" ],
+    [ 18, "        return nil;" ],
+    [ 19, "    end;" ],
+    [ 20, "" ],
+    [ 21, "    function main(): ExitCode is" ]
+  ]
+}

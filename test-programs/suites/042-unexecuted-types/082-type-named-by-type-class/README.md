@@ -1,0 +1,1 @@
+lib/TypeParser.ml, decl_type_signature, the `TypeClass _` arm: a parameter's type is the name of a typeclass of the module. The type is not a local type, so the parser looks the name up among the declarations, finds a typeclass, gets no type signature, and reports an unknown type.

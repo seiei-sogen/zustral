@@ -1,0 +1,50 @@
+pragma Unsafe_Module;
+
+import Austral.Memory (Address, Pointer);
+
+module body Test is
+    record Tag: Free is
+        x: Int32;
+    end;
+
+    generic [T: Type]
+    function none(): Pointer[&[Int32, T]] is
+        return @embed(Pointer[&[Int32, T]], "NULL");
+    end;
+
+    generic [U: Free]
+    function viaFree(u: Pointer[U]): Unit is
+        let p: Pointer[&[Int32, U]] := none();
+        return nil;
+    end;
+
+    generic [U: Linear]
+    function viaLinear(u: Pointer[U]): Unit is
+        let p: Pointer[&[Int32, U]] := none();
+        return nil;
+    end;
+
+    generic [U: Type]
+    function viaType(u: Pointer[U]): Unit is
+        let p: Pointer[&[Int32, U]] := none();
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        let p1: Pointer[&[Int32, Unit]] := none();
+        let p2: Pointer[&[Int32, Bool]] := none();
+        let p3: Pointer[&[Int32, Int32]] := none();
+        let p4: Pointer[&[Int32, Float32]] := none();
+        let p5: Pointer[&[Int32, Float64]] := none();
+        let p6: Pointer[&[Int32, Tag]] := none();
+        let p7: Pointer[&[Int32, &[Int32, Static]]] := none();
+        let p8: Pointer[&[Int32, &![Int32, Static]]] := none();
+        let p9: Pointer[&[Int32, Span[Int32, Static]]] := none();
+        let p10: Pointer[&[Int32, Span![Int32, Static]]] := none();
+        let p11: Pointer[&[Int32, Address[Int32]]] := none();
+        let p12: Pointer[&[Int32, Pointer[Int32]]] := none();
+        let p13: Pointer[&[Int32, Fn[Int32, Int32]]] := none();
+        printLn("thirteen null pointers");
+        return ExitSuccess();
+    end;
+end module body.

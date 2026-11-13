@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": " must be " },
+    { "type": "code", "content": "Region" },
+    { "type": "text", "content": " but " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": " is " },
+    { "type": "code", "content": "Free" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/064-bind-region-parameter-to-free/Test.aum",
+    "startp": { "line": 20, "column": 8 },
+    "end": { "line": 20, "column": 18 }
+  },
+  "context": [
+    [ 18, "" ],
+    [ 19, "    function caller(p: Pointer[Int32]): Unit is" ],
+    [ 20, "        callee(p);" ],
+    [ 21, "        return nil;" ],
+    [ 22, "    end;" ]
+  ]
+}

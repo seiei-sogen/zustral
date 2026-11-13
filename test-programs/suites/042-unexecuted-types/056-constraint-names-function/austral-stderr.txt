@@ -1,0 +1,28 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": " of " },
+    { "type": "code", "content": "f" },
+    { "type": "text", "content": " is constrained by " },
+    { "type": "code", "content": "inc" },
+    {
+      "type": "text",
+      "content": ", which is not a typeclass. A constraint must name a typeclass."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/056-constraint-names-function/Test.aum",
+    "startp": { "line": 24, "column": 8 },
+    "end": { "line": 24, "column": 13 }
+  },
+  "context": [
+    [ 22, "" ],
+    [ 23, "    function main(): ExitCode is" ],
+    [ 24, "        f(1);" ],
+    [ 25, "        return ExitSuccess();" ],
+    [ 26, "    end;" ]
+  ]
+}

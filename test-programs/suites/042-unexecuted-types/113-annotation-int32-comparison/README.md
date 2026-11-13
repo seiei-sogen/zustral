@@ -1,0 +1,1 @@
+lib/LiteralTyping.ml line 138, annotation_types_literal, the `TComparison` alternative of the `Integer` arm. The expression `(i = i)` is annotated with the type `Int32` (`((i = i) : Int32)`): the annotation asks annotation_types_literal first, which answers no for this expression, and the cast is then rejected.

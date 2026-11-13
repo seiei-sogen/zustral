@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": " must be " },
+    { "type": "code", "content": "Free" },
+    { "type": "text", "content": " but " },
+    { "type": "type", "content": "U" },
+    { "type": "text", "content": " is " },
+    { "type": "code", "content": "Type" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/058-bind-free-parameter-to-type/Test.aum",
+    "startp": { "line": 21, "column": 8 },
+    "end": { "line": 21, "column": 18 }
+  },
+  "context": [
+    [ 19, "    generic [U: Type]" ],
+    [ 20, "    function caller(p: Pointer[U]): Unit is" ],
+    [ 21, "        callee(p);" ],
+    [ 22, "        return nil;" ],
+    [ 23, "    end;" ]
+  ]
+}

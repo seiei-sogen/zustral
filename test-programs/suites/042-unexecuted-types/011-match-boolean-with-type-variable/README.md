@@ -1,0 +1,1 @@
+lib/TypeMatch.ml, try_match_type, the `TyVar _` alternative of the mismatch arm for an expected `Boolean` (lines 64-66). A generic function passes its parameter of type `T` to a function that takes `Bool`: the call is a type mismatch, and the message names both types.

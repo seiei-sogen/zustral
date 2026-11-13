@@ -1,0 +1,98 @@
+module body Test is
+    record Pair: Free is
+        x: Int32;
+        y: Float64;
+    end;
+
+    constant ci: Int32 := 3;
+    constant cf: Float64 := 0.5;
+
+    function inc(x: Int32): Int32 is
+        return x + 1;
+    end;
+
+    function half(x: Float64): Float64 is
+        return x / 2.0;
+    end;
+
+    generic [R: Region]
+    function references(r: &[Int32, R], si: &[Span[Nat8, R], R], s: Span[Nat8, R]): Unit is
+        printLn(&(si[0]) = &(si[0]));
+        printLn(&(s[0]) = &(s[0]));
+        printLn(!r = 1);
+        printLn((r : &[Int32, R]) = r);
+        return nil;
+    end;
+
+    -- Never called, so never compiled to C: `=` on a span or a record makes C
+    -- that gcc rejects.
+    generic [T: Free]
+    function uncompiled(s: Span[Nat8, Static], t: Pair, x: T): Unit is
+        printLn("abc" = s);
+        printLn((t : Pair) = t);
+        return nil;
+    end;
+
+    function parameters(i: Int32, f: Float64): Unit is
+        printLn(i = i);
+        printLn(f = f);
+        printLn((i : Int32));
+        printLn((f : Float64));
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        let b: Bool := true;
+        let i: Int32 := 2;
+        let f: Float64 := 2.0;
+        let t: Pair := Pair(x => 2, y => 2.0);
+        let s: Span[Nat8, Static] := "abc";
+        let z: ByteSize := sizeof(Int32);
+        var j: Int32 := 0;
+        var g: Float64 := 0.0;
+        printLn(nil = nil);
+        printLn(true = b);
+        printLn(i = i);
+        printLn((i < i) = b);
+        printLn((b and b) = b);
+        printLn((b or b) = b);
+        printLn((not b) = b);
+        printLn((if b then 2 else 3) = i);
+        printLn(@embed(Int32, "2") = i);
+        printLn((i : Int32) = i);
+        printLn(sizeof(Int32) = z);
+        printLn(t.x = i);
+        printLn(i = ci);
+        printLn(i = inc(1));
+        printLn(i = (if b then 2 else 3));
+        printLn(i = t.x);
+        printLn(i = @embed(Int32, "2"));
+        j := i;
+        printLn(j);
+        printLn(f = f);
+        printLn(f = cf);
+        printLn(f = half(4.0));
+        printLn(f = (if b then 2.0 else 3.0));
+        printLn(f = t.y);
+        printLn(f = @embed(Float64, "2.0"));
+        g := f;
+        printLn(g);
+        printLn((ci : Int32));
+        printLn((i : Int32));
+        printLn((inc(1) : Int32));
+        printLn(((if b then 2 else 3) : Int32));
+        printLn((t.x : Int32));
+        printLn((@embed(Int32, "2") : Int32));
+        printLn((cf : Float64));
+        printLn((f : Float64));
+        printLn((half(4.0) : Float64));
+        printLn(((if b then 2.0 else 3.0) : Float64));
+        printLn((t.y : Float64));
+        printLn((@embed(Float64, "2.0") : Float64));
+        printLn((nil : Unit));
+        printLn((b : Bool));
+        printLn((s : Span[Nat8, Static]));
+        parameters(5, 0.25);
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,29 @@
+pragma Unsafe_Module;
+
+import Austral.Memory (Address, Pointer);
+
+module body Test is
+    record Tag: Free is
+        x: Int32;
+    end;
+
+    record Lin: Linear is
+        x: Int32;
+    end;
+
+    typeclass Gen(P: Free) is
+        generic [U: Type]
+        method m(x: P, u: Pointer[U]): Unit;
+    end;
+
+    instance Gen(Int32) is
+        generic [U: Type]
+        method m(x: Int32, u: Pointer[U]): Unit is
+            return nil;
+        end;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "Float64" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "Span[Nat8, Region<0>]" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/099-literal-float64-string-constant/Test.aum",
+    "startp": { "line": 30, "column": 8 },
+    "end": { "line": 30, "column": 26 }
+  },
+  "context": [
+    [ 28, "        let b: Bool := true;" ],
+    [ 29, "        let i: Int32 := 1;" ],
+    [ 30, "        takeFloat(\"text\");" ],
+    [ 31, "        return nil;" ],
+    [ 32, "    end;" ]
+  ]
+}

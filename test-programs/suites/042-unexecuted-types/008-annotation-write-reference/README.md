@@ -1,0 +1,1 @@
+lib/LiteralTyping.ml line 155, annotation_types_literal, the `WriteRef _` alternative: a read reference annotated with a write reference type. No value can be annotated with a write reference type, because the annotation of a write reference is converted to a read reference or rejected; the annotation is a cast error.

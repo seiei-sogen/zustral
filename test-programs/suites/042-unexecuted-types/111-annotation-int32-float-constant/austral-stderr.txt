@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "Float64" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/111-annotation-int32-float-constant/Test.aum",
+    "startp": { "line": 30, "column": 8 },
+    "end": { "line": 30, "column": 31 }
+  },
+  "context": [
+    [ 28, "        let b: Bool := true;" ],
+    [ 29, "        let i: Int32 := 1;" ],
+    [ 30, "        takeInt((1.5 : Int32));" ],
+    [ 31, "        return nil;" ],
+    [ 32, "    end;" ]
+  ]
+}

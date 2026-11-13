@@ -1,0 +1,1 @@
+lib/LiteralTyping.ml line 135, annotation_types_literal, the `TBoolConstant` alternative of the `Integer` arm. The expression `true` is annotated with the type `Int32` (`(true : Int32)`): the annotation asks annotation_types_literal first, which answers no for this expression, and the cast is then rejected.

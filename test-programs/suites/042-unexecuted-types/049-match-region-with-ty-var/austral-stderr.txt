@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "Region<0>" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "T" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/049-match-region-with-ty-var/Test.aum",
+    "startp": { "line": 20, "column": 8 },
+    "end": { "line": 20, "column": 16 }
+  },
+  "context": [
+    [ 18, "    generic [T: Free]" ],
+    [ 19, "    function pass(p: Pointer[T]): Unit is" ],
+    [ 20, "        take(p);" ],
+    [ 21, "        return nil;" ],
+    [ 22, "    end;" ]
+  ]
+}

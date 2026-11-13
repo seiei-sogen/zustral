@@ -1,0 +1,1 @@
+lib/TypeMatch.ml, try_match_type, the `TyVar _` alternative of the mismatch arm for an expected `SingleFloat` (lines 83-84). A generic function passes its parameter of type `T` to a function that takes `Float32`: the call is a type mismatch, and the message names both types.

@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": " must be " },
+    { "type": "code", "content": "Region" },
+    { "type": "text", "content": " but " },
+    { "type": "type", "content": "Lin" },
+    { "type": "text", "content": " is " },
+    { "type": "code", "content": "Linear" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/065-bind-region-parameter-to-linear/Test.aum",
+    "startp": { "line": 20, "column": 8 },
+    "end": { "line": 20, "column": 18 }
+  },
+  "context": [
+    [ 18, "" ],
+    [ 19, "    function caller(p: Pointer[Lin]): Unit is" ],
+    [ 20, "        callee(p);" ],
+    [ 21, "        return nil;" ],
+    [ 22, "    end;" ]
+  ]
+}

@@ -1,0 +1,27 @@
+pragma Unsafe_Module;
+
+import Austral.Memory (Address, Pointer);
+
+module body Test is
+    record Tag: Free is
+        x: Int32;
+    end;
+
+    record Lin: Linear is
+        x: Int32;
+    end;
+
+    function inc(x: Int32): Int32 is
+        return x + 1;
+    end;
+
+    generic [T: Free(inc)]
+    function f(x: T): Unit is
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        f(1);
+        return ExitSuccess();
+    end;
+end module body.

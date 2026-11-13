@@ -1,0 +1,1 @@
+lib/LiteralTyping.ml line 105, literal_matches, the `TFunVar` alternative of the `Integer` arm. The expression `inc` is passed to a function that takes `Int32`: match_type_with_value asks literal_matches first, which answers no for this expression, and the types are then compared and differ.

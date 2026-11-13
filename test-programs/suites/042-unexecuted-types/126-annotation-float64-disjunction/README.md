@@ -1,0 +1,1 @@
+lib/LiteralTyping.ml line 150, annotation_types_literal, the `TDisjunction` alternative of the `SingleFloat | DoubleFloat` arm. The expression `(b or b)` is annotated with the type `Float64` (`((b or b) : Float64)`): the annotation asks annotation_types_literal first, which answers no for this expression, and the cast is then rejected.

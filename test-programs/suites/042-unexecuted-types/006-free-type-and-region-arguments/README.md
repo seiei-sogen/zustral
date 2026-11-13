@@ -1,0 +1,1 @@
+lib/TypeSystem.ml line 85, any_arg_is_linear: the alternatives for the universes Free, Type and Region. The record `Tri` is declared in the universe Type, so the type parser works out the universe of `Tri[Int32, T, Static]` from its arguments, one of each of these universes, none of them Linear. The program prints one line.

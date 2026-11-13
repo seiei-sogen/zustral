@@ -1,0 +1,1 @@
+lib/LiteralTyping.ml line 135, annotation_types_literal, the `TStringConstant` alternative of the `Integer` arm. The expression `"text"` is annotated with the type `Int32` (`("text" : Int32)`): the annotation asks annotation_types_literal first, which answers no for this expression, and the cast is then rejected.

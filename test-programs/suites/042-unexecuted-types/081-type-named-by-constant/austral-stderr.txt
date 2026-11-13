@@ -1,0 +1,30 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Unable to find a type with the name " },
+    { "type": "code", "content": "c" },
+    { "type": "text", "content": "." },
+    { "type": "break" },
+    {
+      "type": "text",
+      "content": "Consider importing it, if it is defined in another module."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/081-type-named-by-constant/Test.aum",
+    "startp": { "line": 13, "column": 27 },
+    "end": { "line": 17, "column": 8 }
+  },
+  "context": [
+    [ 11, "        x: Int32;" ],
+    [ 12, "    end;" ],
+    [ 13, "    constant c: Int32 := 1;" ],
+    [ 14, "" ],
+    [ 15, "    function f(x: c): Unit is" ],
+    [ 16, "        return nil;" ],
+    [ 17, "    end;" ],
+    [ 18, "" ],
+    [ 19, "    function main(): ExitCode is" ]
+  ]
+}

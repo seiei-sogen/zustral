@@ -1,0 +1,1 @@
+Tri[Int32, T, Static] has the universe Type

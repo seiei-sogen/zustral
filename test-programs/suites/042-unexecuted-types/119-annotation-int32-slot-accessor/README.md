@@ -1,0 +1,1 @@
+lib/LiteralTyping.ml line 139, annotation_types_literal, the `TSlotAccessor` alternative of the `Integer` arm. The expression `&(p.x)` is annotated with the type `Int32` (`(&(p.x) : Int32)`): the annotation asks annotation_types_literal first, which answers no for this expression, and the cast is then rejected.
