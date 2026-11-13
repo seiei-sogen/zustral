@@ -52,12 +52,12 @@ let ctx: TypeCheckExpr.expr_ctx =
       })
   in
   let lexenv: LexEnv.lexenv =
-    LexEnv.push_vars LexEnv.empty_lexenv [
+    LexEnv.push_vars NoSpan LexEnv.empty_lexenv [
         (make_ident "x", int32, LexEnv.VarLocal Immutable);
         (make_ident "isZero", FnPtr ([int32], Boolean), LexEnv.VarLocal Immutable)
       ]
   in
-  TypeCheckExpr.make_ctx example env RegionMap.empty_region_map TypeParameters.empty_typarams lexenv
+  TypeCheckExpr.make_ctx NoSpan example env RegionMap.empty_region_map TypeParameters.empty_typarams lexenv
 
 let three_hundred: NumberLiteral.int_literal = NumberLiteral.of_decimal "300"
 

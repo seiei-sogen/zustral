@@ -137,11 +137,6 @@ let place_inside (outer: place) (span: span): place =
   | AtSpan _ when span = empty_span -> outer
   | AtSpan _ | NoSpan -> AtSpan span
 
-(* What a file that is not converted yet passes to a converted function. The
-   error leaves with no span, and the handler around the call fills it in, as
-   it does for the file's own errors. *)
-let place_from_adorn: place = NoSpan
-
 (* Error context-augmenting functions *)
 
 let add_source_ctx (error: austral_error) (ctx: source_ctx): austral_error =
@@ -161,27 +156,6 @@ let add_module_name (error: austral_error) (new_module_name: module_name): austr
      AustralError { location = locate (Some new_module_name) (AtSpan span); error = cause; source_ctx }
   | Nowhere ->
      AustralError { location = locate (Some new_module_name) NoSpan; error = cause; source_ctx }
-
-let adorn_error_with_span (new_span: span) (f: unit -> 'a): 'a =
-  try
-    f ()
-  with Austral_error error ->
-    let (AustralError { location; error = cause; source_ctx }) = error in
-    let with_new_span (): austral_error =
-      AustralError { location = locate (location_module_name location) (AtSpan new_span); error = cause; source_ctx }
-    in
-    match location_span location with
-    | Some span' ->
-       (* The error already has a span. *)
-       if span' = empty_span then
-         (* The error has the empty span, add ours. *)
-         raise (Austral_error (with_new_span ()))
-       else
-         (* The error has a non-empty span, reraise. *)
-         raise (Austral_error error)
-    | None ->
-       (* Add the span *)
-       raise (Austral_error (with_new_span ()))
 
 (* Error rendering to plain text *)
 

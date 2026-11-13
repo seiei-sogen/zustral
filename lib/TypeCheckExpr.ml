@@ -26,6 +26,7 @@ open LexEnv
 open TypeBindings
 open TypeMatch
 open Error
+open Error.Placed
 open Util
 
 (* Expression Context *)
@@ -43,10 +44,12 @@ type expr_ctx =
       (** Type parameters of the function or method containing this expression. *)
       lexenv: lexenv;
       (** The lexical environment. *)
+      place: place;
+      (** Where an error in the expression is reported. *)
     }
 
-let make_ctx (module_name: module_name) (env: env) (rm: region_map) (typarams: typarams) (lexenv: lexenv): expr_ctx =
-  ExpressionContext { module_name; env; rm; typarams; lexenv }
+let make_ctx (place: place) (module_name: module_name) (env: env) (rm: region_map) (typarams: typarams) (lexenv: lexenv): expr_ctx =
+  ExpressionContext { module_name; env; rm; typarams; lexenv; place }
 
 let ctx_module_name (ctx: expr_ctx): module_name =
   let (ExpressionContext { module_name; _ }) = ctx in
@@ -68,27 +71,31 @@ let ctx_lexenv (ctx: expr_ctx): lexenv =
   let (ExpressionContext { lexenv; _ }) = ctx in
   lexenv
 
+let ctx_place (ctx: expr_ctx): place =
+  let (ExpressionContext { place; _ }) = ctx in
+  place
+
 (* Utilities *)
 
 (** Wrapper around match_type. *)
 let match_type_ctx (ctx: expr_ctx) (expected: ty) (actual: ty): type_bindings =
   let env: env = ctx_env ctx
   and module_name: module_name = ctx_module_name ctx in
-  match_type (env, module_name) expected actual
+  match_type (env, module_name, ctx_place ctx) expected actual
 
 (** Wrapper around match_type_with_value. *)
 let match_type_with_value_ctx (ctx: expr_ctx) (expected: ty) (value: texpr): type_bindings =
   let env: env = ctx_env ctx
   and module_name: module_name = ctx_module_name ctx in
-  match_type_with_value (env, module_name) expected value
+  match_type_with_value (env, module_name, ctx_place ctx) expected value
 
 (** Wrapper around match_typarams_ctx. *)
 let match_typarams_ctx (ctx: expr_ctx) (typarams: typarams) (type_args: ty list): type_bindings =
-  match_typarams (ctx_env ctx, ctx_module_name ctx) typarams type_args
+  match_typarams (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) typarams type_args
 
 (** Is this expression of boolean type? *)
-let is_bool (e: texpr): bool =
-  match get_type e with
+let is_bool (place: place) (e: texpr): bool =
+  match get_type place e with
   | Boolean -> true
   | Unit | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
   | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
@@ -97,39 +104,39 @@ let is_bool (e: texpr): bool =
 (* Since the extraction pass has already happened, we can simplify the call to
    `parse_type` by passing an empty list of local type signatures. *)
 let parse_typespec (ctx: expr_ctx) (ty: qtypespec): ty =
-  parse_type place_from_adorn (ctx_env ctx) [] (ctx_region_map ctx) (ctx_typarams ctx) ty
+  parse_type (ctx_place ctx) (ctx_env ctx) [] (ctx_region_map ctx) (ctx_typarams ctx) ty
 
-let get_record_definition (env: env) (name: qident) (ty: ty): (module_name * type_vis * typarams * typed_slot list) =
-  match get_decl_by_name place_from_adorn env (qident_to_sident name) with
+let get_record_definition (place: place) (env: env) (name: qident) (ty: ty): (module_name * type_vis * typarams * typed_slot list) =
+  match get_decl_by_name place env (qident_to_sident name) with
   | (Some (Record { mod_id; vis; typarams; slots; _ })) ->
-     let mod_name: module_name = module_name_from_id place_from_adorn env mod_id in
+     let mod_name: module_name = module_name_from_id place env mod_id in
      (mod_name, vis, typarams, slots)
   | Some _ ->
-     type_error (PathNotRecord ty)
+     type_error place (PathNotRecord ty)
   | None ->
-     generic_error (NoRecordWithName (original_name name))
+     generic_error place (NoRecordWithName (original_name name))
 
-let get_slot_with_name type_name slots slot_name =
+let get_slot_with_name (place: place) type_name slots slot_name =
   match List.find_opt (fun (TypedSlot (n, _)) -> n = slot_name) slots with
   | Some s -> s
   | None ->
-     type_error (NoSuchSlot { type_name = original_name type_name; slot_name })
+     type_error place (NoSuchSlot { type_name = original_name type_name; slot_name })
 
 (* Check that there are as many bindings as there are type parameters, and that
    every type parameter is satisfied. *)
-and check_bindings (typarams: typarams) (bindings: type_bindings): unit =
+and check_bindings (place: place) (typarams: typarams) (bindings: type_bindings): unit =
   let check (tp: type_parameter): unit =
     let n = typaram_name tp
     and u = typaram_universe tp
     in
     (match get_binding bindings tp with
      | Some ty ->
-        if universe_compatible u (type_universe place_from_adorn ty) then
+        if universe_compatible u (type_universe place ty) then
           ()
         else
-          generic_error (BindingUniverseMismatch { expected = u; actual = type_universe place_from_adorn ty })
+          generic_error place (BindingUniverseMismatch { expected = u; actual = type_universe place ty })
      | None ->
-        generic_error (NoBindingForParameter n))
+        generic_error place (NoBindingForParameter n))
   in
   let _ = List.map check (typarams_as_list typarams) in
   ()
@@ -143,28 +150,28 @@ and check_bindings (typarams: typarams) (bindings: type_bindings): unit =
 let rec check_argument_list (ctx: expr_ctx) (name: identifier) (params: value_parameter list) (args: texpr list): type_bindings =
   (* Check that the number of parameters is the same as the number of
      arguments. *)
-  check_arity name params args;
+  check_arity (ctx_place ctx) name params args;
   (* Check arguments against parameters *)
   check_argument_list' ctx empty_bindings params args
 
-and check_arity (name: identifier) (params: value_parameter list) (args: texpr list): unit =
+and check_arity (place: place) (name: identifier) (params: value_parameter list) (args: texpr list): unit =
   let nparams = List.length params
   and nargs = List.length args in
   if nparams = nargs then
     ()
   else
-    type_error (CallWrongArity { name; expected = nparams; actual = nargs })
+    type_error place (CallWrongArity { name; expected = nparams; actual = nargs })
 
 (* Precondition: both lists have the same length. *)
 and check_argument_list' (ctx: expr_ctx) (bindings: type_bindings) (params: value_parameter list) (args: texpr list): type_bindings =
   match (params, args) with
   | ((first_param::rest_params), (first_arg::rest_args)) ->
-     let bindings' = merge_bindings bindings (match_parameter ctx first_param first_arg) in
+     let bindings' = merge_bindings (ctx_place ctx) bindings (match_parameter ctx first_param first_arg) in
      check_argument_list' ctx bindings' rest_params rest_args
   | ([], []) ->
      bindings
   | _ ->
-     internal_err ("couldn't check argument list in module `"
+     internal_err (ctx_place ctx) ("couldn't check argument list in module `"
                    ^ (mod_name_string (ctx_module_name ctx))
                    ^ "` with bindings: "
                    ^ (show_type_bindings bindings)
@@ -178,7 +185,7 @@ and match_parameter (ctx: expr_ctx) (param: value_parameter) (arg: texpr): type_
   let (ValueParameter (_, ty)) = param in
   match_type_with_value_ctx ctx ty arg
 
-let make_substs (bindings: type_bindings) (typarams: typarams): type_bindings =
+let make_substs (place: place) (bindings: type_bindings) (typarams: typarams): type_bindings =
   let f (tp: type_parameter): (type_parameter * ty) option =
     if (typaram_universe tp) = RegionUniverse then
       Some (tp, RegionTy static_region)
@@ -189,7 +196,7 @@ let make_substs (bindings: type_bindings) (typarams: typarams): type_bindings =
       | None ->
          None
   in
-  bindings_from_list (List.filter_map f (typarams_as_list typarams))
+  bindings_from_list place (List.filter_map f (typarams_as_list typarams))
 
 (* Types From the Place of an Expression *)
 
@@ -202,8 +209,8 @@ let make_substs (bindings: type_bindings) (typarams: typarams): type_bindings =
 type context_bindings = identifier -> ty -> type_bindings
 
 (* The place says nothing about the type. *)
-let no_expected_type (name: identifier) (_: ty): type_bindings =
-  type_error (UnconstrainedGenericFunction name)
+let no_expected_type (place: place) (name: identifier) (_: ty): type_bindings =
+  type_error place (UnconstrainedGenericFunction name)
 
 (* The place expects the type `expected`: the bindings are the ones that make
    the type of the expression that type. *)
@@ -219,11 +226,11 @@ let rec augment_call (ctx: expr_ctx) (name: qident) (args: typed_arglist) (from_
      augment_fptr_call ctx (local_name name) ty from_context args
   | None ->
      (* Otherwise, find a callable from the environment. *)
-     (match get_callable place_from_adorn (ctx_env ctx) (ctx_module_name ctx) (qident_to_sident name) with
+     (match get_callable (ctx_place ctx) (ctx_env ctx) (ctx_module_name ctx) (qident_to_sident name) with
       | Some callable ->
          augment_callable ctx name callable from_context args
       | None ->
-         generic_error (UnknownName { kind = CallableName; name = original_name name }))
+         generic_error (ctx_place ctx) (UnknownName { kind = CallableName; name = original_name name }))
 
 and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (from_context: context_bindings) (args: typed_arglist): texpr =
   (* Because function pointers don't preserve value parameter names, we can't
@@ -232,7 +239,7 @@ and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (from_c
     match args with
     | TPositionalArglist args -> args
     | TNamedArglist _ ->
-       type_error FunPointerNamedArgs
+       type_error (ctx_place ctx) FunPointerNamedArgs
   in
   (* We extract the parameter types and return type from the function pointer
      type. *)
@@ -241,7 +248,7 @@ and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (from_c
     | FnPtr (paramtys, rt) -> (paramtys, rt)
     | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
     | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
-    | MonoTy _ -> type_error (CallNonCallable fn_ptr_ty)
+    | MonoTy _ -> type_error (ctx_place ctx) (CallNonCallable fn_ptr_ty)
   in
   (* Then, we synthesize a parameter list from the function pointer type. The
      parameter names are fake, but this is so we can reuse the arity-checking,
@@ -251,7 +258,7 @@ and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (from_c
   let bindings = check_argument_list ctx name params args in
   (* Use the bindings to get the effective return type *)
   let rt' = replace_variables bindings rt in
-  let (bindings', rt'') = handle_return_type_polymorphism name params rt' from_context bindings in
+  let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) name params rt' from_context bindings in
   let arguments = cast_arguments bindings' params args in
   TFptrCall (name, arguments, rt'')
 
@@ -262,30 +269,30 @@ and augment_callable (ctx: expr_ctx) (name: qident) (callable: callable) (from_c
   | RecordConstructor (_, typarams, universe, slots) ->
      augment_record_constructor ctx name typarams universe slots from_context args
   | UnionConstructor { union_id; type_params; universe; case } ->
-     let type_name: qident = (let { name; mod_id; _ }: union_decl = get_union place_from_adorn (ctx_env ctx) union_id in
+     let type_name: qident = (let { name; mod_id; _ }: union_decl = get_union (ctx_place ctx) (ctx_env ctx) union_id in
                                  (* TODO: constructing a fake qident *)
-                                 make_qident (module_name_from_id place_from_adorn (ctx_env ctx) mod_id, name, name))
+                                 make_qident (module_name_from_id (ctx_place ctx) (ctx_env ctx) mod_id, name, name))
      in
      augment_union_constructor ctx type_name type_params universe case from_context args
   | MethodCallable { typeclass_id; value_parameters; return_type; _ } ->
-     let { param; _ }: typeclass_decl = get_typeclass place_from_adorn (ctx_env ctx) typeclass_id in
+     let { param; _ }: typeclass_decl = get_typeclass (ctx_place ctx) (ctx_env ctx) typeclass_id in
      augment_method_call ctx typeclass_id param name value_parameters return_type from_context args
 
 and augment_function_call (ctx: expr_ctx) (id: function_id) name typarams params rt (from_context: context_bindings) args =
   (* For simplicity, and to reduce duplication of code, we convert the argument
      list to a positional list. *)
   let param_names = List.map (fun (ValueParameter (n, _)) -> n) params in
-  let arguments: texpr list = arglist_to_positional (args, param_names) in
+  let arguments: texpr list = arglist_to_positional (ctx_place ctx) (args, param_names) in
   (* Check the list of params against the list of arguments *)
   let bindings = check_argument_list ctx (original_name name) params arguments in
   (* Use the bindings to get the effective return type *)
   let rt' = replace_variables bindings rt in
-  let (bindings', rt'') = handle_return_type_polymorphism (local_name name) params rt' from_context bindings in
+  let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) (local_name name) params rt' from_context bindings in
   (* Check: the set of bindings equals the set of type parameters *)
-  let bindings'' = merge_bindings bindings bindings' in
-  check_bindings typarams bindings'';
+  let bindings'' = merge_bindings (ctx_place ctx) bindings bindings' in
+  check_bindings (ctx_place ctx) typarams bindings'';
   let arguments' = cast_arguments bindings'' params arguments in
-  let substs = make_substs bindings'' typarams in
+  let substs = make_substs (ctx_place ctx) bindings'' typarams in
   TFuncall (id, name, arguments', rt'', substs)
 
 and augment_record_constructor (ctx: expr_ctx) (name: qident) (typarams: typarams) (universe: universe) (slots: typed_slot list) (from_context: context_bindings) (args: typed_arglist) =
@@ -295,17 +302,17 @@ and augment_record_constructor (ctx: expr_ctx) (name: qident) (typarams: typaram
                   if l = [] then
                     []
                   else
-                    type_error (ConstructorNotNamed RecordAggregate)
+                    type_error (ctx_place ctx) (ConstructorNotNamed RecordAggregate)
                | TNamedArglist a ->
                   a) in
   (* Check: the set of slots matches the set of param names *)
   let slot_names: identifier list = List.map (fun (TypedSlot (name, _)) -> name) slots in
   let argument_names: identifier list = List.map (fun (n, _) -> n) args' in
   if not (ident_set_eq slot_names argument_names) then
-    type_error (ConstructorWrongArgs RecordAggregate)
+    type_error (ctx_place ctx) (ConstructorWrongArgs RecordAggregate)
   else
     (* Convert args to positional *)
-    let arguments = arglist_to_positional (args, slot_names) in
+    let arguments = arglist_to_positional (ctx_place ctx) (args, slot_names) in
     (* Check the list of params against the list of arguments *)
     let params = List.map (fun (TypedSlot (n, t)) -> ValueParameter (n, t)) slots in
     let bindings = check_argument_list ctx (original_name name) params arguments in
@@ -315,14 +322,14 @@ and augment_record_constructor (ctx: expr_ctx) (name: qident) (typarams: typaram
                         universe)
     in
     let rt' = replace_variables bindings rt in
-    let (bindings', rt'') = handle_return_type_polymorphism (local_name name) params rt' from_context bindings in
+    let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) (local_name name) params rt' from_context bindings in
     (* Check: the set of bindings equals the set of type parameters *)
-    check_bindings typarams (merge_bindings bindings bindings');
+    check_bindings (ctx_place ctx) typarams (merge_bindings (ctx_place ctx) bindings bindings');
     (* Check the resulting type is in the correct universe *)
-    if universe_compatible universe (type_universe place_from_adorn rt'') then
+    if universe_compatible universe (type_universe (ctx_place ctx) rt'') then
       TRecordConstructor (rt'', List.map2 (fun a b -> (a, b)) slot_names arguments)
     else
-      generic_error ConstructorUniverseMismatch
+      generic_error (ctx_place ctx) ConstructorUniverseMismatch
 
 and augment_union_constructor (ctx: expr_ctx) (type_name: qident) (typarams: typarams) (universe: universe) (case: typed_case) (from_context: context_bindings) (args: typed_arglist) =
   let args' = (match args with
@@ -330,7 +337,7 @@ and augment_union_constructor (ctx: expr_ctx) (type_name: qident) (typarams: typ
                   if l = [] then
                     []
                   else
-                    type_error (ConstructorNotNamed UnionAggregate)
+                    type_error (ctx_place ctx) (ConstructorNotNamed UnionAggregate)
                | TNamedArglist a ->
                   a) in
   (* Check: the set of slots matches the set of param names *)
@@ -338,10 +345,10 @@ and augment_union_constructor (ctx: expr_ctx) (type_name: qident) (typarams: typ
   let slot_names: identifier list = List.map (fun (TypedSlot (name, _)) -> name) slots in
   let argument_names: identifier list = List.map (fun (n, _) -> n) args' in
   if not (ident_set_eq slot_names argument_names) then
-    type_error (ConstructorWrongArgs UnionAggregate)
+    type_error (ctx_place ctx) (ConstructorWrongArgs UnionAggregate)
   else
     (* Convert args to positional *)
-    let arguments = arglist_to_positional (args, slot_names) in
+    let arguments = arglist_to_positional (ctx_place ctx) (args, slot_names) in
     (* Check the list of params against the list of arguments *)
     let params = List.map (fun (TypedSlot (n, t)) -> ValueParameter (n, t)) slots in
     let bindings = check_argument_list ctx case_name params arguments in
@@ -351,14 +358,14 @@ and augment_union_constructor (ctx: expr_ctx) (type_name: qident) (typarams: typ
                         universe)
     in
     let rt' = replace_variables bindings rt in
-    let (bindings', rt'') = handle_return_type_polymorphism case_name params rt' from_context bindings in
+    let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) case_name params rt' from_context bindings in
     (* Check: the set of bindings equals the set of type parameters *)
-    check_bindings typarams (merge_bindings bindings bindings');
+    check_bindings (ctx_place ctx) typarams (merge_bindings (ctx_place ctx) bindings bindings');
     (* Check the resulting type is in the correct universe *)
-    if universe_compatible universe (type_universe place_from_adorn rt'') then
+    if universe_compatible universe (type_universe (ctx_place ctx) rt'') then
       TUnionConstructor (rt'', case_name, List.map2 (fun a b -> (a, b)) slot_names arguments)
     else
-      generic_error ConstructorUniverseMismatch
+      generic_error (ctx_place ctx) ConstructorUniverseMismatch
 
 and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: type_parameter) (callable_name: qident) (params: value_parameter list) (rt: ty) (from_context: context_bindings) (args: typed_arglist): texpr =
   (* At this point, we know the method's name and the typeclass it belongs
@@ -367,22 +374,22 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
   (* For simplicity, and to reduce duplication of code, we convert the argument
      list to a positional list. *)
   let param_names = List.map (fun (ValueParameter (n, _)) -> n) params in
-  let arguments: texpr list = arglist_to_positional (args, param_names) in
+  let arguments: texpr list = arglist_to_positional (ctx_place ctx) (args, param_names) in
   (* Check the list of params against the list of arguments *)
   let bindings = check_argument_list ctx (original_name callable_name) params arguments in
   (* Use the bindings to get the effective return type *)
   let rt' = replace_variables bindings rt in
-  let (bindings', rt'') = handle_return_type_polymorphism (local_name callable_name) params rt' from_context bindings in
-  let bindings'' = merge_bindings bindings bindings' in
+  let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) (local_name callable_name) params rt' from_context bindings in
+  let bindings'' = merge_bindings (ctx_place ctx) bindings bindings' in
   (* Check: the set of bindings equals the set of type parameters *)
-  check_bindings (typarams_from_list place_from_adorn [typaram]) bindings'';
+  check_bindings (ctx_place ctx) (typarams_from_list (ctx_place ctx) [typaram]) bindings'';
   match get_binding bindings'' typaram with
   | (Some dispatch_ty) ->
      (* Is the dispatch type a type variable? *)
      (match dispatch_ty with
       | TyVar (TypeVariable (typaram, _, _, constraints)) ->
          (* If so, check if the constraints say that it implements the typeclass. *)
-         let tc_name: sident = get_decl_sident_or_die place_from_adorn (ctx_env ctx) typeclass_id in
+         let tc_name: sident = get_decl_sident_or_die (ctx_place ctx) (ctx_env ctx) typeclass_id in
          if List.exists (fun c -> equal_sident tc_name c) constraints then
            (* If it's a tyvar that implements the typeclass, we have to
               proceed differently. Essentially we can't go on with instance
@@ -400,17 +407,17 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
              }
          else
            (* If it doesn't, that's an error *)
-           type_error (UnconstrainedTypeParameter { typeclass = sident_name tc_name; typaram })
+           type_error (ctx_place ctx) (UnconstrainedTypeParameter { typeclass = sident_name tc_name; typaram })
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _
       | Pointer _ | FnPtr _ | MonoTy _ ->
          (* If it's not a type variable, continue normal instance resolution. *)
          let (instance, instance_bindings): instance_decl * type_bindings =
-           (match get_instance (ctx_env ctx) (ctx_module_name ctx) dispatch_ty typeclass_id with
+           (match get_instance (ctx_place ctx) (ctx_env ctx) (ctx_module_name ctx) dispatch_ty typeclass_id with
             | Some (i, b) -> (i, b)
             | None ->
-               let tc_name: sident = get_decl_sident_or_die place_from_adorn (ctx_env ctx) typeclass_id in
-               type_error (NoSuitableInstance { typeclass = sident_name tc_name; ty = dispatch_ty }))
+               let tc_name: sident = get_decl_sident_or_die (ctx_place ctx) (ctx_env ctx) typeclass_id in
+               type_error (ctx_place ctx) (NoSuitableInstance { typeclass = sident_name tc_name; ty = dispatch_ty }))
          in
          let params' = List.map (fun (ValueParameter (n, t)) -> ValueParameter (n, replace_variables instance_bindings t)) params in
          let arguments' = cast_arguments instance_bindings params' arguments in
@@ -420,14 +427,14 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
             | Some (InsMethRec { id; _ }) -> id
             (* A program reaches this: an instance that leaves out a method of
                its typeclass is accepted where it is declared (#91). *)
-            | None -> internal_err ("Couldn't get instance method for `"
+            | None -> internal_err (ctx_place ctx) ("Couldn't get instance method for `"
                                     ^ (ident_string (original_name callable_name))
                                     ^ "`"))
          in
-         let substs = make_substs instance_bindings typarams in
+         let substs = make_substs (ctx_place ctx) instance_bindings typarams in
          TMethodCall (meth_id, callable_name, typarams, arguments', rt'', substs))
   | None ->
-     internal_err "couldn't extract dispatch type."
+     internal_err (ctx_place ctx) "couldn't extract dispatch type."
 
 and cast_arguments (bindings: type_bindings) (params: value_parameter list) (arguments: texpr list): texpr list =
   let f (ValueParameter (_, expected)) value =
@@ -443,10 +450,10 @@ and cast_arguments (bindings: type_bindings) (params: value_parameter list) (arg
   in
   List.map2 f params arguments
 
-and handle_return_type_polymorphism (name: identifier) (params: value_parameter list) (rt: ty) (from_context: context_bindings) (bindings: type_bindings): (type_bindings * ty) =
+and handle_return_type_polymorphism (place: place) (name: identifier) (params: value_parameter list) (rt: ty) (from_context: context_bindings) (bindings: type_bindings): (type_bindings * ty) =
   if is_return_type_polymorphic params rt then
     let bindings' = from_context name rt in
-    let bindings'' = merge_bindings bindings bindings' in
+    let bindings'' = merge_bindings place bindings bindings' in
     (bindings'', replace_variables bindings'' rt)
   else
     (empty_bindings, replace_variables bindings rt)
@@ -489,14 +496,14 @@ let rec infer (ctx: expr_ctx) (expr: aexpr): texpr =
   | StringConstant s ->
      TStringConstant s
   | Variable name ->
-     augment_variable ctx name no_expected_type
+     augment_variable ctx name (no_expected_type (ctx_place ctx))
   | Temporary name ->
      augment_temporary ctx name
   | FunctionCall (name, args) ->
      let arglist: typed_arglist = augment_arglist ctx args in
-     augment_call ctx name arglist no_expected_type
+     augment_call ctx name arglist (no_expected_type (ctx_place ctx))
   | ArithmeticExpression (op, lhs, rhs) ->
-     augment_arithmetic ctx op lhs rhs no_expected_type
+     augment_arithmetic ctx op lhs rhs (no_expected_type (ctx_place ctx))
   | Comparison (op, lhs, rhs) ->
      augment_comparison ctx op lhs rhs
   | Conjunction (lhs, rhs) ->
@@ -556,7 +563,7 @@ and infer_with_expected (ctx: expr_ctx) (expr: aexpr) (expected: ty): texpr =
 and augment_variable (ctx: expr_ctx) (name: qident) (from_context: context_bindings): texpr =
   let env = ctx_env ctx in
   (* Does this name a declaration? *)
-  match get_decl_by_name place_from_adorn env (qident_to_sident name) with
+  match get_decl_by_name (ctx_place ctx) env (qident_to_sident name) with
   | Some (Function { id; typarams; value_params; rt; _ }) ->
      let arg_tys: ty list = List.map (fun (ValueParameter (_, ty)) -> ty) value_params in
      let fn_ty: ty = FnPtr (arg_tys, rt) in
@@ -572,7 +579,7 @@ and augment_variable (ctx: expr_ctx) (name: qident) (from_context: context_bindi
        (* Function is concrete. *)
        TFunVar (id, fn_ty, empty_bindings)
   | _ ->
-     (match get_variable place_from_adorn (ctx_env ctx) (ctx_lexenv ctx) name with
+     (match get_variable (ctx_place ctx) (ctx_env ctx) (ctx_lexenv ctx) name with
       | Some (ty, src) ->
          (match src with
           | VarConstant ->
@@ -582,14 +589,14 @@ and augment_variable (ctx: expr_ctx) (name: qident) (from_context: context_bindi
           | VarLocal _ ->
              TLocalVar ((original_name name), ty))
       | None ->
-         generic_error (UnknownName { kind = VariableName; name = original_name name }))
+         generic_error (ctx_place ctx) (UnknownName { kind = VariableName; name = original_name name }))
 
 and augment_temporary (ctx: expr_ctx) (name: identifier): texpr =
   match get_var (ctx_lexenv ctx) name with
   | Some (ty, _) ->
      TTemporary (name, ty)
   | None ->
-     internal_err ("Temporary variable does not exist in lexenv: " ^ (ident_string name))
+     internal_err (ctx_place ctx) ("Temporary variable does not exist in lexenv: " ^ (ident_string name))
 
 and augment_comparison ctx op lhs rhs =
   let lhs' = infer ctx lhs
@@ -597,79 +604,79 @@ and augment_comparison ctx op lhs rhs =
   let _ =
     (* A lone literal on the left takes the type of the right operand. *)
     if (LiteralTyping.is_numeric_literal lhs) && not (LiteralTyping.is_numeric_literal rhs) then
-      match_type_with_value_ctx ctx (get_type rhs') lhs'
+      match_type_with_value_ctx ctx (get_type (ctx_place ctx) rhs') lhs'
     else
-      match_type_with_value_ctx ctx (get_type lhs') rhs'
+      match_type_with_value_ctx ctx (get_type (ctx_place ctx) lhs') rhs'
   in
   TComparison (op, lhs', rhs')
 
 and augment_conjunction ctx lhs rhs =
   let lhs': texpr = infer ctx lhs
   and rhs': texpr = infer ctx rhs in
-  if ((is_bool lhs') && (is_bool rhs')) then
+  if ((is_bool (ctx_place ctx) lhs') && (is_bool (ctx_place ctx) rhs')) then
     TConjunction (lhs', rhs')
   else
-    type_error (LogicalOperandsNotBoolean (ConjunctionOperands (get_type lhs', get_type rhs')))
+    type_error (ctx_place ctx) (LogicalOperandsNotBoolean (ConjunctionOperands (get_type (ctx_place ctx) lhs', get_type (ctx_place ctx) rhs')))
 
 and augment_disjunction ctx lhs rhs =
   let lhs': texpr = infer ctx lhs
   and rhs': texpr = infer ctx rhs in
-  if ((is_bool lhs') && (is_bool rhs')) then
+  if ((is_bool (ctx_place ctx) lhs') && (is_bool (ctx_place ctx) rhs')) then
     TDisjunction (lhs', rhs')
   else
-    type_error (LogicalOperandsNotBoolean (DisjunctionOperands (get_type lhs', get_type rhs')))
+    type_error (ctx_place ctx) (LogicalOperandsNotBoolean (DisjunctionOperands (get_type (ctx_place ctx) lhs', get_type (ctx_place ctx) rhs')))
 
 and augment_negation ctx e =
   let e' = infer ctx e in
-  if is_bool e' then
+  if is_bool (ctx_place ctx) e' then
     TNegation e'
   else
-    type_error (LogicalOperandsNotBoolean (NegationOperand (get_type e')))
+    type_error (ctx_place ctx) (LogicalOperandsNotBoolean (NegationOperand (get_type (ctx_place ctx) e')))
 
 and augment_if_expr ctx c t f =
   let c' = infer ctx c
   and t' = infer ctx t
   and f' = infer ctx f in
-  if is_bool c' then
-    if (get_type t') = (get_type f') then
+  if is_bool (ctx_place ctx) c' then
+    if (get_type (ctx_place ctx) t') = (get_type (ctx_place ctx) f') then
       TIfExpression (c', t', f')
     else
-      type_error (IfInequal { lhs = get_type t'; rhs = get_type f' })
+      type_error (ctx_place ctx) (IfInequal { lhs = get_type (ctx_place ctx) t'; rhs = get_type (ctx_place ctx) f' })
   else
-    type_error (ConditionNotBoolean { condition = IfExpressionCondition; ty = get_type c' })
+    type_error (ctx_place ctx) (ConditionNotBoolean { condition = IfExpressionCondition; ty = get_type (ctx_place ctx) c' })
 
 and augment_deref (ctx: expr_ctx) (expr: aexpr): texpr =
   (* The type of the expression being dereferenced must be either a read-only
      reference or a write reference. *)
   let expr' = infer ctx expr in
-  let ty = get_type expr' in
+  let ty = get_type (ctx_place ctx) expr' in
   (match ty with
    | ReadRef (ty', _) ->
-      if type_universe place_from_adorn ty' = FreeUniverse then
+      if type_universe (ctx_place ctx) ty' = FreeUniverse then
         TDeref expr'
       else
-        linearity_error (DereferenceNonFree ty')
+        linearity_error (ctx_place ctx) (DereferenceNonFree ty')
    | WriteRef (ty', _) ->
-      if type_universe place_from_adorn ty' = FreeUniverse then
+      if type_universe (ctx_place ctx) ty' = FreeUniverse then
         TDeref expr'
       else
-        linearity_error (DereferenceNonFree ty')
+        linearity_error (ctx_place ctx) (DereferenceNonFree ty')
    | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
    | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
-      type_error (DereferenceNonReference ty))
+      type_error (ctx_place ctx) (DereferenceNonReference ty))
 
 and augment_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identifier): texpr =
   (* The type of the expression is a reference. *)
   let expr: texpr = infer ctx expr in
   let ty, region, mode =
-    match (get_type expr) with
+    match (get_type (ctx_place ctx) expr) with
     | ReadRef (ty, reg) ->
        (ty, reg, ReadBorrow)
     | WriteRef (ty, reg) ->
        (ty, reg, WriteBorrow)
     | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
     | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
-       generic_error (RefTransformNeedsRef (get_type expr))
+       generic_error (ctx_place ctx) (RefTransformNeedsRef (get_type (ctx_place ctx) expr))
   in
   (* The pointed-to type is a record. *)
   let (type_name, type_args): qident * ty list = begin
@@ -679,20 +686,20 @@ and augment_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identifier): t
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
       | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
       | MonoTy _ ->
-         type_error (CantAccessSlotNotRecord { slot_name; ty })
+         type_error (ctx_place ctx) (CantAccessSlotNotRecord { slot_name; ty })
     end
   in
-  let (source_module, vis, typarams, slots) = get_record_definition (ctx_env ctx) type_name ty in
+  let (source_module, vis, typarams, slots) = get_record_definition (ctx_place ctx) (ctx_env ctx) type_name ty in
   (* We can access that record. *)
   let _ =
     if (vis = TypeVisPublic) || ((ctx_module_name ctx) = source_module) then
       (* The record is public, or it is defined in the same module as we are. *)
       ()
     else
-      type_error (PathNotPublic { type_name = original_name type_name; slot_name })
+      type_error (ctx_place ctx) (PathNotPublic { type_name = original_name type_name; slot_name })
   in
   (* Get the slot with the given name. *)
-  let (TypedSlot (_, slot_ty)) = get_slot_with_name type_name slots slot_name in
+  let (TypedSlot (_, slot_ty)) = get_slot_with_name (ctx_place ctx) type_name slots slot_name in
   (* Make the slot type. *)
   let bindings: type_bindings = match_typarams_ctx ctx typarams type_args in
   let slot_ty: ty = replace_variables bindings slot_ty in
@@ -708,7 +715,7 @@ and augment_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identifier): t
 and augment_pointer_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identifier): texpr =
   (* The type of the expression is a reference... *)
   let expr: texpr = infer ctx expr in
-  let ty1: ty = get_type expr in
+  let ty1: ty = get_type (ctx_place ctx) expr in
   let ty2, region =
     match ty1 with
     | ReadRef (ty2, reg) ->
@@ -717,7 +724,7 @@ and augment_pointer_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identi
        (ty2, reg)
     | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
     | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
-       generic_error (RefTransformNeedsRef (get_type expr))
+       generic_error (ctx_place ctx) (RefTransformNeedsRef (get_type (ctx_place ctx) expr))
   in
   (* ... to a reference... *)
   let (ty3, mode): ty * borrowing_mode =
@@ -728,7 +735,7 @@ and augment_pointer_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identi
        (ty3, WriteBorrow)
     | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
     | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
-       type_error (PointerAccessNotReference ty2)
+       type_error (ctx_place ctx) (PointerAccessNotReference ty2)
   in
   (* ... to a record. *)
   let (type_name, type_args): qident * ty list = begin
@@ -738,20 +745,20 @@ and augment_pointer_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identi
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
       | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
       | MonoTy _ ->
-         type_error (CantAccessSlotNotRecord { slot_name; ty = ty3 })
+         type_error (ctx_place ctx) (CantAccessSlotNotRecord { slot_name; ty = ty3 })
     end
   in
-  let (source_module, vis, typarams, slots) = get_record_definition (ctx_env ctx) type_name ty3 in
+  let (source_module, vis, typarams, slots) = get_record_definition (ctx_place ctx) (ctx_env ctx) type_name ty3 in
   (* We can access that record. *)
   let _ =
     if (vis = TypeVisPublic) || ((ctx_module_name ctx) = source_module) then
       (* The record is public, or it is defined in the same module as we are. *)
       ()
     else
-      type_error (PathNotPublic { type_name = original_name type_name; slot_name })
+      type_error (ctx_place ctx) (PathNotPublic { type_name = original_name type_name; slot_name })
   in
   (* Get the slot with the given name. *)
-  let (TypedSlot (_, slot_ty)) = get_slot_with_name type_name slots slot_name in
+  let (TypedSlot (_, slot_ty)) = get_slot_with_name (ctx_place ctx) type_name slots slot_name in
   (* Make the slot type. *)
   let bindings: type_bindings = match_typarams_ctx ctx typarams type_args in
   let slot_ty: ty = replace_variables bindings slot_ty in
@@ -769,7 +776,7 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
   let expr: texpr = infer ctx expr
   and index_expr: texpr = infer ctx index_expr in
   (* The type of the expression is a read reference, or a span. *)
-  match (get_type expr) with
+  match (get_type (ctx_place ctx) expr) with
   | ReadRef (ty, reg) -> begin
       let elem_ty: ty =
         match ty with
@@ -780,7 +787,7 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
         | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
         | RegionTy _ | ReadRef _ | WriteRef _ | TyVar _ | Address _ | Pointer _
         | FnPtr _ | MonoTy _ ->
-           type_error (CantIndexNotSpan ty)
+           type_error (ctx_place ctx) (CantIndexNotSpan ty)
       in
       (* Construct the result type. *)
       TArrayIndex (expr, index_expr, ReadRef (elem_ty, reg))
@@ -795,7 +802,7 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
         | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
         | RegionTy _ | ReadRef _ | WriteRef _ | TyVar _ | Address _ | Pointer _
         | FnPtr _ | MonoTy _ ->
-           type_error (CantIndexNotSpan ty)
+           type_error (ctx_place ctx) (CantIndexNotSpan ty)
       in
       (* Construct the result type. *)
       TArrayIndex (expr, index_expr, WriteRef (elem_ty, reg))
@@ -806,7 +813,7 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
      TSpanIndex (expr, index_expr, WriteRef (ty, reg))
   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
   | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
-     type_error (ArrayIndexNotReference (get_type expr))
+     type_error (ctx_place ctx) (ArrayIndexNotReference (get_type (ctx_place ctx) expr))
 
 
 and check_annotated (ctx: expr_ctx) (expr: aexpr) (target_type: ty): texpr =
@@ -824,14 +831,14 @@ and check_annotated (ctx: expr_ctx) (expr: aexpr) (target_type: ty): texpr =
   (* For 1: if the expression is an int literal and the target type is an
      int type, do the conversion. Similarly, if the expression is a float
      constant and the target type is a float, do the conversion. *)
-  if LiteralTyping.annotation_types_literal target_type expr' then
+  if LiteralTyping.annotation_types_literal (ctx_place ctx) target_type expr' then
     TCast (expr', target_type)
   else
     (* Otherwise, if the expression has a mutable reference type and the
        target type is a read reference, and they point to the same underlying
        type and underlying region, just convert it to a read ref. This does
        point 2. *)
-    (match (get_type expr') with
+    (match (get_type (ctx_place ctx) expr') with
      | WriteRef (underlying_ty, region) ->
         (match target_type with
          | ReadRef (underlying_ty', region') ->
@@ -839,25 +846,25 @@ and check_annotated (ctx: expr_ctx) (expr: aexpr) (target_type: ty): texpr =
              | (true, true) ->
                 TCast (expr', target_type)
              | (false, true) ->
-                type_error (CastDifferentReferences DifferentUnderlyingType)
+                type_error (ctx_place ctx) (CastDifferentReferences DifferentUnderlyingType)
              | (true, false) ->
-                type_error (CastDifferentReferences DifferentUnderlyingRegion)
+                type_error (ctx_place ctx) (CastDifferentReferences DifferentUnderlyingRegion)
              | (false, false) ->
-                type_error (CastDifferentReferences DifferentTypeAndRegion))
+                type_error (ctx_place ctx) (CastDifferentReferences DifferentTypeAndRegion))
          | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
          | RegionTy _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
          | Pointer _ | FnPtr _ | MonoTy _ ->
-            type_error CastWriteRefToNonRef)
+            type_error (ctx_place ctx) CastWriteRefToNonRef)
      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
      | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
      | FnPtr _ | MonoTy _ ->
-        (match try_match_type (ctx_env ctx, ctx_module_name ctx) target_type (get_type expr') with
+        (match try_match_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) target_type (get_type (ctx_place ctx) expr') with
          | Ok _ ->
             expr'
          | Error _ ->
             (* Every failure becomes this error, also an internal error from
                checking a constraint of a type variable in the target type. *)
-            type_error (CastInvalid { target = target_type; source = get_type expr' })))
+            type_error (ctx_place ctx) (CastInvalid { target = target_type; source = get_type (ctx_place ctx) expr' })))
 
 and augment_arglist (ctx: expr_ctx) (args: abstract_arglist): typed_arglist =
   match args with
@@ -871,8 +878,8 @@ and augment_arithmetic (ctx: expr_ctx) (op: arithmetic_operator) (lhs: aexpr) (r
   let lhs' = infer ctx lhs
   and rhs' = infer ctx rhs in
   (* Get the types. *)
-  let lhs_ty = get_type lhs'
-  and rhs_ty = get_type rhs'
+  let lhs_ty = get_type (ctx_place ctx) lhs'
+  and rhs_ty = get_type (ctx_place ctx) rhs'
   in
   (* A lone literal takes the type of the other operand, and has to fit it like
      the initial value of a `let`. Otherwise the left operand decides. *)
@@ -905,10 +912,10 @@ and augment_arithmetic (ctx: expr_ctx) (op: arithmetic_operator) (lhs: aexpr) (r
   (* Are the types the same? *)
   if lhs_ty = rhs_ty then
     (* If the types are the same type, check it is a numeric type. *)
-    if (is_numeric place_from_adorn lhs_ty) then
+    if (is_numeric (ctx_place ctx) lhs_ty) then
       augment_arithmetic_call ()
     else
-      type_error (ArithmeticNotNumeric lhs_ty)
+      type_error (ctx_place ctx) (ArithmeticNotNumeric lhs_ty)
   else
     (* If the types are different, check if at least one operator is a constant.*)
     if (LiteralTyping.is_numeric_literal lhs) <> (LiteralTyping.is_numeric_literal rhs) then
@@ -916,4 +923,4 @@ and augment_arithmetic (ctx: expr_ctx) (op: arithmetic_operator) (lhs: aexpr) (r
          different types are an integer and a float, and neither decides. *)
       augment_arithmetic_call ()
     else
-      type_error (ArithmeticIncompatibleTypes { lhs = lhs_ty; rhs = rhs_ty })
+      type_error (ctx_place ctx) (ArithmeticIncompatibleTypes { lhs = lhs_ty; rhs = rhs_ty })

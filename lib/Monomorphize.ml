@@ -37,7 +37,7 @@ let make_substs2 (bindings: type_bindings) (typarams: typarams): type_bindings =
       | None ->
          None
   in
-  bindings_from_list (List.filter_map f (typarams_as_list typarams))
+  bindings_from_list NoSpan (List.filter_map f (typarams_as_list typarams))
 
 (* Monomorphize type specifiers *)
 
@@ -211,7 +211,7 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
   | TVarMethodCall { dispatch_ty; typeclass_id; source_module_name; params; args; method_name; rt; _ } ->
      (* Continue the instance resolution process we halted in the typing pass. *)
      let (instance, instance_bindings): instance_decl * type_bindings =
-       (match get_instance env source_module_name dispatch_ty typeclass_id with
+       (match get_instance NoSpan env source_module_name dispatch_ty typeclass_id with
         | Some (i, b) -> (i, b)
         | None ->
            generic_error NoSpan (TypeclassResolutionFailed dispatch_ty))
@@ -708,7 +708,7 @@ and make_bindings (typarams: typarams) (args: mono_type_bindings): type_bindings
               generic_error NoSpan ParameterNotFound))
         typarams
     in
-    let b = bindings_from_list pairs in
+    let b = bindings_from_list NoSpan pairs in
     b
   else
     generic_error NoSpan (ParameterArgumentLengthMismatch {

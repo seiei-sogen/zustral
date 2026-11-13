@@ -7,6 +7,7 @@
 
 open IdentifierMap
 open Error
+open Error.Placed
 open Region
 
 type region_map = region IdentifierMap.t
@@ -16,9 +17,9 @@ let empty_region_map = IdentifierMap.empty
 let get_region m n =
   IdentifierMap.find_opt n m
 
-let add_region m n r =
+let add_region (place: place) m n r =
   match get_region m n with
   | Some _ ->
-     generic_error RegionAlreadyExists
+     generic_error place RegionAlreadyExists
   | None ->
      IdentifierMap.add n r m

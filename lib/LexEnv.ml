@@ -8,6 +8,7 @@ open Identifier
 open Common
 open Type
 open Error
+open Error.Placed
 
 type var_source =
   | VarConstant
@@ -23,18 +24,18 @@ let get_var (l: lexenv) (name: identifier): (ty * var_source) option =
   let (LexEnv inner) = l in
   Option.map (fun (_, t, s) -> (t, s)) (List.find_opt (fun (n, _, _) -> n = name) inner)
 
-let push_var (l: lexenv) (name: identifier) (ty: ty) (source: var_source): lexenv =
+let push_var (place: place) (l: lexenv) (name: identifier) (ty: ty) (source: var_source): lexenv =
   let (LexEnv inner) = l in
   match get_var l name with
   | (Some _) ->
-     generic_error (VariableAlreadyExists name)
+     generic_error place (VariableAlreadyExists name)
   | None ->
      LexEnv ((name, ty, source) :: inner)
 
-let rec push_vars env l =
+let rec push_vars (place: place) env l =
   match l with
   | (n,t,s)::rest ->
-     push_vars (push_var env n t s) rest
+     push_vars place (push_var place env n t s) rest
   | [] ->
      env
 

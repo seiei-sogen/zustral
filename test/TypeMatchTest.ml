@@ -60,12 +60,12 @@ let unknown_module (name: module_name): ('a, error) result =
 
 let test_constraint_names_a_missing_module _ =
   let tv: type_var = constrained "T" (make_sident nope (make_ident "C")) in
-  assert_equal (unknown_module nope) (TypeMatch.try_match_type (Env.empty_env, nope) (TyVar tv) Unit)
+  assert_equal (unknown_module nope) (TypeMatch.try_match_type (Env.empty_env, nope, NoSpan) (TyVar tv) Unit)
 
 let test_match_from_a_missing_module _ =
   let (env, typeclass) = env_with_instance in
   let tv: type_var = constrained "T" typeclass in
-  assert_equal (unknown_module nope) (TypeMatch.try_match_type (env, nope) (TyVar tv) Unit)
+  assert_equal (unknown_module nope) (TypeMatch.try_match_type (env, nope, NoSpan) (TyVar tv) Unit)
 
 (* The lookup of an instance goes on to the next instance after every
    failure of a match. The failure here is the missing module of the
@@ -75,7 +75,7 @@ let test_instance_with_a_missing_module_is_passed_over _ =
   let tv: type_var = constrained "T" typeclass in
   assert_equal
     (Error (Type (UnsatisfiedConstraint { tyvar = tv; ty = Pointer Unit; typeclass })))
-    (TypeMatch.try_match_type (env, example) (TyVar tv) (Pointer Unit))
+    (TypeMatch.try_match_type (env, example, NoSpan) (TyVar tv) (Pointer Unit))
 
 let suite =
   "TypeMatch" >::: [

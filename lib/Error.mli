@@ -144,21 +144,11 @@ end
     it, when that place has a span. *)
 val place_inside : place -> span -> place
 
-(** The place that a file not converted yet passes to a converted function:
-    the span of the error still comes from the {!adorn_error_with_span} around
-    the call. It is not {!NoSpan}, which says that the error has no span. Goes
-    away with {!adorn_error_with_span}. *)
-val place_from_adorn : place
-
 (** Add a source context to an error if it doesn't have one. *)
 val add_source_ctx : austral_error -> source_ctx -> austral_error
 
 (** Put the module name in an error if it doesn't have one. *)
 val add_module_name : austral_error -> module_name -> austral_error
-
-(** Run the callback, and if it throws an error that doesn't have a span, put
-    the given span in the error and rethrow it. *)
-val adorn_error_with_span : span -> (unit -> 'a) -> 'a
 
 (** The title of an error: the name of its category. *)
 val error_title : error -> string

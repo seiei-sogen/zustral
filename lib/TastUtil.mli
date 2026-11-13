@@ -32,7 +32,7 @@ open Identifier
        2. If the argument list is a named argument list, then the set of keys
           is exactly the same as the set of given parameter names.
 *)
-val arglist_to_positional : typed_arglist * identifier list -> texpr list
+val arglist_to_positional : Error.place -> typed_arglist * identifier list -> texpr list
 
-val get_type : texpr -> ty
+val get_type : Error.place -> texpr -> ty
 

@@ -8,6 +8,7 @@ open Common
 open Type
 open Stages.Tast
 open Error
+open Error.Placed
 module Ast = Stages.Ast
 module AstDB = Stages.AstDB
 
@@ -82,19 +83,19 @@ let fits (signed : signedness) (width : integer_width) (n : Z.t) : bool =
   in
   Z.compare min_bound n <= 0 && Z.compare n max_bound <= 0
 
-let check_int_literal_fits (signedness: signedness) (width: integer_width) (literal: NumberLiteral.int_literal): unit =
+let check_int_literal_fits (place: place) (signedness: signedness) (width: integer_width) (literal: NumberLiteral.int_literal): unit =
    (* Check that it fits *)
    if fits signedness width literal.value then
       ()
    else
-      type_error (IntegerDoesNotFit { literal; ty = Integer (signedness, width) })
+      type_error place (IntegerDoesNotFit { literal; ty = Integer (signedness, width) })
 
-let literal_matches (ty: ty) (expr: texpr): bool =
+let literal_matches (place: place) (ty: ty) (expr: texpr): bool =
   match ty with
   | Integer (signedness, width) ->
      (match expr with
       | TIntConstant value | TCast (TIntConstant value, _) | TImplicitCast (TIntConstant value, _) ->
-         check_int_literal_fits signedness width value;
+         check_int_literal_fits place signedness width value;
          true
       | _ ->
          false)
@@ -108,12 +109,12 @@ let literal_matches (ty: ty) (expr: texpr): bool =
   | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ | MonoTy _ ->
      false
 
-let annotation_types_literal (ty: ty) (expr: texpr): bool =
+let annotation_types_literal (place: place) (ty: ty) (expr: texpr): bool =
   match ty with
   | Integer (signedness, width) ->
      (match expr with
       | TIntConstant value ->
-         check_int_literal_fits signedness width value;
+         check_int_literal_fits place signedness width value;
          true
       | _ ->
          false)

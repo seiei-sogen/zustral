@@ -14,12 +14,13 @@ open Stages.Tast
 open Identifier
 open StringSet
 open Error
+open Error.Placed
 
 let arglist_size = function
   | (TPositionalArglist l) -> List.length l
   | (TNamedArglist l) -> List.length l
 
-let rec arglist_to_positional (args, names): texpr list =
+let rec arglist_to_positional (place: place) (args, names): texpr list =
   let expected = List.length names
   and actual = arglist_size args
   in
@@ -29,7 +30,7 @@ let rec arglist_to_positional (args, names): texpr list =
     | (TPositionalArglist l) -> l
     | (TNamedArglist l) -> reorder_arglist l names
   else
-    generic_error (WrongNumberOfArguments { expected; actual })
+    generic_error place (WrongNumberOfArguments { expected; actual })
 
 and names_match arglist names =
   match arglist with
@@ -46,7 +47,7 @@ and find_arg_with_name l name =
   let (_, value) = List.find (fun (n, _) -> name = n) l in
   value
 
-let rec get_type = function
+let rec get_type (place: place) = function
   | TNilConstant ->
      Unit
   | TBoolConstant _ ->
@@ -86,7 +87,7 @@ let rec get_type = function
   | TNegation _ ->
      Boolean
   | TIfExpression (_, t, _) ->
-     get_type t
+     get_type place t
   | TRecordConstructor (ty, _) ->
      ty
   | TUnionConstructor (ty, _, _) ->
@@ -94,7 +95,7 @@ let rec get_type = function
   | TEmbed (ty, _, _) ->
      ty
   | TDeref e ->
-     (match get_type e with
+     (match get_type place e with
       | ReadRef (t, _) ->
          t
       | WriteRef (t, _) ->
@@ -102,7 +103,7 @@ let rec get_type = function
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _
       | MonoTy _ ->
-         internal_err ("a dereference expression was constructed whose argument is not a reference type."))
+         internal_err place ("a dereference expression was constructed whose argument is not a reference type."))
   | TSizeOf _ ->
      Integer (Unsigned, WidthByteSize)
   | TSlotAccessor (_, _, ty) -> ty

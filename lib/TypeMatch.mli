@@ -18,7 +18,7 @@ open EnvTypes
     in the module where the typechecking happens. This is used to check that,
     when matching a constrained type variable to a type, that the type
     implements the constraints.*)
-type ctx = env * module_name
+type ctx = env * module_name * Error.place
 
 val match_type_with_value : ctx -> ty -> texpr -> type_bindings
 
@@ -34,4 +34,4 @@ val match_typarams : ctx -> typarams -> ty list -> type_bindings
 
 Parameters are: environment, source module name, dispatch type, and ID of the
 typeclass. *)
-val get_instance : env -> module_name -> ty -> typeclass_id -> (instance_decl * type_bindings) option
+val get_instance : Error.place -> env -> module_name -> ty -> typeclass_id -> (instance_decl * type_bindings) option

@@ -27,10 +27,10 @@ val empty_lexenv : lexenv
 (** The lexenv with one more variable, given its name, type, and source. If a
     variable with that name is in it already, this raises the error that says
     so: a program that declares a name twice in one scope gets here. *)
-val push_var : lexenv -> identifier -> ty -> var_source -> lexenv
+val push_var : Error.place -> lexenv -> identifier -> ty -> var_source -> lexenv
 
 (** Add a list of variables. *)
-val push_vars : lexenv -> (identifier * ty * var_source) list -> lexenv
+val push_vars : Error.place -> lexenv -> (identifier * ty * var_source) list -> lexenv
 
 (** The lexenv without the variable of that name. *)
 val remove_var : lexenv -> identifier -> lexenv

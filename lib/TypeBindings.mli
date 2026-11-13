@@ -22,9 +22,9 @@ val bindings_list : type_bindings -> (type_parameter * ty) list
 
 val empty_bindings : type_bindings
 
-val bindings_from_list : (type_parameter * ty) list -> type_bindings
+val bindings_from_list : Error.place -> (type_parameter * ty) list -> type_bindings
 
-val merge_bindings : type_bindings -> type_bindings -> type_bindings
+val merge_bindings : Error.place -> type_bindings -> type_bindings -> type_bindings
 
 (** [merge_bindings], and adding one binding, with a failure returned as a
     value, the error that reports it. *)

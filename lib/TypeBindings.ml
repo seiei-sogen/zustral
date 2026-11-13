@@ -14,6 +14,7 @@ open Type
 open TypeParameter
 open TypeSystem
 open Error
+open Error.Placed
 
 let universe_compatible param arg =
   (* The check here is:
@@ -93,14 +94,14 @@ let try_add_binding (TypeBindings m) (tp: type_parameter) (ty: ty): (type_bindin
      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
      | Pointer _ | FnPtr _ ->
-      if universe_compatible (typaram_universe tp) (type_universe place_from_adorn ty) then
+      if universe_compatible (typaram_universe tp) (type_universe NoSpan ty) then
         Ok (TypeBindings (BindingsMap.add tp ty m))
       else
         Error (Type (TyparamBindingWrongUniverse {
             param = tp;
             ty;
             expected = typaram_universe tp;
-            actual = type_universe place_from_adorn ty;
+            actual = type_universe NoSpan ty;
           }))
 
 (* Add multiple bindings to a bindings map. *)
@@ -115,8 +116,8 @@ let try_merge_bindings (TypeBindings a) (TypeBindings b) =
   let* m = try_add_bindings empty_bindings (List.map (fun (tp, t) -> (tp, t)) (BindingsMap.bindings a)) in
   try_add_bindings m (List.map (fun (tp, t) -> (tp, t)) (BindingsMap.bindings b))
 
-let merge_bindings (a: type_bindings) (b: type_bindings): type_bindings =
-  ok_or_raise (try_merge_bindings a b)
+let merge_bindings (place: place) (a: type_bindings) (b: type_bindings): type_bindings =
+  ok_or_raise place (try_merge_bindings a b)
 
 let rec replace_variables bindings ty =
   match ty with
@@ -132,11 +133,13 @@ let rec replace_variables bindings ty =
      DoubleFloat
   | NamedType (n, a, u) ->
      let a' = List.map (replace_variables bindings) a in
+     (* The universe of an argument is unknown only for a MonoTy, which exists
+        only during monomorphization, where errors have no span. *)
      if u = TypeUniverse then
-       let u' = if any_arg_is_linear place_from_adorn a' then
+       let u' = if any_arg_is_linear NoSpan a' then
                   LinearUniverse
                 else
-                  if any_arg_is_type place_from_adorn a' then
+                  if any_arg_is_type NoSpan a' then
                     TypeUniverse
                   else
                     FreeUniverse
@@ -167,12 +170,12 @@ let rec replace_variables bindings ty =
   | MonoTy id ->
      MonoTy id
 
-let rec bindings_from_list lst =
+let rec bindings_from_list (place: place) lst =
   match lst with
   | (tp, ty)::rest ->
      let bindings = empty_bindings in
-     let bindings = ok_or_raise (try_add_binding bindings tp ty) in
-     merge_bindings bindings (bindings_from_list rest)
+     let bindings = ok_or_raise place (try_add_binding bindings tp ty) in
+     merge_bindings place bindings (bindings_from_list place rest)
   | [] ->
    empty_bindings
 

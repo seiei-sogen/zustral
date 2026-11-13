@@ -40,10 +40,10 @@ val is_numeric_literal : Stages.AstDB.aexpr -> bool
     A literal under a cast is a literal here, whether the cast is an annotation
     or one the type checker added. [false] means that the rules say nothing
     about the value, and its type has to match the expected one. *)
-val literal_matches : ty -> texpr -> bool
+val literal_matches : Error.place -> ty -> texpr -> bool
 
 (** Whether a type annotation gives the value its type: an integer literal
     annotated with an integer type, which it has to fit as above, and a float
     literal annotated with a float type. A literal under a cast is not a
     literal here. *)
-val annotation_types_literal : ty -> texpr -> bool
+val annotation_types_literal : Error.place -> ty -> texpr -> bool

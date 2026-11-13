@@ -17,12 +17,15 @@ open TastUtil
 open Env
 open EnvTypes
 open Error
+open Error.Placed
 
-type ctx = env * module_name
+type ctx = env * module_name * place
 
-let ctx_env (env, _) = env
+let ctx_env (env, _, _) = env
 
-let ctx_mn (_, mn) = mn
+let ctx_mn (_, mn, _) = mn
+
+let ctx_place (_, _, place) = place
 
 open Outcome.Syntax
 
@@ -241,10 +244,10 @@ and try_constraint (ctx: ctx) (tv: type_var) (ty: ty) (typeclass_name: sident): 
      Error (Declaration (DeclarationErrors.UnknownModule (sident_module_name typeclass_name)))
   | Some _ ->
   (* Find the typeclass. *)
-  match get_decl_by_name place_from_adorn (ctx_env ctx) typeclass_name with
+  match get_decl_by_name (ctx_place ctx) (ctx_env ctx) typeclass_name with
   | Some (TypeClass { id; _ }) ->
      (* Try to find an instance for the given typeclass name that implements this type. *)
-     let* instance = try_get_instance (ctx_env ctx) (ctx_mn ctx) ty id in
+     let* instance = try_get_instance (ctx_place ctx) (ctx_env ctx) (ctx_mn ctx) ty id in
      (match instance with
       | Some _ ->
          Ok ()
@@ -257,7 +260,7 @@ and try_constraint (ctx: ctx) (tv: type_var) (ty: ty) (typeclass_name: sident): 
   | None ->
      Error (Internal "No typeclass with the given name. This should have been validated in the extraction pass.")
 
-and try_get_instance (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: typeclass_id): ((instance_decl * type_bindings) option, error) result =
+and try_get_instance (place: place) (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: typeclass_id): ((instance_decl * type_bindings) option, error) result =
   match get_module_by_name env source_module_name with
   | None ->
      Error (Declaration (DeclarationErrors.UnknownModule source_module_name))
@@ -268,7 +271,7 @@ and try_get_instance (env: env) (source_module_name: module_name) (dispatch_ty: 
     match decl with
     | { typeclass_id; argument; _ } ->
        if equal_typeclass_id typeclass_id typeclass then
-         (match try_match_type (env, source_module_name) argument dispatch_ty with
+         (match try_match_type (env, source_module_name, place) argument dispatch_ty with
           | Ok bindings ->
              Some (decl, bindings)
           | Error _ ->
@@ -280,7 +283,7 @@ and try_get_instance (env: env) (source_module_name: module_name) (dispatch_ty: 
          None
   in
   let filtered: (instance_decl * type_bindings) list =
-    (List.filter_map pred (visible_instances place_from_adorn env mod_id))
+    (List.filter_map pred (visible_instances place env mod_id))
   in
   match filtered with
   | [a] ->
@@ -303,19 +306,19 @@ and try_match_type_list (ctx: ctx) (tys: ty list) (tys': ty list): (type_binding
     bs
 
 let match_type (ctx: ctx) (a: ty) (b: ty): type_bindings =
-  ok_or_raise (try_match_type ctx a b)
+  ok_or_raise (ctx_place ctx) (try_match_type ctx a b)
 
-let get_instance (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: typeclass_id): (instance_decl * type_bindings) option =
-  ok_or_raise (try_get_instance env source_module_name dispatch_ty typeclass)
+let get_instance (place: place) (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: typeclass_id): (instance_decl * type_bindings) option =
+  ok_or_raise place (try_get_instance place env source_module_name dispatch_ty typeclass)
 
 let match_typarams (ctx: ctx) (typarams: typarams) (args: ty list): type_bindings =
   let typarams' = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams) in
-  ok_or_raise (try_match_type_list ctx typarams' args)
+  ok_or_raise (ctx_place ctx) (try_match_type_list ctx typarams' args)
 
 let match_type_with_value (ctx: ctx) (ty: ty) (expr: texpr): type_bindings =
   (* Like match_type, but a literal that the rules for literals accept does not
      have to have the type. *)
-  if LiteralTyping.literal_matches ty expr then
+  if LiteralTyping.literal_matches (ctx_place ctx) ty expr then
     empty_bindings
   else
-    match_type ctx ty (get_type expr)
+    match_type ctx ty (get_type (ctx_place ctx) expr)
