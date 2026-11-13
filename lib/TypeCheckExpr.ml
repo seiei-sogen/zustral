@@ -375,7 +375,7 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
   let (bindings', rt'') = handle_return_type_polymorphism (local_name callable_name) params rt' from_context bindings in
   let bindings'' = merge_bindings bindings bindings' in
   (* Check: the set of bindings equals the set of type parameters *)
-  check_bindings (typarams_from_list [typaram]) bindings'';
+  check_bindings (typarams_from_list place_from_adorn [typaram]) bindings'';
   match get_binding bindings'' typaram with
   | (Some dispatch_ty) ->
      (* Is the dispatch type a type variable? *)

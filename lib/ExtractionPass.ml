@@ -343,9 +343,9 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
          (* Add the typeclass itself to the env *)
          let (env, typeclass_id) = register env (NewTypeClass { mod_id; vis; name; docstring; param = typaram; }) in
          (* Convert the list of methods into a list of type_class_method records *)
-         let typarams = typarams_from_list [typaram] in
+         let typarams = typarams_from_list (AtSpan span) [typaram] in
          let method_map (Combined.CMethodDecl (name, method_typarams, params, rt, docstring)): type_class_method_input =
-           let effective_typarams: typarams = merge_typarams typarams method_typarams in
+           let effective_typarams: typarams = merge_typarams (AtSpan span) typarams method_typarams in
            let value_params = List.map (parse_param effective_typarams) params
            and rt = parse' rm effective_typarams rt in
            {
@@ -405,7 +405,7 @@ and extract_definition (env: env) (mod_id: mod_id) (mn: module_name) (local_type
          let (env, instance_id) = register env (NewInstance input) in
          (* Convert the list of methods into a list of instance_method_input records *)
          let method_map (CMethodDef (name, method_typarams, params, rt, meth_docstring, body)): (instance_method_input * astmt) =
-           let effective_typarams: typarams = merge_typarams typarams method_typarams in
+           let effective_typarams: typarams = merge_typarams (AtSpan span) typarams method_typarams in
            let value_params = List.map (parse_param effective_typarams) params
            and rt = parse' rm effective_typarams rt
            and method_id: decl_id =

@@ -10,6 +10,7 @@ open Imports
 open Cst
 open BuiltIn
 open Error
+open Error.Placed
 open Id
 open Env
 open EnvTypes
@@ -48,16 +49,16 @@ let resolve_import (env: env) (kind: module_kind) (imports: import_map) (idecl: 
   | Some decl ->
      if is_importable decl then
        match get_symbol imports nickname with
-       | Some _ -> declaration_error (DoubleImport name)
+       | Some _ -> declaration_error NoSpan (DoubleImport name)
        | None ->
           if (equal_module_name module_name memory_module_name) && (kind = SafeModule) then
-            declaration_error ImportMemoryInSafeModule
+            declaration_error NoSpan ImportMemoryInSafeModule
           else
             add_symbol imports (make_qident (module_name, name, nickname))
      else
-       declaration_error (ImportPrivate name)
+       declaration_error NoSpan (ImportPrivate name)
   | None ->
-     declaration_error (ImportUnresolved { name; module_name })
+     declaration_error NoSpan (ImportUnresolved { name; module_name })
 
 let rec resolve' (env: env) (kind: module_kind) (imports: import_map) (list: import_decl list): import_map =
   match list with

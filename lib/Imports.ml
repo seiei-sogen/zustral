@@ -8,6 +8,7 @@ open Identifier
 open IdentifierMap
 open Id
 open Error
+open Error.Placed
 
 type import_map =
   ImportMap of {
@@ -30,7 +31,7 @@ let get_symbol (im: import_map) (name: identifier): qident option =
 let add_symbol (im: import_map) (q: qident) =
   match get_symbol im (local_name q) with
   | Some _ ->
-     generic_error SymbolImportedTwice
+     generic_error NoSpan SymbolImportedTwice
   | None ->
      let (ImportMap { import_into; symbols; instances }) = im in
      ImportMap {

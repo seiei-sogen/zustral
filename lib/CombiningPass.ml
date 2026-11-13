@@ -16,6 +16,7 @@ open Stages.Combined
 open Env
 open ImportResolution
 open Error
+open Error.Placed
 
 let parse_slots (imports: import_map) (slots: concrete_slot list): qslot list =
   List.map
@@ -37,25 +38,25 @@ let parse_params (imports: import_map) (params: concrete_param list): qparam lis
       QualifiedParameter (n, qualify_typespec imports t))
     params
 
-let name_typarams (im: import_map) (params: concrete_type_param list) (name: qident): typarams =
+let name_typarams (place: place) (im: import_map) (params: concrete_type_param list) (name: qident): typarams =
   let lst: type_parameter list =
     List.map (fun (ConcreteTypeParam (n, u, cs)) -> make_typaram (n, u, name, List.map (fun i -> qident_to_sident (qualify_identifier im i)) cs)) params
   in
-  typarams_from_list lst
+  typarams_from_list place lst
 
 let parse_method_decls (module_name: module_name) (imports: import_map) (methods: concrete_method_decl list): combined_method_decl list =
   List.map (fun (ConcreteMethodDecl (n, typarams, params, rt, method_docstring)) ->
       CMethodDecl (n,
-                   name_typarams imports typarams (make_qident (module_name, n, n)),
+                   name_typarams NoSpan imports typarams (make_qident (module_name, n, n)),
                    parse_params imports params,
                    qualify_typespec imports rt,
                    method_docstring))
     methods
 
-let parse_method_defs (module_name: module_name) (imports: import_map) (methods: concrete_method_def list): combined_method_def list =
+let parse_method_defs (place: place) (module_name: module_name) (imports: import_map) (methods: concrete_method_def list): combined_method_def list =
   List.map (fun (ConcreteMethodDef (n, typarams, params, rt, body, method_docstring)) ->
       CMethodDef (n,
-                  name_typarams imports typarams (make_qident (module_name, n, n)),
+                  name_typarams place imports typarams (make_qident (module_name, n, n)),
                   parse_params imports params,
                   qualify_typespec imports rt,
                   method_docstring,
@@ -75,9 +76,9 @@ let match_decls (module_name: module_name) (ii: import_map) (bi: import_map) (de
             if (name = name') && (ty = ty') then
               CConstant (defspan, VisPublic, name, qualify_typespec ii ty, abs_expr bi value, docstring)
             else
-              declaration_error (DeclarationTypeMismatch name)
+              declaration_error (AtSpan span) (DeclarationTypeMismatch name)
          | _ ->
-            declaration_error (DeclarationKindMismatch { name; expected = ConstantDeclaration }))
+            declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = ConstantDeclaration }))
   | ConcreteOpaqueTypeDecl (span, name, typarams, universe, docstring) ->
      adorn_error_with_span span
        (fun _ ->
@@ -88,32 +89,32 @@ let match_decls (module_name: module_name) (ii: import_map) (bi: import_map) (de
               CRecord (defspan,
                        TypeVisOpaque,
                        name,
-                       name_typarams bi typarams qname,
+                       name_typarams (AtSpan span) bi typarams qname,
                        universe,
                        parse_slots bi slots,
                        docstring)
             else
               if universe != universe' then
-                declaration_error (DeclarationUniverseMismatch name)
+                declaration_error (AtSpan span) (DeclarationUniverseMismatch name)
               else
-                declaration_error (DeclarationTypeMismatch name)
+                declaration_error (AtSpan span) (DeclarationTypeMismatch name)
          | ConcreteUnionDef (ConcreteUnion (defspan, name', typarams', universe', cases, _)) ->
             if (name = name') && (typarams = typarams') && (universe = universe') then
               let qname = make_qname name' in
               CUnion (defspan,
                       TypeVisOpaque,
                       name,
-                      name_typarams bi typarams qname,
+                      name_typarams (AtSpan span) bi typarams qname,
                       universe,
                       parse_cases bi cases,
                       docstring)
             else
               if universe <> universe' then
-                declaration_error (DeclarationUniverseMismatch name)
+                declaration_error (AtSpan span) (DeclarationUniverseMismatch name)
               else
-                declaration_error (DeclarationTypeMismatch name)
+                declaration_error (AtSpan span) (DeclarationTypeMismatch name)
          | _ ->
-            declaration_error (DeclarationKindMismatch { name; expected = TypeDeclaration }))
+            declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = TypeDeclaration }))
   | ConcreteFunctionDecl (span, name, typarams, params, rt, docstring) ->
      adorn_error_with_span span
        (fun _ ->
@@ -124,7 +125,7 @@ let match_decls (module_name: module_name) (ii: import_map) (bi: import_map) (de
               CFunction (defspan,
                          VisPublic,
                          name,
-                         name_typarams bi typarams qname,
+                         name_typarams (AtSpan span) bi typarams qname,
                          parse_params ii params,
                          qualify_typespec ii rt,
                          abs_stmt bi body,
@@ -141,9 +142,9 @@ let match_decls (module_name: module_name) (ii: import_map) (bi: import_map) (de
                 else
                   OtherDifference
               in
-              declaration_error (FunctionMismatch { name; difference })
+              declaration_error (AtSpan span) (FunctionMismatch { name; difference })
          | _ ->
-            declaration_error (DeclarationKindMismatch { name; expected = FunctionDeclaration }))
+            declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = FunctionDeclaration }))
   | ConcreteInstanceDecl (span, name, typarams, argument, docstring) ->
      adorn_error_with_span span
        (fun _ ->
@@ -159,16 +160,16 @@ let match_decls (module_name: module_name) (ii: import_map) (bi: import_map) (de
               CInstance (defspan,
                          VisPublic,
                          qname,
-                         name_typarams bi typarams qname,
+                         name_typarams (AtSpan span) bi typarams qname,
                          qualify_typespec ii argument,
-                         parse_method_defs module_name bi methods,
+                         parse_method_defs (AtSpan span) module_name bi methods,
                          docstring)
             else
-              declaration_error (DeclarationTypeMismatch name)
+              declaration_error (AtSpan span) (DeclarationTypeMismatch name)
          | _ ->
-            declaration_error (DeclarationKindMismatch { name; expected = InstanceDeclaration }))
+            declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = InstanceDeclaration }))
   | _ ->
-     generic_error InvalidDeclInContext
+     generic_error NoSpan InvalidDeclInContext
 
 let private_def module_name im def =
   let make_qname n =
@@ -187,7 +188,7 @@ let private_def module_name im def =
      CRecord (span,
               TypeVisPrivate,
               name,
-              name_typarams im typarams qname,
+              name_typarams NoSpan im typarams qname,
               universe,
               parse_slots im slots,
               docstring)
@@ -196,7 +197,7 @@ let private_def module_name im def =
      CUnion (span,
              TypeVisPrivate,
              name,
-             name_typarams im typarams qname,
+             name_typarams NoSpan im typarams qname,
              universe,
              parse_cases im cases,
              docstring)
@@ -205,7 +206,7 @@ let private_def module_name im def =
      CFunction (span,
                 VisPrivate,
                 name,
-                name_typarams im typarams qname,
+                name_typarams NoSpan im typarams qname,
                 parse_params im params,
                 qualify_typespec im rt,
                 abs_stmt im body,
@@ -216,11 +217,11 @@ let private_def module_name im def =
      CTypeclass (span,
                  VisPrivate,
                  name,
-                 (match (typarams_as_list (name_typarams im [typaram] qname)) with
+                 (match (typarams_as_list (name_typarams NoSpan im [typaram] qname)) with
                   | [tp] ->
                      tp
                   | _ ->
-                     declaration_error (MultiargTypeclass name)),
+                     declaration_error NoSpan (MultiargTypeclass name)),
                  parse_method_decls module_name im methods,
                  docstring)
   | ConcreteInstanceDef (ConcreteInstance (span, name, typarams, argument, methods, docstring)) ->
@@ -232,9 +233,9 @@ let private_def module_name im def =
      CInstance (span,
                 VisPrivate,
                 qname,
-                name_typarams im typarams qname,
+                name_typarams NoSpan im typarams qname,
                 qualify_typespec im argument,
-                parse_method_defs module_name im methods,
+                parse_method_defs NoSpan module_name im methods,
                 docstring)
 
 open Outcome.Syntax
@@ -246,7 +247,7 @@ let rec combine (env: env) (cmi: concrete_module_interface) (cmb: concrete_modul
   let* (im, bm) =
     Outcome.catch (fun () ->
         if mn <> mn' then
-          declaration_error (ModuleNameMismatch { interface = mn; body = mn' })
+          declaration_error NoSpan (ModuleNameMismatch { interface = mn; body = mn' })
         else
           let im = resolve mn kind env interface_imports
           and bm = resolve mn kind env body_imports
@@ -278,7 +279,7 @@ and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb
          CRecord (span,
                   TypeVisPublic,
                   name,
-                  name_typarams im typarams qname,
+                  name_typarams NoSpan im typarams qname,
                   universe,
                   parse_slots im slots,
                   docstring)
@@ -287,7 +288,7 @@ and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb
          CUnion (span,
                  TypeVisPublic,
                  name,
-                 name_typarams im typarams qname,
+                 name_typarams NoSpan im typarams qname,
                  universe,
                  parse_cases im cases,
                  docstring)
@@ -296,11 +297,11 @@ and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb
          CTypeclass (span,
                      VisPublic,
                      name,
-                 (match (typarams_as_list (name_typarams im [typaram] qname)) with
+                 (match (typarams_as_list (name_typarams NoSpan im [typaram] qname)) with
                   | [tp] ->
                      tp
                   | _ ->
-                     declaration_error (MultiargTypeclass name)),
+                     declaration_error NoSpan (MultiargTypeclass name)),
                      parse_method_decls module_name im methods,
                      docstring)
       | _ ->
@@ -309,7 +310,7 @@ and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb
           | (Some def) ->
              match_decls module_name im bm decl def
           | None ->
-             declaration_error (MissingBodyDefinition name)))
+             declaration_error NoSpan (MissingBodyDefinition name)))
   | None ->
      (match decl with
       | ConcreteInstanceDecl (_, name, typarams, argument, _) ->
@@ -318,9 +319,9 @@ and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb
           | (Some def) ->
              match_decls module_name im bm decl (ConcreteInstanceDef def)
           | None ->
-             declaration_error (MissingInstanceBodyDefinition { name; ty = WrittenType (typespec_string argument) }))
+             declaration_error NoSpan (MissingInstanceBodyDefinition { name; ty = WrittenType (typespec_string argument) }))
       | _ ->
-         internal_err "Couldn't parse declaration declaration")
+         internal_err NoSpan "Couldn't parse declaration declaration")
 
 and parse_defs (mn: module_name) (cmi: concrete_module_interface) (im: import_map) (defs: concrete_def list): combined_definition list Outcome.t =
   Outcome.map (List.filter_map (fun def -> def))
@@ -346,7 +347,7 @@ and parse_def (module_name: module_name) (cmi: concrete_module_interface) (im: i
          else
            Some (private_def module_name im def)
       | _ ->
-         internal_err "Couldn't parse definition")
+         internal_err NoSpan "Couldn't parse definition")
 
 let as_public (def: combined_definition): combined_definition =
   match def with
