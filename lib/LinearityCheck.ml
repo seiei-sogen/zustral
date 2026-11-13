@@ -9,6 +9,7 @@ open Stages.Tast
 open Type
 open TypeSystem
 open Error
+open Error.Placed
 
 (* Data structures *)
 
@@ -57,16 +58,16 @@ let get_entry (tbl: state_tbl) (name: identifier): (ty * loop_depth * var_state)
   | None ->
      None
 
-let get_entry_or_fail (tbl: state_tbl) (name: identifier): (ty * loop_depth * var_state) =
+let get_entry_or_fail (place: place) (tbl: state_tbl) (name: identifier): (ty * loop_depth * var_state) =
   match get_entry tbl name with
   | Some p -> p
   | None ->
-     internal_err ("variable `"
+     internal_err place ("variable `"
           ^ (ident_string name)
           ^ "` not in state table. Table contents: \n\n"
           ^ (show_state_tbl tbl))
 
-let add_entry (tbl: state_tbl) (name: identifier) (ty: ty) (depth: loop_depth): state_tbl =
+let add_entry (place: place) (tbl: state_tbl) (name: identifier) (ty: ty) (depth: loop_depth): state_tbl =
   let (StateTable (rows, pending)) = tbl in
   match get_entry tbl name with
   | None ->
@@ -74,13 +75,13 @@ let add_entry (tbl: state_tbl) (name: identifier) (ty: ty) (depth: loop_depth): 
   | Some _ ->
      (* The justification for this being an internal error is that the compiler
         should already have caught a duplicate variable. *)
-     internal_err ("An entry exists in the state table with this name: " ^ (ident_string name))
+     internal_err place ("An entry exists in the state table with this name: " ^ (ident_string name))
 
-let trim_free (tbl: state_tbl): state_tbl =
+let trim_free (place: place) (tbl: state_tbl): state_tbl =
   let (StateTable (entries, pending)) = tbl in
   let trim tuple =
     let (_, ty, _, _) = tuple in
-    if universe_linear_ish (type_universe ty) then
+    if universe_linear_ish (type_universe place ty) then
       Some tuple
     else
       None
@@ -88,12 +89,12 @@ let trim_free (tbl: state_tbl): state_tbl =
   let entries = List.filter_map trim entries in
   StateTable (entries, pending)
 
-let update_tbl (tbl: state_tbl) (name: identifier) (state: var_state): state_tbl =
+let update_tbl (place: place) (tbl: state_tbl) (name: identifier) (state: var_state): state_tbl =
   match get_entry tbl name with
   | None ->
      (* The justification for this being an internal error is the compiler
         should have caught a use of a variable that doesn't exist. *)
-     internal_err ("Tried to update the state of the variable `"
+     internal_err place ("Tried to update the state of the variable `"
                    ^ (ident_string name)
                    ^ "`, but no such variable exists in the state table. Table contents: \n\n"
                    ^ (show_state_tbl tbl))
@@ -103,11 +104,11 @@ let update_tbl (tbl: state_tbl) (name: identifier) (state: var_state): state_tbl
      in
      StateTable ((name, ty, depth, state) :: other_entries, pending)
 
-let remove_entry (tbl: state_tbl) (name: identifier): state_tbl =
+let remove_entry (place: place) (tbl: state_tbl) (name: identifier): state_tbl =
   match get_entry tbl name with
   | None ->
      (* Internal because it should have been caught by the compiler. *)
-     internal_err ("Tried to update the state of the variable `"
+     internal_err place ("Tried to update the state of the variable `"
                    ^ (ident_string name)
                    ^ "`, but no such variable exists in the state table. Table contents: \n\n"
                    ^ (show_state_tbl tbl))
@@ -125,17 +126,17 @@ let remove_entry (tbl: state_tbl) (name: identifier): state_tbl =
        let others = List.filter (fun (n, _, _, _) -> not (equal_identifier name n)) rows in
        StateTable (others, pending)
      else
-       if universe_linear_ish (type_universe ty) then
-         linearity_error (ForgotToConsume name)
+       if universe_linear_ish (type_universe place ty) then
+         linearity_error place (ForgotToConsume name)
        else
          let (StateTable (rows, pending)) = tbl in
          let others = List.filter (fun (n, _, _, _) -> not (equal_identifier name n)) rows in
          StateTable (others, pending)
 
-let rec remove_entries (tbl: state_tbl) (names: identifier list): state_tbl =
+let rec remove_entries (place: place) (tbl: state_tbl) (names: identifier list): state_tbl =
   match names with
   | first::rest ->
-     remove_entries (remove_entry tbl first) rest
+     remove_entries place (remove_entry place tbl first) rest
   | [] ->
      tbl
 
@@ -149,16 +150,16 @@ let get_pending (tbl: state_tbl): identifier list =
 let is_pending (tbl: state_tbl) (name: identifier): bool =
   List.exists (fun elem -> equal_identifier name elem) (get_pending tbl)
 
-let mark_pending (tbl: state_tbl) (name: identifier): state_tbl =
+let mark_pending (place: place) (tbl: state_tbl) (name: identifier): state_tbl =
   let (StateTable (rows, pending)) = tbl in
   if is_pending tbl name then
-    internal_err "Identifier twice marked pending."
+    internal_err place "Identifier twice marked pending."
   else
     StateTable (rows, name :: pending)
 
-let remove_pending (tbl: state_tbl) (name: identifier): state_tbl =
+let remove_pending (place: place) (tbl: state_tbl) (name: identifier): state_tbl =
   if not (is_pending tbl name) then
-    internal_err "Tried to remove_pending an identifier not on the list of pending variables."
+    internal_err place "Tried to remove_pending place an identifier not on the list of pending variables."
   else
     let (StateTable (rows, pending)) = tbl in
     let pending' = List.filter (fun elem -> not (equal_identifier name elem)) pending in
@@ -258,16 +259,16 @@ let rec count (name: identifier) (expr: texpr): appearances =
  
 (* Utilities *)
 
-let get_state (tbl: state_tbl) (name: identifier): var_state =
-  let (_, _, state) = get_entry_or_fail tbl name in
+let get_state (place: place) (tbl: state_tbl) (name: identifier): var_state =
+  let (_, _, state) = get_entry_or_fail place tbl name in
   state
 
-let get_loop_depth (tbl: state_tbl) (name: identifier): loop_depth =
-  let (_, depth, _) = get_entry_or_fail tbl name in
+let get_loop_depth (place: place) (tbl: state_tbl) (name: identifier): loop_depth =
+  let (_, depth, _) = get_entry_or_fail place tbl name in
   depth
 
-let is_unconsumed (tbl: state_tbl) (name: identifier): bool =
-  let state = get_state tbl name in
+let is_unconsumed (place: place) (tbl: state_tbl) (name: identifier): bool =
+  let state = get_state place tbl name in
   match state with
   | Unconsumed -> true
   | _ -> false
@@ -277,7 +278,7 @@ type partitions =
   | One
   | MoreThanOne
 
-let partition (n: int): partitions =
+let partition (place: place) (n: int): partitions =
   if n > 1 then
     MoreThanOne
   else
@@ -287,13 +288,13 @@ let partition (n: int): partitions =
       if n = 0 then
         Zero
       else
-        internal_err "Impossible"
+        internal_err place "Impossible"
 
 (* Table consistency *)
 
-let tables_are_consistent (statement: LinearityErrors.branching) (a: state_tbl) (b: state_tbl): unit =
-  let a: state_tbl = trim_free a
-  and b: state_tbl = trim_free b in
+let tables_are_consistent (place: place) (statement: LinearityErrors.branching) (a: state_tbl) (b: state_tbl): unit =
+  let a: state_tbl = trim_free place a
+  and b: state_tbl = trim_free place b in
   (* Find common variables. *)
   let names: identifier list =
     List.filter_map (fun (name, _, _, _) ->
@@ -311,14 +312,14 @@ let tables_are_consistent (statement: LinearityErrors.branching) (a: state_tbl) 
           | Some (_, _, state_a) ->
              state_a
           | None ->
-             internal_err "bad state table"
+             internal_err place "bad state table"
         in
         let state_b =
           match get_entry b name with
           | Some (_, _, state_b) ->
              state_b
           | None ->
-             internal_err "bad state table"
+             internal_err place "bad state table"
         in
         (name, state_a, state_b))
       names
@@ -326,16 +327,16 @@ let tables_are_consistent (statement: LinearityErrors.branching) (a: state_tbl) 
   (* Ensure the states are the same. *)
   List.iter (fun (name, state_a, state_b) ->
       if state_a <> state_b then
-        linearity_error (InconsistentBranches { name; statement; state_a = reported_state state_a; state_b = reported_state state_b })
+        linearity_error place (InconsistentBranches { name; statement; state_a = reported_state state_a; state_b = reported_state state_b })
       else
         ())
     common
 
-let rec table_list_is_consistent (lst: state_tbl list): unit =
+let rec table_list_is_consistent (place: place) (lst: state_tbl list): unit =
   match lst with
   | a::b::rest ->
-     let _ = tables_are_consistent CaseBranching a b in
-     table_list_is_consistent rest
+     let _ = tables_are_consistent place CaseBranching a b in
+     table_list_is_consistent place rest
   | [a] ->
      let _ = a in
      ()
@@ -344,127 +345,126 @@ let rec table_list_is_consistent (lst: state_tbl list): unit =
 
 (* Linearity checking in expressions *)
 
-let rec check_var_in_expr (tbl: state_tbl) (depth: loop_depth) (name: identifier) (ty: ty) (expr: texpr): state_tbl =
+let rec check_var_in_expr (place: place) (tbl: state_tbl) (depth: loop_depth) (name: identifier) (ty: ty) (expr: texpr): state_tbl =
   (* Count the appearances of the variable in the expression. *)
   let apps: appearances = count name expr in
   (* Destructure apps. *)
   let { consumed: int; } = apps in
   (* What is the current state of this variable? *)
-  let state: var_state = get_state tbl name in
+  let state: var_state = get_state place tbl name in
   (* Make a tuple with the variable's state, and the partitioned appearances. *)
-  let tup = (state, partition consumed) in
+  let tup = (state, partition place consumed) in
   match tup with
   (*       State        Consumed  *)
   (* ---------------|-------------*)
   | (     Unconsumed,         Zero) -> (* Not yet consumed, not consumed. *)
      tbl
   | (     Unconsumed,          One) -> (* Not yet consumed, consumed once. *)
-     consume_once tbl depth name ty
+     consume_once place tbl depth name ty
   | (     Unconsumed,  MoreThanOne) -> (* Not yet consumed, consumed more than once. *)
-     error_consumed_more_than_once name ty;
+     error_consumed_more_than_once place name ty;
      tbl
   | (   BorrowedRead,         Zero) -> (* Read borrowed, and not consumed. *)
      tbl
   | (   BorrowedRead,            _) -> (* Read borrowed, and consumed zero or more times. *)
-     error_read_borrowed_and_consumed name ty;
+     error_read_borrowed_and_consumed place name ty;
      tbl
   | (  BorrowedWrite,         Zero) -> (* Write borrowed, and not consumed. *)
      tbl
   | (  BorrowedWrite,            _) -> (* Write borrowed, and consumed zero or more times. *)
-     error_write_borrowed_and_consumed name ty;
+     error_write_borrowed_and_consumed place name ty;
      tbl
   | (       Consumed,         Zero) -> (* Already consumed, and unused. *)
      tbl
   | (       Consumed,            _) -> (* Already consumed, and consumed again zero or more times. *)
-     error_already_consumed name ty;
+     error_already_consumed place name ty;
      tbl
 
-and consume_once (tbl: state_tbl) (depth: loop_depth) (name: identifier) (ty: ty): state_tbl =
+and consume_once (place: place) (tbl: state_tbl) (depth: loop_depth) (name: identifier) (ty: ty): state_tbl =
   let tbl: state_tbl =
-    if universe_linear_ish (type_universe ty) then
-      update_tbl tbl name Consumed
+    if universe_linear_ish (type_universe place ty) then
+      update_tbl place tbl name Consumed
     else
       tbl
   in
-    if depth <> get_loop_depth tbl name then
+    if depth <> get_loop_depth place tbl name then
     (* Consumed inside a loop, so mark it as pending. *)
-    if universe_linear_ish (type_universe ty) then
-      mark_pending tbl name
+    if universe_linear_ish (type_universe place ty) then
+      mark_pending place tbl name
     else
       tbl
   else
     (* Nothing else to do. *)
     tbl
 
-and error_consumed_more_than_once (name: identifier) (ty: ty) =
-  if universe_linear_ish (type_universe ty) then
-    linearity_error (ConsumedMoreThanOnce name)
+and error_consumed_more_than_once (place: place) (name: identifier) (ty: ty) =
+  if universe_linear_ish (type_universe place ty) then
+    linearity_error place (ConsumedMoreThanOnce name)
   else
     ()
 
-and error_read_borrowed_and_consumed (name: identifier) (ty: ty) =
-  if universe_linear_ish (type_universe ty) then
-    linearity_error (ConsumedWhileBorrowedRead name)
+and error_read_borrowed_and_consumed (place: place) (name: identifier) (ty: ty) =
+  if universe_linear_ish (type_universe place ty) then
+    linearity_error place (ConsumedWhileBorrowedRead name)
   else
     ()
 
-and error_write_borrowed_and_consumed (name: identifier) (ty: ty) =
-  if universe_linear_ish (type_universe ty) then
-    linearity_error (ConsumedWhileBorrowedWrite name)
+and error_write_borrowed_and_consumed (place: place) (name: identifier) (ty: ty) =
+  if universe_linear_ish (type_universe place ty) then
+    linearity_error place (ConsumedWhileBorrowedWrite name)
   else
     ()
 
-and error_already_consumed (name: identifier) (ty: ty) =
-  if universe_linear_ish (type_universe ty) then
-    linearity_error (AlreadyConsumed name)
+and error_already_consumed (place: place) (name: identifier) (ty: ty) =
+  if universe_linear_ish (type_universe place ty) then
+    linearity_error place (AlreadyConsumed name)
   else
     ()
 
-let check_expr (tbl: state_tbl) (depth: loop_depth) (expr: texpr): state_tbl =
+let check_expr (place: place) (tbl: state_tbl) (depth: loop_depth) (expr: texpr): state_tbl =
   (* For each variable in the table, check if the variable is used correctly in
      the expression. *)
   let vars: (identifier * ty) list = List.map (fun (name, ty, _, _) -> (name, ty)) (tbl_to_list tbl) in
   let f (tbl: state_tbl) (name, ty): state_tbl =
-    check_var_in_expr tbl depth name ty expr
+    check_var_in_expr place tbl depth name ty expr
   in
   Util.iter_with_context f tbl vars
 
 (* Linearity checking *)
 
-let rec check_stmt (tbl: state_tbl) (depth: loop_depth) (stmt: tstmt): state_tbl =
+let rec check_stmt (place: place) (tbl: state_tbl) (depth: loop_depth) (stmt: tstmt): state_tbl =
   match stmt with
   | TSkip _ ->
      tbl
   | TLet (span, _, name, ty, body) ->
-     adorn_error_with_span span
-       (fun _ ->
-         (* Add an entry to the table. *)
-         let tbl: state_tbl = add_entry tbl name ty depth in
-         let tbl: state_tbl = check_stmt tbl depth body in
-         (* Once we leave the scope, remove the variable we added. *)
-         let tbl: state_tbl = remove_entry tbl name in
-         tbl)
+     let place: place = place_inside place span in
+     (* Add an entry to the table. *)
+     let tbl: state_tbl = add_entry place tbl name ty depth in
+     let tbl: state_tbl = check_stmt place tbl depth body in
+     (* Once we leave the scope, remove the variable we added. *)
+     let tbl: state_tbl = remove_entry place tbl name in
+     tbl
   | TLetTmp (name, ty, expr) ->
      (* Add an entry to the table. *)
-     let tbl: state_tbl = add_entry tbl name ty depth in
-     let tbl: state_tbl = check_expr tbl depth expr in
+     let tbl: state_tbl = add_entry place tbl name ty depth in
+     let tbl: state_tbl = check_expr place tbl depth expr in
      tbl
   | TAssignTmp (name, expr) ->
-    let tbl: state_tbl = check_expr tbl depth expr in
+    let tbl: state_tbl = check_expr place tbl depth expr in
     begin
       match get_entry tbl name with
       | Some (ty, _, state) ->
          begin
            match state with
            | Unconsumed | BorrowedRead | BorrowedWrite ->
-              if universe_linear_ish (type_universe ty) then
-                linearity_error (AssignToUnconsumed name)
+              if universe_linear_ish (type_universe place ty) then
+                linearity_error place (AssignToUnconsumed name)
               else
                 tbl
            | Consumed ->
-              let tbl: state_tbl = update_tbl tbl name Unconsumed in
+              let tbl: state_tbl = update_tbl place tbl name Unconsumed in
               if is_pending tbl name then
-                remove_pending tbl name
+                remove_pending place tbl name
               else
                 tbl
          end
@@ -472,187 +472,177 @@ let rec check_stmt (tbl: state_tbl) (depth: loop_depth) (stmt: tstmt): state_tbl
          tbl
     end
   | TDestructure (span, _, bindings, expr, body) ->
-     adorn_error_with_span span
-       (fun _ ->
-         (* First, check the expression. *)
-         let tbl: state_tbl = check_expr tbl depth expr in
-         (* Iterate over the bidings, for each, add an entry to the table. Also,
-            keep track of the names of the variables. *)
-         let linear_names: identifier list =
-           List.filter_map (fun (TypedBinding { rename; _ }) ->
-               Some rename)
-             bindings
-         in
-         let tbl: state_tbl =
-           Util.iter_with_context
-             (fun tbl (TypedBinding { rename; ty; _ }) ->
-               add_entry tbl rename ty depth)
-             tbl
-             bindings
-         in
-         let tbl: state_tbl = check_stmt tbl depth body in
-         (* Once we leave the scope, remove the linear variables we added. *)
-         let tbl: state_tbl = remove_entries tbl linear_names in
-         tbl)
+     let place: place = place_inside place span in
+     (* First, check the expression. *)
+     let tbl: state_tbl = check_expr place tbl depth expr in
+     (* Iterate over the bidings, for each, add an entry to the table. Also,
+        keep track of the names of the variables. *)
+     let linear_names: identifier list =
+       List.filter_map (fun (TypedBinding { rename; _ }) ->
+           Some rename)
+         bindings
+     in
+     let tbl: state_tbl =
+       Util.iter_with_context
+         (fun tbl (TypedBinding { rename; ty; _ }) ->
+           add_entry place tbl rename ty depth)
+         tbl
+         bindings
+     in
+     let tbl: state_tbl = check_stmt place tbl depth body in
+     (* Once we leave the scope, remove the linear variables we added. *)
+     let tbl: state_tbl = remove_entries place tbl linear_names in
+     tbl
   | TAssign (span, lvalue, rvalue) ->
-     adorn_error_with_span span
-       (fun _ ->
-         let tbl: state_tbl = check_expr tbl depth lvalue in
-         let tbl: state_tbl = check_expr tbl depth rvalue in
-         tbl)
+     let place: place = place_inside place span in
+     let tbl: state_tbl = check_expr place tbl depth lvalue in
+     let tbl: state_tbl = check_expr place tbl depth rvalue in
+     tbl
   | TAssignVar (span, name, rvalue) ->
-     adorn_error_with_span span
-       (fun _ ->
-         let tbl: state_tbl = check_expr tbl depth rvalue in
-         let name = local_name name in
-         let (ty, _, state) = get_entry_or_fail tbl name in
-         begin
-           match state with
-           | Unconsumed | BorrowedRead | BorrowedWrite ->
-              if universe_linear_ish (type_universe ty) then
-                linearity_error (AssignToUnconsumed name)
-              else
-                tbl
-           | Consumed ->
-              let tbl: state_tbl = update_tbl tbl name Unconsumed in
-              if is_pending tbl name then
-                remove_pending tbl name
-              else
-                tbl
-         end)
+     let place: place = place_inside place span in
+     let tbl: state_tbl = check_expr place tbl depth rvalue in
+     let name = local_name name in
+     let (ty, _, state) = get_entry_or_fail place tbl name in
+     begin
+       match state with
+       | Unconsumed | BorrowedRead | BorrowedWrite ->
+          if universe_linear_ish (type_universe place ty) then
+            linearity_error place (AssignToUnconsumed name)
+          else
+            tbl
+       | Consumed ->
+          let tbl: state_tbl = update_tbl place tbl name Unconsumed in
+          if is_pending tbl name then
+            remove_pending place tbl name
+          else
+            tbl
+     end
   | TInitialAssign (_, rvalue) ->
-     let tbl: state_tbl = check_expr tbl depth rvalue in
+     let tbl: state_tbl = check_expr place tbl depth rvalue in
      tbl
   | TIf (span, cond, tb, fb) ->
-     adorn_error_with_span span
-       (fun _ ->
-         let tbl: state_tbl = check_expr tbl depth cond in
-         let true_tbl: state_tbl = check_stmt tbl depth tb in
-         let false_tbl: state_tbl = check_stmt tbl depth fb in
-         let _ = tables_are_consistent IfBranching true_tbl false_tbl in
-         true_tbl)
+     let place: place = place_inside place span in
+     let tbl: state_tbl = check_expr place tbl depth cond in
+     let true_tbl: state_tbl = check_stmt place tbl depth tb in
+     let false_tbl: state_tbl = check_stmt place tbl depth fb in
+     let _ = tables_are_consistent place IfBranching true_tbl false_tbl in
+     true_tbl
   | TCase (span, expr, whens, _) ->
-     adorn_error_with_span span
-       (fun _ ->
-         let tbl: state_tbl = check_expr tbl depth expr in
-         let tbls: state_tbl list = check_whens tbl depth whens in
-         let _ = table_list_is_consistent tbls in
-         (match tbls with
-          | first::rest ->
-             let _ = rest in
-             first
-          | [] ->
-             tbl))
+     let place: place = place_inside place span in
+     let tbl: state_tbl = check_expr place tbl depth expr in
+     let tbls: state_tbl list = check_whens place tbl depth whens in
+     let _ = table_list_is_consistent place tbls in
+     (match tbls with
+      | first::rest ->
+         let _ = rest in
+         first
+      | [] ->
+         tbl)
   | TWhile (span, cond, body) ->
-     adorn_error_with_span span
-       (fun _ ->
-         let pending_before: identifier list = get_pending tbl in
-         let tbl: state_tbl = check_expr tbl depth cond in
-         let tbl: state_tbl = check_stmt tbl (depth + 1) body in
-         let pending_after: identifier list = get_pending tbl in
-         (* pending_after - pending_before = variables consumed in the loop and not
-            assigned to *)
-         let new_pending: identifier list = subtract pending_after pending_before in
-         if (List.length new_pending) > 0 then
-           linearity_error (ConsumedInLoop new_pending)
-         else
-           tbl)
+     let place: place = place_inside place span in
+     let pending_before: identifier list = get_pending tbl in
+     let tbl: state_tbl = check_expr place tbl depth cond in
+     let tbl: state_tbl = check_stmt place tbl (depth + 1) body in
+     let pending_after: identifier list = get_pending tbl in
+     (* pending_after - pending_before = variables consumed in the loop and not
+        assigned to *)
+     let new_pending: identifier list = subtract pending_after pending_before in
+     if (List.length new_pending) > 0 then
+       linearity_error place (ConsumedInLoop new_pending)
+     else
+       tbl
   | TFor (span, _, start, final, body) ->
-     adorn_error_with_span span
-       (fun _ ->
-         let tbl: state_tbl = check_expr tbl depth start in
-         let tbl: state_tbl = check_expr tbl depth final in
-         let pending_before: identifier list = get_pending tbl in
-         let tbl: state_tbl = check_stmt tbl (depth + 1) body in
-         let pending_after: identifier list = get_pending tbl in
-         let new_pending: identifier list = subtract pending_after pending_before in
-         if (List.length new_pending) > 0 then
-           linearity_error (ConsumedInLoop new_pending)
-         else
-           tbl)
+     let place: place = place_inside place span in
+     let tbl: state_tbl = check_expr place tbl depth start in
+     let tbl: state_tbl = check_expr place tbl depth final in
+     let pending_before: identifier list = get_pending tbl in
+     let tbl: state_tbl = check_stmt place tbl (depth + 1) body in
+     let pending_after: identifier list = get_pending tbl in
+     let new_pending: identifier list = subtract pending_after pending_before in
+     if (List.length new_pending) > 0 then
+       linearity_error place (ConsumedInLoop new_pending)
+     else
+       tbl
   | TBorrow { original; mode; body; rename; ref_type; span; _ } ->
-     adorn_error_with_span span
-       (fun _ ->
-         (* Ensure the original variable is unconsumed to be borrowed. *)
-         if is_unconsumed tbl original then
-           let tbl: state_tbl =
-             match mode with
-             | Read ->
-                (* Mark the original as being read-borrowed. *)
-                update_tbl tbl original BorrowedRead
-             | Write ->
-                (* Mark the original as being write-borrowed. *)
-                update_tbl tbl original BorrowedWrite
-             | Reborrow ->
-                (* Mark the original as being write-borrowed. *)
-                update_tbl tbl original BorrowedWrite
-           in
-           (* Add the rename. *)
-           let tbl: state_tbl = add_entry tbl rename ref_type depth in
-           (* Traverse the body. *)
-           let tbl: state_tbl = check_stmt tbl depth body in
-           (* After the body, unborrow the variable. *)
-           let tbl: state_tbl = update_tbl tbl original Unconsumed in
-           (* Remove the rename from the table. *)
-           let tbl: state_tbl = remove_entry tbl rename in
-           tbl
-         else
-           (* If we're read-borrowing, and the variable is already read-borrowed, that's also allowed. *)
-           let state: var_state = get_state tbl original in
-           if (mode = Read) && (state = BorrowedRead) then
-             (* Add the rename. *)
-             let tbl: state_tbl = add_entry tbl rename ref_type depth in
-             (* Traverse the body. *)
-             let tbl: state_tbl = check_stmt tbl depth body in
-             (* After the body, unborrow the variable. *)
-             let tbl: state_tbl = update_tbl tbl original Unconsumed in
-             (* Remove the rename from the table. *)
-             let tbl: state_tbl = remove_entry tbl rename in
-             tbl
-           else
-             linearity_error (CannotBorrow { mode; name = original; state = reported_state state }))
+     let place: place = place_inside place span in
+     (* Ensure the original variable is unconsumed to be borrowed. *)
+     if is_unconsumed place tbl original then
+       let tbl: state_tbl =
+         match mode with
+         | Read ->
+            (* Mark the original as being read-borrowed. *)
+            update_tbl place tbl original BorrowedRead
+         | Write ->
+            (* Mark the original as being write-borrowed. *)
+            update_tbl place tbl original BorrowedWrite
+         | Reborrow ->
+            (* Mark the original as being write-borrowed. *)
+            update_tbl place tbl original BorrowedWrite
+       in
+       (* Add the rename. *)
+       let tbl: state_tbl = add_entry place tbl rename ref_type depth in
+       (* Traverse the body. *)
+       let tbl: state_tbl = check_stmt place tbl depth body in
+       (* After the body, unborrow the variable. *)
+       let tbl: state_tbl = update_tbl place tbl original Unconsumed in
+       (* Remove the rename from the table. *)
+       let tbl: state_tbl = remove_entry place tbl rename in
+       tbl
+     else
+       (* If we're read-borrowing, and the variable is already read-borrowed, that's also allowed. *)
+       let state: var_state = get_state place tbl original in
+       if (mode = Read) && (state = BorrowedRead) then
+         (* Add the rename. *)
+         let tbl: state_tbl = add_entry place tbl rename ref_type depth in
+         (* Traverse the body. *)
+         let tbl: state_tbl = check_stmt place tbl depth body in
+         (* After the body, unborrow the variable. *)
+         let tbl: state_tbl = update_tbl place tbl original Unconsumed in
+         (* Remove the rename from the table. *)
+         let tbl: state_tbl = remove_entry place tbl rename in
+         tbl
+       else
+         linearity_error place (CannotBorrow { mode; name = original; state = reported_state state })
   | TBlock (_, a, b) ->
-     let tbl: state_tbl = check_stmt tbl depth a in
-     let tbl: state_tbl = check_stmt tbl depth b in
+     let tbl: state_tbl = check_stmt place tbl depth a in
+     let tbl: state_tbl = check_stmt place tbl depth b in
      tbl
   | TDiscarding (span, expr) ->
-     adorn_error_with_span span
-       (fun _ ->
-         let tbl: state_tbl = check_expr tbl depth expr in
-         tbl)
+     let place: place = place_inside place span in
+     let tbl: state_tbl = check_expr place tbl depth expr in
+     tbl
   | TReturn (span, expr) ->
-     adorn_error_with_span span
-       (fun _ ->
-         let tbl: state_tbl = check_expr tbl depth expr in
-         (* Ensure that all variables are Consumed. *)
-         let _ =
-           List.map (fun (name, ty, _, state) ->
-               if state = Consumed then
+     let place: place = place_inside place span in
+     let tbl: state_tbl = check_expr place tbl depth expr in
+     (* Ensure that all variables are Consumed. *)
+     let _ =
+       List.map (fun (name, ty, _, state) ->
+           if state = Consumed then
+             ()
+           else
+             (* Is the type of this variable a write reference? *)
+             (match ty with
+              | WriteRef _ ->
+                 (* Write references can be dropped implicitly. *)
                  ()
-               else
-                 (* Is the type of this variable a write reference? *)
-                 (match ty with
-                  | WriteRef _ ->
-                     (* Write references can be dropped implicitly. *)
-                     ()
-                  | SpanMut _ ->
-                     (* Write spans can be dropped implicitly. *)
-                     ()
-                  | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat
-                  | NamedType _ | RegionTy _ | ReadRef _ | Span _ | TyVar _ | Address _
-                  | Pointer _ | FnPtr _ | MonoTy _ ->
-                     if universe_linear_ish (type_universe ty) then
-                       linearity_error (NotConsumedAtReturn name)
-                     else
-                       ()))
-             (tbl_to_list tbl)
-         in
-         tbl)
+              | SpanMut _ ->
+                 (* Write spans can be dropped implicitly. *)
+                 ()
+              | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat
+              | NamedType _ | RegionTy _ | ReadRef _ | Span _ | TyVar _ | Address _
+              | Pointer _ | FnPtr _ | MonoTy _ ->
+                 if universe_linear_ish (type_universe place ty) then
+                   linearity_error place (NotConsumedAtReturn name)
+                 else
+                   ()))
+         (tbl_to_list tbl)
+     in
+     tbl
 
-and check_whens (tbl: state_tbl) (depth: loop_depth) (whens: typed_when list): state_tbl list =
-  List.map (check_when tbl depth) whens
+and check_whens (place: place) (tbl: state_tbl) (depth: loop_depth) (whens: typed_when list): state_tbl list =
+  List.map (check_when place tbl depth) whens
 
-and check_when (tbl: state_tbl) (depth: loop_depth) (whn: typed_when): state_tbl =
+and check_when (place: place) (tbl: state_tbl) (depth: loop_depth) (whn: typed_when): state_tbl =
   let TypedWhen (_, bindings, body) = whn in
   (* Add bindings to the table. *)
   let names: identifier list =
@@ -661,20 +651,20 @@ and check_when (tbl: state_tbl) (depth: loop_depth) (whn: typed_when): state_tbl
   let tbl: state_tbl =
     Util.iter_with_context
       (fun tbl (TypedBinding { rename; ty; _ }) ->
-        add_entry tbl rename ty depth)
+        add_entry place tbl rename ty depth)
       tbl
       bindings
   in
   (* Check the body. *)
-  let tbl: state_tbl = check_stmt tbl depth body in
+  let tbl: state_tbl = check_stmt place tbl depth body in
   (* Once we leave the scope, remove the linear variables we added. *)
-  let tbl: state_tbl = remove_entries tbl names in
+  let tbl: state_tbl = remove_entries place tbl names in
   tbl
 
-let init_tbl (tbl: state_tbl) (params: value_parameter list): state_tbl =
+let init_tbl (place: place) (tbl: state_tbl) (params: value_parameter list): state_tbl =
   let f (tbl: state_tbl) (ValueParameter (name, ty)): state_tbl =
     (* Add this parameter to the list at depth zero. *)
-    add_entry tbl name ty 0
+    add_entry place tbl name ty 0
   in
   Util.iter_with_context f tbl params
 
@@ -684,9 +674,9 @@ let linearity_check (params: value_parameter list) (body: tstmt): unit =
   (* Initialize the state table to the empty table. *)
   let tbl: state_tbl = empty_tbl in
   (* Populate the table with the linear parameters. *)
-  let tbl: state_tbl = init_tbl tbl params in
+  let tbl: state_tbl = init_tbl NoSpan tbl params in
   (* Traverse the code in execution order. *)
-  let _ = check_stmt tbl depth body in
+  let _ = check_stmt NoSpan tbl depth body in
   ()
 
 (* Linearity checking of whole modules *)

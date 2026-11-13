@@ -20,13 +20,13 @@ open Error
 open Error.Placed
 
 let check_instance_argument_has_right_universe (place: place) (universe: universe) (arg: ty): unit =
-  if universe_compatible universe (type_universe arg) then
+  if universe_compatible universe (type_universe place arg) then
     ()
   else
     type_error place (InstanceArgumentWrongUniverse {
         ty = arg;
         expected = universe;
-        actual = type_universe arg;
+        actual = type_universe place arg;
       })
 
 let check_instance_argument_has_right_shape (place: place) (typarams: typarams) (arg: ty): unit =
@@ -37,7 +37,7 @@ let check_instance_argument_has_right_shape (place: place) (typarams: typarams) 
     | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
     | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _
     | MonoTy _ ->
-       declaration_error place (InstanceArgumentNotATyvar { ty; universe = type_universe ty })
+       declaration_error place (InstanceArgumentNotATyvar { ty; universe = type_universe place ty })
   and all_distinct (tyvars: type_var list): unit =
     let names: identifier list = List.map (fun (TypeVariable (name, _, _, _)) -> name) tyvars in
     let set: IdentifierSet.t = IdentifierSet.of_list names in

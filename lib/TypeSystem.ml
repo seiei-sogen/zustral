@@ -12,8 +12,9 @@
 open Type
 open TypeVarSet
 open Error
+open Error.Placed
 
-let type_universe = function
+let type_universe (place: place) = function
     Unit -> FreeUniverse
   | Boolean -> FreeUniverse
   | Integer _ -> FreeUniverse
@@ -29,9 +30,9 @@ let type_universe = function
   | Address _ -> FreeUniverse
   | Pointer _ -> FreeUniverse
   | FnPtr _ -> FreeUniverse
-  | MonoTy _ -> internal_err "You shouldn't be asking for the type_universe of a MonoTy"
+  | MonoTy _ -> internal_err place "You shouldn't be asking for the type_universe of a MonoTy"
 
-let is_numeric = function
+let is_numeric (place: place) = function
   | Unit -> false
   | Boolean -> false
   | Integer _ -> true
@@ -47,7 +48,7 @@ let is_numeric = function
   | Address _ -> false
   | Pointer _ -> false
   | FnPtr _ -> false
-  | MonoTy _ -> generic_error IsNumericOnMonoTy
+  | MonoTy _ -> generic_error place IsNumericOnMonoTy
 
 let rec type_variables = function
   | Unit ->
@@ -88,18 +89,18 @@ let rec type_variables = function
 
 (** Given a list of types, return whether any of them are in the Linear
     universe. *)
-and any_arg_is_linear (args: ty list) =
+and any_arg_is_linear (place: place) (args: ty list) =
   let is_linear = function
     | LinearUniverse -> true
     | FreeUniverse | TypeUniverse | RegionUniverse -> false
   in
-  List.exists is_linear (List.map type_universe args)
+  List.exists is_linear (List.map (type_universe place) args)
 
 (** Given a list of types, return whether any of them are in the Type
     universe. *)
-and any_arg_is_type (args: ty list) =
+and any_arg_is_type (place: place) (args: ty list) =
   let is_type = function
     | TypeUniverse -> true
     | FreeUniverse | LinearUniverse | RegionUniverse -> false
   in
-  List.exists is_type (List.map type_universe args)
+  List.exists is_type (List.map (type_universe place) args)

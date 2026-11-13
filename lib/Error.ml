@@ -132,6 +132,11 @@ module Placed = struct
     | Error error -> raise_error place error
 end
 
+let place_inside (outer: place) (span: span): place =
+  match outer with
+  | AtSpan _ when span = empty_span -> outer
+  | AtSpan _ | NoSpan -> AtSpan span
+
 (* What a file that is not converted yet passes to a converted function. The
    error leaves with no span, and the handler around the call fills it in, as
    it does for the file's own errors. *)

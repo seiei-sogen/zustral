@@ -283,7 +283,7 @@ and augment_assign (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
       let _ = match_type_with_value (env, module_name) pointed_ty rvalue in
       (* The pointed-to type must be in the free universe. *)
       let _ =
-        if (type_universe pointed_ty) = FreeUniverse then
+        if (type_universe place_from_adorn pointed_ty) = FreeUniverse then
           ()
         else
           linearity_error (AssignToNonFreePath pointed_ty)
@@ -474,7 +474,7 @@ and augment_discarding (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span
   adorn_error_with_span span
     (fun _ ->
       let e' = infer_expr module_name env rm typarams lexenv e in
-      let u = type_universe (get_type e') in
+      let u = type_universe place_from_adorn (get_type e') in
       if ((u = LinearUniverse) || (u = TypeUniverse)) then
         type_error (DiscardLinear u)
       else

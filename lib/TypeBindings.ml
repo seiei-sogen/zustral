@@ -93,14 +93,14 @@ let try_add_binding (TypeBindings m) (tp: type_parameter) (ty: ty): (type_bindin
      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
      | Pointer _ | FnPtr _ ->
-      if universe_compatible (typaram_universe tp) (type_universe ty) then
+      if universe_compatible (typaram_universe tp) (type_universe place_from_adorn ty) then
         Ok (TypeBindings (BindingsMap.add tp ty m))
       else
         Error (Type (TyparamBindingWrongUniverse {
             param = tp;
             ty;
             expected = typaram_universe tp;
-            actual = type_universe ty;
+            actual = type_universe place_from_adorn ty;
           }))
 
 (* Add multiple bindings to a bindings map. *)
@@ -133,10 +133,10 @@ let rec replace_variables bindings ty =
   | NamedType (n, a, u) ->
      let a' = List.map (replace_variables bindings) a in
      if u = TypeUniverse then
-       let u' = if any_arg_is_linear a' then
+       let u' = if any_arg_is_linear place_from_adorn a' then
                   LinearUniverse
                 else
-                  if any_arg_is_type a' then
+                  if any_arg_is_type place_from_adorn a' then
                     TypeUniverse
                   else
                     FreeUniverse

@@ -32,7 +32,7 @@ open Error.Placed
 let check_slots_are_free (place: place) (name: identifier) (slots: typed_slot list): unit =
   let check_slot_is_free (slot: typed_slot): unit =
     let (TypedSlot (_, ty)) = slot in
-    match type_universe ty with
+    match type_universe place ty with
     | FreeUniverse ->
        ()
     | RegionUniverse ->

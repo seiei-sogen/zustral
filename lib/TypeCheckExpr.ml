@@ -124,10 +124,10 @@ and check_bindings (typarams: typarams) (bindings: type_bindings): unit =
     in
     (match get_binding bindings tp with
      | Some ty ->
-        if universe_compatible u (type_universe ty) then
+        if universe_compatible u (type_universe place_from_adorn ty) then
           ()
         else
-          generic_error (BindingUniverseMismatch { expected = u; actual = type_universe ty })
+          generic_error (BindingUniverseMismatch { expected = u; actual = type_universe place_from_adorn ty })
      | None ->
         generic_error (NoBindingForParameter n))
   in
@@ -319,7 +319,7 @@ and augment_record_constructor (ctx: expr_ctx) (name: qident) (typarams: typaram
     (* Check: the set of bindings equals the set of type parameters *)
     check_bindings typarams (merge_bindings bindings bindings');
     (* Check the resulting type is in the correct universe *)
-    if universe_compatible universe (type_universe rt'') then
+    if universe_compatible universe (type_universe place_from_adorn rt'') then
       TRecordConstructor (rt'', List.map2 (fun a b -> (a, b)) slot_names arguments)
     else
       generic_error ConstructorUniverseMismatch
@@ -355,7 +355,7 @@ and augment_union_constructor (ctx: expr_ctx) (type_name: qident) (typarams: typ
     (* Check: the set of bindings equals the set of type parameters *)
     check_bindings typarams (merge_bindings bindings bindings');
     (* Check the resulting type is in the correct universe *)
-    if universe_compatible universe (type_universe rt'') then
+    if universe_compatible universe (type_universe place_from_adorn rt'') then
       TUnionConstructor (rt'', case_name, List.map2 (fun a b -> (a, b)) slot_names arguments)
     else
       generic_error ConstructorUniverseMismatch
@@ -645,12 +645,12 @@ and augment_deref (ctx: expr_ctx) (expr: aexpr): texpr =
   let ty = get_type expr' in
   (match ty with
    | ReadRef (ty', _) ->
-      if type_universe ty' = FreeUniverse then
+      if type_universe place_from_adorn ty' = FreeUniverse then
         TDeref expr'
       else
         linearity_error (DereferenceNonFree ty')
    | WriteRef (ty', _) ->
-      if type_universe ty' = FreeUniverse then
+      if type_universe place_from_adorn ty' = FreeUniverse then
         TDeref expr'
       else
         linearity_error (DereferenceNonFree ty')
@@ -905,7 +905,7 @@ and augment_arithmetic (ctx: expr_ctx) (op: arithmetic_operator) (lhs: aexpr) (r
   (* Are the types the same? *)
   if lhs_ty = rhs_ty then
     (* If the types are the same type, check it is a numeric type. *)
-    if (is_numeric lhs_ty) then
+    if (is_numeric place_from_adorn lhs_ty) then
       augment_arithmetic_call ()
     else
       type_error (ArithmeticNotNumeric lhs_ty)

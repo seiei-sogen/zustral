@@ -140,7 +140,7 @@ let rec effective_universe (place: place) name (typarams: typarams) declared_uni
    *)
   match declared_universe with
   | FreeUniverse ->
-     if all_arguments_are_free args then
+     if all_arguments_are_free place args then
        FreeUniverse
      else
        generic_error place (FreeTypeWithNonFreeArgument name)
@@ -150,17 +150,17 @@ let rec effective_universe (place: place) name (typarams: typarams) declared_uni
      internal_err place "effective_universe called with a region type"
   | TypeUniverse ->
      assert ((typarams_size typarams) > 0);
-     if any_arg_is_linear args then
+     if any_arg_is_linear place args then
        LinearUniverse
      else
-       if any_arg_is_type args then
+       if any_arg_is_type place args then
          TypeUniverse
        else
          FreeUniverse
 
 (** Given a list of types, check that all of them are either in the Free or
     Region universes. *)
-and all_arguments_are_free (args: ty list): bool =
+and all_arguments_are_free (place: place) (args: ty list): bool =
   let is_compatible_with_free = function
     | FreeUniverse ->
        true
@@ -169,7 +169,7 @@ and all_arguments_are_free (args: ty list): bool =
     | LinearUniverse | TypeUniverse ->
        false
   in
-  List.for_all is_compatible_with_free (List.map type_universe args)
+  List.for_all is_compatible_with_free (List.map (type_universe place) args)
 
 (* Type signature retrieval *)
 
@@ -280,7 +280,7 @@ and check_universes_match (place: place) (params: typarams) (args: ty list): uni
 
 and check_universes_match' (place: place) (tp: type_parameter) (arg: ty): unit =
   let param_u = typaram_universe tp
-  and arg_u = type_universe arg in
+  and arg_u = type_universe place arg in
   if universe_compatible param_u arg_u then
     ()
   else

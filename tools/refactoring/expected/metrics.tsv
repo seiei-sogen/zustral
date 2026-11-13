@@ -28,7 +28,7 @@ lib/Env.ml	584	10	0	0	0	9	1	7	0	0
 lib/EnvExtras.ml	26	1	0	0	0	0	0	1	0	0
 lib/EnvTypes.ml	305	0	0	0	0	0	1	0	0	0
 lib/EnvUtils.ml	55	0	0	0	0	0	0	0	0	0
-lib/Error.ml	294	28	2	0	0	0	1	2	0	0
+lib/Error.ml	299	28	2	0	0	0	1	2	0	0
 lib/ErrorText.ml	57	0	0	0	0	0	2	0	0	0
 lib/Escape.ml	53	1	0	0	0	1	1	0	0	0
 lib/ExportInstantiation.ml	66	10	0	0	0	0	0	0	0	0
@@ -45,7 +45,7 @@ lib/InstanceIdSet.ml	15	0	0	0	0	0	0	0	0	0
 lib/LexEnv.ml	53	1	0	0	0	0	0	0	0	0
 lib/Lexer.mll	175	4	0	0	0	0	0	0	0	0
 lib/LiftControlPass.ml	227	0	0	0	0	0	0	0	0	0
-lib/LinearityCheck.ml	715	21	11	0	0	2	0	9	0	0
+lib/LinearityCheck.ml	705	21	0	0	0	2	0	9	0	0
 lib/LinearityErrors.ml	159	0	0	0	0	0	0	0	0	0
 lib/LiteralTyping.ml	128	1	0	0	0	5	0	0	0	0
 lib/MonoType.ml	37	0	0	0	0	0	0	0	0	0
@@ -79,7 +79,7 @@ lib/TypeParser.ml	306	8	0	0	0	3	0	1	0	0
 lib/TypeReplace.ml	202	0	0	0	0	0	0	0	0	0
 lib/TypeSignature.ml	18	0	0	0	0	0	0	0	0	0
 lib/TypeStripping.ml	88	1	0	0	0	0	0	0	0	0
-lib/TypeSystem.ml	105	2	0	0	0	0	0	1	0	0
+lib/TypeSystem.ml	106	2	0	0	0	0	0	1	0	0
 lib/TypeVarSet.ml	15	0	0	0	0	0	0	0	0	0
 lib/TypingPass.ml	758	34	13	0	0	5	0	1	0	0
 lib/Util.ml	140	5	0	0	0	3	1	4	0	0
