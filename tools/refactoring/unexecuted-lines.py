@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Lists the source lines that no program of the corpus executes in full, and
-checks that each has a reason on record.
+"""Lists the source lines that no test executes in full (no test program and no
+unit test of test/), and checks that each has a reason on record.
 
     unexecuted-lines.py POINTS ROOT            print them: file, line, definition, which, points, text
     unexecuted-lines.py --check POINTS ROOT    compare with expected/unexecuted-lines.tsv
@@ -26,10 +26,11 @@ The record, expected/unexecuted-lines.tsv, has one row per listed line: file,
 the top-level definition the line is in (`name#2` for the second definition of
 a name in the file), which of the lines with that text in the definition it is
 (1 for the first), `points`, the text of the line without its indentation, and
-the reason why no program can execute the rest of it. The reason is written by
+the reason why no test can execute the rest of it. The reason is written by
 hand: it is a claim about the compiler, and nobody can generate it. A row is
 found by file, definition, which and text, not by line number, so it survives
-edits elsewhere in the file.
+edits elsewhere in the file. The record is empty: every line is executed. A
+row is the last resort, after a test and after removing the line.
 
 --check fails for a listed line without a row (write a test that executes it,
 or a row that says why none can), for a row whose line is not listed any more
@@ -70,18 +71,24 @@ def load_points(coverage_file: str) -> dict[str, list[tuple[int, int]]]:
     return points
 
 
-def unexecuted(coverage_file: str, root: pathlib.Path) -> tuple[list[Row], int]:
-    rows, with_point = [], 0
+def unexecuted(coverage_file: str, root: pathlib.Path) -> tuple[list[Row], int, int, int, int]:
+    """The listed lines, the number of lines with a point, the number of points,
+    how many of the points were never hit, and how many of those are left out
+    because they follow a call that never returns."""
+    rows, with_point, all_points, never_hit, left_out = [], 0, 0, 0, 0
     for name, points in sorted(load_points(coverage_file).items()):
         if GENERATED.search(name) or not name.startswith(("lib/", "cli/")):
             continue
         # One character per byte: the points are byte offsets.
         text = (root / name).read_text(encoding="latin-1")
         hits = collections.defaultdict(list)
+        all_points += len(points)
+        never_hit += sum(1 for _, count in points if count == 0)
         for offset, count in points:
             name_here = NAME_AT_END.search(text, max(0, offset - 80), offset + 1)
-            after_name = offset + 1 == len(text) or not (text[offset + 1].isalnum() or text[offset + 1] in "_'")
+            after_name = offset + 1 >= len(text) or not (text[offset + 1].isalnum() or text[offset + 1] in "_'")
             if count == 0 and name_here and after_name and name_here.group(0) in NEVER_RETURNS:
+                left_out += 1
                 continue
             hits[text.count("\n", 0, offset) + 1].append(count)
         with_point += len(hits)
@@ -100,12 +107,12 @@ def unexecuted(coverage_file: str, root: pathlib.Path) -> tuple[list[Row], int]:
         for number in sorted(n for n, counts in hits.items() if min(counts) == 0):
             some = "some" if max(hits[number]) > 0 else "none"
             rows.append((name, number, *place[number], some, source[number - 1].strip()))
-    return rows, with_point
+    return rows, with_point, all_points, never_hit, left_out
 
 
 def main() -> int:
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    rows, with_point = unexecuted(args[0], pathlib.Path(args[1]))
+    rows, with_point, all_points, never_hit, left_out = unexecuted(args[0], pathlib.Path(args[1]))
     if "--check" not in sys.argv:
         for name, number, definition, which, some, text in rows:
             print(f"{name}\t{number}\t{definition}\t{which}\t{some}\t{text}")
@@ -138,6 +145,7 @@ def main() -> int:
     print(f"lines with a point {with_point}, not executed in full {len(found)} "
           f"({100 * (with_point - len(found)) / with_point:.2f}% executed), with a reason {len(set(found) & set(recorded))}, "
           f"without {len(no_reason)}, stale rows {len(stale)}, rows whose points moved {len(moved)}")
+    print(f"points {all_points}, never hit {never_hit}, of which {left_out} follow a call that never returns and are left out")
     return 1 if no_reason or stale or moved else 0
 
 
