@@ -22,7 +22,7 @@ type t =
   | ExpectedValueFlag of string
   | UnknownFlagType of string
   | CCompilerError of { command: string; exit_code: int; stdout: string; stderr: string }
-  | WriteError of { path: string; reason: string option }
+  | WriteError of { path: string; reason: string }
 
 let render (error: t): err_text =
   match error with
@@ -126,17 +126,10 @@ let render (error: t): err_text =
        Text stderr
      ]
   | WriteError { path; reason } ->
-     (match reason with
-      | Some msg ->
-         [
-           Text "Failed to write to file ";
-           Code path;
-           Text ": ";
-           Break;
-           Text msg
-         ]
-      | None ->
-         [
-           Text "Failed to write to file ";
-           Code path
-         ])
+     [
+       Text "Failed to write to file ";
+       Code path;
+       Text ": ";
+       Break;
+       Text reason
+     ]

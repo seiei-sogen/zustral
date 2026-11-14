@@ -31,13 +31,8 @@ let write_string_to_file (path: string) (contents: string): unit =
     Printf.fprintf stream "%s" contents;
     close_out stream;
     ()
-  with error ->
+  with Sys_error reason ->
     close_out_noerr stream;
-    let reason =
-      match error with
-      | Sys_error msg -> Some msg
-      | _ -> None
-    in
     cli_error NoSpan (WriteError { path; reason })
 
 let get_exit_code = function

@@ -11,5 +11,6 @@
   BuiltInNamesTest
   CompilerTest
   TypeCheckExprTest
-  TypeMatchTest)
+  TypeMatchTest
+  UnexecutedWordingTest)
  (libraries austral_core austral_cli ounit2))

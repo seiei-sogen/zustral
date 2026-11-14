@@ -1,9 +1,9 @@
 file	lines	raise	catch	state	io	wildcard	strings	internal	adhoc	names	planstate
 cli/Cli.ml	23	0	1	0	1	0	0	0	0	0	0
-cli/CliEngine.ml	199	0	0	0	39	0	0	0	0	0	0
+cli/CliEngine.ml	194	0	0	0	39	0	0	0	0	0	0
 cli/CliParser.ml	173	11	0	0	0	4	4	0	0	0	0
-cli/CliUtil.ml	116	5	0	0	0	1	3	0	0	0	0
-cli/Os.ml	73	2	2	0	13	1	1	0	0	0	0
+cli/CliUtil.ml	118	5	0	0	0	1	3	0	0	0	0
+cli/Os.ml	68	2	2	0	13	0	1	0	0	0	0
 lib/AbstractionPass.ml	145	0	0	0	0	0	0	0	0	0	0
 lib/BodyExtractionPass.ml	26	0	0	0	0	0	0	0	0	0	0
 lib/BuiltIn.ml	36	0	0	0	0	0	0	0	0	0	0
@@ -11,7 +11,7 @@ lib/BuiltInNames.ml	184	0	0	0	0	0	0	0	0	0	0
 lib/CIdent.ml	41	0	0	0	0	0	1	0	0	0	0
 lib/CRenderer.ml	305	0	0	0	0	0	1	0	0	0	0
 lib/CRepr.ml	107	0	0	0	0	0	5	0	0	0	0
-lib/CliErrors.ml	142	0	1	0	0	0	10	0	0	0	0
+lib/CliErrors.ml	135	0	1	0	0	0	10	0	0	0	0
 lib/CodeGen.ml	685	0	0	0	0	1	0	0	0	0	0
 lib/CombiningPass.ml	378	17	0	0	0	2	0	0	0	0	0
 lib/Common.ml	64	0	0	0	0	0	3	0	0	0	0
@@ -63,7 +63,7 @@ lib/Qualifier.ml	30	0	0	0	0	0	0	0	0	0	0
 lib/Region.ml	16	0	0	0	0	0	0	0	0	0	0
 lib/RegionMap.ml	24	1	0	0	0	0	0	0	0	0	0
 lib/ReturnCheck.ml	100	2	0	0	0	0	0	0	0	0	0
-lib/SourceContext.ml	60	0	0	0	0	0	1	0	0	0	0
+lib/SourceContext.ml	53	0	0	0	0	0	1	0	0	0	0
 lib/Span.ml	62	0	0	0	0	0	1	0	0	0	0
 lib/Stages.ml	702	0	0	0	0	0	8	0	0	0	0
 lib/StringSet.ml	8	0	0	0	0	0	0	0	0	0	0

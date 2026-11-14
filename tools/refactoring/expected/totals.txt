@@ -1,10 +1,10 @@
 files 87
-lines 15969
+lines 15947
 raise 228
 catch 6
 state 1
 io 53
-wildcard 17
+wildcard 16
 strings 61
 internal 14
 adhoc 0

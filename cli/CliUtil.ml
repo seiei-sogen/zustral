@@ -57,17 +57,23 @@ let arg_has_name (arg: arg) (name: string): bool =
   | PositionalArg _ ->
      false
 
-let flags_with_name (arglist: arglist) (name: string): arg list =
+(* For each flag with the name, its value if it is a value flag. *)
+let flag_values_with_name (arglist: arglist) (name: string): string option list =
   let (ArgList l) = arglist in
-  List.filter (fun a -> arg_has_name a name) l
+  List.filter_map (fun a ->
+      match a with
+      | BoolFlag n when n = name -> Some None
+      | ValueFlag (n, value) when n = name -> Some (Some value)
+      | BoolFlag _ | ValueFlag _ | PositionalArg _ -> None)
+    l
 
 let args_without_name (arglist: arglist) (name: string): arglist =
   let (ArgList l) = arglist in
   ArgList (List.filter (fun a -> not (arg_has_name a name)) l)
 
-let pop_flag (arglist: arglist) (name: string): (arglist * arg) option =
+let pop_flag (arglist: arglist) (name: string): (arglist * string option) option =
   (* Find all flags with the name. *)
-  let flags: arg list = flags_with_name arglist name
+  let flags: string option list = flag_values_with_name arglist name
   (* Find all args without the name. *)
   and args_rest: arglist = args_without_name arglist name
   in
@@ -84,23 +90,19 @@ let pop_flag (arglist: arglist) (name: string): (arglist * arg) option =
 
 let pop_bool_flag (arglist: arglist) (name: string): arglist option =
   match pop_flag arglist name with
-  | Some (arglist, flag) ->
-     (match flag with
-      | BoolFlag _ ->
-         Some arglist
-      | ValueFlag _ | PositionalArg _ ->
-         cli_error NoSpan (ExpectedBoolFlag name))
+  | Some (arglist, None) ->
+     Some arglist
+  | Some (_, Some _) ->
+     cli_error NoSpan (ExpectedBoolFlag name)
   | None ->
      None
 
 let pop_value_flag (arglist: arglist) (name: string): (arglist * string) option =
   match pop_flag arglist name with
-  | Some (arglist, flag) ->
-     (match flag with
-      | ValueFlag (_, value) ->
-         Some (arglist, value)
-      | BoolFlag _ | PositionalArg _ ->
-         cli_error NoSpan (ExpectedValueFlag name))
+  | Some (arglist, Some value) ->
+     Some (arglist, value)
+  | Some (_, None) ->
+     cli_error NoSpan (ExpectedValueFlag name)
   | None ->
      None
 

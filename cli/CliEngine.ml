@@ -152,22 +152,17 @@ and exec_compile (modules: mod_source list) (target: target) (error_reporting_mo
      report_and_exit error_reporting_mode no_error
 
 and try_adding_source_ctx (error: austral_error) (source_map: source_map): austral_error =
-  let (AustralError { location; source_ctx; _ }) = error in
-  match source_ctx with
-  | Some _ ->
-     (* Already have a context. *)
-     error
-  | None ->
-     (match location_span location with
-      | Some span ->
-         let (Span { filename; _ }) = span in
-         (match (SourceMap.find_opt filename source_map) with
-          | Some code ->
-             add_source_ctx error (get_source_ctx code span)
-          | None ->
-             error)
+  let (AustralError { location; _ }) = error in
+  match location_span location with
+  | Some span ->
+     let (Span { filename; _ }) = span in
+     (match (SourceMap.find_opt filename source_map) with
+      | Some code ->
+         add_source_ctx error (get_source_ctx code span)
       | None ->
          error)
+  | None ->
+     error
 
 (** Compile the modules and write what the target asks for. The errors of the
     compiler, and those of writing the output and running `cc`, are in the

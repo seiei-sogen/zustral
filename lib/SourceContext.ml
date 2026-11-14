@@ -36,13 +36,6 @@ let get_source_ctx (code: string) (span: span): source_ctx =
     List.filteri (fun idx _ -> idx >= first_line_idx && idx <= last_line_idx) lines_with_pos in
   SourceContext collected_lines
 
-let pad (num: int) (width: int): string =
-  let s = string_of_int num in
-  if (String.length s) > width then
-    s
-  else
-    (String.make (width - (String.length s)) ' ') ^ s
-
 let source_ctx_to_plain_text (ctx: source_ctx): string =
   let SourceContext lines = ctx in
   (* What's the size in characters of the largest line number? *)
@@ -50,9 +43,9 @@ let source_ctx_to_plain_text (ctx: source_ctx): string =
   (* Pad the libe numbers. *)
   let rendered_lines: string list =
     List.map (fun (line_num, line) ->
-        (* Pad the line number with zeroes so the line number columns all have
+        (* Pad the line number with spaces so the line number columns all have
            the same width. *)
-        let padded_line_num = pad line_num largest_line_num in
+        let padded_line_num = Printf.sprintf "%*d" largest_line_num line_num in
         padded_line_num ^ " | " ^ line)
       lines
   in
