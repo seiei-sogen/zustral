@@ -232,7 +232,7 @@ $ gcc -fwrapv generated.c -lm
 
 ## コミュニティ
 
-- [Discord](https://discord.gg/8cEuAcD8pM)
+- [Discord](https://discord.gg/8cEuAcD8pM)（本家 Austral のコミュニティ）
 
 ## ロードマップ
 
