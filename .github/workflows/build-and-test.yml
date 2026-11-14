@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+  # To run the job on a branch by hand (Actions, "Run workflow").
+  workflow_dispatch:
 
 jobs:
   build-and-test-linux:
