@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "Cannot reborrow the variable " },
+    { "type": "code", "content": "w" },
+    { "type": "text", "content": " because it is already " },
+    { "type": "text", "content": "consumed" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/032-other-errors/025-linearity-reborrow-after-consume/Test.aum",
+    "startp": { "line": 10, "column": 8 },
+    "end": { "line": 10, "column": 31 }
+  },
+  "context": [
+    [ 8, "    function f(w: &![Int32, R]): Unit is" ],
+    [ 9, "        take(w);" ],
+    [ 10, "        let x: Int32 := !(&~w);" ],
+    [ 11, "        return nil;" ],
+    [ 12, "    end;" ]
+  ]
+}

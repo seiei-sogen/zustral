@@ -206,7 +206,7 @@ val get_type_monomorph : env -> mono_id -> (mod_id * TypeSignature.type_signatur
 
 (** Get the type of a variable, trying first the lexenv and then the env for
     constants. *)
-val get_variable : Error.place -> env -> lexenv -> qident -> (ty * var_source) option
+val get_variable : Error.place -> env -> lexenv -> qident -> (ty * variable_source) option
 
 (** Return all typeclass instances visible from a module. These are not only the
     instances that are defined in the module itself, but the instances imported

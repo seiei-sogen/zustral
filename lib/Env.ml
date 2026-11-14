@@ -342,10 +342,10 @@ let get_callable (place: place) (env: env) (importing_module_name: module_name) 
   | None ->
      None
 
-let get_variable (place: place) (env: env) (lexenv: lexenv) (name: qident): (ty * var_source) option =
+let get_variable (place: place) (env: env) (lexenv: lexenv) (name: qident): (ty * variable_source) option =
   match get_var lexenv (original_name name) with
   | Some (ty, src) ->
-     Some (ty, src)
+     Some (ty, VarLexical src)
   | None ->
      (match get_decl_by_name place env (qident_to_sident name) with
       | Some decl ->

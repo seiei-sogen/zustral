@@ -559,9 +559,9 @@ and augment_variable (ctx: expr_ctx) (name: qident) (from_context: context_bindi
          (match src with
           | VarConstant ->
              TConstVar (name, ty)
-          | VarParam ->
+          | VarLexical VarParam ->
              TParamVar ((original_name name), ty)
-          | VarLocal _ ->
+          | VarLexical (VarLocal _) ->
              TLocalVar ((original_name name), ty))
       | None ->
          generic_error (ctx_place ctx) (UnknownName { kind = VariableName; name = original_name name }))

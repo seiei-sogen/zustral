@@ -5,7 +5,7 @@ cli/CliParser.ml	173	11	0	0	0	4	4	0	0	0	0
 cli/CliUtil.ml	118	5	0	0	0	1	3	0	0	0	0
 cli/Os.ml	63	2	2	0	13	0	1	0	0	0	0
 cli/ProcessStatus.ml	13	0	0	0	1	0	0	0	0	0	0
-lib/AbstractionPass.ml	145	0	0	0	0	0	0	0	0	0	0
+lib/AbstractionPass.ml	144	0	0	0	0	0	0	0	0	0	0
 lib/BodyExtractionPass.ml	26	0	0	0	0	0	0	0	0	0	0
 lib/BuiltIn.ml	36	0	0	0	0	0	0	0	0	0	0
 lib/BuiltInNames.ml	184	0	0	0	0	0	0	0	0	0	0
@@ -44,10 +44,10 @@ lib/IdentifierSet.ml	24	0	0	0	0	0	0	0	0	0	0
 lib/ImportResolution.ml	100	4	0	0	0	0	0	0	0	0	0
 lib/Imports.ml	56	1	0	0	0	0	0	0	0	0	0
 lib/InstanceIdSet.ml	15	0	0	0	0	0	0	0	0	0	0
-lib/LexEnv.ml	63	2	0	0	0	0	0	1	0	0	0
+lib/LexEnv.ml	66	2	0	0	0	0	0	1	0	0	0
 lib/Lexer.mll	170	4	0	0	0	0	0	0	0	0	0
-lib/LiftControlPass.ml	227	0	0	0	0	0	0	0	0	0	0
-lib/LinearityCheck.ml	669	15	0	0	0	0	0	3	0	0	0
+lib/LiftControlPass.ml	225	0	0	0	0	0	0	0	0	0	0
+lib/LinearityCheck.ml	664	15	0	0	0	0	0	3	0	0	0
 lib/LinearityErrors.ml	159	0	0	0	0	0	0	0	0	0	0
 lib/LiteralTyping.ml	157	1	0	0	0	0	0	0	0	0	0
 lib/MonoType.ml	37	0	0	0	0	0	0	0	0	0	0
@@ -63,10 +63,10 @@ lib/Pipeline.mli	91	0	0	0	0	0	6	0	0	0	0
 lib/Qualifier.ml	30	0	0	0	0	0	0	0	0	0	0
 lib/Region.ml	16	0	0	0	0	0	0	0	0	0	0
 lib/RegionMap.ml	24	1	0	0	0	0	0	0	0	0	0
-lib/ReturnCheck.ml	100	2	0	0	0	0	0	0	0	0	0
+lib/ReturnCheck.ml	98	2	0	0	0	0	0	0	0	0	0
 lib/SourceContext.ml	53	0	0	0	0	0	1	0	0	0	0
 lib/Span.ml	62	0	0	0	0	0	1	0	0	0	0
-lib/Stages.ml	702	0	0	0	0	0	8	0	0	0	0
+lib/Stages.ml	704	0	0	0	0	0	8	0	0	0	0
 lib/StringSet.ml	8	0	0	0	0	0	0	0	0	0	0
 lib/Supply.ml	73	0	0	0	0	0	0	0	0	0	0
 lib/TastUtil.ml	103	1	0	0	0	0	0	0	0	0	0

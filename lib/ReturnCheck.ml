@@ -22,7 +22,7 @@ let rec ends_in_return (stmt: astmt): bool =
   match stmt with
   | ASkip _ ->
      false
-  | ALet (_, _, _, _, body) ->
+  | ALet (_, _, _, _, _, _, body) ->
      ends_in_return body
   | ADestructure (_, _, _, _, body) ->
      ends_in_return body
@@ -55,8 +55,6 @@ let rec ends_in_return (stmt: astmt): bool =
          false)
   | AReturn _ ->
      true
-  | AInitialAssign _ ->
-     false
 
 let check_method_ends_in_return (span: span) (CMethodDef (name, _, _, _, _, body)): unit =
   if ends_in_return body then

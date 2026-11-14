@@ -14,12 +14,18 @@ open Type
     environment, and the one it was given stays as it was. *)
 type lexenv
 
-(** Where an identifier comes from: a constant, a function parameter, or a local
-    variable. *)
+(** Where a variable of the lexical environment comes from: a function
+    parameter, or a local variable. *)
 type var_source =
-  | VarConstant
   | VarParam
   | VarLocal of mutability
+
+(** What a name used as a variable refers to: a constant, which the
+    environment holds and the lexical environment does not, or a variable of
+    the lexical environment. *)
+type variable_source =
+  | VarConstant
+  | VarLexical of var_source
 
 (** The empty lexenv. *)
 val empty_lexenv : lexenv

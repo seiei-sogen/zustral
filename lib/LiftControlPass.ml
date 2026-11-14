@@ -18,9 +18,9 @@ let rec lift (supply: Supply.t) (stmt: Ast.astmt): AstLC.astmt * Supply.t =
   match stmt with
   | Ast.ASkip span ->
      (AstLC.ASkip span, supply)
-  | Ast.ALet (span, m, id, qt, s) ->
+  | Ast.ALet (span, m, id, qt, name, value, s) ->
      let (s, supply) = lift supply s in
-     (AstLC.ALet (span, m, id, qt, s), supply)
+     (AstLC.ALet (span, m, id, qt, AstLC.ABlock (empty_span, AstLC.AInitialAssign (name, qt, transform value), s)), supply)
   | Ast.ADestructure (span, m, qbl, e, s) ->
      let (s, supply) = lift supply s in
      (AstLC.ADestructure (span, m, qbl, transform e, s), supply)
@@ -36,8 +36,6 @@ let rec lift (supply: Supply.t) (stmt: Ast.astmt): AstLC.astmt * Supply.t =
            ),
          AstLC.AAssign (span, lv, Temporary tmp)
        ), supply)
-  | Ast.AInitialAssign (name, typespec, expr) ->
-     (AstLC.AInitialAssign (name, typespec, transform expr), supply)
   | Ast.AIf (span, e, s1, s2) ->
      let (tmp, supply): identifier * Supply.t = fresh_ident supply in
      let e = transform e in

@@ -299,19 +299,19 @@ and augment_assign_var (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span
           (* A constant is not in the lexical environment: it is looked up as
              an expression looks a name up, so that assigning to one is said
              to be that, and not an unknown name. *)
-          let variable: (ty * var_source) option = get_variable place env lexenv name in
+          let variable: (ty * variable_source) option = get_variable place env lexenv name in
           let name: identifier = original_name name in
         match variable with
         | (Some (orig_ty, src)) -> begin
             let _ =
               match src with
-              | VarLocal Mutable ->
+              | VarLexical (VarLocal Mutable) ->
                  ()
-              | VarLocal Immutable ->
+              | VarLexical (VarLocal Immutable) ->
                  generic_error place (CantAssignToImmutableVar name)
               | VarConstant ->
                  generic_error place CannotAssignToConstant
-              | VarParam ->
+              | VarLexical VarParam ->
                  generic_error place CannotAssignToParameter
             in
             orig_ty
@@ -407,7 +407,7 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
                  ()
                else
                  type_error place (CannotBorrowParamMutably { name = original; ty = orig_ty })
-            | ((VarConstant | VarLocal Mutable), Write) | (_, Reborrow) ->
+            | (VarLocal Mutable, Write) | (_, Reborrow) ->
                (* And anything else is fine. *)
                ()
           in

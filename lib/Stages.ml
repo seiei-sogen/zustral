@@ -31,10 +31,12 @@ module Ast = struct
 
   type astmt =
     | ASkip of span
-    | ALet of span * mutability * identifier * qtypespec * astmt
+    | ALet of span * mutability * identifier * qtypespec * qident * aexpr * astmt
+    (** A let gives the variable its value before its body: the name, as the
+        variable is referred to, and the value. The later stages make that an
+        `AInitialAssign` at the start of the body. *)
     | ADestructure of span * mutability * qbinding list * aexpr * astmt
     | AAssign of span * lvalue * aexpr
-    | AInitialAssign of qident * qtypespec * aexpr
     | AIf of span * aexpr * astmt * astmt
     | AWhen of span * aexpr * astmt
     | ACase of span * aexpr * abstract_when list

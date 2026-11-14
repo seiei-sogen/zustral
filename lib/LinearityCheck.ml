@@ -31,6 +31,11 @@ let reported_state (state: var_state): LinearityErrors.reported_state =
   | BorrowedWrite -> ReportedBorrowedWrite
   | Consumed -> ReportedConsumed
 
+let is_consumed (state: var_state): bool =
+  match state with
+  | Consumed -> true
+  | Unconsumed | BorrowedRead | BorrowedWrite -> false
+
 let universe_linear_ish = function
   | LinearUniverse -> true
   | TypeUniverse -> true
@@ -113,12 +118,7 @@ let remove_entry (place: place) (tbl: state_tbl) (name: identifier): state_tbl =
        | ReadRef _ | Span _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
           false
      in
-     let consumed: bool =
-       match state with
-       | Consumed -> true
-       | Unconsumed | BorrowedRead | BorrowedWrite -> false
-     in
-     if consumed || is_write_ref then
+     if is_consumed state || is_write_ref then
        let (StateTable (rows, pending)) = tbl in
        let others = List.filter (fun (n, _, _, _) -> not (equal_identifier name n)) rows in
        StateTable (others, pending)
@@ -576,12 +576,7 @@ let rec check_stmt (place: place) (tbl: state_tbl) (depth: loop_depth) (stmt: ts
      (* Ensure that all variables are Consumed. *)
      let _ =
        List.map (fun (name, ty, _, state) ->
-           let consumed: bool =
-             match state with
-             | Consumed -> true
-             | Unconsumed | BorrowedRead | BorrowedWrite -> false
-           in
-           if consumed then
+           if is_consumed state then
              ()
            else
              (* Is the type of this variable a write reference? *)

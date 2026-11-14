@@ -287,31 +287,6 @@ let test_assign_temporary _ =
   (* A name not in the table is not a variable whose use is checked. *)
   assert_equal (Ok ()) (check_linearity [] (TAssignTmp (i "elsewhere", TNilConstant)))
 
-(* ReturnCheck *)
-
-(* An `AInitialAssign` at the end of a body: `let_reshape` puts one only
-   first in a block. *)
-let test_initial_assign_last _ =
-  let combined =
-    get (let* cb = ParserInterface.parse_module_body source "Test.aum" in
-         let (Cst.ConcreteModuleBody (mn, kind, doc, imports, decls)) = cb in
-         CombiningPass.body_as_combined (Lazy.force pervasive)
-           (Cst.ConcreteModuleBody (mn, kind, doc, BuiltIn.pervasive_imports :: imports, decls)))
-  in
-  let (Stages.Combined.CombinedModule m) = combined in
-  let body: Stages.Ast.astmt =
-    Stages.Ast.ABlock (sp, Stages.Ast.AReturn (sp, Stages.Ast.IntConstant one),
-                       Stages.Ast.AInitialAssign (q "y", int32_spec, Stages.Ast.IntConstant one))
-  in
-  let decls = List.map (function
-                  | Stages.Combined.CFunction (span, vis, name, typarams, params, rt, _, doc, pragmas) ->
-                     Stages.Combined.CFunction (span, vis, name, typarams, params, rt, body, doc, pragmas)
-                  | d -> d)
-                m.decls
-  in
-  assert_equal (Declaration (MissingReturn { name = i "f"; declaration = FunctionDeclaration }))
-    (the_error (ReturnCheck.check_ends_in_return (Stages.Combined.CombinedModule { m with decls })))
-
 (* TypeCheckExpr *)
 
 let ctx_with (vars: (string * ty) list): TypeCheckExpr.expr_ctx =
@@ -514,7 +489,6 @@ let suite =
       "an undeclared temporary" >:: test_undeclared_temporary;
       "a name declared twice" >:: test_name_declared_twice;
       "assigning a temporary" >:: test_assign_temporary;
-      "an initial assignment last" >:: test_initial_assign_last;
       "checked as inferred" >:: test_checked_as_inferred;
       "a pointer slot of a non-reference" >:: test_pointer_slot_of_non_reference;
       "a method of no instance" >:: test_method_of_no_instance;

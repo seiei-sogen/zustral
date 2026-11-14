@@ -32,7 +32,7 @@ let rec abs_stmt (place: place) im stmt =
             where we check all functions have a return value we need else-less
             whens. *)
          AWhen (span, c, t)
-      | ALet _ | ADestructure _ | AAssign _ | AInitialAssign _ | AIf _ | AWhen _
+      | ALet _ | ADestructure _ | AAssign _ | AIf _ | AWhen _
       | ACase _ | AWhile _ | AFor _ | ABorrow _ | ABlock _ | ADiscarding _ | AReturn _ ->
          AIf (span, c, t, f))
   | CCase (span, e, cases) ->
@@ -128,8 +128,7 @@ and let_reshape (place: place) (im: import_map) (l: concrete_block_elem list): a
   | first::rest ->
      (match first with
       | CLet (span, mut, n, t, v) ->
-         ALet (span, mut, n, qualify_typespec im t,
-               ABlock (empty_span, AInitialAssign (qualify_identifier im n, qualify_typespec im t, abs_expr place im v), let_reshape place im rest))
+         ALet (span, mut, n, qualify_typespec im t, qualify_identifier im n, abs_expr place im v, let_reshape place im rest)
       | CDestructure (span, mut, bs, e) ->
          let bs' = List.map (fun (ConcreteBinding {name; ty; rename; }) -> QBinding { name; ty = qualify_typespec im ty; rename; }) bs
          and e' = abs_expr place im e

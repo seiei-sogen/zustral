@@ -10,9 +10,12 @@ open Type
 open Error
 
 type var_source =
-  | VarConstant
   | VarParam
   | VarLocal of mutability
+
+type variable_source =
+  | VarConstant
+  | VarLexical of var_source
 
 type lexenv = LexEnv of (identifier * ty * var_source) list
 

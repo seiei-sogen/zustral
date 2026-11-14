@@ -1,0 +1,13 @@
+module body Test is
+    generic [R: Region]
+    function f(w: &![Int32, R]): Unit is
+        borrow ref: &[&![Int32, R], Rho] := &w do
+            let x: Int32 := !(&~w);
+        end borrow;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.
