@@ -8,7 +8,6 @@
 (* A string where escape characters have been processed into the characters they
    represent. *)
 type escaped_string
-[@@deriving show]
 
 (* Given a string with escape characters, process the escape characters and
    return a escaped string. *)

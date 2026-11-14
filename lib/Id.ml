@@ -38,7 +38,6 @@ type instance_id = decl_id
 type type_decl_id =
   | RecordTypeId of record_id
   | UnionTypeId of union_id
-[@@deriving (eq, show)]
 
 type ins_meth_id = InsMethId of int
 [@@deriving (eq, show)]

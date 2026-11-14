@@ -14,8 +14,6 @@ open TypeParameter
     types. These are created as part of the type checking process. *)
 type type_bindings
 
-val pp_type_bindings : Format.formatter -> type_bindings -> unit
-
 val bindings_list : type_bindings -> (type_parameter * ty) list
 
 val empty_bindings : type_bindings

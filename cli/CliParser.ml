@@ -12,23 +12,19 @@ open Error
 
 type entrypoint =
   | Entrypoint of module_name * identifier
-[@@deriving eq]
 
 type mod_source =
   | ModuleSource of { inter_path: string; body_path: string }
   | ModuleBodySource of { body_path: string }
-[@@deriving eq]
 
 type target =
   | TypeCheck
   | Executable of { bin_path: string; entrypoint: entrypoint; }
   | CStandalone of { output_path: string; entrypoint: entrypoint option; }
-[@@deriving eq]
 
 type error_reporting_mode =
   | ErrorReportPlain
   | ErrorReportJson
-[@@deriving eq]
 
 type cmd =
   | HelpCommand
@@ -39,7 +35,6 @@ type cmd =
       target: target;
       error_reporting_mode: error_reporting_mode;
     }
-[@@deriving eq]
 
 let check_leftovers (arglist: arglist): unit =
   if (arglist_size arglist) > 0 then

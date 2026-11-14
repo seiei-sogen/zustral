@@ -30,7 +30,7 @@ type signedness =
 [@@deriving (eq, show)]
 
 type type_var = TypeVariable of identifier * universe * qident * sident list
-[@@deriving (eq, show)]
+[@@deriving eq]
 
 type ty =
   | Unit
@@ -58,14 +58,12 @@ and ref_region =
   | NotARegion of ty
   (** Whatever else the program wrote in the region position: the type parser
       does not check it, so [&\[Int32, Int32\]] is accepted (#90). *)
-[@@deriving show]
 
 type typed_slot = TypedSlot of identifier * ty
 
 type typed_case = TypedCase of identifier * typed_slot list
 
 type value_parameter = ValueParameter of identifier * ty
-[@@deriving show]
 
 (** The region field as a type. *)
 val ty_of_ref_region : ref_region -> ty

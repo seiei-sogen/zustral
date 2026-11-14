@@ -70,7 +70,6 @@ type instance_id
 type type_decl_id =
   | RecordTypeId of record_id
   | UnionTypeId of union_id
-[@@deriving (eq, show)]
 
 (** {1 Monomorph IDs that say what kind of monomorph they stand for}
 

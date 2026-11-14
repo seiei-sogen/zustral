@@ -21,7 +21,6 @@ module Ast = struct
     | QWriteRef of qtypespec * qtypespec
     | QSpan of qtypespec * qtypespec
     | QSpanWrite of qtypespec * qtypespec
-  [@@deriving show]
 
   type qbinding =
     QBinding of {
@@ -473,12 +472,10 @@ module Tast = struct
         ty: ty;
         rename: identifier;
       }
-  [@@deriving show]
 
   type case_ref =
     | CasePlain
     | CaseRef
-  [@@deriving show]
 
   type tstmt =
     | TSkip of span
@@ -508,7 +505,6 @@ module Tast = struct
     | TReturn of span * texpr
     | TLetTmp of identifier * ty * texpr
     | TAssignTmp of identifier * texpr
-  [@@deriving show]
 
   and texpr =
     | TNilConstant
@@ -572,16 +568,13 @@ module Tast = struct
     | TDeref of texpr * ty
     (** The type is the one of the value the reference points to. *)
     | TSizeOf of ty
-  [@@deriving show]
 
   and typed_when =
     TypedWhen of identifier * typed_binding list * tstmt
-  [@@deriving show]
 
   and typed_arglist =
     | TPositionalArglist of texpr list
     | TNamedArglist of (identifier * texpr) list
-  [@@deriving show]
 
   type typed_method_decl =
     TypedMethodDecl of typeclass_method_id * identifier * value_parameter list * ty

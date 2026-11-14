@@ -11,21 +11,18 @@ type radix =
   | Binary
   | Octal
   | Character
-[@@deriving show]
 
 type int_literal = {
   written: string;
   radix: radix;
-  value: Z.t [@printer Z.pp_print];
+  value: Z.t;
 }
-[@@deriving show]
 
 type float_literal = {
   written: string;
   fraction_digits: int;
   has_exponent: bool;
 }
-[@@deriving show]
 
 (* This module depends on nothing else in the compiler: the syntax tree carries
    its records, and the modules that describe errors carry the syntax tree. *)

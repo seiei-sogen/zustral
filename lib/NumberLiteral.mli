@@ -15,7 +15,6 @@ type radix =
   | Binary
   | Octal
   | Character
-[@@deriving show]
 
 type int_literal = private {
   written: string;
@@ -24,7 +23,6 @@ type int_literal = private {
   radix: radix;
   value: Z.t;
 }
-[@@deriving show]
 
 type float_literal = private {
   written: string;
@@ -33,7 +31,6 @@ type float_literal = private {
   (** How many digits follow the period. *)
   has_exponent: bool;
 }
-[@@deriving show]
 
 (** {1 Reading a token}
 

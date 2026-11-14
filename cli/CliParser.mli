@@ -12,7 +12,6 @@ open CliUtil
 (** Represents a program entrypoint. *)
 type entrypoint =
   | Entrypoint of module_name * identifier
-[@@deriving eq]
 
 (** Represents the path to a module. *)
 type mod_source =
@@ -20,7 +19,6 @@ type mod_source =
   (** Path to a module's interface and body files. *)
   | ModuleBodySource of { body_path: string }
   (** Path to a module's body file, for public body-only modules. *)
-[@@deriving eq]
 
 (** The compiler's target output. *)
 type target =
@@ -30,7 +28,6 @@ type target =
   (** Compile to C, generate an executable. *)
   | CStandalone of { output_path: string; entrypoint: entrypoint option; }
   (** Compile to a standalone C file. *)
-[@@deriving eq]
 
 type error_reporting_mode =
   | ErrorReportPlain
@@ -54,7 +51,6 @@ type cmd =
       (** Whether to report errors in plain text or JSON. *)
     }
   (** Whole program compilation using the C backend. *)
-[@@deriving eq]
 
 (** Parse an argument list into a compiler command. *)
 val parse : arglist -> cmd

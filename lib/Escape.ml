@@ -8,7 +8,6 @@ open Util
 open Error
 
 type escaped_string = EscapedString of string
-[@@deriving show]
 
 let rec escape_string (place: place) s =
   EscapedString (string_implode (escape_list place (string_explode s)))

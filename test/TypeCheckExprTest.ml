@@ -106,8 +106,8 @@ let test_call_that_needs_the_expected_type _ =
    | TFuncall (_, name, [], rt, _) ->
       assert_bool "the callable is make" (equal_qident name (named "make"));
       assert_equal int32 rt
-   | other ->
-      assert_failure ("not a call of make: " ^ show_texpr other))
+   | _ ->
+      assert_failure "not a call of make")
 
 (* The expected type goes no further than the expression it is given to: the
    operand of a comparison is inferred. *)

@@ -38,7 +38,7 @@ let test_compile_default _ =
                           error_reporting_mode = ErrorReportPlain
                         }
   in
-  assert_bool "commands are equal" (equal_cmd cmd expected)
+  assert_bool "commands are equal" (cmd = expected)
 
 let suite =
   "CliParser" >::: [

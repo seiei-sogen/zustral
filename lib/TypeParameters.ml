@@ -10,7 +10,6 @@ open TypeParameter
 open Error
 
 type typarams = TyParams of type_parameter list
-[@@deriving show]
 
 let empty_typarams: typarams = TyParams []
 

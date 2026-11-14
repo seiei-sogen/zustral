@@ -169,5 +169,3 @@ let rec bindings_from_list (place: place) lst =
      merge_bindings place bindings (bindings_from_list place rest)
   | [] ->
    empty_bindings
-
-let pp_type_bindings _ _ = ()

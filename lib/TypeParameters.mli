@@ -12,7 +12,6 @@ open TypeParameter
 
 (** An ordered set of type parameters keyed by the parameter's name. *)
 type typarams
-[@@deriving show]
 
 (** An empty type parameter set. *)
 val empty_typarams : typarams
