@@ -18,7 +18,7 @@ lib/Common.ml	64	0	0	0	0	0	3	0	0	0	0
 lib/Compiler.ml	151	0	0	0	0	0	0	0	0	0	0
 lib/Cst.ml	163	0	0	0	0	0	2	0	0	0	0
 lib/CstUtil.ml	173	4	0	0	0	0	0	0	0	0	0
-lib/DeclarationErrors.ml	379	0	0	0	0	0	1	0	0	0	0
+lib/DeclarationErrors.ml	370	0	0	0	0	0	1	0	0	0	0
 lib/DesugarBorrows.ml	244	1	0	0	0	0	0	0	0	0	0
 lib/DesugarPaths.ml	146	0	0	0	0	0	0	0	0	0	0
 lib/DesugaringPass.ml	43	0	0	0	0	0	0	0	0	0	0
@@ -34,7 +34,7 @@ lib/Escape.ml	52	1	0	0	0	1	1	0	0	0	0
 lib/ExportInstantiation.ml	30	0	0	0	0	0	0	0	0	0	0
 lib/ExtractionPass.ml	575	14	0	0	0	0	0	0	0	0	0
 lib/ForeignType.ml	118	2	0	0	0	0	0	0	0	0	0
-lib/GenericErrors.ml	219	0	0	0	0	0	0	0	0	0	0
+lib/GenericErrors.ml	214	0	0	0	0	0	0	0	0	0	0
 lib/HtmlError.ml	304	0	0	0	0	0	0	0	0	0	0
 lib/Id.ml	142	0	0	0	0	0	0	0	0	0	0
 lib/Identifier.ml	62	0	0	0	0	0	2	0	0	0	0

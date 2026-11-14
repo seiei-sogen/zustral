@@ -26,7 +26,6 @@ let raised_wording (f: unit -> 'a): string =
 
 let test_generic_wording _ =
   let open GenericErrors in
-  eq "Invalid decl in this context" (wording (Generic InvalidDeclInContext));
   eq "Cannot add symbol to the import map twice." (wording (Generic SymbolImportedTwice));
   eq "Parameter not found." (wording (Generic ParameterNotFound));
   eq "Mismatched universes: expected Type.FreeUniverse and got Type.LinearUniverse"
@@ -38,10 +37,6 @@ let test_declaration_wording _ =
   let open DeclarationErrors in
   eq "The interface requires `f` to be a instance"
     (wording (Declaration (DeclarationKindMismatch { name = i "f"; expected = InstanceDeclaration })));
-  eq "The interface declaration for `f` and its implementation are different."
-    (wording (Declaration (FunctionMismatch { name = i "f"; difference = OtherDifference })));
-  eq "The typeclass `C` has multiple type parameters, which is unsupported."
-    (wording (Declaration (MultiargTypeclass (i "C"))));
   eq "Typeclass arguments cannot be regions." (wording (Declaration InstanceArgumentRegion))
 
 let test_parse_wording _ =

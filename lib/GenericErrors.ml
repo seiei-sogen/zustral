@@ -34,7 +34,6 @@ type t =
   | DuplicateTypeParameter of type_parameter option
   | TypeWrongArity of { typename: identifier; expected: int; actual: int option }
   | ForeignFunctionTypeNotAllowed
-  | InvalidDeclInContext
   | BorrowExpressionNotAllowed
   | BadWhitespaceEscape
   | SymbolImportedTwice
@@ -133,10 +132,6 @@ let render (error: t): err_text =
   | ForeignFunctionTypeNotAllowed ->
      [
        Text "Not allowed"
-     ]
-  | InvalidDeclInContext ->
-     [
-       Text "Invalid decl in this context"
      ]
   | BorrowExpressionNotAllowed ->
      [

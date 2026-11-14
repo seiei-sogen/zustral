@@ -40,7 +40,6 @@ type function_difference =
   | DifferentTypeParameters
   | DifferentValueParameters
   | DifferentReturnTypes
-  | OtherDifference
 
 (** The pragmas the compiler knows. *)
 type known_pragma =
@@ -57,7 +56,6 @@ type t =
   | MissingBodyDefinition of identifier
   | MissingInstanceBodyDefinition of { name: identifier; ty: written_type }
   | ModuleNameMismatch of { interface: module_name; body: module_name }
-  | MultiargTypeclass of identifier
   | DeclarationTypeMismatch of identifier
   | DeclarationUniverseMismatch of identifier
   | PragmaArgumentError of known_pragma
@@ -130,7 +128,6 @@ let render (error: t): err_text =
        | DifferentTypeParameters -> "have different type parameters."
        | DifferentValueParameters -> "have different parameters."
        | DifferentReturnTypes -> "have different return types"
-       | OtherDifference -> "are different."
      in
      [
        Text "The interface declaration for ";
@@ -157,12 +154,6 @@ let render (error: t): err_text =
        Code (mod_name_string interface);
        Text " and ";
        Code (mod_name_string body)
-     ]
-  | MultiargTypeclass name ->
-     [
-       Text "The typeclass ";
-       Code (ident_string name);
-       Text " has multiple type parameters, which is unsupported."
      ]
   | DeclarationTypeMismatch name ->
      [
