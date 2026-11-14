@@ -36,3 +36,8 @@ val arglist_to_positional : Error.place -> typed_arglist * identifier list -> te
 
 val get_type : Error.place -> texpr -> ty
 
+(** Whether an expression may be the value of a constant: literals, other
+    constants, functions, constructors and casts of those, and the accesses
+    that do not read memory. A call is not, and neither is anything that names
+    a parameter, a local variable or a temporary. *)
+val is_constant_expression : texpr -> bool

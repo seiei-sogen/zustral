@@ -479,6 +479,19 @@ let test_constant_values _ =
   | TConstant (_, _, _, _, value, _) -> assert_equal typed value
   | _ -> assert_failure "not a constant"
 
+(* The value of a constant is type-checked with an empty lexical environment,
+   so no program gives the predicate a parameter, a local variable, a temporary
+   or a call through a function pointer, and an implicit cast is made only
+   inside a call. The predicate answers for every expression all the same. *)
+let test_constant_expression_of_every_expression _ =
+  let int32: ty = Integer (Signed, Width32) and x: identifier = i "x" in
+  assert_equal false (TastUtil.is_constant_expression (TParamVar (x, int32)));
+  assert_equal false (TastUtil.is_constant_expression (TLocalVar (x, int32)));
+  assert_equal false (TastUtil.is_constant_expression (TTemporary (x, int32)));
+  assert_equal false (TastUtil.is_constant_expression (TFptrCall (x, [], int32)));
+  assert_equal true (TastUtil.is_constant_expression (TImplicitCast (TNilConstant, int32)));
+  assert_equal true (TastUtil.is_constant_expression (TCast (TNilConstant, int32)))
+
 let suite =
   "Unexecuted checker lines" >::: [
       "is_numeric_literal of every expression" >:: test_numeric_literal;
@@ -498,7 +511,8 @@ let suite =
       "a case on a non-union" >:: test_case_on_non_union;
       "a function with a stored body" >:: test_function_with_stored_body;
       "invalid pragmas" >:: test_invalid_pragmas;
-      "constant values" >:: test_constant_values
+      "constant values" >:: test_constant_values;
+      "is_constant_expression of every expression" >:: test_constant_expression_of_every_expression
     ]
 
 let _ = run_test_tt_main suite

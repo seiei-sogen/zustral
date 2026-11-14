@@ -621,71 +621,11 @@ and augment_when (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (typebindin
   else
     type_error place (CaseWrongSlots { binding_names; slot_names })
 
-let rec validate_constant_expression (expr: texpr): unit =
-  if is_constant expr then
+let validate_constant_expression (expr: texpr): unit =
+  if TastUtil.is_constant_expression expr then
     ()
   else
     type_error NoSpan ExpressionNotConstant
-
-and is_constant = function
-  | TNilConstant ->
-     true
-  | TBoolConstant _ ->
-     true
-  | TIntConstant _ ->
-     true
-  | TFloatConstant _ ->
-     true
-  | TStringConstant _ ->
-     true
-  | TConstVar _ ->
-     true
-  | TParamVar _ ->
-     false
-  | TLocalVar _ ->
-     false
-  | TTemporary _ ->
-     false
-  | TFunVar _ ->
-     true
-  | TFuncall _ ->
-     false
-  | TMethodCall _ ->
-     false
-  | TVarMethodCall _ ->
-     false
-  | TFptrCall _ ->
-     false
-  | TCast _ | TImplicitCast _ ->
-     true
-  | TComparison (_, lhs, rhs) ->
-     (is_constant lhs) && (is_constant rhs)
-  | TConjunction (lhs, rhs) ->
-     (is_constant lhs) && (is_constant rhs)
-  | TDisjunction (lhs, rhs) ->
-     (is_constant lhs) && (is_constant rhs)
-  | TNegation e ->
-     is_constant e
-  | TIfExpression (c, t, f) ->
-     (is_constant c) && (is_constant t) && (is_constant f)
-  | TRecordConstructor (_, values) ->
-     List.for_all (fun (_, v) -> is_constant v) values
-  | TUnionConstructor { args = values; _ } ->
-     List.for_all (fun (_, v) -> is_constant v) values
-  | TEmbed _ ->
-     true
-  | TDeref _ ->
-     false
-  | TSizeOf _ ->
-     true
-  | TSlotAccessor _ ->
-     true
-  | TPointerSlotAccessor _ ->
-     true
-  | TArrayIndex (_, idx, _, _, _) ->
-     is_constant idx
-  | TSpanIndex (_, idx, _, _, _) ->
-     is_constant idx
 
 let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (supply: Supply.t) (decl: linked_definition): typed_decl * Supply.t =
   let rm = empty_region_map in

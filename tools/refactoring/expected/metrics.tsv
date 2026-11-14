@@ -69,7 +69,7 @@ lib/Span.ml	62	0	0	0	0	0	1	0	0	0	0
 lib/Stages.ml	704	0	0	0	0	0	8	0	0	0	0
 lib/StringSet.ml	8	0	0	0	0	0	0	0	0	0	0
 lib/Supply.ml	73	0	0	0	0	0	0	0	0	0	0
-lib/TastUtil.ml	103	1	0	0	0	0	0	0	0	0	0
+lib/TastUtil.ml	164	1	0	0	0	0	0	0	0	0	0
 lib/Type.ml	281	0	0	0	0	1	0	0	0	0	0
 lib/TypeBindings.ml	171	2	0	0	0	0	0	0	0	0	0
 lib/TypeCheckExpr.ml	907	40	0	0	0	1	0	0	0	0	0
@@ -84,6 +84,6 @@ lib/TypeSignature.ml	22	0	0	0	0	0	0	0	0	0	0
 lib/TypeStripping.ml	81	1	0	0	0	0	0	0	0	0	0
 lib/TypeSystem.ml	96	0	0	0	0	0	0	0	0	0	0
 lib/TypeVarSet.ml	15	0	0	0	0	0	0	0	0	0	0
-lib/TypingPass.ml	764	29	0	0	0	0	0	0	0	0	0
+lib/TypingPass.ml	704	29	0	0	0	0	0	0	0	0	0
 lib/Util.ml	132	1	0	0	0	3	1	0	0	0	0
 lib/Version.ml	18	0	0	0	0	0	0	0	0	0	0

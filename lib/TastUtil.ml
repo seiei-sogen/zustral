@@ -101,3 +101,64 @@ let rec get_type (place: place) = function
   | TPointerSlotAccessor (_, _, ty) -> ty
   | TArrayIndex (_, _, elem_ty, region, mode) -> reference_type elem_ty region mode
   | TSpanIndex (_, _, elem_ty, region, mode) -> reference_type elem_ty region mode
+
+let rec is_constant_expression (expr: texpr): bool =
+  match expr with
+  | TNilConstant ->
+     true
+  | TBoolConstant _ ->
+     true
+  | TIntConstant _ ->
+     true
+  | TFloatConstant _ ->
+     true
+  | TStringConstant _ ->
+     true
+  | TConstVar _ ->
+     true
+  | TParamVar _ ->
+     false
+  | TLocalVar _ ->
+     false
+  | TTemporary _ ->
+     false
+  | TFunVar _ ->
+     true
+  | TFuncall _ ->
+     false
+  | TMethodCall _ ->
+     false
+  | TVarMethodCall _ ->
+     false
+  | TFptrCall _ ->
+     false
+  | TCast _ | TImplicitCast _ ->
+     true
+  | TComparison (_, lhs, rhs) ->
+     (is_constant_expression lhs) && (is_constant_expression rhs)
+  | TConjunction (lhs, rhs) ->
+     (is_constant_expression lhs) && (is_constant_expression rhs)
+  | TDisjunction (lhs, rhs) ->
+     (is_constant_expression lhs) && (is_constant_expression rhs)
+  | TNegation e ->
+     is_constant_expression e
+  | TIfExpression (c, t, f) ->
+     (is_constant_expression c) && (is_constant_expression t) && (is_constant_expression f)
+  | TRecordConstructor (_, values) ->
+     List.for_all (fun (_, v) -> is_constant_expression v) values
+  | TUnionConstructor { args = values; _ } ->
+     List.for_all (fun (_, v) -> is_constant_expression v) values
+  | TEmbed _ ->
+     true
+  | TDeref _ ->
+     false
+  | TSizeOf _ ->
+     true
+  | TSlotAccessor _ ->
+     true
+  | TPointerSlotAccessor _ ->
+     true
+  | TArrayIndex (_, idx, _, _, _) ->
+     is_constant_expression idx
+  | TSpanIndex (_, idx, _, _, _) ->
+     is_constant_expression idx
