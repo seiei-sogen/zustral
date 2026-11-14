@@ -65,14 +65,15 @@ jobs:
 
       # Builds the compiler a second time, instrumented, and runs every program in the
       # repository with it. A line of lib/*Errors.ml that none of them executes is wording
-      # without a test; it fails the job unless it is on the record of unreachable lines.
-      - name: every wording of an error message is executed by a test
+      # that no program shows; it fails the job unless it is on the record of the lines
+      # that no program can reach (the unit tests execute those: the next step).
+      - name: every wording of an error message is shown by a program, or is on the record
         run: nix-shell --command 'tools/refactoring/coverage.sh --messages'
 
-      # The same instrumented run, for every line of the compiler. A line that no program
-      # executes fails the job unless the record says why none can
-      # (tools/refactoring/expected/unexecuted-lines.tsv).
-      - name: every line is executed by a test, or has a reason on the record
+      # The instrumented compiler again, with the programs and the unit tests of test/,
+      # for every line of the compiler. A line that no test executes in full fails the job.
+      # The record of exceptions (tools/refactoring/expected/unexecuted-lines.tsv) is empty.
+      - name: every line is executed by a test
         run: nix-shell --command 'tools/refactoring/coverage.sh --unexecuted --check'
 
       # Compiles every program in the repository with the base branch's compiler and with

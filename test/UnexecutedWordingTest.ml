@@ -31,8 +31,6 @@ let test_generic_wording _ =
 
 let test_declaration_wording _ =
   let open DeclarationErrors in
-  eq "The interface requires `f` to be a instance"
-    (wording (Declaration (DeclarationKindMismatch { name = i "f"; expected = InstanceDeclaration })));
   eq "Typeclass arguments cannot be regions." (wording (Declaration InstanceArgumentRegion))
 
 let test_parse_wording _ =
@@ -59,6 +57,10 @@ let test_write_to_full_device _ =
   eq "Command Line Arguments Error: Failed to write to file `/dev/full`: \n\nNo space left on device"
     (raised_wording (fun () -> Austral_cli.Os.write_string_to_file "/dev/full" "x"))
 
+(* This fixes what the code does today, not what it should do: the code of a
+   command that a signal killed is OCaml's number of the signal (-7 for
+   SIGKILL), neither the number of the system (9) nor what a shell reports
+   (137). Issue #144 has it. *)
 let test_command_killed_by_signal _ =
   let (Austral_cli.Os.CommandOutput { code; _ }) = Austral_cli.Os.run_command "kill -9 $$" in
   eq Sys.sigkill code

@@ -208,7 +208,11 @@ let test_annotation_types_literal _ =
     (every_texpr () @ int_literals @ float_literals)
 
 (* The signed widths of sizes and indices: the type parser makes both
-   unsigned, the bounds are there all the same. *)
+   unsigned, the bounds are there all the same. The bounds of a byte size fix
+   what the code does today, not what it should do: they are those of 8 bits,
+   and a byte size is a `size_t`. The unsigned bound (0 to 255) is the same
+   mistake, and a program reaches it (issue #144). When that is fixed, these
+   expectations change with it. *)
 let test_signed_size_widths _ =
   let fits ty n = LiteralTyping.literal_matches NoSpan ty (TIntConstant (NumberLiteral.of_decimal n)) in
   let does_not_fit ty n =

@@ -1,10 +1,32 @@
 #!/usr/bin/env bash
-# Measures how much of the compiler the tests execute: the corpus of
-# equivalence.py (every program in the repository) and the unit tests of test/.
-# A line no test runs is a line a refactoring can break unnoticed.
-#   coverage.sh              compare the per-file summary with expected/coverage.txt
+# Measures how much of the compiler the tests execute. There are two kinds of
+# test: the programs (the corpus of equivalence.py: every program in the
+# repository) and the unit tests of test/, which call the compiler's functions
+# directly, also with values that no program makes them see. A line no test
+# runs is a line a refactoring can break unnoticed.
+#
+# Measured over all tests (programs and unit tests):
+#   coverage.sh              compare the per-file summary with expected/coverage.txt.
+#                            The record also has the total of the programs alone
 #   coverage.sh --record     rewrite expected/coverage.txt
-#   coverage.sh --lines F    print the line numbers of lib/F that no program executes
+#   coverage.sh --lines F    print the line numbers of lib/F that no test executes
+#   coverage.sh --unexecuted list every line that no test executes in full: file,
+#                            line, definition, which, points (some or none), text
+#   coverage.sh --unexecuted --check
+#                            fail if one of them has no reason on the record,
+#                            expected/unexecuted-lines.tsv, or if a row of the
+#                            record is executed or gone. The record is empty
+#   coverage.sh --unexecuted --only DIR
+#                            the list when only the programs under DIR run (to see
+#                            which lines a new test executes); --only unit runs only
+#                            the unit tests of test/
+#   coverage.sh --kinds      count the lines that no test executes, by kind (an
+#                            arm that raises an internal error, a line of or-pattern
+#                            alternatives, ...); --kinds --files adds the count of
+#                            each file. The kinds are read off the text: rough
+#
+# Measured over the programs alone, because the question is what a program can
+# make the compiler say (a unit test prints an error it built by hand):
 #   coverage.sh --errors     list the places that raise an error to the user and that no
 #                            program executes
 #   coverage.sh --errors --only DIR
@@ -12,23 +34,11 @@
 #                            (a directory of test-programs/suites)
 #   coverage.sh --messages   list the lines of error wording (lib/*Errors.ml) that no
 #                            program executes, and fail if one is not on the record,
-#                            expected/unexecuted-message-lines.txt
+#                            expected/unexecuted-message-lines.txt. The unit tests
+#                            execute the lines of that record: --unexecuted --check
+#                            fails otherwise
 #   coverage.sh --messages --record
 #                            rewrite that record
-#   coverage.sh --unexecuted list every line that no program executes in full: file,
-#                            line, definition, which, points (some or none), text
-#   coverage.sh --unexecuted --check
-#                            fail if one of them has no reason on the record,
-#                            expected/unexecuted-lines.tsv, or if a row of the
-#                            record is executed or gone
-#   coverage.sh --unexecuted --only DIR
-#                            the list when only the programs under DIR run (to see
-#                            which lines a new test executes); --only unit runs only
-#                            the unit tests of test/
-#   coverage.sh --kinds      count the lines that no program executes, by kind (an
-#                            arm that raises an internal error, a line of or-pattern
-#                            alternatives, ...); --kinds --files adds the count of
-#                            each file. The kinds are read off the text: rough
 # Environment:
 #   ZUSTRAL_NIX_FLAGS  extra flags for `nix develop`
 #
@@ -71,10 +81,32 @@ if [[ $ONLY != unit ]]; then
     || { echo "corpus run failed: $(tail -n 5 "$T/snapshot.log")" >&2; exit 2; }
 fi
 
-# The unit tests (test/) call the compiler's functions directly, also with
-# values that no program makes them see. They count as tests: they run in a
-# measurement of everything, and alone with --only unit.
-if [[ -z $ONLY || $ONLY == unit ]]; then
+# The report of bisect_ppx as lines "file<TAB>percent<TAB>hit/all", with totals.
+# Its own total counts the generated parser and built-in modules too; the total
+# over the hand-written files is the number the plan tracks.
+summarize() {
+  awk -F'\t' '
+    $1 == "Project" { printf "total-with-generated\t%s\t%s\n", $2, $3; next }
+    { split($3, a, "/"); hit += a[1]; all += a[2]; print }
+    END { printf "total-hand-written\t%.2f\t%d/%d\n", 100 * hit / all, hit, all }'
+}
+summary() {
+  in_shell "bisect-ppx-report summary --per-file --coverage-path '$T/cov'" > "$T/report.txt" 2> "$T/report.err" \
+    || { echo "report failed: $(tail -n 5 "$T/report.err")" >&2; exit 2; }
+  # Lines look like " 87.50 %   14/16   lib/Foo.ml"; the generated modules are left out.
+  grep -E '%' "$T/report.txt" | grep -v -E 'lib/(BuiltInModules|Parser|Lexer)\.ml$' \
+    | awk '{ pct = $1; frac = $3; file = $4; if (file == "") file = "total"; printf "%s\t%s\t%s\n", file, pct, frac }' \
+    | sort | summarize > "$1"
+}
+
+# What the programs alone execute, before the unit tests add to it.
+[[ $MODE == compare || $MODE == record ]] && summary "$T/programs.txt"
+
+# The unit tests count as tests: they run in a measurement of everything, and
+# alone with --only unit. --errors and --messages measure the programs alone.
+ALL_TESTS=yes
+[[ -n $ONLY || $MODE == errors || $MODE == messages ]] && ALL_TESTS=
+if [[ -n $ALL_TESTS || $ONLY == unit ]]; then
   in_shell "BISECT_FILE='$T/cov/bisect' dune test --root . --build-dir _build_coverage --instrument-with bisect_ppx --force 2>&1" > "$T/unit.log" 2>&1 \
     || { echo "unit tests failed: $(tail -n 8 "$T/unit.log")" >&2; exit 2; }
 fi
@@ -133,22 +165,14 @@ PY
   exit $?
 fi
 
-in_shell "bisect-ppx-report summary --per-file --coverage-path '$T/cov'" > "$T/report.txt" 2> "$T/report.err" \
-  || { echo "report failed: $(tail -n 5 "$T/report.err")" >&2; exit 2; }
-
-# The report's own total counts the generated parser and built-in modules too.
-# Add a total over the hand-written files, which is the number the plan tracks.
-summarize() {
-  awk -F'\t' '
-    $1 == "Project" { printf "total-with-generated\t%s\t%s\n", $2, $3; next }
-    { split($3, a, "/"); hit += a[1]; all += a[2]; print }
-    END { printf "total-hand-written\t%.2f\t%d/%d\n", 100 * hit / all, hit, all }'
-}
-
-# Lines look like " 87.50 %   14/16   lib/Foo.ml"; the generated modules are left out.
-grep -E '%' "$T/report.txt" | grep -v -E 'lib/(BuiltInModules|Parser|Lexer)\.ml$' \
-  | awk '{ pct = $1; frac = $3; file = $4; if (file == "") file = "total"; printf "%s\t%s\t%s\n", file, pct, frac }' \
-  | sort | summarize > "$T/coverage.txt"
+# Per file and in total over all tests, and the total of the programs alone on
+# the line before the last.
+summary "$T/all.txt"
+{
+  sed '$d' "$T/all.txt"
+  tail -n 1 "$T/programs.txt" | sed 's/^total-hand-written/programs-alone-hand-written/'
+  tail -n 1 "$T/all.txt"
+} > "$T/coverage.txt"
 
 if [[ $MODE == record ]]; then
   cp "$T/coverage.txt" "$HERE/expected/coverage.txt"; echo "recorded coverage.txt: $(tail -n 1 "$T/coverage.txt")"

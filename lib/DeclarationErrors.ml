@@ -23,7 +23,6 @@ type declaration_kind =
   | UnionDeclaration
   | FunctionDeclaration
   | MethodDeclaration
-  | InstanceDeclaration
 
 let declaration_kind_word (kind: declaration_kind): string =
   match kind with
@@ -33,7 +32,6 @@ let declaration_kind_word (kind: declaration_kind): string =
   | UnionDeclaration -> "union"
   | FunctionDeclaration -> "function"
   | MethodDeclaration -> "method"
-  | InstanceDeclaration -> "instance"
 
 (** How the declaration of a function in an interface differs from its definition in the body. *)
 type function_difference =

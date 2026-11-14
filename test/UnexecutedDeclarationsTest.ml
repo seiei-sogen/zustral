@@ -358,7 +358,9 @@ let test_overlap_of_every_pair_of_kinds _ =
             | RegionTy _ | TyVar _ ->
                Some (Generic InstanceOverlapTypeNotAllowed)
             | Pointer _ ->
-               (* Issue #122. *)
+               (* This fixes what the code does today, which issue #122 reports
+                  as a bug: a pointer overlaps an instance for any type. When
+                  #122 is fixed, a pointer belongs to the last arm. *)
                Some (Generic OverlappingInstances)
             | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
             | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | FnPtr _ ->
@@ -446,8 +448,11 @@ let test_a_monomorph_with_bindings_for_other_parameters _ =
   assert_equal (Some (Generic ParameterNotFound)) (instantiate env)
 
 (* An instance whose type parameter its argument does not name: extraction
-   rejects it (InstanceLeftoverTypeParameters). A call of its method on a type
-   variable leaves the parameter out of the method's type arguments. *)
+   rejects it (InstanceLeftoverTypeParameters), so no program builds this
+   environment. A call of its method on `Unit`, the instance's argument, leaves
+   the parameter out of the method's type arguments. The test executes the
+   check that counts them and fixes the error it raises; it says nothing about
+   a program. *)
 let test_a_method_call_leaves_out_an_unbound_parameter _ =
   let (env, mod_id) = add_example Env.empty_env in
   let (env, typeclass_id, method_id) = register_typeclass_with_method env mod_id in
@@ -564,7 +569,10 @@ let kind (decl: CRepr.c_decl): string =
   | CFunctionDefinition _ -> "definition"
 
 (* A record monomorph before the declarations a module's own definitions
-   generate: the sort compares its struct with each of them first. *)
+   generate: the sort compares its struct with each of them first. The
+   pipeline never hands the declarations over in this order (the monomorphs of
+   a module come after its own declarations); the test executes the
+   comparisons of the sort that this order needs, and fixes their result. *)
 let test_a_struct_before_other_declarations _ =
   let (env, mod_id) = add_example Env.empty_env in
   let (env, function_id) = register_function env mod_id "f" [] Unit BodyNotAttached in

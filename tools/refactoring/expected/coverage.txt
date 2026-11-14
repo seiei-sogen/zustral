@@ -1,4 +1,4 @@
-total-with-generated	83.54	11199/13406
+total-with-generated	83.54	11198/13405
 cli/Cli.ml	85.71	6/7
 cli/CliEngine.ml	100.00	92/92
 cli/CliParser.ml	100.00	71/71
@@ -17,7 +17,7 @@ lib/CombiningPass.ml	100.00	192/192
 lib/Compiler.ml	100.00	84/84
 lib/Cst.ml	100.00	19/19
 lib/CstUtil.ml	100.00	137/137
-lib/DeclarationErrors.ml	100.00	92/92
+lib/DeclarationErrors.ml	100.00	91/91
 lib/DesugarBorrows.ml	100.00	135/135
 lib/DesugarPaths.ml	100.00	112/112
 lib/DesugaringPass.ml	100.00	25/25
@@ -79,4 +79,5 @@ lib/TypeVarSet.ml	100.00	0/0
 lib/TypingPass.ml	97.90	512/523
 lib/Util.ml	100.00	82/82
 lib/Version.ml	100.00	3/3
-total-hand-written	99.57	8300/8336
+programs-alone-hand-written	96.09	8009/8335
+total-hand-written	99.57	8299/8335
