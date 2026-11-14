@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "Bool" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/056-borrow-name-free-after-borrow/Test.aum",
+    "startp": { "line": 11, "column": 8 },
+    "end": { "line": 11, "column": 29 }
+  },
+  "context": [
+    [ 9, "        end borrow;" ],
+    [ 10, "        let a: Int32 := 15;" ],
+    [ 11, "        let b: Int32 := true;" ],
+    [ 12, "        return ExitSuccess();" ],
+    [ 13, "    end;" ]
+  ]
+}

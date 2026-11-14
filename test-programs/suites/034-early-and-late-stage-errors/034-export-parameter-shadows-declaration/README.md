@@ -1,0 +1,1 @@
+Pins which error an exported function `g(g: Int32): Unit` reports: the return type that exports do not allow (lib/ForeignType.ml, `check_signature`, found while declarations are extracted) wins over the parameter that has the name of a declaration (found later, by the type checker). Before R22 the parameter's error was reported.

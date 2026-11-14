@@ -1,0 +1,1 @@
+Covers the `DoubleFloat` alternative of the non-reference arm of `augment_deref` (lib/TypeCheckExpr.ml): dereferencing a value of type `Float64` is an error. Target line: lib/TypeCheckExpr.ml line 653.

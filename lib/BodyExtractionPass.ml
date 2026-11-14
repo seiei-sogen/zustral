@@ -4,12 +4,13 @@
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
+
 open Env
 open Stages.Tast
 
-let rec extract_bodies (env: env) (m: typed_module): env =
-  let (TypedModule (_, decls)) = m in
-  Util.iter_with_context extract_decl env decls
+let rec extract_bodies (env: env) (m: LinearityCheck.checked_module): env Outcome.t =
+  let (TypedModule (_, decls)) = LinearityCheck.as_typed_module m in
+  Outcome.catch (fun () -> Util.iter_with_context extract_decl env decls)
 
 and extract_decl (env: env) (decl: typed_decl): env =
   match decl with
@@ -17,7 +18,7 @@ and extract_decl (env: env) (decl: typed_decl): env =
       store_function_body env decl_id body
   | TInstance (_, _, _, _, _, methods, _) ->
      Util.iter_with_context extract_method env methods
-  | _ ->
+  | TConstant _ | TRecord _ | TUnion _ | TForeignFunction _ | TTypeClass _ ->
      env
 
 and extract_method (env: env) (meth: typed_method_def): env =

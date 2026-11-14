@@ -1,0 +1,10 @@
+module body Test is
+    pragma Foreign_Export(External_Name => "f");
+    function f(): Span[Nat8, Static] is
+        return @embed(Span[Nat8, Static], "0");
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

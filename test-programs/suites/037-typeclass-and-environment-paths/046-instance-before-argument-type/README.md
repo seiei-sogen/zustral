@@ -1,0 +1,1 @@
+An instance declared before the type it is for, in the same module, is reported as a declaration error at the instance (lib/TypeClasses.ml, is_type_local). The orphan rule looks the type up in the environment before the type is registered.

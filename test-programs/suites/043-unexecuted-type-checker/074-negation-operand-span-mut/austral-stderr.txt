@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The operand of a " },
+    { "type": "text", "content": "negation" },
+    {
+      "type": "text",
+      "content": " operator must be a boolean expression, but it has the type "
+    },
+    { "type": "type", "content": "Span![Int32, R]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/074-negation-operand-span-mut/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 29 }
+  },
+  "context": [
+    [ 2, "    generic [R: Region]" ],
+    [ 3, "    function probe(x: Span![Int32, R]): Unit is" ],
+    [ 4, "        let y: Bool := not x;" ],
+    [ 5, "        return nil;" ],
+    [ 6, "    end;" ]
+  ]
+}

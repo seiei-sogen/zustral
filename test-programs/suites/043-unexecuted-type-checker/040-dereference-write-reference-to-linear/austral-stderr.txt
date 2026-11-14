@@ -1,0 +1,20 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "Cannot dereference non-free type " },
+    { "type": "type", "content": "Lin" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/040-dereference-write-reference-to-linear/Test.aum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 7, "column": 11 }
+  },
+  "context": [
+    [ 5, "    generic [R: Region]" ],
+    [ 6, "    function f(r: &![Lin, R]): Unit is" ],
+    [ 7, "        !r;" ],
+    [ 8, "        return nil;" ],
+    [ 9, "    end;" ]
+  ]
+}

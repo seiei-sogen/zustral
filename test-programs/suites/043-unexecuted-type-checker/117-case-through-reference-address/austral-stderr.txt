@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The case expression has type " },
+    { "type": "type", "content": "Address[Int32]" },
+    { "type": "text", "content": " which is not a union type." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/117-case-through-reference-address/Test.aum",
+    "startp": { "line": 8, "column": 8 },
+    "end": { "line": 11, "column": 17 }
+  },
+  "context": [
+    [ 6, "    generic [R: Region]" ],
+    [ 7, "    function probe(x: &[Address[Int32], R]): Unit is" ],
+    [ 8, "        case x of" ],
+    [ 9, "            when A do" ],
+    [ 10, "                skip;" ],
+    [ 11, "        end case;" ],
+    [ 12, "        return nil;" ],
+    [ 13, "    end;" ]
+  ]
+}

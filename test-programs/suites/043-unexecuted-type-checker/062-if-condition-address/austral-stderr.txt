@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The condition in " },
+    { "type": "code", "content": "if" },
+    { "type": "text", "content": "-" },
+    { "type": "text", "content": "statement" },
+    { "type": "text", "content": "s should be a boolean type, but is " },
+    { "type": "type", "content": "Address[Int32]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/062-if-condition-address/Test.aum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 9, "column": 15 }
+  },
+  "context": [
+    [ 5, "module body Test is" ],
+    [ 6, "    function probe(x: Address[Int32]): Unit is" ],
+    [ 7, "        if x then" ],
+    [ 8, "            skip;" ],
+    [ 9, "        end if;" ],
+    [ 10, "        return nil;" ],
+    [ 11, "    end;" ]
+  ]
+}

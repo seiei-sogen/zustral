@@ -33,12 +33,17 @@ and concrete_decl =
   | ConcreteInstanceDecl of span * identifier * concrete_type_param list * typespec * docstring
 
 and concrete_def =
+  | ConcreteNamedDef of concrete_named_def
+  | ConcreteInstanceDef of concrete_instance
+
+(** A definition that has a name. An instance has none: it is found by its
+    typeclass's name, its type parameters and its argument. *)
+and concrete_named_def =
   | ConcreteConstantDef of span * identifier * typespec * cexpr * docstring
   | ConcreteRecordDef of concrete_record
   | ConcreteUnionDef of concrete_union
   | ConcreteFunctionDef of span * identifier * concrete_type_param list * concrete_param list * typespec * cstmt * docstring * pragma list
   | ConcreteTypeClassDef of concrete_typeclass
-  | ConcreteInstanceDef of concrete_instance
 
 and concrete_record =
   ConcreteRecord of span * identifier * concrete_type_param list * universe * concrete_slot list * docstring
@@ -74,8 +79,8 @@ and typespec =
 and cexpr =
   | CNilConstant of span
   | CBoolConstant of span * bool
-  | CIntConstant of span * string
-  | CFloatConstant of span * string
+  | CIntConstant of span * NumberLiteral.int_literal
+  | CFloatConstant of span * NumberLiteral.float_literal
   | CStringConstant of span * string
   | CVariable of span * identifier
   | CArith of span * arithmetic_operator * cexpr * cexpr
@@ -96,9 +101,7 @@ and cexpr =
 
 and cstmt =
   | CSkip of span
-  | CLet of span * mutability * identifier * typespec * cexpr
-  | CDestructure of span * mutability * concrete_binding list * cexpr
-  | CAssign of span * cexpr * cexpr
+  | CAssign of span * concrete_lvalue * cexpr
   | CIf of span * cexpr * cstmt * cstmt
   | CCase of span * cexpr * concrete_when list
   | CWhile of span * cexpr * cstmt
@@ -111,9 +114,18 @@ and cstmt =
       body: cstmt;
       mode: borrow_stmt_kind
     }
-  | CBlock of span * cstmt list
+  | CBlock of span * concrete_block_elem list
   | CDiscarding of span * cexpr
   | CReturn of span * cexpr
+
+(* A `let` is not a statement: it scopes the rest of its block. *)
+and concrete_block_elem =
+  | CLet of span * mutability * identifier * typespec * cexpr
+  | CDestructure of span * mutability * concrete_binding list * cexpr
+  | CStatement of cstmt
+
+and concrete_lvalue =
+  ConcreteLvalue of span * identifier * concrete_path_elem list
 
 and concrete_binding =
   ConcreteBinding of  {
@@ -121,9 +133,6 @@ and concrete_binding =
       ty: typespec;
       rename: identifier;
     }
-
-and condition_branch =
-  ConditionBranch of cexpr * cstmt
 
 and concrete_when =
   ConcreteWhen of identifier * concrete_binding list * cstmt
@@ -142,3 +151,18 @@ and concrete_path_elem =
   | CSlotAccessor of identifier
   | CPointerSlotAccessor of identifier
   | CArrayIndex of cexpr
+
+let rec typespec_string (ts: typespec): string =
+  match ts with
+  | TypeSpecifier (name, args) ->
+     (match args with
+      | [] -> (ident_string name)
+      | args -> (ident_string name) ^ "[" ^ (String.concat ", " (List.map typespec_string args)) ^ "]")
+  | ConcreteReadRef (ty, reg) ->
+     BuiltInNames.read_ref_name ^ "[" ^ (typespec_string ty) ^ ", " ^ (typespec_string reg) ^ "]"
+  | ConcreteWriteRef (ty, reg) ->
+     BuiltInNames.write_ref_name ^ "[" ^ (typespec_string ty) ^ ", " ^ (typespec_string reg) ^ "]"
+  | ConcreteSpan (ty, reg) ->
+     BuiltInNames.span_name ^ "[" ^ (typespec_string ty) ^ ", " ^ (typespec_string reg) ^ "]"
+  | ConcreteSpanWrite (ty, reg) ->
+     BuiltInNames.span_mut_name ^ "[" ^ (typespec_string ty) ^ ", " ^ (typespec_string reg) ^ "]"

@@ -1,0 +1,20 @@
+module body Test is
+    generic [T: Free]
+    function identity(x: T): T is
+        return x;
+    end;
+
+    function double(x: Int32): Int32 is
+        return x * 2;
+    end;
+
+    function main(): ExitCode is
+        var f: Fn[Int32, Int32] := double;
+        let y: Int32 := f(4);
+        printLn(y);
+        f := identity;
+        let z: Int32 := f(4);
+        printLn(z);
+        return ExitSuccess();
+    end;
+end module body.

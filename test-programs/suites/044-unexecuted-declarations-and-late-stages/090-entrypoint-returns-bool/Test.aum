@@ -1,0 +1,5 @@
+module body Test is
+    function main(): Bool is
+        return true;
+    end;
+end module body.

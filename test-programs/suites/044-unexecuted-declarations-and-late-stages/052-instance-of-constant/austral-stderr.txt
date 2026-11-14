@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "Cannot create an instance for " },
+    { "type": "code", "content": "K" },
+    { "type": "text", "content": " because it is not a typeclass." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/052-instance-of-constant/Test.aum",
+    "startp": { "line": 2, "column": 27 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    constant K: Int32 := 1;" ],
+    [ 3, "" ],
+    [ 4, "    instance K(Int32) is" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    function main(): ExitCode is" ]
+  ]
+}

@@ -1,0 +1,1 @@
+Covers a parameter of a generic function whose type is a region type parameter: accepted, because a generic function is compiled only for the types of a call, and no call can pass such a value (lib/ExtractionPass.ml, check_instance_methods_hold_no_region).

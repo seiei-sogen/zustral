@@ -1,0 +1,161 @@
+module body Test is
+    record Pair: Free is
+        first: Int32;
+        second: Int32;
+    end;
+
+    record Box: Linear is
+        value: Int32;
+    end;
+
+    union Shape: Free is
+        case Circle is
+            radius: Int32;
+        case Square is
+            side: Int32;
+        case Dot;
+    end;
+
+    typeclass Describe(T: Free) is
+        method describe(value: T): Int32;
+    end;
+
+    generic [R: Region]
+    function peek(box: &[Box, R]): Int32 is
+        return box->value;
+    end;
+
+    generic [R: Region, S: Region]
+    function peekTwo(a: &[Box, R], b: &[Box, S]): Int32 is
+        return a->value + b->value;
+    end;
+
+    generic [R: Region]
+    function bump(box: &![Box, R]): Unit is
+        box->value := box->value + 1;
+        return nil;
+    end;
+
+    generic [R: Region]
+    function bumpTwice(box: &![Box, R]): Unit is
+        bump(&~box);
+        bump(&~box);
+        return nil;
+    end;
+
+    instance Describe(Int32) is
+        method describe(value: Int32): Int32 is
+            let s: Shape := Square(side => value);
+            case s of
+                when Circle(radius: Int32) do
+                    if radius > 0 then
+                        return radius;
+                    else
+                        return 0;
+                    end if;
+                when Square(side: Int32) do
+                    let p: Pair := Pair(first => side, second => side);
+                    let { first: Int32, second: Int32 } := p;
+                    while first > second do
+                        return 1;
+                    end while;
+                    return first + second;
+                when Dot do
+                    return 0;
+            end case;
+        end;
+    end;
+
+    generic [T: Free]
+    function twice(value: T, shape: Shape): T is
+        case shape of
+            when Circle(radius: Int32) do
+                let p: Pair := Pair(first => radius, second => radius);
+                let { first as a: Int32, second as b: Int32 } := p;
+                if a > b then
+                    case shape of
+                        when Circle(radius as r2: Int32) do
+                            skip;
+                        when Square(side: Int32) do
+                            skip;
+                        when Dot do
+                            skip;
+                    end case;
+                else
+                    let q: Pair := Pair(first => b, second => a);
+                    let { first as c: Int32, second as d: Int32 } := q;
+                    skip;
+                end if;
+            when Square(side: Int32) do
+                for i from 0 to 3 do
+                    let q: Pair := Pair(first => side, second => side);
+                    let { first as c: Int32, second as d: Int32 } := q;
+                    skip;
+                end for;
+            when Dot do
+                skip;
+        end case;
+        return value;
+    end;
+
+    function control(n: Int32): Int32 is
+        var total: Int32 := 0;
+        var box: Box := Box(value => n);
+        if n > 0 then
+            if n > 1 then
+                total := total + 1;
+                while total < 3 do
+                    total := total + peek(&box);
+                end while;
+            else
+                total := total + 2;
+            end if;
+            total := total + 3;
+        else
+            if n < 0 then
+                total := peekTwo(&box, &box);
+            end if;
+            for i from 0 to 2 do
+                if total > 100 then
+                    bump(&!box);
+                    bumpTwice(&!box);
+                else
+                    total := (total + peek(&box)) + peekTwo(&box, &box);
+                end if;
+            end for;
+        end if;
+        borrow ref: &[Box, R1] := &box do
+            total := total + peek(ref);
+            borrow ref2: &[Box, R2] := &box do
+                total := total + peekTwo(ref, ref2);
+            end borrow;
+        end borrow;
+        borrow mref: &![Box, R3] := &!box do
+            bumpTwice(mref);
+        end borrow;
+        let s: Shape := Circle(radius => total);
+        case s of
+            when Circle(radius: Int32) do
+                total := total + radius;
+            when Square(side: Int32) do
+                if side > 0 then
+                    total := total + side;
+                end if;
+            when Dot do
+                skip;
+        end case;
+        let { value: Int32 } := box;
+        return ((total + value) + describe(total)) + twice(total, s);
+    end;
+
+    function box2(n: Int32): Box is
+        return Box(value => n);
+    end;
+
+    function main(): ExitCode is
+        let r: Int32 := control(3);
+        let u: Unit := twice(nil, Dot());
+        let b: Bool := twice(true, Dot());
+        return ExitSuccess();
+    end;
+end module body.

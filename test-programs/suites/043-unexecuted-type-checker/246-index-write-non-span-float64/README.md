@@ -1,0 +1,1 @@
+Covers the `DoubleFloat` alternative of the write-reference arm of `augment_array_index` (lib/TypeCheckExpr.ml): assigning to `y[0]` with `y` of type `Float64` borrows it mutably, and the pointed-to type is not a span. Target line: lib/TypeCheckExpr.ml line 798.

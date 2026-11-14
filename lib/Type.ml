@@ -5,19 +5,15 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 
-open Id
 open Identifier
 open Region
-open Names
-open Sexplib
-open Std
 
 type universe =
   | FreeUniverse
   | LinearUniverse
   | TypeUniverse
   | RegionUniverse
-[@@deriving (eq, show, sexp)]
+[@@deriving (eq, show)]
 
 type integer_width =
   | Width8
@@ -26,15 +22,15 @@ type integer_width =
   | Width64
   | WidthByteSize
   | WidthIndex
-[@@deriving (eq, show, sexp)]
+[@@deriving (eq, show)]
 
 type signedness =
   | Unsigned
   | Signed
-[@@deriving (eq, show, sexp)]
+[@@deriving (eq, show)]
 
 type type_var = TypeVariable of identifier * universe * qident * sident list
-[@@deriving (eq, show, sexp)]
+[@@deriving eq]
 
 type ty =
   | Unit
@@ -42,27 +38,54 @@ type ty =
   | Integer of signedness * integer_width
   | SingleFloat
   | DoubleFloat
-  | NamedType of qident * ty list * universe
+  | NamedType of qident * Id.type_decl_id * ty list * universe
+  (** The name, as the program wrote it, and the ID of the record or union
+      it stands for. *)
   | RegionTy of region
-  | ReadRef of ty * ty
-  | WriteRef of ty * ty
-  | Span of ty * ty
-  | SpanMut of ty * ty
+  | ReadRef of ty * ref_region
+  | WriteRef of ty * ref_region
+  | Span of ty * ref_region
+  | SpanMut of ty * ref_region
   | TyVar of type_var
   | Address of ty
   | Pointer of ty
   | FnPtr of ty list * ty
-  | MonoTy of mono_id
-[@@deriving (show, sexp)]
+(* The region of a reference or span type. *)
+and ref_region =
+  | RefRegion of region
+  | RefRegionVar of type_var
+  (* A type variable of the Region universe. *)
+  | NotARegion of ty
+  (* Whatever else the program wrote in the region position: the type parser
+     does not check it, so `&[Int32, Int32]` is accepted (#90). *)
 
 type typed_slot = TypedSlot of identifier * ty
-[@@deriving sexp]
 
 type typed_case = TypedCase of identifier * typed_slot list
-[@@deriving sexp]
 
 type value_parameter = ValueParameter of identifier * ty
-[@@deriving (show, sexp)]
+
+(* Matching, equality, substitution and printing see the region field as a
+   type, so that a NotARegion behaves as the type it holds (#90). *)
+let ty_of_ref_region (r: ref_region): ty =
+  match r with
+  | RefRegion r -> RegionTy r
+  | RefRegionVar tv -> TyVar tv
+  | NotARegion ty -> ty
+
+let ref_region_of_ty (ty: ty): ref_region =
+  match ty with
+  | RegionTy r ->
+     RefRegion r
+  | TyVar (TypeVariable (_, universe, _, _) as tv) ->
+     (match universe with
+      | RegionUniverse ->
+         RefRegionVar tv
+      | FreeUniverse | LinearUniverse | TypeUniverse ->
+         NotARegion ty)
+  | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | ReadRef _
+  | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ ->
+     NotARegion ty
 
 let universe_string = function
   | FreeUniverse -> "Free"
@@ -70,57 +93,58 @@ let universe_string = function
   | TypeUniverse -> "Type"
   | RegionUniverse -> "Region"
 
+(* ByteSize and Index have one name each, whatever the signedness. *)
+let integer_built_in (s: signedness) (w: integer_width): BuiltInNames.builtin_type =
+  match (s, w) with
+  | (Unsigned, Width8) -> BuiltInNames.Nat8
+  | (Unsigned, Width16) -> BuiltInNames.Nat16
+  | (Unsigned, Width32) -> BuiltInNames.Nat32
+  | (Unsigned, Width64) -> BuiltInNames.Nat64
+  | (Signed, Width8) -> BuiltInNames.Int8
+  | (Signed, Width16) -> BuiltInNames.Int16
+  | (Signed, Width32) -> BuiltInNames.Int32
+  | (Signed, Width64) -> BuiltInNames.Int64
+  | (Unsigned, WidthByteSize) | (Signed, WidthByteSize) -> BuiltInNames.ByteSize
+  | (Unsigned, WidthIndex) | (Signed, WidthIndex) -> BuiltInNames.Index
+
 let rec type_string = function
   | Unit ->
-     unit_name
+     BuiltInNames.type_name BuiltInNames.Unit
   | Boolean ->
-     bool_name
+     BuiltInNames.type_name BuiltInNames.Bool
   | Integer (s, w) ->
-     let sgn: string =
-       match s with
-       | Unsigned -> nat_prefix
-       | Signed -> int_prefix
-     in
-     (match w with
-      | Width8 -> sgn ^ "8"
-      | Width16 -> sgn ^ "16"
-      | Width32 -> sgn ^ "32"
-      | Width64 -> sgn ^ "64"
-      | WidthByteSize -> "ByteSize"
-      | WidthIndex -> "Index")
+     BuiltInNames.type_name (integer_built_in s w)
   | SingleFloat ->
-     single_float_name
+     BuiltInNames.type_name BuiltInNames.Float32
   | DoubleFloat ->
-     double_float_name
-  | NamedType (n, args, _) ->
+     BuiltInNames.type_name BuiltInNames.Float64
+  | NamedType (n, _, args, _) ->
      (ident_string (local_name n)) ^ args_string args
   | RegionTy r ->
      "Region<" ^ (string_of_int (region_id r)) ^ ">"
   | ReadRef (t, r) ->
-     read_ref_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string r) ^ "]"
+     BuiltInNames.read_ref_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string (ty_of_ref_region r)) ^ "]"
   | WriteRef (t, r) ->
-     write_ref_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string r) ^ "]"
+     BuiltInNames.write_ref_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string (ty_of_ref_region r)) ^ "]"
   | Span (t, r) ->
-     "Span[" ^ (type_string t) ^ ", " ^ (type_string r) ^ "]"
+     BuiltInNames.span_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string (ty_of_ref_region r)) ^ "]"
   | SpanMut (t, r) ->
-     "Span![" ^ (type_string t) ^ ", " ^ (type_string r) ^ "]"
+     BuiltInNames.span_mut_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string (ty_of_ref_region r)) ^ "]"
   | TyVar (TypeVariable (n, _, _, _)) ->
      ident_string n
   | Address ty ->
-     address_name ^ "[" ^ (type_string ty) ^ "]"
+     BuiltInNames.address_name ^ "[" ^ (type_string ty) ^ "]"
   | Pointer ty ->
-     pointer_name ^ "[" ^ (type_string ty) ^ "]"
+     BuiltInNames.pointer_name ^ "[" ^ (type_string ty) ^ "]"
   | FnPtr (args, rt) ->
      (match args with
       | [] ->
          (* No arguments case. *)
-         ("Fn[" ^ (type_string rt) ^ "]")
+         (BuiltInNames.type_name BuiltInNames.Fn ^ "[" ^ (type_string rt) ^ "]")
       | _ ->
          (* Some arguments case. *)
          let args': string = String.concat ", " (List.map type_string args) in
-         ("Fn[" ^ args' ^ ", " ^ (type_string rt) ^ "]"))
-  | MonoTy _ ->
-     "MonoTy)"
+         (BuiltInNames.type_name BuiltInNames.Fn ^ "[" ^ args' ^ ", " ^ (type_string rt) ^ "]"))
 
 and args_string = function
   | (first::rest) -> "[" ^ (String.concat ", " (List.map type_string (first::rest))) ^ "]"
@@ -128,7 +152,7 @@ and args_string = function
 
 let index_type = Integer (Unsigned, WidthIndex)
 
-let string_type = Span (Integer (Unsigned, Width8), RegionTy static_region)
+let string_type = Span (Integer (Unsigned, Width8), RefRegion static_region)
 
 let rec equal_ty a b =
   match a with
@@ -136,98 +160,122 @@ let rec equal_ty a b =
      (match b with
       | Unit ->
          true
-      | _ ->
+      | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+      | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ ->
          false)
   | Boolean ->
      (match b with
       | Boolean ->
          true
-      | _ ->
+      | Unit | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+      | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ ->
          false)
   | Integer (s, w) ->
      (match b with
       | Integer (s', w') ->
          (equal_signedness s s') && (equal_integer_width w w')
-      | _ ->
+      | Unit | Boolean | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+      | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ ->
          false)
   | SingleFloat ->
      (match b with
       | SingleFloat ->
          true
-      | _ ->
+      | Unit | Boolean | Integer _ | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
          false)
   | DoubleFloat ->
      (match b with
       | DoubleFloat ->
          true
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | NamedType _ | RegionTy _ | ReadRef _
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
          false)
-  | NamedType (n, args, u) ->
+  | NamedType (n, _, args, u) ->
      (match b with
-      | NamedType (n', args', u') ->
+      | NamedType (n', _, args', u') ->
+         (* By the name, as before the type held an ID: a name stands for one
+            declaration, but the same declaration under two names (#50) stays
+            two types. *)
          (equal_qident n n')
          && (List.for_all (fun (a', b') -> equal_ty a' b') (List.map2 (fun a' b' -> (a',b')) args args'))
          && (equal_universe u u')
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
          false)
   | RegionTy r ->
      (match b with
       | RegionTy r' ->
          equal_region r r'
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ ->
          false)
   | ReadRef (ty, r) ->
      (match b with
       | ReadRef (ty', r') ->
-         (equal_ty ty ty') && (equal_ty r r')
-      | _ ->
+         (equal_ty ty ty') && (equal_ty (ty_of_ref_region r) (ty_of_ref_region r'))
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ ->
          false)
   | WriteRef (ty, r) ->
      (match b with
       | WriteRef (ty', r') ->
-         (equal_ty ty ty') && (equal_ty r r')
-      | _ ->
+         (equal_ty ty ty') && (equal_ty (ty_of_ref_region r) (ty_of_ref_region r'))
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ ->
          false)
     | Span (ty, r) ->
      (match b with
       | Span (ty', r') ->
-         (equal_ty ty ty') && (equal_ty r r')
-      | _ ->
+         (equal_ty ty ty') && (equal_ty (ty_of_ref_region r) (ty_of_ref_region r'))
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | SpanMut _ | TyVar _ | Address _
+      | Pointer _ | FnPtr _ ->
          false)
   | SpanMut (ty, r) ->
      (match b with
       | SpanMut (ty', r') ->
-         (equal_ty ty ty') && (equal_ty r r')
-      | _ ->
+         (equal_ty ty ty') && (equal_ty (ty_of_ref_region r) (ty_of_ref_region r'))
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ ->
          false)
   | TyVar v ->
      (match b with
       | TyVar v' ->
          equal_type_var v v'
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _
+      | Pointer _ | FnPtr _ ->
          false)
   | Address ty ->
      (match b with
       | Address ty' ->
          equal_ty ty ty'
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Pointer _
+      | FnPtr _ ->
         false)
   | Pointer ty ->
      (match b with
       | Pointer ty' ->
          equal_ty ty ty'
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
+      | FnPtr _ ->
          false)
   | FnPtr (args, rt) ->
      (match b with
       | FnPtr (args', rt') ->
          (List.for_all (fun (a', b') -> equal_ty a' b') (List.map2 (fun a' b' -> (a', b')) args args'))
          && (equal_ty rt rt')
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
+      | Pointer _ ->
         false)
-  | MonoTy a ->
-    (match b with
-     | MonoTy b ->
-       equal_mono_id a b
-     | _ ->
-       false)

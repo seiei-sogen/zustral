@@ -1,0 +1,1 @@
+An instance declared before the type it is for, both in the interface, is reported as a declaration error at the instance's declaration in the interface, not at its definition in the body, which declares no type (lib/TypeClasses.ml, is_type_local; lib/CombiningPass.ml gives the instance the span of its declaration). Next to 046, where both are in the body.

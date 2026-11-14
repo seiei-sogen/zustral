@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type " },
+    { "type": "type", "content": "Region<0>" },
+    {
+      "type": "text",
+      "content": " cannot be destructured because it is not a record."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/084-destructure-region/Test.aum",
+    "startp": { "line": 3, "column": 8 },
+    "end": { "line": 3, "column": 30 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function probe(x: Static): Unit is" ],
+    [ 3, "        let { a: Int32 } := x;" ],
+    [ 4, "        return nil;" ],
+    [ 5, "    end;" ]
+  ]
+}

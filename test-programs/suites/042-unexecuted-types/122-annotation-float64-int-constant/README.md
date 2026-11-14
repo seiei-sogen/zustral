@@ -1,0 +1,1 @@
+lib/LiteralTyping.ml line 147, annotation_types_literal, the `TIntConstant` alternative of the `SingleFloat | DoubleFloat` arm. The expression `1` is annotated with the type `Float64` (`(1 : Float64)`): the annotation asks annotation_types_literal first, which answers no for this expression, and the cast is then rejected.

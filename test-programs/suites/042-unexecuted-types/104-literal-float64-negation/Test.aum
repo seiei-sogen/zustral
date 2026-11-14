@@ -1,0 +1,37 @@
+pragma Unsafe_Module;
+
+import Austral.Memory (Address, Pointer);
+
+module body Test is
+    record Tag: Free is
+        x: Int32;
+    end;
+
+    record Lin: Linear is
+        x: Int32;
+    end;
+
+    function inc(x: Int32): Int32 is
+        return x + 1;
+    end;
+
+    function takeInt(x: Int32): Unit is
+        return nil;
+    end;
+
+    function takeFloat(x: Float64): Unit is
+        return nil;
+    end;
+
+    generic [R: Region]
+    function check(p: &[Tag, R]): Unit is
+        let b: Bool := true;
+        let i: Int32 := 1;
+        takeFloat((not b));
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

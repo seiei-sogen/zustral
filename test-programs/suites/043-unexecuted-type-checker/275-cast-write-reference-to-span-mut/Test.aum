@@ -1,0 +1,11 @@
+module body Test is
+    generic [R: Region]
+    function probe(x: &![Int32, R]): Unit is
+        let y: Span![Int32, R] := (x : Span![Int32, R]);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

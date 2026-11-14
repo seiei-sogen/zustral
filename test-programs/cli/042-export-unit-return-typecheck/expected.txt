@@ -1,0 +1,30 @@
+exit: 255
+files: error.html
+--- stdout
+--- stderr
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type " },
+    { "type": "type", "content": "Unit" },
+    {
+      "type": "text",
+      "content": " is not allowed in the signature of an exported function."
+    }
+  ],
+  "span": {
+    "filename": "Test.aum",
+    "startp": { "line": 2, "column": 48 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    pragma Foreign_Export(External_Name => \"f\");" ],
+    [ 3, "    function f(): Unit is" ],
+    [ 4, "        return nil;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    function main(): ExitCode is" ]
+  ]
+}

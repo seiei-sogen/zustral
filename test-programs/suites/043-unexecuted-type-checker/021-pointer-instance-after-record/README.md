@@ -1,0 +1,1 @@
+Covers the `NamedType` alternative of the `Pointer` arm of `overlapping_instances` (lib/TypeClasses.ml): an instance for `Pointer[U]` declared after one for `Foo` is reported as overlapping it. This pins issue #122: the answer should be `false`. Target line(s): lib/TypeClasses.ml line 176.

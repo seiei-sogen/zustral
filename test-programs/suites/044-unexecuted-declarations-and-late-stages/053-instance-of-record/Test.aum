@@ -1,0 +1,12 @@
+module body Test is
+    record K: Free is
+        x: Int32;
+    end;
+
+    instance K(Int32) is
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

@@ -13,14 +13,12 @@ type position = Position of {
       (* Columns range from 0 to infinity. *)
       column: int;
     }
-[@@deriving (show, sexp)]
 
 type span = Span of {
       filename: string;
       startp: position;
       endp: position;
     }
-[@@deriving (show, sexp)]
 
 val from_lexbuf : lexbuf -> span
 
@@ -29,7 +27,5 @@ val from_lexbuf : lexbuf -> span
 val from_loc : (Lexing.position * Lexing.position) -> span
 
 val position_to_string : position -> string
-
-val span_to_string : span -> string
 
 val empty_span : span

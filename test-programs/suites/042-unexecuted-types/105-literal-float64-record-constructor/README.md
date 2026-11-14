@@ -1,0 +1,1 @@
+lib/LiteralTyping.ml line 120, literal_matches, the `TRecordConstructor` alternative of the `SingleFloat | DoubleFloat` arm. The expression `Tag(x => 1)` is passed to a function that takes `Float64`: match_type_with_value asks literal_matches first, which answers no for this expression, and the types are then compared and differ.

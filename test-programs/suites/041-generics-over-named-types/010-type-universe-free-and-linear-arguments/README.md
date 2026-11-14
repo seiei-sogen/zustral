@@ -1,0 +1,1 @@
+A generic record in the `Type` universe, instantiated once with a free record (its value is read twice and never consumed) and once with a linear record (its value is destructured).

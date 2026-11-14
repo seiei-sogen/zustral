@@ -1,0 +1,1 @@
+A generic record of a named type (`Box[Foo]`) passed as `T` to a generic function, which passes it on to a second generic function: the returned value is the one passed in. This compiled before named types were put into the instantiated body as themselves; it is here so that it stays so.

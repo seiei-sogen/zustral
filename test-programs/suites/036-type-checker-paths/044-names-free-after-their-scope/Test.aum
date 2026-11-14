@@ -1,0 +1,49 @@
+module body Test is
+    record Pair: Free is
+        a: Int32;
+        b: Int32;
+    end;
+
+    function main(): ExitCode is
+        let c: Bool := true;
+        if c then
+            let a: Int32 := 1;
+            printLn(a);
+        else
+            let a: Int32 := 2;
+            printLn(a);
+        end if;
+        for a from 0 to 1 do
+            printLn(a);
+        end for;
+        for a from 2 to 3 do
+            printLn(a);
+        end for;
+        var x: Int32 := 10;
+        let o: Option[Int32] := Some(value => 12);
+        case o of
+            when Some(value as a: Int32) do
+                printLn(a);
+            when None do
+                skip;
+        end case;
+        case o of
+            when Some(value as a: Int32) do
+                printLn(a);
+            when None do
+                skip;
+        end case;
+        if c then
+            let { a: Int32, b: Int32 } := Pair(a => 13, b => 14);
+            printLn(a + b);
+        end if;
+        while x < 12 do
+            let a: Int32 := x;
+            printLn(a);
+            x := x + 1;
+        end while;
+        let a: Int32 := 15;
+        printLn(a);
+        return ExitSuccess();
+    end;
+end module body.

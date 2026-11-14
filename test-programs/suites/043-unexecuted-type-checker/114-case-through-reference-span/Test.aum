@@ -1,0 +1,14 @@
+module body Test is
+    generic [R: Region]
+    function probe(x: &[Span[Int32, R], R]): Unit is
+        case x of
+            when A do
+                skip;
+        end case;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,36 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "R" },
+    {
+      "type": "text",
+      "content": " is used as a type, but it is declared in the "
+    },
+    { "type": "code", "content": "Region" },
+    {
+      "type": "text",
+      "content": " universe, and regions are not types. A region can only be the region of a reference or of a span."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/040-region-as-value-type/031-record-name-is-also-a-case/Test.aum",
+    "startp": { "line": 5, "column": 8 },
+    "end": { "line": 12, "column": 8 }
+  },
+  "context": [
+    [ 3, "        generic [R: Region]" ],
+    [ 4, "        method area(x: T, y: Outer[R]): Int32;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    instance Shape(Int32) is" ],
+    [ 8, "        generic [R: Region]" ],
+    [ 9, "        method area(x: Int32, y: Outer[R]): Int32 is" ],
+    [ 10, "            return x;" ],
+    [ 11, "        end;" ],
+    [ 12, "    end;" ],
+    [ 13, "" ],
+    [ 14, "    record Outer[R: Region]: Free is" ]
+  ]
+}

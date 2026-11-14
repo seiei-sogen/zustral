@@ -1,0 +1,27 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": " is expected to be " },
+    { "type": "code", "content": "Linear" },
+    { "type": "text", "content": " but the supplied argument is " },
+    { "type": "code", "content": "Region" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/072-type-argument-region-for-linear-parameter/Test.aum",
+    "startp": { "line": 17, "column": 4 },
+    "end": { "line": 20, "column": 8 }
+  },
+  "context": [
+    [ 15, "    end;" ],
+    [ 16, "" ],
+    [ 17, "    generic [U: Type]" ],
+    [ 18, "    function f(p: Pointer[LinearBox[Static]]): Unit is" ],
+    [ 19, "        return nil;" ],
+    [ 20, "    end;" ],
+    [ 21, "" ],
+    [ 22, "    function main(): ExitCode is" ]
+  ]
+}

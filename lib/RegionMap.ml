@@ -16,9 +16,9 @@ let empty_region_map = IdentifierMap.empty
 let get_region m n =
   IdentifierMap.find_opt n m
 
-let add_region m n r =
+let add_region (place: place) m n r =
   match get_region m n with
   | Some _ ->
-     err "Region map already has a region with this name"
+     generic_error place RegionAlreadyExists
   | None ->
      IdentifierMap.add n r m

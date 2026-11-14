@@ -1,0 +1,1 @@
+A constrained generic function called with a record and with a union dispatches to the instance of each: the output is the text of the record's instance and then the text of the union's instance.

@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "I can't find a " },
+    { "type": "text", "content": "variable" },
+    { "type": "text", "content": " named " },
+    { "type": "code", "content": "a" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/049-name-not-visible-in-other-branch/Test.aum",
+    "startp": { "line": 5, "column": 12 },
+    "end": { "line": 5, "column": 23 }
+  },
+  "context": [
+    [ 3, "        let c: Bool := true;" ],
+    [ 4, "        if c then" ],
+    [ 5, "            printLn(a);" ],
+    [ 6, "        else" ],
+    [ 7, "            let a: Int32 := 2;" ]
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [ { "type": "text", "content": "Not allowed" } ],
+  "span": {
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/004-foreign-read-reference-parameter/Test.aum",
+    "startp": { "line": 4, "column": 48 },
+    "end": { "line": 6, "column": 8 }
+  },
+  "context": [
+    [ 2, "" ],
+    [ 3, "module body Test is" ],
+    [ 4, "    pragma Foreign_Import(External_Name => \"f\");" ],
+    [ 5, "    function f(r: &[Int32, Static]): Int32 is" ],
+    [ 6, "    end;" ],
+    [ 7, "" ],
+    [ 8, "    function main(): ExitCode is" ]
+  ]
+}

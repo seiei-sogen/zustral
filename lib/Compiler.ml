@@ -5,7 +5,6 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 open Identifier
-open Id
 open Env
 open BuiltIn
 open BuiltInModules
@@ -15,7 +14,6 @@ open ExtractionPass
 open TypingPass
 open BodyExtractionPass
 open CodeGen
-open CRenderer
 open CRepr
 open Cst
 open CstUtil
@@ -27,10 +25,9 @@ open Mtast
 open Monomorphize
 open ReturnCheck
 open LinearityCheck
-open Reporter
 open Entrypoint
 open ExportInstantiation
-open HtmlError
+open Pipeline
 
 let append_import_to_interface (ci: concrete_module_interface) (import: concrete_import_list): concrete_module_interface =
   let (ConcreteModuleInterface (mn, docstring, imports, decls)) = ci in
@@ -46,123 +43,109 @@ let append_import_to_body (cb: concrete_module_body) (import: concrete_import_li
   else
     ConcreteModuleBody (mn, kind, docstring, import :: imports, decls)
 
-type compiler = Compiler of env * string
+(** The environment, and the C generated so far, one unit per module in the
+    order the modules were compiled. *)
+type compiler = Compiler of env * c_unit list
 
-(** Extract the env from the compiler. *)
-let cenv (Compiler (m, _)): env = m
+open Outcome.Syntax
 
-let compiler_code (Compiler (_, c)): string = c
+(* An error does not say which module it is in (issue #107). The driver knows,
+   and puts the name in the errors of everything that runs once the name is
+   known. *)
+let in_module (name: module_name) (outcome: 'a Outcome.t): 'a Outcome.t =
+  Outcome.map_errors (fun error -> add_module_name error name) outcome
 
-type module_source =
-  | TwoFileModuleSource of {
-      int_filename: string;
-      int_code: string;
-      body_filename: string;
-      body_code: string
-    }
-  | BodyModuleSource of {
-      body_filename: string;
-      body_code: string
-    }
-
-let parse_and_combine (env: env) (source: module_source): (env * module_name * Combined.combined_module * file_id option * file_id) =
+let parse_and_combine (env: env) (source: module_source): (module_name * Combined.combined_module) Outcome.t =
   match source with
   | TwoFileModuleSource { int_filename; int_code; body_filename; body_code } ->
-     let (env, int_file_id) = add_file env { path = int_filename; contents = int_code } in
-     let (env, body_file_id) = add_file env { path = body_filename; contents = body_code } in
-     let ci: concrete_module_interface = parse_module_int int_code int_filename in
+     let* (ci: concrete_module_interface) = parse_module_int int_code int_filename in
      let name: module_name = mod_int_name ci in
-     adorn_error_with_module_name name
-       (fun _ ->
-         let cb: concrete_module_body = parse_module_body body_code body_filename in
-         let ci: concrete_module_interface = append_import_to_interface ci pervasive_imports
-         and cb: concrete_module_body = append_import_to_body cb pervasive_imports in
-         let combined: Combined.combined_module = combine env ci cb in
-         (env, name, combined, Some int_file_id, body_file_id))
+     in_module name
+       (let* (cb: concrete_module_body) = parse_module_body body_code body_filename in
+        let ci: concrete_module_interface = append_import_to_interface ci pervasive_imports
+        and cb: concrete_module_body = append_import_to_body cb pervasive_imports in
+        let* (combined: Combined.combined_module) = combine env ci cb in
+        Ok (name, combined))
   | BodyModuleSource { body_filename; body_code } ->
-     let (env, body_file_id) = add_file env { path = body_filename; contents = body_code } in
-     let cb: concrete_module_body = parse_module_body body_code body_filename in
+     let* (cb: concrete_module_body) = parse_module_body body_code body_filename in
      let name: module_name = mod_body_name cb in
-     adorn_error_with_module_name name
-       (fun _ ->
-         let cb: concrete_module_body = append_import_to_body cb pervasive_imports in
-         let combined: Combined.combined_module = body_as_combined env cb in
-         (env, name, combined, None, body_file_id))
+     in_module name
+       (let cb: concrete_module_body = append_import_to_body cb pervasive_imports in
+        let* (combined: Combined.combined_module) = body_as_combined env cb in
+        Ok (name, combined))
 
-let rec compile_mod (c: compiler) (source: module_source): compiler =
-  with_frame "Compile module"
-    (fun _ ->
-      let env: env = cenv c in
-      let (env, name, combined, int_file_id, body_file_id) = parse_and_combine env source in
-      adorn_error_with_module_name name
-        (fun _ ->
-          let _ = check_ends_in_return combined in
-          let combined: SmallCombined.combined_module = DesugaringPass.desugar combined in
-          let (env, linked): (env * linked_module) = extract env combined int_file_id body_file_id in
-          let typed: typed_module = augment_module env linked in
-          let _ = check_module_linearity typed in
-          let env: env = extract_bodies env typed in
-          let (env, mono): (env * mono_module) = monomorphize env typed in
-          let unit: c_unit = gen_module env mono in
-          let unit_code: string = render_unit unit in
-          let code: string = (compiler_code c) ^ "\n" ^ unit_code in
-          Compiler (env, code)))
+(* The two checks define the types they return, which Pipeline names, so their
+   interfaces cannot name Pipeline's types without a cycle. The types are
+   checked here instead. *)
+let check_returns: Pipeline.check_returns = check_ends_in_return
+let check_linearity: Pipeline.check_linearity = check_module_linearity
 
-let rec compile_multiple c modules =
+let compile_mod (c: compiler) (source: module_source): compiler Outcome.t =
+  let (Compiler (env, units)) = c in
+  let* (name, combined) = parse_and_combine env source in
+  in_module name
+    (let* (returning: returning_module) = check_returns combined in
+     let* ((env, combined): env * SmallCombined.combined_module) =
+       with_supply env (fun supply -> DesugaringPass.desugar supply returning)
+     in
+     let* ((env, linked): env * linked_module) = extract env combined in
+     let* ((env, typed): env * typed_module) =
+       with_supply env (fun supply -> augment_module env supply linked)
+     in
+     let* (checked: checked_module) = check_linearity typed in
+     let* (env: env) = extract_bodies env checked in
+     let* ((env, mono): env * mono_module) = monomorphize env checked in
+     let* ((env, unit): env * c_unit) = with_supply env (fun supply -> gen_module env supply mono) in
+     Ok (Compiler (env, units @ [unit])))
+
+let rec compile_multiple (c: compiler) (modules: module_source list): compiler Outcome.t =
   match modules with
-  | m::rest -> compile_multiple (compile_mod c m) rest
-  | [] -> c
-
-let compile_entrypoint c mn i =
-  let qi = make_qident (mn, i, i) in
-  let (Compiler (m, code)) = c in
-  let entry_code: string = entrypoint_code m qi in
-  Compiler (m, code ^ "\n" ^ entry_code)
+  | m::rest ->
+     let* (c: compiler) = compile_mod c m in
+     compile_multiple c rest
+  | [] ->
+     Ok c
 
 let fake_mod_source (is: string) (bs: string): module_source =
   TwoFileModuleSource { int_filename = ""; int_code = is; body_filename = ""; body_code = bs }
 
-let dump_and_die _: 'a =
-  print_endline "Compiler call tree printed to calltree.html";
-  Reporter.dump ();
-  exit (-1)
+let finish: Pipeline.finish = fun (env: env) (units: c_unit list) (entrypoint: entrypoint option) ->
+  (* The wrapper functions. *)
+  let* (env, decls, exported) = monomorphize_wrappers env in
+  let* wrappers = Outcome.map (fun decls -> CUnit (BuiltInNames.wrappers_unit_name, decls)) (all_wrappers exported) in
+  (* The entrypoint asks for the monomorphs of the types its signature names,
+     as every use of a type does. The module of the entrypoint registered them,
+     so in a program there is nothing left to instantiate and `entrypoint_decls`
+     is empty. Declarations it did return are generated with those of the
+     wrappers. *)
+  let* (env, entrypoint_decls, entrypoint) =
+    match entrypoint with
+    | Some (mn, i) ->
+       let* (env, decls, code) = entrypoint_code env (make_qident (mn, i, i)) in
+       Ok (env, decls, Some code)
+    | None ->
+       Ok (env, [], None)
+  in
+  let* (_, wrapper_unit) =
+    with_supply env (fun supply -> gen_module env supply (MonoModule (make_mod_name BuiltInNames.wrappers_module, decls @ entrypoint_decls)))
+  in
+  Ok (CProgram { prelude = CSource prelude_c; units = units @ [wrapper_unit; wrappers]; entrypoint })
 
-let post_compile (compiler: compiler): compiler =
-  let env: env = cenv compiler in
-  let (env, decls): env * mdecl list = monomorphize_wrappers env in
-  let unit: c_unit = gen_module env (MonoModule (make_mod_name "Austral.Wrappers", decls)) in
-  let unit_code: string = render_unit unit in
-  let wrappers: c_unit = CUnit ("Wrappers", all_wrappers env) in
-  let wrapper_code: string = render_unit wrappers in
-  let code: string = (compiler_code compiler) ^ "\n" ^ unit_code ^ "\n" ^ wrapper_code in
-  Compiler (env, code)
+let empty_compiler (): compiler Outcome.t =
+  (* We have to compile the Austral.Pervasive module, followed by
+     Austral.Memory, since the latter uses declarations from the former. *)
+  let c = Compiler (empty_env, []) in
+  let* (c: compiler) = compile_mod c (fake_mod_source pervasive_interface_source pervasive_body_source) in
+  compile_mod c (fake_mod_source memory_interface_source memory_body_source)
 
-let empty_compiler: compiler =
-  with_frame "Compile built-in modules"
-    (fun _ ->
-      (* We have to compile the Austral.Pervasive module, followed by
-         Austral.Memory, since the latter uses declarations from the former. *)
-      let env: env = empty_env in
-      (* Start with the C prelude. *)
-      let c = Compiler (env, prelude_c) in
-      let c =
-        (* Handle errors during the compilation of the Austral,Pervasive
-           module. Otherwise, a typo in the source code of this module will cause a
-           fatal error due to an exception stack overflow (unsure why this
-           happens). *)
-        try
-          compile_mod c (fake_mod_source pervasive_interface_source pervasive_body_source)
-        with Austral_error error ->
-          Printf.eprintf "%s" (render_error_to_plain error);
-          html_error_dump error;
-          dump_and_die ()
-      in
-      let c =
-        try
-          compile_mod c (fake_mod_source memory_interface_source memory_body_source)
-        with Austral_error error ->
-          Printf.eprintf "%s" (render_error_to_plain error);
-          html_error_dump error;
-          dump_and_die ()
-      in
-      c)
+(* The built-in modules, then the given ones, in order. *)
+let compile_modules (sources: module_source list): compiler Outcome.t =
+  let* (c: compiler) = empty_compiler () in
+  compile_multiple c sources
+
+let compile (sources: module_source list) (entrypoint: entrypoint option): c_program Outcome.t =
+  let* (Compiler (env, units)) = compile_modules sources in
+  finish env units entrypoint
+
+let check (sources: module_source list): unit Outcome.t =
+  Outcome.map ignore (compile_modules sources)

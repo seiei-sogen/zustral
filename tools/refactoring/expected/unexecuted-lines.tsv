@@ -1,0 +1,3 @@
+# One row per line that no test executes in full: file, top-level definition, which line with that text in the definition (1 = first), whether `some` or `none` of the points on the line are executed, text of the line, reason why no test can execute the rest.
+# Tabs between the columns. Checked by `tools/refactoring/coverage.sh --unexecuted --check`; tools/refactoring/unexecuted-lines.py says what the columns mean.
+# There is none. A line that appears here needs a test, not a row: a row is for a line that no test can execute, with the reason.

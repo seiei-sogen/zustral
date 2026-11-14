@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "Expected the head of an array indexing operator to be a reference, but found the type "
+    },
+    { "type": "type", "content": "Address[Int32]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/263-index-non-reference-address/Test.aum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 7, "column": 16 }
+  },
+  "context": [
+    [ 5, "module body Test is" ],
+    [ 6, "    function probe(x: Address[Int32]): Unit is" ],
+    [ 7, "        &(x[0]);" ],
+    [ 8, "        return nil;" ],
+    [ 9, "    end;" ]
+  ]
+}

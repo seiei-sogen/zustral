@@ -1,0 +1,32 @@
+module body Test is
+    record Box[T: Free]: Free is
+        value: T;
+    end;
+
+    typeclass Inner(T: Free) is
+        method inner(value: T): Int32;
+    end;
+
+    instance Inner(Int32) is
+        method inner(value: Int32): Int32 is
+            return 1;
+        end;
+    end;
+
+    typeclass Outer(T: Free) is
+        method outer(value: T): Int32;
+    end;
+
+    generic [U: Free(Inner)]
+    instance Outer(Box[U]) is
+        method outer(value: Box[U]): Int32 is
+            return 2;
+        end;
+    end;
+
+    function main(): ExitCode is
+        let b: Box[Int32] := Box(value => 10);
+        printLn(outer(b));
+        return ExitSuccess();
+    end;
+end module body.

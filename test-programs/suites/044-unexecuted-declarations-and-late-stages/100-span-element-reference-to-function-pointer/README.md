@@ -1,0 +1,1 @@
+For lib/MtastUtil.ml, mono_reference_type: the arm `WriteBorrow`, which get_type reaches for a reference to an element of a `Span!` (`&(sp[0])`) passed to a call through a function pointer. Shows that the called function reads the element.

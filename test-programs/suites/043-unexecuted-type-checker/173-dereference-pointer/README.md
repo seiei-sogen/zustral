@@ -1,0 +1,1 @@
+Covers the `Pointer` alternative of the non-reference arm of `augment_deref` (lib/TypeCheckExpr.ml): dereferencing a value of type `Pointer[Int32]` is an error. Target line: lib/TypeCheckExpr.ml line 654.

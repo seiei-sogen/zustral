@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "&[Int32, Region<0>]" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "&[Int32, Region<4>]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/039-numbering-order/002-region-in-then-branch/Test.aum",
+    "startp": { "line": 6, "column": 16 },
+    "end": { "line": 6, "column": 51 }
+  },
+  "context": [
+    [ 4, "        if n > 0 then" ],
+    [ 5, "            borrow ref: &[Int32, rho] := &n do" ],
+    [ 6, "                let other: &[Int32, Static] := ref;" ],
+    [ 7, "            end borrow;" ],
+    [ 8, "        else" ]
+  ]
+}

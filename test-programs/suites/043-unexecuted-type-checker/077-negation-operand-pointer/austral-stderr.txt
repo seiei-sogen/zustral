@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The operand of a " },
+    { "type": "text", "content": "negation" },
+    {
+      "type": "text",
+      "content": " operator must be a boolean expression, but it has the type "
+    },
+    { "type": "type", "content": "Pointer[Int32]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/077-negation-operand-pointer/Test.aum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 7, "column": 29 }
+  },
+  "context": [
+    [ 5, "module body Test is" ],
+    [ 6, "    function probe(x: Pointer[Int32]): Unit is" ],
+    [ 7, "        let y: Bool := not x;" ],
+    [ 8, "        return nil;" ],
+    [ 9, "    end;" ]
+  ]
+}

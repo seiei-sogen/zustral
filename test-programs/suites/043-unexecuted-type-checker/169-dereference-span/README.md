@@ -1,0 +1,1 @@
+Covers the `Span` alternative of the non-reference arm of `augment_deref` (lib/TypeCheckExpr.ml): dereferencing a value of type `Span[Int32, R]` is an error. Target line: lib/TypeCheckExpr.ml line 654.

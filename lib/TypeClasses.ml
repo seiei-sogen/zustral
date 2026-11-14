@@ -14,101 +14,40 @@ open TypeParser
 open TypeSystem
 open Env
 open EnvTypes
-open EnvExtras
 open EnvUtils
 open Error
 
-module Errors = struct
-  let broken_orphan_rule () =
-    austral_raise GenericError [
-      Text "Orphan rule broken: typeclass and type are both foreign."
-    ]
-
-  let duplicate_tyvars () =
-    austral_raise DeclarationError [
-      Text "Generic instances can only use each type parameter once in the argument."
-    ]
-
-  let leftovers () =
-    austral_raise DeclarationError [
-      Text "The number of type parameters in the instance declaration must be the same as the number of type variables applied to the argument."
-    ]
-
-  let lone_tyvar () =
-    austral_raise DeclarationError [
-      Text "Typeclass arguments cannot be lone type parameters."
-    ]
-
-  let not_a_tyvar ty =
-    austral_raise DeclarationError [
-      Text "The type ";
-      Type ty;
-      Text " is not a type parameter, but generic instances must use either all type parameters or none of them in the argument.";
-      Break;
-      Text "Consider adding another generic parameter with universe ";
-      Code (type_universe ty |> universe_string)
-    ]
-
-  let overlapping_instances () =
-    austral_raise GenericError [
-      Text "Instance overlaps."
-    ]
-
-  let region_arg () =
-    austral_raise DeclarationError [
-      Text "Typeclass arguments cannot be regions."
-    ]
-
-  let shadowing_typeclass_param name =
-    austral_raise DeclarationError [
-      Text "The type parameters in a generic instance declaration cannot have the same name as the type parameter in the corresponding typeclass. The colliding name is ";
-      Code (ident_string name);
-      Text ".";
-      Break;
-      Text "This is, regrettably, a load-bearing hack for https://github.com/austral/austral/issues/244. Fixing this properly would require rewriting large parts of the frontend."
-    ]
-
-  let wrong_universe ~ty ~expected ~actual =
-    austral_raise TypeError [
-      Text "Cannot define an instance with argument ";
-      Type ty;
-      Text " because it should belong to the ";
-      Code (universe_string expected);
-      Text " universe, but it is actually in the ";
-      Code (universe_string actual);
-      Text " universe."
-    ]
-end
-
-let check_instance_argument_has_right_universe (universe: universe) (arg: ty): unit =
+let check_instance_argument_has_right_universe (place: place) (universe: universe) (arg: ty): unit =
   if universe_compatible universe (type_universe arg) then
     ()
   else
-    Errors.wrong_universe
-      ~ty:arg
-      ~expected:universe
-      ~actual:(type_universe arg)
+    type_error place (InstanceArgumentWrongUniverse {
+        ty = arg;
+        expected = universe;
+        actual = type_universe arg;
+      })
 
-let check_instance_argument_has_right_shape (typarams: typarams) (arg: ty): unit =
+let check_instance_argument_has_right_shape (place: place) (typarams: typarams) (arg: ty): unit =
   let is_tyvar (ty: ty): type_var =
     match ty with
     | TyVar tv ->
        tv
-    | _ ->
-       Errors.not_a_tyvar ty
+    | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+    | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ ->
+       declaration_error place (InstanceArgumentNotATyvar { ty; universe = type_universe ty })
   and all_distinct (tyvars: type_var list): unit =
     let names: identifier list = List.map (fun (TypeVariable (name, _, _, _)) -> name) tyvars in
     let set: IdentifierSet.t = IdentifierSet.of_list names in
     if List.length tyvars = IdentifierSet.cardinal set then
       ()
     else
-      Errors.duplicate_tyvars ()
+      declaration_error place InstanceDuplicateTyvars
   (* Assert the number of type parameters *)
   and no_leftovers (n: int): unit =
     if (typarams_size typarams) = n then
       ()
     else
-      Errors.leftovers ()
+      declaration_error place InstanceLeftoverTypeParameters
   in
   match arg with
   | Unit -> ()
@@ -116,30 +55,30 @@ let check_instance_argument_has_right_shape (typarams: typarams) (arg: ty): unit
   | Integer _ -> ()
   | SingleFloat -> ()
   | DoubleFloat -> ()
-  | NamedType (_, args, _) ->
+  | NamedType (_, _, args, _) ->
      let _ = all_distinct (List.map is_tyvar args) in
      let _ = no_leftovers (List.length args) in
      ()
   | RegionTy _ ->
-     Errors.region_arg ()
+     declaration_error place InstanceArgumentRegion
   | ReadRef (ty, r) ->
-     let _ = all_distinct [is_tyvar ty; is_tyvar r] in
+     let _ = all_distinct [is_tyvar ty; is_tyvar (ty_of_ref_region r)] in
      let _ = no_leftovers 2 in
      ()
   | WriteRef (ty, r) ->
-     let _ = all_distinct [is_tyvar ty; is_tyvar r] in
+     let _ = all_distinct [is_tyvar ty; is_tyvar (ty_of_ref_region r)] in
      let _ = no_leftovers 2 in
      ()
   | Span (ty, r) ->
-     let _ = all_distinct [is_tyvar ty; is_tyvar r] in
+     let _ = all_distinct [is_tyvar ty; is_tyvar (ty_of_ref_region r)] in
      let _ = no_leftovers 2 in
      ()
   | SpanMut (ty, r) ->
-     let _ = all_distinct [is_tyvar ty; is_tyvar r] in
+     let _ = all_distinct [is_tyvar ty; is_tyvar (ty_of_ref_region r)] in
      let _ = no_leftovers 2 in
      ()
   | TyVar _ ->
-     Errors.lone_tyvar ()
+     declaration_error place InstanceArgumentLoneTyvar
   | Address ty ->
      let _ = is_tyvar ty in
      let _ = no_leftovers 1 in
@@ -153,98 +92,116 @@ let check_instance_argument_has_right_shape (typarams: typarams) (arg: ty): unit
      let _ = all_distinct (List.map is_tyvar args') in
      let _ = no_leftovers (List.length args') in
      ()
-  | MonoTy _ ->
-     err "Not allowed"
 
-let overlapping_instances (a: ty) (b: ty): bool =
+let overlapping_instances (place: place) (a: ty) (b: ty): bool =
   match a with
   | Unit ->
      (match b with
       | Unit -> true
-      | _ -> false)
+      | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+      | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ -> false)
   | Boolean ->
      (match b with
       | Boolean -> true
-      | _ -> false)
+      | Unit | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+      | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ -> false)
   | Integer (s, w) ->
      (match b with
       | Integer (s', w') ->
          (equal_signedness s s')
          && (equal_integer_width w w')
-      | _ ->
+      | Unit | Boolean | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+      | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ ->
          false)
   | SingleFloat ->
      (match b with
       | SingleFloat -> true
-      | _ -> false)
+      | Unit | Boolean | Integer _ | DoubleFloat | NamedType _ | RegionTy _ | ReadRef _
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ -> false)
   | DoubleFloat ->
      (match b with
       | DoubleFloat -> true
-      | _ -> false)
-  | NamedType (name, _, _) ->
+      | Unit | Boolean | Integer _ | SingleFloat | NamedType _ | RegionTy _ | ReadRef _
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ -> false)
+  | NamedType (name, _, _, _) ->
      (match b with
-      | NamedType (name', _, _) ->
+      | NamedType (name', _, _, _) ->
          equal_qident name name'
-      | _ ->
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
+      | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
          false)
   | RegionTy _ ->
-     err "Not allowed"
+     generic_error place InstanceOverlapTypeNotAllowed
   | ReadRef _ ->
      (match b with
       | ReadRef _ -> true
-      | _ -> false)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ -> false)
   | WriteRef _ ->
      (match b with
       | WriteRef _ -> true
-      | _ -> false)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ -> false)
   | Span _ ->
      (match b with
       | Span _ -> true
-      | _ -> false)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | SpanMut _ | TyVar _ | Address _
+      | Pointer _ | FnPtr _ -> false)
   | SpanMut _ ->
      (match b with
       | SpanMut _ -> true
-      | _ -> false)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ -> false)
   | TyVar _ ->
-     err "Not allowed"
+     generic_error place InstanceOverlapTypeNotAllowed
   | Address _ ->
      (match b with
       | Address _ -> true
-      | _ -> false)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Pointer _
+      | FnPtr _ -> false)
   | Pointer _ ->
      (match b with
       | Pointer _ -> true
-      | _ -> true)
+      (* Issue #122: a Pointer instance overlaps an instance for any other
+         type. These should be false; they stay true until the issue is fixed
+         (pinned by 037-typeclass-and-environment-paths/013). *)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
+      | FnPtr _ -> true)
   | FnPtr _ ->
      (match b with
       | FnPtr _ -> true
-      | _ -> false)
-  | MonoTy _ ->
-     err "Not allowed"
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
+      | Pointer _ -> false)
 
-let check_instance_locally_unique (instances: decl list) (argument: ty): unit =
-  let pred (decl: decl): bool =
-    match decl with
-    | Instance { argument=argument'; _ } ->
-       overlapping_instances argument argument'
-    | _ ->
-       false
+let check_instance_locally_unique (place: place) (instances: instance_decl list) (argument: ty): unit =
+  let pred (instance: instance_decl): bool =
+    overlapping_instances place argument instance.argument
   in
   if List.exists pred instances then
-    Errors.overlapping_instances ()
+    generic_error place OverlappingInstances
   else
     ()
 
-let rec check_instance_orphan_rules (env: env) (mod_id: mod_id) (typeclass_mod_id: mod_id) (ty: ty): unit =
+let rec check_instance_orphan_rules (place: place) (decl_place: place) (env: env) (mod_id: mod_id) (typeclass_mod_id: mod_id) (ty: ty): unit =
   let tc_local: bool = equal_mod_id mod_id typeclass_mod_id
-  and ty_local: bool = is_type_local env mod_id ty
+  and ty_local: bool = is_type_local place decl_place env mod_id ty
   in
   if (not tc_local) && (not ty_local) then
-    Errors.broken_orphan_rule ()
+    generic_error place BrokenOrphanRule
   else
     ()
 
-and is_type_local (env: env) (mod_id: mod_id) (ty: ty): bool =
+and is_type_local (place: place) (decl_place: place) (env: env) (mod_id: mod_id) (ty: ty): bool =
   match ty with
   | Unit ->
      true
@@ -256,9 +213,16 @@ and is_type_local (env: env) (mod_id: mod_id) (ty: ty): bool =
      true
   | DoubleFloat ->
      true
-  | NamedType (name, _, _) ->
-     let type_mod_id: mod_id = decl_mod_id (get_decl_by_name_or_die env (qident_to_sident name)) in
-     equal_mod_id mod_id type_mod_id
+  | NamedType (name, _, _, _) ->
+     (match get_decl_by_name place env (qident_to_sident name) with
+      | Some decl ->
+         equal_mod_id mod_id (decl_mod_id decl)
+      | None ->
+         (* The type parser found the type among the signatures of this module,
+            but the declarations are registered in order, and the type's comes
+            after the instance's. The interface's declarations come first, in
+            its order, so the error is where the instance is declared. *)
+         declaration_error decl_place (InstanceBeforeType (original_name name)))
   | RegionTy _ ->
      (* Not applicable. *)
      false
@@ -279,14 +243,11 @@ and is_type_local (env: env) (mod_id: mod_id) (ty: ty): bool =
      true
   | FnPtr _ ->
      true
-  | MonoTy _ ->
-     (* Not applicable. *)
-     false
 
-let check_disjoint_typarams (name: identifier) (typarams: typarams): unit =
+let check_disjoint_typarams (place: place) (name: identifier) (typarams: typarams): unit =
   match get_typaram typarams name with
   | Some _ ->
-     Errors.shadowing_typeclass_param name
+     declaration_error place (InstanceShadowsTypeclassParam name)
   | None ->
      (* No collision *)
      ()

@@ -1,0 +1,61 @@
+module body Test is
+    typeclass Name(T: Type) is
+        method name(x: T): T;
+    end;
+
+    record Token: Linear is
+        n: Int32;
+    end;
+
+    record BoxF[U: Free]: Free is
+        v: U;
+    end;
+
+    record BoxL[U: Linear]: Linear is
+        v: U;
+    end;
+
+    record BoxT[U: Type]: Type is
+        v: U;
+    end;
+
+    generic [U: Free]
+    instance Name(BoxF[U]) is
+        method name(x: BoxF[U]): BoxF[U] is
+            printLn("free");
+            return x;
+        end;
+    end;
+
+    generic [U: Linear]
+    instance Name(BoxL[U]) is
+        method name(x: BoxL[U]): BoxL[U] is
+            printLn("linear");
+            return x;
+        end;
+    end;
+
+    generic [U: Type]
+    instance Name(BoxT[U]) is
+        method name(x: BoxT[U]): BoxT[U] is
+            printLn("type");
+            return x;
+        end;
+    end;
+
+    generic [T: Type(Name)]
+    function call(x: T): T is
+        return name(x);
+    end;
+
+    function main(): ExitCode is
+        let f: BoxF[Int32] := call(BoxF(v => 1));
+        let l: BoxL[Token] := call(BoxL(v => Token(n => 2)));
+        let { v: Token } := l;
+        let { n: Int32 } := v;
+        printLn(n);
+        let t: BoxT[Int32] := call(BoxT(v => 3));
+        printLn(t.v);
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "Option[Int32]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/118-annotation-int32-union-constructor/Test.aum",
+    "startp": { "line": 30, "column": 8 },
+    "end": { "line": 30, "column": 44 }
+  },
+  "context": [
+    [ 28, "        let b: Bool := true;" ],
+    [ 29, "        let i: Int32 := 1;" ],
+    [ 30, "        takeInt((Some(value => 1) : Int32));" ],
+    [ 31, "        return nil;" ],
+    [ 32, "    end;" ]
+  ]
+}

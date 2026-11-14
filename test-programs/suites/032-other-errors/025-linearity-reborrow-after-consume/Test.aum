@@ -1,0 +1,17 @@
+module body Test is
+    generic [R: Region]
+    function take(w: &![Int32, R]): Unit is
+        return nil;
+    end;
+
+    generic [R: Region]
+    function f(w: &![Int32, R]): Unit is
+        take(w);
+        let x: Int32 := !(&~w);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,11 @@
+module body Test is
+    function probe(x: Float64): Unit is
+        var y: Float64 := x;
+        y[0] := 1;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,15 @@
+exit: 255
+files: error.html
+--- stdout
+--- stderr
+Error:
+  Title: Generic Error
+  Module:
+    [unknown]
+  Location:
+    [no span available]
+  Description:
+    There are leftover arguments.
+  Code:
+    [no span available]
+

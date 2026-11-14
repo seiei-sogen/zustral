@@ -1,0 +1,1 @@
+Covers the named-arguments arm of `augment_fptr_call` (lib/TypeCheckExpr.ml): a call through a function pointer cannot name its arguments, because a function pointer type has no parameter names. Target line(s): the arm at lib/TypeCheckExpr.ml line 226.

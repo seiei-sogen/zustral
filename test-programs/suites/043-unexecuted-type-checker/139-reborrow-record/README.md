@@ -1,0 +1,1 @@
+Covers the `NamedType` alternative of the reborrow arm of `augment_borrow` (lib/TypingPass.ml): reborrowing a variable of type `Foo`, which is not a mutable reference, is an error. Target line: lib/TypingPass.ml line 423.

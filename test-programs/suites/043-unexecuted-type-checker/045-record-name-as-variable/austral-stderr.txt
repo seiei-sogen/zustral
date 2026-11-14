@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "I can't find a " },
+    { "type": "text", "content": "variable" },
+    { "type": "text", "content": " named " },
+    { "type": "code", "content": "Foo" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/045-record-name-as-variable/Test.aum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 7, "column": 28 }
+  },
+  "context": [
+    [ 5, "" ],
+    [ 6, "    function main(): ExitCode is" ],
+    [ 7, "        let x: Int32 := Foo;" ],
+    [ 8, "        return ExitSuccess();" ],
+    [ 9, "    end;" ]
+  ]
+}

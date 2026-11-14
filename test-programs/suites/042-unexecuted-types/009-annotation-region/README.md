@@ -1,0 +1,1 @@
+lib/LiteralTyping.ml line 155, annotation_types_literal, the `RegionTy _` alternative: an `Int32` annotated with the type `Static`, a region. The annotation is a cast error. The message prints the region `Static` as `Region<0>`, the compiler's number for it, not the name the program wrote: the output pins that, and it is not what a user should see.

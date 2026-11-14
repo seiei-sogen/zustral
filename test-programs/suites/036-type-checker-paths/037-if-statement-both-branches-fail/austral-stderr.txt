@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "Unit" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/037-if-statement-both-branches-fail/Test.aum",
+    "startp": { "line": 7, "column": 12 },
+    "end": { "line": 7, "column": 32 }
+  },
+  "context": [
+    [ 5, "            let a: Int32 := true;" ],
+    [ 6, "        else" ],
+    [ 7, "            let b: Int32 := nil;" ],
+    [ 8, "        end if;" ],
+    [ 9, "        return ExitSuccess();" ]
+  ]
+}

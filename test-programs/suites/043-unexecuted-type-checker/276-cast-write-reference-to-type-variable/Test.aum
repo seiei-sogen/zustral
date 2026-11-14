@@ -1,0 +1,11 @@
+module body Test is
+    generic [T: Free, R: Region]
+    function probe(x: &![Int32, R], t: T): Unit is
+        let y: T := (x : T);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

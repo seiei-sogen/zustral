@@ -8,32 +8,40 @@ open Identifier
 open Stages
 open Span
 
-let rec lift (stmt: Ast.astmt): AstLC.astmt =
+(* A statement takes the name of its temporary before its sub-statements take
+   theirs, and the sub-statements go from the last to the first: the `else`
+   branch before the `then` branch, the rest of a block before its first
+   statement. The names are in the generated C, so this order stays. It is the
+   order OCaml evaluated the arguments of the constructors in, when the names
+   came from a global counter. *)
+let rec lift (supply: Supply.t) (stmt: Ast.astmt): AstLC.astmt * Supply.t =
   match stmt with
   | Ast.ASkip span ->
-     AstLC.ASkip span
-  | Ast.ALet (span, m, id, qt, s) ->
-     AstLC.ALet (span, m, id, qt, lift s)
+     (AstLC.ASkip span, supply)
+  | Ast.ALet (span, m, id, qt, name, value, s) ->
+     let (s, supply) = lift supply s in
+     (AstLC.ALet (span, m, id, qt, AstLC.ABlock (empty_span, AstLC.AInitialAssign (name, qt, transform value), s)), supply)
   | Ast.ADestructure (span, m, qbl, e, s) ->
-     AstLC.ADestructure (span, m, qbl, transform e, lift s)
+     let (s, supply) = lift supply s in
+     (AstLC.ADestructure (span, m, qbl, transform e, s), supply)
   | Ast.AAssign (span, lv, e) ->
-     let tmp: identifier = fresh_ident () in
+     let (tmp, supply): identifier * Supply.t = fresh_ident supply in
      let e = transform e in
-     let lv = transform lv in
-     AstLC.ABlock (
+     let lv = transform_lvalue lv in
+     (AstLC.ABlock (
          empty_span,
          AstLC.LetTmp (
              tmp,
              e
            ),
          AstLC.AAssign (span, lv, Temporary tmp)
-       )
-  | Ast.AInitialAssign (name, typespec, expr) ->
-     AstLC.AInitialAssign (name, typespec, transform expr)
+       ), supply)
   | Ast.AIf (span, e, s1, s2) ->
-     let tmp: identifier = fresh_ident () in
+     let (tmp, supply): identifier * Supply.t = fresh_ident supply in
      let e = transform e in
-     AstLC.ABlock (
+     let (s2, supply) = lift supply s2 in
+     let (s1, supply) = lift supply s1 in
+     (AstLC.ABlock (
          empty_span,
          AstLC.LetTmp (
              tmp,
@@ -42,14 +50,15 @@ let rec lift (stmt: Ast.astmt): AstLC.astmt =
          AstLC.AIf (
              span,
              Temporary tmp,
-             lift s1,
-             lift s2
+             s1,
+             s2
            )
-       )
+       ), supply)
   | Ast.AWhen (span, e, s) ->
-     let tmp: identifier = fresh_ident () in
+     let (tmp, supply): identifier * Supply.t = fresh_ident supply in
      let e = transform e in
-     AstLC.ABlock (
+     let (s, supply) = lift supply s in
+     (AstLC.ABlock (
          empty_span,
          AstLC.LetTmp (
              tmp,
@@ -58,13 +67,14 @@ let rec lift (stmt: Ast.astmt): AstLC.astmt =
          AstLC.AWhen (
              span,
              Temporary tmp,
-             lift s
+             s
            )
-       )
+       ), supply)
   | Ast.ACase (span, e, awl) ->
-     let tmp: identifier = fresh_ident () in
+     let (tmp, supply): identifier * Supply.t = fresh_ident supply in
      let e = transform e in
-     AstLC.ABlock (
+     let (awl, supply) = Supply.map transform_abstract_when supply awl in
+     (AstLC.ABlock (
          empty_span,
          AstLC.LetTmp (
              tmp,
@@ -73,13 +83,14 @@ let rec lift (stmt: Ast.astmt): AstLC.astmt =
          AstLC.ACase (
              span,
              Temporary tmp,
-             List.map transform_abstract_when awl
+             awl
            )
-       )
+       ), supply)
   | Ast.AWhile (span, e, s) ->
-     let tmp: identifier = fresh_ident () in
+     let (tmp, supply): identifier * Supply.t = fresh_ident supply in
      let e = transform e in
-     AstLC.ABlock (
+     let (s, supply) = lift supply s in
+     (AstLC.ABlock (
          empty_span,
          AstLC.LetTmp (
              tmp,
@@ -90,25 +101,26 @@ let rec lift (stmt: Ast.astmt): AstLC.astmt =
              Temporary tmp,
              AstLC.ABlock (
                  empty_span,
-                 lift s,
+                 s,
                  AssignTmp (tmp, e)
                )
            )
-       )
+       ), supply)
   | Ast.AFor {span; name; initial; final; body} ->
-     let tmp_initial: identifier = fresh_ident () in
-     let tmp_final: identifier = fresh_ident () in
+     let (tmp_initial, supply): identifier * Supply.t = fresh_ident supply in
+     let (tmp_final, supply): identifier * Supply.t = fresh_ident supply in
      let idx =
        Ast.QTypeSpecifier (
            make_qident (
-               make_mod_name "Austral.Pervasive",
-               make_ident "Index",
-               make_ident "Index"
+               BuiltIn.pervasive_module_name,
+               make_ident (BuiltInNames.type_name BuiltInNames.Index),
+               make_ident (BuiltInNames.type_name BuiltInNames.Index)
              ),
            []
          )
      in
-     AstLC.ABlock (
+     let (body, supply) = lift supply body in
+     (AstLC.ABlock (
          empty_span,
          AstLC.LetTmp (
              tmp_initial,
@@ -125,18 +137,21 @@ let rec lift (stmt: Ast.astmt): AstLC.astmt =
                  name;
                  initial=Temporary tmp_initial;
                  final=Temporary tmp_final;
-                 body=lift body
+                 body
                }
            )
-       )
+       ), supply)
   | Ast.ABorrow {span; original; rename; region; body; mode} ->
-     AstLC.ABorrow {span; original; rename; region; body=lift body; mode}
+     let (body, supply) = lift supply body in
+     (AstLC.ABorrow {span; original; rename; region; body; mode}, supply)
   | Ast.ABlock (span, s1, s2) ->
-     AstLC.ABlock (span, lift s1, lift s2)
+     let (s2, supply) = lift supply s2 in
+     let (s1, supply) = lift supply s1 in
+     (AstLC.ABlock (span, s1, s2), supply)
   | Ast.ADiscarding (span, e) ->
-     AstLC.ADiscarding (span, transform e)
+     (AstLC.ADiscarding (span, transform e), supply)
   | Ast.AReturn (span, e) ->
-     AstLC.AReturn (span, transform e)
+     (AstLC.AReturn (span, transform e), supply)
 
 and transform (expr: Ast.aexpr): AstLC.aexpr =
   match expr with
@@ -183,14 +198,19 @@ and transform (expr: Ast.aexpr): AstLC.aexpr =
   | Ast.Reborrow q ->
     AstLC.Reborrow q
 
-and transform_abstract_when aw =
+and transform_abstract_when supply aw =
   match aw with
-  | Ast.AbstractWhen (id, qbl, s) -> AstLC.AbstractWhen (id, qbl, lift s)
+  | Ast.AbstractWhen (id, qbl, s) ->
+     let (s, supply) = lift supply s in
+     (AstLC.AbstractWhen (id, qbl, s), supply)
 
 and transform_arglist al =
   match al with
   | Ast.Positional el -> AstLC.Positional (List.map transform el)
   | Ast.Named idel -> AstLC.Named (List.map (fun (id, e) -> (id, transform e)) idel)
+
+and transform_lvalue (Ast.LValue (head, pel)): AstLC.lvalue =
+  AstLC.LValue (head, transform_path pel)
 
 and transform_path (elems: Ast.path_elem list): AstLC.path_elem list =
   List.map transform_elem elems

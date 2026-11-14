@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The case expression has type " },
+    { "type": "type", "content": "Float32" },
+    { "type": "text", "content": " which is not a union type." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/109-case-through-reference-float32/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 7, "column": 17 }
+  },
+  "context": [
+    [ 2, "    generic [R: Region]" ],
+    [ 3, "    function probe(x: &[Float32, R]): Unit is" ],
+    [ 4, "        case x of" ],
+    [ 5, "            when A do" ],
+    [ 6, "                skip;" ],
+    [ 7, "        end case;" ],
+    [ 8, "        return nil;" ],
+    [ 9, "    end;" ]
+  ]
+}

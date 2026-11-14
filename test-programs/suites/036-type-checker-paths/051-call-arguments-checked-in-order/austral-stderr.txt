@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "I can't find a " },
+    { "type": "text", "content": "variable" },
+    { "type": "text", "content": " named " },
+    { "type": "code", "content": "firstMissing" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/051-call-arguments-checked-in-order/Test.aum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 7, "column": 50 }
+  },
+  "context": [
+    [ 5, "" ],
+    [ 6, "    function main(): ExitCode is" ],
+    [ 7, "        printLn(add(firstMissing, secondMissing));" ],
+    [ 8, "        return ExitSuccess();" ],
+    [ 9, "    end;" ]
+  ]
+}

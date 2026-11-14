@@ -1,0 +1,76 @@
+# R22 で、作り直す前のコンパイラ（タグ refactoring-base、97c6041）と出力が変わったプログラム
+# tools/refactoring/equivalence.py compare の出力。73 本。どれも、外部関数の型のエラーを出すプログラムである。
+# 行の末尾は、変わったもの（exit は終了コード、files は残すファイル、stderr と error.html はエラーの出力）。
+cli/041-foreign-unit-return-typecheck: stderr error.html
+cli/042-export-unit-return-typecheck: exit stderr error.html files
+cli/043-export-then-error-in-later-module-typecheck: stderr error.html
+suites/032-other-errors/008-export-disallowed-type: stderr error.html
+suites/034-early-and-late-stage-errors/001-foreign-unit-return: stderr error.html
+suites/034-early-and-late-stage-errors/002-foreign-record-parameter: stderr error.html
+suites/034-early-and-late-stage-errors/003-foreign-region-parameter: stderr error.html
+suites/034-early-and-late-stage-errors/004-foreign-read-reference-parameter: stderr error.html
+suites/034-early-and-late-stage-errors/005-foreign-write-reference-parameter: stderr error.html
+suites/034-early-and-late-stage-errors/010-foreign-unit-parameter: stderr error.html
+suites/034-early-and-late-stage-errors/011-foreign-record-return: stderr error.html
+suites/034-early-and-late-stage-errors/012-foreign-region-return: stderr error.html
+suites/034-early-and-late-stage-errors/013-foreign-read-reference-return: stderr error.html
+suites/034-early-and-late-stage-errors/014-foreign-write-reference-return: stderr error.html
+suites/034-early-and-late-stage-errors/015-export-unit-parameter: stderr error.html
+suites/034-early-and-late-stage-errors/016-export-record-return: stderr error.html
+suites/034-early-and-late-stage-errors/017-export-region-return: stderr error.html
+suites/034-early-and-late-stage-errors/018-export-read-reference-return: stderr error.html
+suites/034-early-and-late-stage-errors/019-export-write-reference-return: stderr error.html
+suites/034-early-and-late-stage-errors/020-export-span-return: stderr error.html
+suites/034-early-and-late-stage-errors/021-export-mutable-span-return: stderr error.html
+suites/034-early-and-late-stage-errors/022-export-pointer-return: stderr error.html
+suites/034-early-and-late-stage-errors/023-export-address-of-record-parameter: stderr error.html
+suites/034-early-and-late-stage-errors/024-export-address-of-unit-return: stderr error.html
+suites/034-early-and-late-stage-errors/025-export-parameter-and-return: stderr error.html
+suites/034-early-and-late-stage-errors/026-export-two-functions: stderr error.html
+suites/034-early-and-late-stage-errors/027-foreign-after-type-error: stderr error.html
+suites/034-early-and-late-stage-errors/028-foreign-in-safe-module-unit-return: stderr error.html
+suites/034-early-and-late-stage-errors/030-foreign-then-error-in-later-module: stderr error.html
+suites/034-early-and-late-stage-errors/031-export-after-type-error: stderr error.html
+suites/034-early-and-late-stage-errors/032-export-then-error-in-later-module: stderr error.html
+suites/038-late-stage-paths/023-export-record-parameter: stderr error.html
+suites/038-late-stage-paths/024-export-region-parameter: stderr error.html
+suites/038-late-stage-paths/025-export-read-reference-parameter: stderr error.html
+suites/038-late-stage-paths/026-export-write-reference-parameter: stderr error.html
+suites/038-late-stage-paths/027-export-span-parameter: stderr error.html
+suites/038-late-stage-paths/028-export-mutable-span-parameter: stderr error.html
+suites/038-late-stage-paths/029-export-pointer-parameter: stderr error.html
+typecheck/032-other-errors/008-export-disallowed-type: exit stderr error.html files
+typecheck/034-early-and-late-stage-errors/001-foreign-unit-return: stderr error.html
+typecheck/034-early-and-late-stage-errors/002-foreign-record-parameter: stderr error.html
+typecheck/034-early-and-late-stage-errors/003-foreign-region-parameter: stderr error.html
+typecheck/034-early-and-late-stage-errors/004-foreign-read-reference-parameter: stderr error.html
+typecheck/034-early-and-late-stage-errors/005-foreign-write-reference-parameter: stderr error.html
+typecheck/034-early-and-late-stage-errors/010-foreign-unit-parameter: stderr error.html
+typecheck/034-early-and-late-stage-errors/011-foreign-record-return: stderr error.html
+typecheck/034-early-and-late-stage-errors/012-foreign-region-return: stderr error.html
+typecheck/034-early-and-late-stage-errors/013-foreign-read-reference-return: stderr error.html
+typecheck/034-early-and-late-stage-errors/014-foreign-write-reference-return: stderr error.html
+typecheck/034-early-and-late-stage-errors/015-export-unit-parameter: exit stderr error.html files
+typecheck/034-early-and-late-stage-errors/016-export-record-return: exit stderr error.html files
+typecheck/034-early-and-late-stage-errors/017-export-region-return: exit stderr error.html files
+typecheck/034-early-and-late-stage-errors/018-export-read-reference-return: exit stderr error.html files
+typecheck/034-early-and-late-stage-errors/019-export-write-reference-return: exit stderr error.html files
+typecheck/034-early-and-late-stage-errors/020-export-span-return: exit stderr error.html files
+typecheck/034-early-and-late-stage-errors/021-export-mutable-span-return: exit stderr error.html files
+typecheck/034-early-and-late-stage-errors/022-export-pointer-return: exit stderr error.html files
+typecheck/034-early-and-late-stage-errors/023-export-address-of-record-parameter: exit stderr error.html files
+typecheck/034-early-and-late-stage-errors/024-export-address-of-unit-return: exit stderr error.html files
+typecheck/034-early-and-late-stage-errors/025-export-parameter-and-return: exit stderr error.html files
+typecheck/034-early-and-late-stage-errors/026-export-two-functions: exit stderr error.html files
+typecheck/034-early-and-late-stage-errors/027-foreign-after-type-error: stderr error.html
+typecheck/034-early-and-late-stage-errors/028-foreign-in-safe-module-unit-return: stderr error.html
+typecheck/034-early-and-late-stage-errors/030-foreign-then-error-in-later-module: stderr error.html
+typecheck/034-early-and-late-stage-errors/031-export-after-type-error: stderr error.html
+typecheck/034-early-and-late-stage-errors/032-export-then-error-in-later-module: stderr error.html
+typecheck/038-late-stage-paths/023-export-record-parameter: exit stderr error.html files
+typecheck/038-late-stage-paths/024-export-region-parameter: exit stderr error.html files
+typecheck/038-late-stage-paths/025-export-read-reference-parameter: exit stderr error.html files
+typecheck/038-late-stage-paths/026-export-write-reference-parameter: exit stderr error.html files
+typecheck/038-late-stage-paths/027-export-span-parameter: exit stderr error.html files
+typecheck/038-late-stage-paths/028-export-mutable-span-parameter: exit stderr error.html files
+typecheck/038-late-stage-paths/029-export-pointer-parameter: exit stderr error.html files

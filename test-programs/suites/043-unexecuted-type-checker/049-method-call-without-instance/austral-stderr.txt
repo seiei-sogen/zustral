@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The typeclass " },
+    { "type": "code", "content": "Kind" },
+    { "type": "text", "content": " has no instance which matches for " },
+    { "type": "type", "content": "Bool" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/049-method-call-without-instance/Test.aum",
+    "startp": { "line": 13, "column": 8 },
+    "end": { "line": 13, "column": 28 }
+  },
+  "context": [
+    [ 11, "" ],
+    [ 12, "    function main(): ExitCode is" ],
+    [ 13, "        printLn(kind(true));" ],
+    [ 14, "        return ExitSuccess();" ],
+    [ 15, "    end;" ]
+  ]
+}

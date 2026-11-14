@@ -1,0 +1,30 @@
+import Test_TC (Describe, describe);
+
+module body Test is
+    instance Describe(Int32) is
+        method describe(value: Int32): Int32 is
+            return 2;
+        end;
+    end;
+
+    record Box[T: Free]: Free is
+        value: T;
+    end;
+
+    typeclass Outer(T: Free) is
+        method outer(value: T): Int32;
+    end;
+
+    generic [U: Free(Describe)]
+    instance Outer(Box[U]) is
+        method outer(value: Box[U]): Int32 is
+            return 3;
+        end;
+    end;
+
+    function main(): ExitCode is
+        let b: Box[Int32] := Box(value => 10);
+        printLn(outer(b));
+        return ExitSuccess();
+    end;
+end module body.

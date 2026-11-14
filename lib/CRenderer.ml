@@ -24,12 +24,6 @@ let render_line (Line (Indentation i, s)) =
 let desc_text (Desc text): string =
   "/*\n  " ^ text ^ "\n*/"
 
-(* https://en.cppreference.com/w/c/keyword *)
-let is_c_keyword name = Str.string_match (Str.regexp "alignas\\|alignof\\|auto\\|bool\\|break\\|case\\|char\\|const\\|constexpr\\|continue\\|default\\|do\\|double\\|else\\|enum\\|extern\\|false\\|float\\|for\\|goto\\|if\\|inline\\|int\\|long\\|nullptr\\|register\\|restrict\\|return\\|short\\|signed\\|sizeof\\|static\\|static_assert\\|struct\\|switch\\|thread_local\\|true\\|typedef\\|typeof\\|typeof_unqual\\|union\\|unsigned\\|void\\|volatile\\|while\\|_Alignas\\|_Alignof\\|_Atomic\\|_BitInt\\|_Bool\\|_Complex\\|_Decimal128\\|_Decimal32\\|_Decimal64\\|_Generic\\|_Imaginary\\|_Noreturn\\|_Static_assert\\|_Thread_local\\|_Pragma\\|asm\\|fortran") name 0
-
-let avoid_ckw (v: string): string =
-  if is_c_keyword v then ("au_ckw_" ^ v) else v
-
 let rec render_unit (CUnit (name, decls)): string =
   let rd d =
     String.concat "\n" (List.map render_line (render_decl zero_indent d))
@@ -38,53 +32,44 @@ let rec render_unit (CUnit (name, decls)): string =
   ^ (String.concat "\n\n" (List.map rd decls))
   ^ "\n/* --- END translation unit for module '" ^ name ^ "' --- */\n"
 
+and render_program (CProgram { prelude; units; entrypoint }): string =
+  String.concat "\n" ((source_text prelude :: List.map render_unit units) @ List.map source_text (Option.to_list entrypoint))
+
+and source_text (CSource text): string =
+  text
+
 and render_decl i d =
   match d with
   | CMacro (desc, name, value) ->
      [
        Line (i, desc_text desc);
-       Line (i, "#define " ^ name ^ " " ^ (e value))
-     ]
-  | CConstantDefinition (desc, name, ty, value) ->
-     [
-       Line (i, desc_text desc);
-       Line (i, (render_type ty) ^ " " ^ (avoid_ckw name) ^ " = " ^ (e value) ^ ";")
+       Line (i, "#define " ^ (CIdent.render name) ^ " " ^ (e value))
      ]
   | CStructForwardDeclaration (desc, name) ->
      [
        Line (i, desc_text desc);
-       Line (i, "struct " ^ (avoid_ckw name) ^ ";");
-       Line (i, "typedef struct " ^ (avoid_ckw name) ^ " " ^ (avoid_ckw name) ^ ";")
-     ]
-  | CTypeDefinition (desc, name, def) ->
-     [
-       Line (i, desc_text desc);
-       Line (i, "typedef " ^ (render_type def) ^ " " ^ (avoid_ckw name) ^ ";")
-     ]
-  | CStructDefinition (desc, record) ->
-     [
-       Line (i, desc_text desc);
-       Line (i, (render_struct record) ^ ";")
+       Line (i, "struct " ^ (CIdent.render name) ^ ";");
+       Line (i, "typedef struct " ^ (CIdent.render name) ^ " " ^ (CIdent.render name) ^ ";")
      ]
   | CNamedStructDefinition (desc, name, slots) ->
      [
        Line (i, desc_text desc);
-       Line (i, "typedef struct " ^ (avoid_ckw name) ^ " {" ^ (String.concat "" (List.map (fun (CSlot (n, t)) -> (render_type t) ^ " " ^ n ^ ";") slots)) ^ "} " ^ (avoid_ckw name) ^ ";")
+       Line (i, "typedef struct " ^ (CIdent.render name) ^ " {" ^ (String.concat "" (List.map render_slot slots)) ^ "} " ^ (CIdent.render name) ^ ";")
      ]
   | CEnumDefinition (desc, name, cases) ->
      List.concat [
          [Line (i, desc_text desc)];
          [Line (i, "typedef enum {")];
-         [Line (indent i, comma_sep (List.map (fun case -> case) cases))];
-         [Line (i, "} " ^ (avoid_ckw name) ^ ";")];
+         [Line (indent i, comma_sep (List.map CIdent.render cases))];
+         [Line (i, "} " ^ (CIdent.render name) ^ ";")];
        ]
   | CFunctionDeclaration (desc, name, params, rt, linkage) ->
      let s = (render_linkage linkage)
              ^ (render_type rt)
              ^ " "
-             ^ (avoid_ckw name)
+             ^ (CIdent.render name)
              ^ "("
-             ^ (comma_sep (List.map (fun (CValueParam (n, t)) -> (render_type t) ^ " " ^ (avoid_ckw n)) params))
+             ^ (comma_sep (List.map render_param params))
              ^ ");"
      in
      [
@@ -94,9 +79,9 @@ and render_decl i d =
   | CFunctionDefinition (desc, name, params, rt, body) ->
      let s = (render_type rt)
              ^ " "
-             ^ (avoid_ckw name)
+             ^ (CIdent.render name)
              ^ "("
-             ^ (comma_sep (List.map (fun (CValueParam (n, t)) -> (render_type t) ^ " " ^ (avoid_ckw n)) params))
+             ^ (comma_sep (List.map render_param params))
              ^ ") {"
      in
      List.concat [
@@ -115,10 +100,10 @@ and render_stmt (i: indentation) (stmt: c_stmt): line list =
   | CLet (name, ty, value) -> begin
       match value with
       | (Some value) ->
-         let s = (render_type ty) ^ " " ^ (avoid_ckw name) ^ " = " ^ (e value) ^ ";" in
+         let s = (render_type ty) ^ " " ^ (CIdent.render name) ^ " = " ^ (e value) ^ ";" in
          [Line (i, s)]
       | None ->
-         let s = (render_type ty) ^ " " ^ (avoid_ckw name) ^ ";" in
+         let s = (render_type ty) ^ " " ^ (CIdent.render name) ^ ";" in
          [Line (i, s)]
      end
   | CAssign (lvalue, value) ->
@@ -148,11 +133,11 @@ and render_stmt (i: indentation) (stmt: c_stmt): line list =
        ]
   | CFor (v, final, b) ->
      let s = "; "
-             ^ (avoid_ckw v)
+             ^ (CIdent.render v)
              ^ " <= "
              ^ (e final)
              ^ "; "
-             ^ (avoid_ckw v)
+             ^ (CIdent.render v)
              ^ "++"
      in
      List.concat [
@@ -168,9 +153,9 @@ and render_stmt (i: indentation) (stmt: c_stmt): line list =
      let s = (render_linkage linkage)
              ^ (render_type rt)
              ^ " "
-             ^ name
+             ^ (CIdent.render name)
              ^ "("
-             ^ (comma_sep (List.map (fun (CValueParam (n, t)) -> (render_type t) ^ " " ^ n) params))
+             ^ (comma_sep (List.map render_param params))
              ^ ");"
      in
      [
@@ -192,34 +177,56 @@ and render_switch_case i (CSwitchCase (value, b)) =
     ]
 
 and render_type = function
+  | CBuiltinType b ->
+     render_builtin_type b
   | CNamedType n ->
-     n
+     CIdent.render n
   | CPointer t ->
      (render_type t) ^ "*"
-  | CStructType s ->
-     render_struct s
+  | CStructType slots ->
+     (* Two spaces, around the name these structs do not have. *)
+     "struct  {"
+     ^ (String.concat "" (List.map render_slot slots))
+     ^ "}"
   | CUnionType slots ->
      "union "
      ^ "{ "
-     ^ (String.concat "" (List.map (fun (CSlot (n, t)) -> (render_type t) ^ " " ^ n ^ ";") slots))
+     ^ (String.concat "" (List.map render_slot slots))
      ^ "}"
 
-and render_struct (CStruct (name, slots)) =
-  let name' = Option.value name ~default:"" in
-  "struct "
-  ^ name'
-  ^ " {"
-  ^ (String.concat "" (List.map (fun (CSlot (n, t)) -> (render_type t) ^ " " ^ n ^ ";") slots))
-  ^ "}"
+and render_builtin_type = function
+  | CUnitType -> "au_unit_t"
+  | CBoolType -> "au_bool_t"
+  | CNat8Type -> "au_nat8_t"
+  | CNat16Type -> "au_nat16_t"
+  | CNat32Type -> "au_nat32_t"
+  | CNat64Type -> "au_nat64_t"
+  | CInt8Type -> "au_int8_t"
+  | CInt16Type -> "au_int16_t"
+  | CInt32Type -> "au_int32_t"
+  | CInt64Type -> "au_int64_t"
+  | CSizeType -> "size_t"
+  | CIndexType -> "au_index_t"
+  | CFloatType -> "float"
+  | CDoubleType -> "double"
+  | CRegionType -> "au_region_t"
+  | CSpanType -> "au_span_t"
+  | CFnPtrType -> "au_fnptr_t"
+
+and render_slot (CSlot (n, t)) =
+  (render_type t) ^ " " ^ (CIdent.render n) ^ ";"
+
+and render_param (CValueParam (n, t)) =
+  (render_type t) ^ " " ^ (CIdent.render n)
 
 and render_expr = function
   | (CBool b) -> render_bool b
   | (CInt i) -> i
   | (CFloat f) -> f
   | (CString s) -> "\"" ^ (unescape_string s) ^ "\""
-  | (CVar s) -> (avoid_ckw s)
+  | (CVar s) -> (CIdent.render s)
   | (CFuncall (n, a)) ->
-     (avoid_ckw n) ^ (paren (comma_sep (List.map e a)))
+     (CIdent.render n) ^ (paren (comma_sep (List.map e a)))
   | CFptrCall (expr, rt, argtys, args) ->
      let rt: string = render_type rt
      and argtys: string = String.concat ", " (List.map render_type argtys)
@@ -231,8 +238,6 @@ and render_expr = function
      let e' = render_expr e
      and t' = render_type t in
      paren ((paren t') ^ " " ^ e')
-  | (CArithmetic (op, l, r)) ->
-     paren ((e l) ^ " " ^ render_arith op ^ " " ^ (e r))
   | (CComparison (op, l, r)) ->
      paren ((e l) ^ " " ^ (render_comp op) ^ " " ^ (e r))
   | (CConjunction (l, r)) ->
@@ -244,23 +249,14 @@ and render_expr = function
   | (CIfExpression (c, t, f)) ->
      paren ((e c) ^ " ? " ^ (e t) ^ " : " ^ (e f))
   | (CStructInitializer args) ->
-     "{ " ^ (comma_sep (List.map (fun (n, v) -> "." ^ n ^ " = " ^ (e v)) args)) ^ " }"
+     "{ " ^ (comma_sep (List.map (fun (n, v) -> "." ^ (CIdent.render n) ^ " = " ^ (e v)) args)) ^ " }"
   | (CStructAccessor (v, n)) ->
-     (paren (e v)) ^ "." ^ n
+     (paren (e v)) ^ "." ^ (CIdent.render n)
   | (CPointerStructAccessor (v, n)) ->
-     (paren (e v)) ^ "->" ^ n
-  | CIndex (arr, idx) ->
-     (e arr) ^ "[" ^ (e idx) ^ "]"
+     (paren (e v)) ^ "->" ^ (CIdent.render n)
   | CAddressOf exp ->
      "&(" ^ (e exp) ^ ")"
-  | CPath (head, elems) ->
-     let f (elem: c_path_elem): string =
-       match elem with
-       | CPathSlot name -> "." ^ name
-       | CPathPointer name -> "->" ^ name
-     in
-     (render_expr head) ^ (String.concat "" (List.map f elems))
-  | CEmbed (ty, expr, args) ->
+  | CEmbed (ty, CSource expr, args) ->
      let strs = List.map render_expr args in
      (* the `expr` has a format like "derp $1 $2", so iterate over the list of
         arg swith an index, and replace the corresponding dollar sign marker if
@@ -293,12 +289,6 @@ and e expr = render_expr expr
 and render_bool = function
   | false -> "false"
   | true -> "true"
-
-and render_arith = function
-  | Add -> "+"
-  | Subtract -> "-"
-  | Multiply -> "*"
-  | Divide -> "/"
 
 and render_comp = function
   | Equal -> "=="

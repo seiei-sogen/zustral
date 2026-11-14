@@ -4,30 +4,17 @@
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
-open Identifier
+(** Compile the built-in modules and then the given modules, in order, and
+    return the whole C program: a unit per module, the wrappers of the
+    exported functions and, if asked for, the entrypoint. The entrypoint is a
+    module name and the name of a function in it.
 
-type compiler
+    This reads no file, writes none, and raises no [Austral_error]: the error
+    that stopped it is in the result. *)
+val compile : Pipeline.compile
 
-val empty_compiler : compiler
-
-val compiler_code : compiler -> string
-
-type module_source =
-  | TwoFileModuleSource of {
-      int_filename: string;
-      int_code: string;
-      body_filename: string;
-      body_code: string
-    }
-  | BodyModuleSource of {
-      body_filename: string;
-      body_code: string
-    }
-
-val compile_mod : compiler -> module_source -> compiler
-
-val compile_multiple : compiler -> module_source list -> compiler
-
-val compile_entrypoint : compiler -> module_name -> identifier -> compiler
-
-val post_compile : compiler -> compiler
+(** What the type-check mode of the command line runs: every stage of
+    {!compile} on every module, with the C thrown away. The step after the
+    modules does not run, so an error that only the wrappers or the entrypoint
+    would find is not reported. *)
+val check : Pipeline.check

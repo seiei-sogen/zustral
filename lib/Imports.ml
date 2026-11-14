@@ -6,7 +6,6 @@
 *)
 open Identifier
 open IdentifierMap
-open ModuleNameSet
 open Id
 open Error
 
@@ -14,7 +13,7 @@ type import_map =
   ImportMap of {
       import_into: module_name;
       symbols: qident IdentifierMap.t;
-      instances: decl_id list;
+      instances: instance_id list;
     }
 
 let empty_map (n: module_name): import_map =
@@ -31,7 +30,7 @@ let get_symbol (im: import_map) (name: identifier): qident option =
 let add_symbol (im: import_map) (q: qident) =
   match get_symbol im (local_name q) with
   | Some _ ->
-     err "Cannot add symbol to the import map twice."
+     generic_error NoSpan SymbolImportedTwice
   | None ->
      let (ImportMap { import_into; symbols; instances }) = im in
      ImportMap {
@@ -40,7 +39,7 @@ let add_symbol (im: import_map) (q: qident) =
          instances = instances
        }
 
-let add_instance_to_imports (im: import_map) (id: decl_id): import_map =
+let add_instance_to_imports (im: import_map) (id: instance_id): import_map =
   let (ImportMap { import_into; symbols; instances }) = im in
   ImportMap {
       import_into = import_into;
@@ -52,12 +51,6 @@ let importing_module (im: import_map): module_name =
   let (ImportMap { import_into; _ }) = im in
   import_into
 
-let imported_instances (im: import_map): decl_id list =
+let imported_instances (im: import_map): instance_id list =
   let (ImportMap { instances; _ }) = im in
   instances
-
-let modules_imported_from (im: import_map): ModuleNameSet.t =
-  let ImportMap { symbols; _ } = im in
-  let names: qident list = List.map (fun (_, q) -> q) (List.of_seq (IdentifierMap.to_seq symbols)) in
-  let modnames: module_name list = List.map source_module_name names in
-  ModuleNameSet.of_list modnames

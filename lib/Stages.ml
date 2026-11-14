@@ -21,7 +21,6 @@ module Ast = struct
     | QWriteRef of qtypespec * qtypespec
     | QSpan of qtypespec * qtypespec
     | QSpanWrite of qtypespec * qtypespec
-  [@@deriving show]
 
   type qbinding =
     QBinding of {
@@ -32,10 +31,12 @@ module Ast = struct
 
   type astmt =
     | ASkip of span
-    | ALet of span * mutability * identifier * qtypespec * astmt
+    | ALet of span * mutability * identifier * qtypespec * qident * aexpr * astmt
+    (** A let gives the variable its value before its body: the name, as the
+        variable is referred to, and the value. The later stages make that an
+        `AInitialAssign` at the start of the body. *)
     | ADestructure of span * mutability * qbinding list * aexpr * astmt
-    | AAssign of span * aexpr * aexpr
-    | AInitialAssign of qident * qtypespec * aexpr
+    | AAssign of span * lvalue * aexpr
     | AIf of span * aexpr * astmt * astmt
     | AWhen of span * aexpr * astmt
     | ACase of span * aexpr * abstract_when list
@@ -62,8 +63,8 @@ module Ast = struct
   and aexpr =
     | NilConstant
     | BoolConstant of bool
-    | IntConstant of string
-    | FloatConstant of string
+    | IntConstant of NumberLiteral.int_literal
+    | FloatConstant of NumberLiteral.float_literal
     | StringConstant of escaped_string
     | Variable of qident
     | FunctionCall of qident * abstract_arglist
@@ -93,6 +94,9 @@ module Ast = struct
     | SlotAccessor of identifier
     | PointerSlotAccessor of identifier
     | ArrayIndex of aexpr
+
+  (** The left side of an assignment: a variable and a path into it. *)
+  and lvalue = LValue of qident * path_elem list
 end
 
 (** The combined representation merges the interface and body. *)
@@ -122,7 +126,10 @@ module Combined = struct
     | CUnion of span * type_vis * identifier * typarams * universe * qcase list * docstring
     | CFunction of span * vis * identifier * typarams * qparam list * qtypespec * astmt * docstring * pragma list
     | CTypeclass of span * vis * identifier * type_parameter * combined_method_decl list * docstring
-    | CInstance of span * vis * qident * typarams * qtypespec * combined_method_def list * docstring
+    | CInstance of span * span * vis * qident * typarams * qtypespec * combined_method_def list * docstring
+    (** The first span is the definition's. The second is the declaration's
+        whose place decides when the instance is registered: the interface's,
+        for an instance the interface declares; the definition's, otherwise. *)
 
   and qslot = QualifiedSlot of identifier * qtypespec
 
@@ -150,7 +157,7 @@ module AstLC = struct
     | ASkip of span
     | ALet of span * mutability * identifier * qtypespec * astmt
     | ADestructure of span * mutability * qbinding list * aexpr * astmt
-    | AAssign of span * aexpr * aexpr
+    | AAssign of span * lvalue * aexpr
     | AInitialAssign of qident * qtypespec * aexpr
     | AIf of span * aexpr * astmt * astmt
     | AWhen of span * aexpr * astmt
@@ -180,8 +187,8 @@ module AstLC = struct
   and aexpr =
     | NilConstant
     | BoolConstant of bool
-    | IntConstant of string
-    | FloatConstant of string
+    | IntConstant of NumberLiteral.int_literal
+    | FloatConstant of NumberLiteral.float_literal
     | StringConstant of escaped_string
     | Variable of qident
     | Temporary of identifier
@@ -212,6 +219,9 @@ module AstLC = struct
     | SlotAccessor of identifier
     | PointerSlotAccessor of identifier
     | ArrayIndex of aexpr
+
+  (** The left side of an assignment: a variable and a path into it. *)
+  and lvalue = LValue of qident * path_elem list
 end
 
 (** The AstLC, but paths are desugared. *)
@@ -260,8 +270,8 @@ module AstDP = struct
   and aexpr =
     | NilConstant
     | BoolConstant of bool
-    | IntConstant of string
-    | FloatConstant of string
+    | IntConstant of NumberLiteral.int_literal
+    | FloatConstant of NumberLiteral.float_literal
     | StringConstant of escaped_string
     | Variable of qident
     | Temporary of identifier
@@ -337,8 +347,8 @@ module AstDB = struct
   and aexpr =
     | NilConstant
     | BoolConstant of bool
-    | IntConstant of string
-    | FloatConstant of string
+    | IntConstant of NumberLiteral.int_literal
+    | FloatConstant of NumberLiteral.float_literal
     | StringConstant of escaped_string
     | Variable of qident
     | Temporary of identifier
@@ -398,7 +408,10 @@ module SmallCombined = struct
     | CUnion of span * type_vis * identifier * typarams * universe * qcase list * docstring
     | CFunction of span * vis * identifier * typarams * qparam list * qtypespec * astmt * docstring * pragma list
     | CTypeclass of span * vis * identifier * type_parameter * Combined.combined_method_decl list * docstring
-    | CInstance of span * vis * qident * typarams * qtypespec * combined_method_def list * docstring
+    | CInstance of span * span * vis * qident * typarams * qtypespec * combined_method_def list * docstring
+    (** The first span is the definition's. The second is the declaration's
+        whose place decides when the instance is registered: the interface's,
+        for an instance the interface declares; the definition's, otherwise. *)
 
   and combined_method_def = CMethodDef of identifier * typarams * qparam list * qtypespec * docstring * astmt
 end
@@ -428,16 +441,16 @@ module Linked = struct
       }
 
   and linked_definition =
-    | LConstant of decl_id * vis * identifier * ty * aexpr * docstring
-    | LRecord of decl_id * type_vis * identifier * typarams * universe * typed_slot list * docstring
-    | LUnion of decl_id * type_vis * identifier * typarams * universe * linked_case list * docstring
-    | LFunction of decl_id * vis * identifier * typarams * value_parameter list * ty * astmt * docstring * pragma list
-    | LTypeclass of decl_id * vis * identifier * type_parameter * linked_method_decl list * docstring
-    | LInstance of decl_id * vis * qident * typarams * ty * linked_method_def list * docstring
+    | LConstant of constant_id * vis * identifier * ty * aexpr * docstring
+    | LRecord of record_id * type_vis * identifier * typarams * universe * typed_slot list * docstring
+    | LUnion of union_id * type_vis * identifier * typarams * universe * linked_case list * docstring
+    | LFunction of function_id * vis * identifier * typarams * value_parameter list * ty * astmt * docstring * pragma list
+    | LTypeclass of typeclass_id * vis * identifier * type_parameter * linked_method_decl list * docstring
+    | LInstance of instance_id * vis * qident * typarams * ty * linked_method_def list * docstring
 
-  and linked_case = LCase of decl_id * identifier * typed_slot list
+  and linked_case = LCase of union_case_id * identifier * typed_slot list
 
-  and linked_method_decl = LMethodDecl of decl_id * identifier * value_parameter list * ty * docstring
+  and linked_method_decl = LMethodDecl of typeclass_method_id * identifier * value_parameter list * ty * docstring
 
   and linked_method_def = LMethodDef of ins_meth_id * identifier * value_parameter list * ty * docstring * astmt
 end
@@ -461,12 +474,10 @@ module Tast = struct
         ty: ty;
         rename: identifier;
       }
-  [@@deriving (show, sexp)]
 
   type case_ref =
     | CasePlain
     | CaseRef
-  [@@deriving (show, sexp)]
 
   type tstmt =
     | TSkip of span
@@ -476,7 +487,9 @@ module Tast = struct
     | TAssignVar of span * qident * texpr
     | TInitialAssign of qident * texpr
     | TIf of span * texpr * tstmt * tstmt
-    | TCase of span * texpr * typed_when list * case_ref
+    | TCase of span * texpr * union_id * ty list * typed_when list * case_ref
+    (** The ID and the type arguments are those of the union the value, or the
+        reference, has as its type. *)
     | TWhile of span * texpr * tstmt
     | TFor of span * identifier * texpr * texpr * tstmt
     | TBorrow of {
@@ -494,25 +507,24 @@ module Tast = struct
     | TReturn of span * texpr
     | TLetTmp of identifier * ty * texpr
     | TAssignTmp of identifier * texpr
-  [@@deriving show]
 
   and texpr =
     | TNilConstant
     | TBoolConstant of bool
-    | TIntConstant of string
-    | TFloatConstant of string
+    | TIntConstant of NumberLiteral.int_literal
+    | TFloatConstant of NumberLiteral.float_literal
     | TStringConstant of escaped_string
     | TConstVar of qident * ty
     | TParamVar of identifier * ty
     | TLocalVar of identifier * ty
-    | TFunVar of decl_id * ty * type_bindings
+    | TFunVar of function_id * ty * type_bindings
     | TTemporary of identifier * ty
     (** Represents accessing a function as a value. *)
-    | TFuncall of decl_id * qident * texpr list * ty * type_bindings
+    | TFuncall of function_id * qident * texpr list * ty * type_bindings
     | TMethodCall of ins_meth_id * qident * typarams * texpr list * ty * type_bindings
     | TVarMethodCall of {
         source_module_name: module_name;
-        typeclass_id: decl_id;
+        typeclass_id: typeclass_id;
         params: value_parameter list;
         method_name: qident;
         args: texpr list;
@@ -522,45 +534,64 @@ module Tast = struct
       }
     | TFptrCall of identifier * texpr list * ty
     | TCast of texpr * ty
+    (** A type annotation that changed the expression: it gave a literal its
+        type, or it turned a write reference into a read reference. The
+        annotation is one the user wrote (`e : T`, or the type of a `let`,
+        which annotates the value), or the `Index` that `LiftControlPass`
+        puts around the bounds of a `for`. *)
+    | TImplicitCast of texpr * ty
+    (** A cast the type checker adds: around an argument whose parameter has
+        an integer type, and around the operands of an arithmetic expression,
+        to the type of the operation. *)
     | TComparison of comparison_operator * texpr * texpr
     | TConjunction of texpr * texpr
     | TDisjunction of texpr * texpr
     | TNegation of texpr
     | TIfExpression of texpr * texpr * texpr
     | TRecordConstructor of ty * (identifier * texpr) list
-    | TUnionConstructor of ty * identifier * (identifier * texpr) list
+    | TUnionConstructor of {
+        union_id: union_id;
+        type_name: qident;
+        tyargs: ty list;
+        universe: universe;
+        case_name: identifier;
+        args: (identifier * texpr) list;
+      }
+    (** The type is `NamedType (type_name, UnionTypeId union_id, tyargs, universe)`: `get_type`
+        builds it, so the monomorph of the union and the type of the value
+        come from the same type arguments. *)
     | TSlotAccessor of texpr * identifier * ty
     | TPointerSlotAccessor of texpr * identifier * ty
-    | TArrayIndex of texpr * texpr * ty
-    | TSpanIndex of texpr * texpr * ty
+    | TArrayIndex of texpr * texpr * ty * ref_region * borrowing_mode
+    | TSpanIndex of texpr * texpr * ty * ref_region * borrowing_mode
+    (** The element type, and the region and the mode of the reference to the
+        element that the expression is: `get_type` builds that reference type. *)
     | TEmbed of ty * string * texpr list
-    | TDeref of texpr
+    | TDeref of texpr * ty
+    (** The type is the one of the value the reference points to. *)
     | TSizeOf of ty
-  [@@deriving show]
 
   and typed_when =
     TypedWhen of identifier * typed_binding list * tstmt
-  [@@deriving show]
 
   and typed_arglist =
     | TPositionalArglist of texpr list
     | TNamedArglist of (identifier * texpr) list
-  [@@deriving show]
 
   type typed_method_decl =
-    TypedMethodDecl of decl_id * identifier * value_parameter list * ty
+    TypedMethodDecl of typeclass_method_id * identifier * value_parameter list * ty
 
   type typed_method_def =
     TypedMethodDef of ins_meth_id * identifier * value_parameter list * ty * tstmt
 
   type typed_decl =
-    | TConstant of decl_id * vis * identifier * ty * texpr * docstring
-    | TRecord of decl_id * type_vis * identifier * typarams * universe * typed_slot list * docstring
-    | TUnion of decl_id * type_vis * identifier * typarams * universe * linked_case list * docstring
-    | TFunction of decl_id * vis * identifier * typarams * value_parameter list * ty * tstmt * docstring
-    | TForeignFunction of decl_id * vis * identifier * value_parameter list * ty * string * docstring
-    | TTypeClass of decl_id * vis * identifier * type_parameter * typed_method_decl list * docstring
-    | TInstance of decl_id * vis * qident * typarams * ty * typed_method_def list * docstring
+    | TConstant of constant_id * vis * identifier * ty * texpr * docstring
+    | TRecord of record_id * type_vis * identifier * typarams * universe * typed_slot list * docstring
+    | TUnion of union_id * type_vis * identifier * typarams * universe * linked_case list * docstring
+    | TFunction of function_id * vis * identifier * typarams * value_parameter list * ty * tstmt * docstring
+    | TForeignFunction of function_id * vis * identifier * value_parameter list * ty * string * ty ForeignType.foreign_signature * docstring
+    | TTypeClass of typeclass_id * vis * identifier * type_parameter * typed_method_decl list * docstring
+    | TInstance of instance_id * vis * qident * typarams * ty * typed_method_def list * docstring
 
   type typed_module = TypedModule of module_name * typed_decl list
 end
@@ -583,16 +614,16 @@ module Mtast = struct
   type mono_module = MonoModule of module_name * mdecl list
 
   and mdecl =
-    | MConstant of decl_id * identifier * mono_ty * mexpr
-    | MRecord of decl_id * identifier * mono_slot list
-    | MRecordMonomorph of mono_id * mono_slot list
-    | MUnion of decl_id * identifier * mono_case list
-    | MUnionMonomorph of mono_id * mono_case list
-    | MFunction of decl_id * identifier * mvalue_parameter list * mono_ty * mstmt
-    | MFunctionMonomorph of mono_id * mvalue_parameter list * mono_ty * mstmt
-    | MForeignFunction of decl_id * identifier * mvalue_parameter list * mono_ty * string
-    | MConcreteInstance of decl_id * qident * mono_ty  * concrete_method list
-    | MMethodMonomorph of mono_id * mvalue_parameter list * mono_ty * mstmt
+    | MConstant of constant_id * identifier * mono_ty * mexpr
+    | MRecord of record_id * identifier * mono_slot list
+    | MRecordMonomorph of record_mono_id * mono_slot list
+    | MUnion of union_id * identifier * mono_case list
+    | MUnionMonomorph of union_mono_id * mono_case list
+    | MFunction of function_id * identifier * mvalue_parameter list * mono_ty * mstmt
+    | MFunctionMonomorph of function_mono_id * function_id * mvalue_parameter list * mono_ty * mstmt
+    | MForeignFunction of function_id * identifier * mvalue_parameter list * mono_ty * mono_ty ForeignType.foreign_signature * string
+    | MConcreteInstance of instance_id * qident * mono_ty  * concrete_method list
+    | MMethodMonomorph of method_mono_id * mvalue_parameter list * mono_ty * mstmt
 
   and concrete_method =
     MConcreteMethod of ins_meth_id * identifier * mvalue_parameter list * mono_ty * mstmt
@@ -605,7 +636,7 @@ module Mtast = struct
     | MAssignVar of qident * mexpr
     | MInitialAssign of qident * mexpr
     | MIf of mexpr * mstmt * mstmt
-    | MCase of mexpr * mtyped_when list * Tast.case_ref
+    | MCase of mexpr * union_mono_id * mtyped_when list * Tast.case_ref
     | MWhile of mexpr * mstmt
     | MFor of identifier * mexpr * mexpr * mstmt
     | MBorrow of {
@@ -626,22 +657,22 @@ module Mtast = struct
   and mexpr =
     | MNilConstant
     | MBoolConstant of bool
-    | MIntConstant of string
-    | MFloatConstant of string
+    | MIntConstant of NumberLiteral.int_literal
+    | MFloatConstant of NumberLiteral.float_literal
     | MStringConstant of escaped_string
     | MConstVar of qident * mono_ty
     | MParamVar of identifier * mono_ty
     | MLocalVar of identifier * mono_ty
     | MTemporary of identifier * mono_ty
-    | MGenericFunVar of mono_id * mono_ty
-    | MConcreteFunVar of decl_id * mono_ty
-    | MConcreteFuncall of decl_id * qident * mexpr list * mono_ty
+    | MGenericFunVar of function_mono_id * mono_ty
+    | MConcreteFunVar of function_id * mono_ty
+    | MConcreteFuncall of function_id * qident * mexpr list * mono_ty
     (** Represents a call to a concrete function. *)
-    | MGenericFuncall of mono_id * mexpr list * mono_ty
+    | MGenericFuncall of function_mono_id * mexpr list * mono_ty
     (** Represents a call to a generic function. *)
     | MConcreteMethodCall of ins_meth_id * qident * mexpr list * mono_ty
     (** Represents a call to an instance method of a concrete instance. *)
-    | MGenericMethodCall of ins_meth_id * mono_id * mexpr list * mono_ty
+    | MGenericMethodCall of ins_meth_id * method_mono_id * mexpr list * mono_ty
     (** Represents a call to an instance method of a generic instance. *)
     | MFptrCall of identifier * mexpr list * mono_ty
     | MCast of mexpr * mono_ty
@@ -651,15 +682,18 @@ module Mtast = struct
     | MNegation of mexpr
     | MIfExpression of mexpr * mexpr * mexpr
     | MRecordConstructor of mono_ty * (identifier * mexpr) list
-    | MUnionConstructor of mono_ty * identifier * (identifier * mexpr) list
+    | MUnionConstructor of union_mono_id * identifier * (identifier * mexpr) list
+    (** The type is the monomorph's: `get_type` builds it. *)
     | MEmbed of mono_ty * string * mexpr list
-    | MDeref of mexpr
-    | MTypecast of mexpr * mono_ty
+    | MDeref of mexpr * mono_ty
+    (** The type is the one of the value the reference points to. *)
     | MSizeOf of mono_ty
     | MSlotAccessor of mexpr * identifier * mono_ty
     | MPointerSlotAccessor of mexpr * identifier * mono_ty
-    | MArrayIndex of mexpr * mexpr * mono_ty
-    | MSpanIndex of mexpr * mexpr * mono_ty
+    | MArrayIndex of mexpr * mexpr * mono_ty * mono_ty * borrowing_mode
+    | MSpanIndex of mexpr * mexpr * mono_ty * mono_ty * borrowing_mode
+    (** The element type, and the region and the mode of the reference to the
+        element that the expression is: `get_type` builds that reference type. *)
 
   and mtyped_when =
     MTypedWhen of identifier * mono_binding list * mstmt
@@ -667,11 +701,4 @@ module Mtast = struct
   and mvalue_parameter =
     MValueParameter of identifier * mono_ty
 
-  type mono_method =
-    MonoMethod of {
-        method_id: ins_meth_id;
-        params: mvalue_parameter list;
-        rt: mono_ty;
-        body: mstmt;
-      }
 end

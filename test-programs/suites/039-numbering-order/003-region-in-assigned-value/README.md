@@ -1,0 +1,1 @@
+Pins the order in which the type checker numbers the regions of the borrows in an assignment to a path: the borrow of the target first (region 3), then the borrows in the assigned value (region 4, which is in the message). The region 2 is the borrow in `wantsStatic`.

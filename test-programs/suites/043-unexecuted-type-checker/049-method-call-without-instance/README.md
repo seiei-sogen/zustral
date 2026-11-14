@@ -1,0 +1,1 @@
+Covers the no-instance arm of `augment_method_call` (lib/TypeCheckExpr.ml): the method `kind` is called on a `Bool`, and the typeclass has an instance only for `Int32`. Target line(s): the arm at lib/TypeCheckExpr.ml line 417.

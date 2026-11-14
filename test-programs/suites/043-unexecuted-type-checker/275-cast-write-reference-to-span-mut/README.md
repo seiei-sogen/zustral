@@ -1,0 +1,1 @@
+Covers the `SpanMut` alternative of `check_annotated` (lib/TypeCheckExpr.ml): a cast of a mutable reference to `Span![Int32, R]`, which is not a read reference, is an error. Target line: lib/TypeCheckExpr.ml line 850.

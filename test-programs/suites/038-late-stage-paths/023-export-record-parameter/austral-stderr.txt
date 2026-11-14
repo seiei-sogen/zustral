@@ -1,0 +1,27 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type " },
+    { "type": "type", "content": "Foo" },
+    {
+      "type": "text",
+      "content": " is not allowed in the signature of an exported function."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/038-late-stage-paths/023-export-record-parameter/Test.aum",
+    "startp": { "line": 6, "column": 48 },
+    "end": { "line": 9, "column": 8 }
+  },
+  "context": [
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    pragma Foreign_Export(External_Name => \"f\");" ],
+    [ 7, "    function f(x: Foo): Int32 is" ],
+    [ 8, "        return 1;" ],
+    [ 9, "    end;" ],
+    [ 10, "" ],
+    [ 11, "    function main(): ExitCode is" ]
+  ]
+}

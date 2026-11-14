@@ -1,0 +1,1 @@
+Covers the `WriteRef` alternative of the write-reference arm of `augment_array_index` (lib/TypeCheckExpr.ml): assigning to `x[0]` with the parameter `x` of type `&![Int32, R]` borrows it mutably, and the pointed-to type is not a span. Target line: lib/TypeCheckExpr.ml line 799.

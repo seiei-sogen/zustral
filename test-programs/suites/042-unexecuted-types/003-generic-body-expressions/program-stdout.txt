@@ -1,0 +1,8 @@
+0.500000
+true
+true
+2
+0.500000
+true
+false
+1

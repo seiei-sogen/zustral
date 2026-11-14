@@ -2,11 +2,7 @@
   "module": "Test",
   "kind": "Generic Error",
   "text": [
-    { "type": "text", "content": "I can't find a " },
-    { "type": "text", "content": "variable" },
-    { "type": "text", "content": " named " },
-    { "type": "code", "content": "pi" },
-    { "type": "text", "content": "." }
+    { "type": "text", "content": "Cannot assign a value to a constant." }
   ],
   "span": {
     "filename": "test-programs/suites/002-constants/002-assign/Test.aum",

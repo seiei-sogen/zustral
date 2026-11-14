@@ -1,0 +1,1 @@
+lib/TypeMatch.ml lines 252-254, try_constraint, the `UnionCase _` alternative: the constraint of a type parameter names a declaration that is not a typeclass. The name is looked up where the function is called (#128), and the call reports it.

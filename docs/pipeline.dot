@@ -1,60 +1,89 @@
+// The stages of lib/Compiler.ml and their types in lib/Pipeline.mli.
+// Boxes are values, ellipses are stages (named by the function that runs them).
+// A dashed edge is the environment or the supply that a stage reads or returns.
 digraph G {
     node[style=filled]
 
-    aui[shape=rect fillcolor=coral label=".aui file"]
-    aum[shape=rect fillcolor=coral label=".aum file"]
+    // The two together (or the body alone), each with its file name, are one module_source.
+    aui[shape=rect fillcolor=coral label="interface text (.aui)"]
+    aum[shape=rect fillcolor=coral label="body text (.aum)"]
+    ep[shape=rect fillcolor=coral label="entrypoint option"]
 
-    subgraph cluster_0 {
-        label="Frontend"
+    subgraph cluster_module {
+        label="compile_mod: once per module"
 
-        icst[shape=rect fillcolor=coral1 label="Interface Concrete Syntax Tree (CST)"]
-        bcst[shape=rect fillcolor=coral1 label="Body Concrete Syntax Tree (CST)"]
-        ast[shape=rect fillcolor=aquamarine label="Abstract Syntax Tree (AST)"]
+        icst[shape=rect fillcolor=coral1 label="concrete_module_interface (Cst)"]
+        bcst[shape=rect fillcolor=coral1 label="concrete_module_body (Cst)"]
+        combined[shape=rect fillcolor=aquamarine label="Combined.combined_module (Ast)"]
+        returning[shape=rect fillcolor=aquamarine label="ReturnCheck.returning_module"]
+        small[shape=rect fillcolor=aquamarine3 label="SmallCombined.combined_module (AstDB)"]
+        linked[shape=rect fillcolor=aquamarine4 label="Linked.linked_module"]
+        typed[shape=rect fillcolor=chartreuse1 label="Tast.typed_module"]
+        checked[shape=rect fillcolor=chartreuse3 label="LinearityCheck.checked_module"]
+        mono[shape=rect fillcolor=firebrick2 label="Mtast.mono_module"]
+        unit[shape=rect fillcolor=coral label="c_unit"]
 
-        ip[label="Interface File Parser"]
-        bp[label="Body File Parser"]
-        combining[label="Combining Pass"]
-        res[label="Import Resolution"]
-        abs[label="Abstraction Pass"]
+        parse_int[label="parse_module_int"]
+        parse_body[label="parse_module_body"]
+        pervasive[label="append the Austral.Pervasive import (Compiler.ml)"]
+        combine[label="combine / body_as_combined"]
+        check_returns[label="check_ends_in_return"]
+        desugar[label="desugar"]
+        extract[label="extract"]
+        augment[label="augment_module"]
+        linearity[label="check_module_linearity"]
+        bodies[label="extract_bodies"]
+        monomorphize[label="monomorphize"]
+        gen[label="gen_module"]
     }
 
-    subgraph cluster_1 {
-        label="Middleend"
+    subgraph cluster_finish {
+        label="finish: once, after all modules"
 
-        tast[shape=rect fillcolor=chartreuse1 label="Typed Abstract Syntax Tree (TAST)"]
-        linked[shape=rect fillcolor=aquamarine4 label="Linked Representation"]
-        mtast[shape=rect fillcolor=firebrick2 label="Monomorphic Typed Abstract Syntax Tree (MTAST)"]
-
-        ext[label="Extraction Pass"]
-        typing[label="Typing Pass"]
-        mono[label="Monomorphization"]
+        wrappers[label="monomorphize_wrappers, gen_module, all_wrappers"]
+        entry[label="entrypoint_code"]
+        program[shape=rect fillcolor=coral label="c_program"]
     }
 
-    subgraph cluster_2 {
-        label="Backend"
+    render[label="render_program (cli/)"]
+    c[shape=rect fillcolor=coral label="C code"]
 
-        c[shape=rect fillcolor=coral label="C code"]
+    env[label="env" fillcolor=forestgreen shape=cylinder]
+    supply[label="Supply.t (in env)" fillcolor=palegreen shape=cylinder]
 
-        codegen[label="Code Generation"]
-    }
+    aui -> parse_int -> icst -> pervasive
+    aum -> parse_body -> bcst -> pervasive
+    pervasive -> combine
+    combine -> combined -> check_returns -> returning -> desugar -> small -> extract -> linked
+    linked -> augment -> typed -> linearity -> checked
+    checked -> bodies
+    checked -> monomorphize -> mono -> gen -> unit
+    unit -> program [label="c_unit list, all modules"]
+    ep -> entry
+    wrappers -> program
+    entry -> program
+    program -> render -> c
 
-    env[label="Environment" fillcolor=forestgreen shape=cylinder]
-
-    // Links
-    aui -> ip -> icst -> combining
-    aum -> bp -> bcst -> combining
-    combining -> abs -> ast
-    res -> combining
-    combining -> res
-    env -> res
-    ast -> ext
-    ext -> env
-    env -> ext
-    ext -> linked
-    linked -> typing
-    typing -> tast
-    tast -> mono -> mtast
-    env -> mono
-    mono -> env
-    mtast -> codegen -> c
+    edge[style=dashed]
+    env -> combine
+    env -> extract
+    extract -> env
+    env -> augment
+    env -> bodies
+    bodies -> env
+    // extract_bodies runs before monomorphize, which reads the bodies from the env.
+    bodies -> monomorphize [label="env, with the bodies"]
+    monomorphize -> env
+    env -> gen
+    env -> wrappers
+    wrappers -> env
+    env -> entry
+    supply -> wrappers
+    wrappers -> supply
+    supply -> desugar
+    desugar -> supply
+    supply -> augment
+    augment -> supply
+    supply -> gen
+    gen -> supply
 }

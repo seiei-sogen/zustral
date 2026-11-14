@@ -1,0 +1,15 @@
+module body Test is
+    typeclass Describable(T: Free) is
+        method describe(value: T): Int32;
+    end;
+
+    instance Describable(Int32) is
+        method describe(value: Int32): Int32 is
+            skip;
+        end;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

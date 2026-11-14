@@ -4,32 +4,17 @@
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
+
 open Identifier
 open Common
 open Cst
 open Error
-open ErrorText
-
-module Errors = struct
-  let pragma_argument_error ~pragma_name ~argument =
-    let text = Text ("Invalid " ^ pragma_name ^ " pragma.") :: match argument with
-    | Some argument -> [Break; Text "This pragma takes exactly one argument, "; Code argument]
-    | None -> [Break; Text "This pragma takes no arguments."]
-    in
-    austral_raise DeclarationError text
-
-  let unknown_pragma name =
-    austral_raise DeclarationError [
-      Text "Unknown pragma ";
-      Code name
-    ]
-end
 
 let make_module_body (name: module_name) (imports: concrete_import_list list) (pragmas: pragma list) (defs: concrete_def list) (docstring: docstring) =
   let is_unsafe_module p =
     match p with
     | UnsafeModulePragma -> true
-    | _ -> false
+    | ForeignImportPragma _ | ForeignExportPragma _ -> false
   in
   let kind_from_pragmas pragmas =
     if (List.exists is_unsafe_module pragmas) then
@@ -50,13 +35,13 @@ let concrete_decl_name = function
   | ConcreteTypeClassDecl (ConcreteTypeClass (_, n, _, _, _)) -> Some n
   | ConcreteInstanceDecl _ -> None
 
-let def_name = function
-  | ConcreteConstantDef (_, n, _, _, _) -> Some n
-  | ConcreteRecordDef (ConcreteRecord (_, n, _, _, _, _)) -> Some n
-  | ConcreteUnionDef (ConcreteUnion (_, n, _, _, _, _)) -> Some n
-  | ConcreteFunctionDef (_, n, _, _, _, _, _, _) -> Some n
-  | ConcreteTypeClassDef (ConcreteTypeClass (_, n, _, _, _)) -> Some n
-  | ConcreteInstanceDef _ -> None
+let def_name (def: concrete_named_def): identifier =
+  match def with
+  | ConcreteConstantDef (_, n, _, _, _) -> n
+  | ConcreteRecordDef (ConcreteRecord (_, n, _, _, _, _)) -> n
+  | ConcreteUnionDef (ConcreteUnion (_, n, _, _, _, _)) -> n
+  | ConcreteFunctionDef (_, n, _, _, _, _, _, _) -> n
+  | ConcreteTypeClassDef (ConcreteTypeClass (_, n, _, _, _)) -> n
 
 let get_concrete_decl (ConcreteModuleInterface (_, _, _, decls)) name =
   let pred decl =
@@ -69,20 +54,21 @@ let get_concrete_decl (ConcreteModuleInterface (_, _, _, decls)) name =
   List.find_opt pred decls
 
 let get_concrete_def (ConcreteModuleBody (_, _, _, _, defs)) name =
-  let pred def =
-    match def_name def with
-    | (Some name') ->
-       name = name'
-    | None ->
-       false
+  let pick (def: concrete_def): concrete_named_def option =
+    match def with
+    | ConcreteNamedDef named ->
+       if def_name named = name then Some named else None
+    | ConcreteInstanceDef _ ->
+       None
   in
-  List.find_opt pred defs
+  List.find_map pick defs
 
 let has_instance_decl (ConcreteModuleInterface (_, _, _, decls)) (name: identifier) (typarams: concrete_type_param list) (ty: typespec): bool =
   let pred = function
     | ConcreteInstanceDecl (_, name', typarams', ty', _) ->
        (name = name') && (typarams = typarams') && (ty = ty')
-    | _ ->
+    | ConcreteConstantDecl _ | ConcreteOpaqueTypeDecl _ | ConcreteRecordDecl _
+    | ConcreteUnionDecl _ | ConcreteFunctionDecl _ | ConcreteTypeClassDecl _ ->
        false
   in
   List.exists pred decls
@@ -90,7 +76,7 @@ let has_instance_decl (ConcreteModuleInterface (_, _, _, decls)) (name: identifi
 let get_instance_def (ConcreteModuleBody (_, _, _, _, defs)) (name: identifier) (typarams: concrete_type_param list) (ty: typespec): concrete_instance option =
   let filter = function
     | ConcreteInstanceDef ci -> Some ci
-    | _ -> None
+    | ConcreteNamedDef _ -> None
   and pred (ConcreteInstance (_, name', typarams', ty', _, _)) =
     (name = name') && (typarams = typarams') && (ty = ty')
   in
@@ -98,49 +84,51 @@ let get_instance_def (ConcreteModuleBody (_, _, _, _, defs)) (name: identifier) 
 
 let make_pragma name args =
   let s = ident_string name in
-  if s = "Foreign_Import" then
+  if s = BuiltInNames.foreign_import_pragma_name then
     let raise_err () =
-      Errors.pragma_argument_error
-        ~pragma_name:"Foreign_Import"
-        ~argument:(Some "External_Name")
+      declaration_error NoSpan (PragmaArgumentError ForeignImport)
     in
     match args with
     | ConcreteNamedArgs [(a, CStringConstant (_, f))] ->
-       if equal_identifier a (make_ident "External_Name") then
+       if equal_identifier a (make_ident BuiltInNames.external_name_argument) then
          ForeignImportPragma f
        else
          raise_err ()
-    | _ ->
+    | ConcretePositionalArgs _ | ConcreteNamedArgs ([] | [(_, (CNilConstant _
+        | CBoolConstant _ | CIntConstant _ | CFloatConstant _ | CVariable _ | CArith _
+        | CFuncall _ | CComparison _ | CConjunction _ | CDisjunction _ | CNegation _
+        | CIfExpression _ | CPath _ | CRefPath _ | CEmbed _ | CDeref _ | CTypecast _
+        | CSizeOf _ | CBorrowExpr _ | CReborrow _))] | _ :: _ :: _) ->
        raise_err ()
   else
-    if s = "Foreign_Export" then
+    if s = BuiltInNames.foreign_export_pragma_name then
       let raise_err () =
-        Errors.pragma_argument_error
-          ~pragma_name:"Foreign_Export"
-          ~argument:(Some "External_Name")
+        declaration_error NoSpan (PragmaArgumentError ForeignExport)
       in
       match args with
       | ConcreteNamedArgs [(a, CStringConstant (_, f))] ->
-         if equal_identifier a (make_ident "External_Name") then
+         if equal_identifier a (make_ident BuiltInNames.external_name_argument) then
            ForeignExportPragma f
          else
            raise_err ()
-      | _ ->
+      | ConcretePositionalArgs _ | ConcreteNamedArgs ([] | [(_, (CNilConstant _
+          | CBoolConstant _ | CIntConstant _ | CFloatConstant _ | CVariable _
+          | CArith _ | CFuncall _ | CComparison _ | CConjunction _ | CDisjunction _
+          | CNegation _ | CIfExpression _ | CPath _ | CRefPath _ | CEmbed _ | CDeref _
+          | CTypecast _ | CSizeOf _ | CBorrowExpr _ | CReborrow _))] | _ :: _ :: _) ->
          raise_err ()
     else
-      if s = "Unsafe_Module" then
+      if s = BuiltInNames.unsafe_module_pragma_name then
         let raise_err () =
-          Errors.pragma_argument_error
-            ~pragma_name:"Unsafe_Module"
-            ~argument:None
+          declaration_error NoSpan (PragmaArgumentError UnsafeModule)
         in
         match args with
         | ConcretePositionalArgs [] ->
            UnsafeModulePragma
-        | _ ->
+        | ConcretePositionalArgs _ | ConcreteNamedArgs _ ->
            raise_err ()
       else
-        Errors.unknown_pragma s
+        declaration_error NoSpan (UnknownPragma name)
 
 let mod_int_name (inter: concrete_module_interface): module_name =
   let (ConcreteModuleInterface (name, _, _, _)) = inter in
@@ -149,21 +137,6 @@ let mod_int_name (inter: concrete_module_interface): module_name =
 let mod_body_name (body: concrete_module_body): module_name =
   let (ConcreteModuleBody (name, _, _, _, _)) = body in
   name
-
-let rec typespec_string (ts: typespec): string =
-  match ts with
-  | TypeSpecifier (name, args) ->
-     (match args with
-      | [] -> (ident_string name)
-      | args -> (ident_string name) ^ "[" ^ (String.concat ", " (List.map typespec_string args)) ^ "]")
-  | ConcreteReadRef (ty, reg) ->
-     "&[" ^ (typespec_string ty) ^ ", " ^ (typespec_string reg) ^ "]"
-  | ConcreteWriteRef (ty, reg) ->
-     "&![" ^ (typespec_string ty) ^ ", " ^ (typespec_string reg) ^ "]"
-  | ConcreteSpan (ty, reg) ->
-     "Span[" ^ (typespec_string ty) ^ ", " ^ (typespec_string reg) ^ "]"
-  | ConcreteSpanWrite (ty, reg) ->
-     "Span![" ^ (typespec_string ty) ^ ", " ^ (typespec_string reg) ^ "]"
 
 let decl_replace_docstring_and_pragmas (decl: concrete_decl) (docstring: docstring) (pragmas: pragma list): concrete_decl =
   let _ = pragmas in
@@ -185,15 +158,15 @@ let decl_replace_docstring_and_pragmas (decl: concrete_decl) (docstring: docstri
 
 let def_replace_docstring_and_pragmas (decl: concrete_def) (docstring: docstring) (pragmas: pragma list): concrete_def =
   match decl with
-  | ConcreteConstantDef (span, name, ty, expr, _) ->
-     ConcreteConstantDef (span, name, ty, expr, docstring)
-  | ConcreteRecordDef (ConcreteRecord (span, name, typarams, universe, slots, _)) ->
-     ConcreteRecordDef (ConcreteRecord (span, name, typarams, universe, slots, docstring))
-  | ConcreteUnionDef (ConcreteUnion (span, name, typarams, universe, cases, _)) ->
-     ConcreteUnionDef (ConcreteUnion (span, name, typarams, universe, cases, docstring))
-  | ConcreteFunctionDef (span, name, typarams, params, ty, body, _, _) ->
-     ConcreteFunctionDef (span, name, typarams, params, ty, body, docstring, pragmas)
-  | ConcreteTypeClassDef (ConcreteTypeClass (span, name, typarams, methods, _)) ->
-     ConcreteTypeClassDef (ConcreteTypeClass (span, name, typarams, methods, docstring))
+  | ConcreteNamedDef (ConcreteConstantDef (span, name, ty, expr, _)) ->
+     ConcreteNamedDef (ConcreteConstantDef (span, name, ty, expr, docstring))
+  | ConcreteNamedDef (ConcreteRecordDef (ConcreteRecord (span, name, typarams, universe, slots, _))) ->
+     ConcreteNamedDef (ConcreteRecordDef (ConcreteRecord (span, name, typarams, universe, slots, docstring)))
+  | ConcreteNamedDef (ConcreteUnionDef (ConcreteUnion (span, name, typarams, universe, cases, _))) ->
+     ConcreteNamedDef (ConcreteUnionDef (ConcreteUnion (span, name, typarams, universe, cases, docstring)))
+  | ConcreteNamedDef (ConcreteFunctionDef (span, name, typarams, params, ty, body, _, _)) ->
+     ConcreteNamedDef (ConcreteFunctionDef (span, name, typarams, params, ty, body, docstring, pragmas))
+  | ConcreteNamedDef (ConcreteTypeClassDef (ConcreteTypeClass (span, name, typarams, methods, _))) ->
+     ConcreteNamedDef (ConcreteTypeClassDef (ConcreteTypeClass (span, name, typarams, methods, docstring)))
   | ConcreteInstanceDef (ConcreteInstance (span, name, typarams, ty, methods, _)) ->
      ConcreteInstanceDef (ConcreteInstance (span, name, typarams, ty, methods, docstring))

@@ -1,0 +1,15 @@
+module body Test is
+    function firstSingle(a: Float32, b: Float32): Float32 is
+        return a;
+    end;
+
+    function neverCalled(): Float32 is
+        let trappingAdd: Fn[Float32, Float32, Float32] := firstSingle;
+        let z: Float32 := 1.5 + 2.5;
+        return z;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

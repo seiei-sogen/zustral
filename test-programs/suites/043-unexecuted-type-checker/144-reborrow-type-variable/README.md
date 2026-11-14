@@ -1,0 +1,1 @@
+Covers the `TyVar` alternative of the reborrow arm of `augment_borrow` (lib/TypingPass.ml): reborrowing a variable of type `T`, which is not a mutable reference, is an error. Target line: lib/TypingPass.ml line 424.

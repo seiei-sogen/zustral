@@ -10,14 +10,7 @@ type indentation
 
 type line
 
-val render_line : line -> string
-
-val render_unit : c_unit -> string
-
-val render_decl : indentation -> c_decl -> line list
-
-val render_stmt : indentation -> c_stmt -> line list
-
-val render_switch_case : indentation -> c_switch_case -> line list
+(** The text of the whole program. The parts are separated by a newline. *)
+val render_program : c_program -> string
 
 val render_expr : c_expr -> string

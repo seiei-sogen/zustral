@@ -1,0 +1,1 @@
+Pins what the instance lookup does when two visible instances satisfy the constraint of an instance's type parameter: the internal error of test 016 is discarded, the instance is skipped, and the error is that no instance matches (lib/TypeMatch.ml, get_instance).

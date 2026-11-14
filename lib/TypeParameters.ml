@@ -8,26 +8,8 @@
 open Identifier
 open TypeParameter
 open Error
-open ErrorText
-open Sexplib
-open Std
-
-module Errors = struct
-  let duplicate_type_parameter param =
-    let text = match param with 
-    | Some param -> [
-        Text "Duplicate type parameter ";
-        Code (typaram_name param |> ident_string)
-      ]
-    | None -> [
-        Text "Multiple type parameters have the same name.";
-      ]
-    in
-    austral_raise GenericError text
-end
 
 type typarams = TyParams of type_parameter list
-[@@deriving (show, sexp)]
 
 let empty_typarams: typarams = TyParams []
 
@@ -42,10 +24,10 @@ let get_typaram (typarams: typarams) (name: identifier): type_parameter option =
   in
   List.find_opt pred lst
 
-let add_typaram (typarams: typarams) (typaram: type_parameter): typarams =
+let add_typaram (place: place) (typarams: typarams) (typaram: type_parameter): typarams =
   match get_typaram typarams (typaram_name typaram) with
   | Some _ ->
-    Errors.duplicate_type_parameter (Some typaram)
+    generic_error place (DuplicateTypeParameter (Some typaram))
   | None ->
     let (TyParams lst) = typarams in
     let lst = List.rev lst in
@@ -57,12 +39,12 @@ let typarams_as_list (typarams: typarams): type_parameter list =
   let (TyParams lst) = typarams in
   lst
 
-let typarams_from_list (lst: type_parameter list): typarams =
-  List.fold_left (fun set typaram -> add_typaram set typaram)
+let typarams_from_list (place: place) (lst: type_parameter list): typarams =
+  List.fold_left (fun set typaram -> add_typaram place set typaram)
     empty_typarams
     lst
 
-let merge_typarams (a: typarams) (b: typarams): typarams =
+let merge_typarams (place: place) (a: typarams) (b: typarams): typarams =
   (* Convert both sets to lists *)
   let al: type_parameter list = typarams_as_list a
   and bl: type_parameter list = typarams_as_list b
@@ -71,7 +53,7 @@ let merge_typarams (a: typarams) (b: typarams): typarams =
   let _ =
     List.map (fun tp ->
         if List.exists (fun tp' -> equal_identifier (typaram_name tp) (typaram_name tp')) al then
-          Errors.duplicate_type_parameter None
+          generic_error place (DuplicateTypeParameter None)
         else
           ()) bl
   in

@@ -1,0 +1,1 @@
+A linear record moved through a generic function over `T: Type` and destructured by the caller. This compiled before named types were put into the instantiated body as themselves; it is here so that it stays so.

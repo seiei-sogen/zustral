@@ -1,0 +1,18 @@
+module body Test is
+    record Lin: Linear is
+    end;
+
+    record Holder: Linear is
+        inner: Lin;
+    end;
+
+    generic [R: Region]
+    function f(w: &![Holder, R], value: Lin): Unit is
+        w->inner := value;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

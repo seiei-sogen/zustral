@@ -1,0 +1,19 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "Cannot assign a value to a constant." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/107-assign-to-constant/Test.aum",
+    "startp": { "line": 5, "column": 8 },
+    "end": { "line": 5, "column": 15 }
+  },
+  "context": [
+    [ 3, "" ],
+    [ 4, "    function main(): ExitCode is" ],
+    [ 5, "        c := 2;" ],
+    [ 6, "        return ExitSuccess();" ],
+    [ 7, "    end;" ]
+  ]
+}

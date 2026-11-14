@@ -1,0 +1,8 @@
+module body Test is
+    constant c: Int32 := 1;
+
+    function main(): ExitCode is
+        c := 2;
+        return ExitSuccess();
+    end;
+end module body.

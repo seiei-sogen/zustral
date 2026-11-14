@@ -1,0 +1,37 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The " },
+    { "type": "text", "content": "union" },
+    { "type": "text", "content": " " },
+    { "type": "code", "content": "U" },
+    { "type": "text", "content": " was declared to belong to the " },
+    { "type": "code", "content": "Region" },
+    {
+      "type": "text",
+      "content": " universe, but regions are distinct from types."
+    },
+    { "type": "break" },
+    { "type": "text", "content": "Consider using one of " },
+    { "type": "code", "content": "Type" },
+    { "type": "text", "content": ", " },
+    { "type": "code", "content": "Linear" },
+    { "type": "text", "content": ", or " },
+    { "type": "code", "content": "Free" },
+    { "type": "text", "content": " instead." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/046-union-in-region-universe/Test.aum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 4, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    union U: Region is" ],
+    [ 3, "        case A;" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    function main(): ExitCode is" ]
+  ]
+}

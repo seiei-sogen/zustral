@@ -1,0 +1,1 @@
+A generic instance (`instance Describe(Box[U])`) reached from inside a constrained generic function; its method calls the method of the instance for the record in the box. The output shows both methods ran, outer first.

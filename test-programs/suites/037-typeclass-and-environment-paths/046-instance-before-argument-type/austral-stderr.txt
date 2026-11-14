@@ -1,0 +1,30 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "An instance for the type " },
+    { "type": "code", "content": "Square" },
+    {
+      "type": "text",
+      "content": " is declared before the type. Declare the type first, and its instances after it."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/046-instance-before-argument-type/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 10, "column": 8 }
+  },
+  "context": [
+    [ 2, "    typeclass Shape(T: Free) is" ],
+    [ 3, "        method area(x: T): Int32;" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    instance Shape(Square) is" ],
+    [ 7, "        method area(x: Square): Int32 is" ],
+    [ 8, "            return x.side;" ],
+    [ 9, "        end;" ],
+    [ 10, "    end;" ],
+    [ 11, "" ],
+    [ 12, "    record Square: Free is" ]
+  ]
+}

@@ -1,0 +1,12 @@
+module body Test is
+    record Holder: Free is
+        marker: Marker;
+    end;
+
+    record Marker: Region is
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

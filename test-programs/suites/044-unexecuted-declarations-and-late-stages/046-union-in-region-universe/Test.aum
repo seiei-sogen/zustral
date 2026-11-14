@@ -1,0 +1,9 @@
+module body Test is
+    union U: Region is
+        case A;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

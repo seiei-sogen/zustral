@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type " },
+    { "type": "type", "content": "Span![Nat8, Region<0>]" },
+    {
+      "type": "text",
+      "content": " is not allowed in the signature of an exported function."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/021-export-mutable-span-return/Test.aum",
+    "startp": { "line": 2, "column": 48 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    pragma Foreign_Export(External_Name => \"f\");" ],
+    [ 3, "    function f(): Span![Nat8, Static] is" ],
+    [ 4, "        return @embed(Span![Nat8, Static], \"0\");" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    function main(): ExitCode is" ]
+  ]
+}

@@ -1,0 +1,21 @@
+pragma Unsafe_Module;
+
+import Austral.Memory (Address, Pointer);
+
+module body Test is
+    record Tag: Free is
+        x: Int32;
+    end;
+
+    record Lin: Linear is
+        x: Int32;
+    end;
+
+    record FreeOfAny[T: Type]: Free is
+        p: Pointer[FreeOfAny[T]];
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

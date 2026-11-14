@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "The variable " },
+    { "type": "code", "content": "h" },
+    {
+      "type": "text",
+      "content": " is not consumed by the time of the return statement. Did you forget to call a destructor, or destructure the contents?"
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/041-generics-over-named-types/008-linear-record-through-generic-not-consumed/Test.aum",
+    "startp": { "line": 13, "column": 8 },
+    "end": { "line": 13, "column": 29 }
+  },
+  "context": [
+    [ 11, "    function main(): ExitCode is" ],
+    [ 12, "        let h: Handle := pass(Handle(id => 5));" ],
+    [ 13, "        return ExitSuccess();" ],
+    [ 14, "    end;" ],
+    [ 15, "end module body." ]
+  ]
+}

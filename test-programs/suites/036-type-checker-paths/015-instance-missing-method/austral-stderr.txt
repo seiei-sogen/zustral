@@ -1,0 +1,30 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The instance of the typeclass " },
+    { "type": "code", "content": "Shape" },
+    { "type": "text", "content": " for " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": ", declared in the module " },
+    { "type": "code", "content": "Test" },
+    { "type": "text", "content": ", does not define the method " },
+    { "type": "code", "content": "perimeter" },
+    {
+      "type": "text",
+      "content": ". An instance must define every method of its typeclass."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/015-instance-missing-method/Test.aum",
+    "startp": { "line": 15, "column": 8 },
+    "end": { "line": 15, "column": 33 }
+  },
+  "context": [
+    [ 13, "    function main(): ExitCode is" ],
+    [ 14, "        let side: Int32 := 3;" ],
+    [ 15, "        printLn(perimeter(side));" ],
+    [ 16, "        return ExitSuccess();" ],
+    [ 17, "    end;" ]
+  ]
+}

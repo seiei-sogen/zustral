@@ -1,0 +1,5 @@
+module body Test is
+    function main(x: Float64): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,33 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "More than one instance of the typeclass " },
+    { "type": "code", "content": "Describe" },
+    { "type": "text", "content": " matches the type " },
+    { "type": "type", "content": "Int32" },
+    {
+      "type": "text",
+      "content": ". The instances are declared in the modules "
+    },
+    { "type": "code", "content": "Test" },
+    { "type": "text", "content": ", " },
+    { "type": "code", "content": "Test_TC" },
+    {
+      "type": "text",
+      "content": ". Instances of a typeclass must not overlap: remove all but one of them."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/016-two-visible-instances/Test.aum",
+    "startp": { "line": 12, "column": 8 },
+    "end": { "line": 12, "column": 29 }
+  },
+  "context": [
+    [ 10, "    function main(): ExitCode is" ],
+    [ 11, "        let n: Int32 := 10;" ],
+    [ 12, "        printLn(describe(n));" ],
+    [ 13, "        return ExitSuccess();" ],
+    [ 14, "    end;" ]
+  ]
+}

@@ -1,0 +1,16 @@
+pragma Unsafe_Module;
+
+import Austral.Memory (
+    Address
+);
+
+module body Test is
+    pragma Foreign_Export(External_Name => "f");
+    function f(): Address[Unit] is
+        return @embed(Address[Unit], "0");
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

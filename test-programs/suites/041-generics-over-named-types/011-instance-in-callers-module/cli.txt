@@ -1,0 +1,1 @@
+./austral compile $DIR/Lib.aui,$DIR/Lib.aum $DIR/Test.aum --entrypoint=Test:main --target-type=c --output=$C_PATH --error-format=json

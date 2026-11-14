@@ -14,5 +14,9 @@ open TypeParameters
     validate the definition of a type, we need to know about other types defined
     in the module. To break the circularity, we have a pass that extracts type
     signatures first, and then validates type structures against those
-    signatures.  *)
-type type_signature = TypeSignature of identifier * typarams * universe
+    signatures.
+
+    The ID is the one of the record or union the signature belongs to. The
+    environment reserves it before the type is registered (see
+    {!Env.reserve_record_id}), so that the types of the module can name it. *)
+type type_signature = TypeSignature of identifier * typarams * universe * Id.type_decl_id

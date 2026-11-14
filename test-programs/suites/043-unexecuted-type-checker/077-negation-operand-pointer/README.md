@@ -1,0 +1,1 @@
+Covers the `Pointer` alternative of `is_bool` (lib/TypeCheckExpr.ml): the operand of `not` has the type `Pointer[Int32]`, and the compiler reports that it is not `Bool`. Target line: lib/TypeCheckExpr.ml line 100.

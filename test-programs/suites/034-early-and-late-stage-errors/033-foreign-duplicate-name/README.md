@@ -1,0 +1,1 @@
+Pins that a second function `f` with `pragma Foreign_Import` and a parameter type that imports do not allow (`Unit`) reports the name that is already taken, not the signature: the extraction stage checks the name (lib/Env.ml, `name_must_be_free`) before the signature (lib/ForeignType.ml, `check_signature`), the order it had before R22.

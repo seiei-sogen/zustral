@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "Cannot reborrow something that is not a mutable reference: Region<0>"
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/140-reborrow-region/Test.aum",
+    "startp": { "line": 3, "column": 8 },
+    "end": { "line": 5, "column": 19 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function probe(x: Static): Unit is" ],
+    [ 3, "        borrow r: &![Int32, Q] := &~x do" ],
+    [ 4, "            skip;" ],
+    [ 5, "        end borrow;" ],
+    [ 6, "        return nil;" ],
+    [ 7, "    end;" ]
+  ]
+}

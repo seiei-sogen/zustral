@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "Unit" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/007-arithmetic-on-every-expression/Test.aum",
+    "startp": { "line": 13, "column": 8 },
+    "end": { "line": 13, "column": 25 }
+  },
+  "context": [
+    [
+      11,
+      "    function operands(p: Pair, q: &[Pair, R], r: &[Int32, R], w: &![Int32, R], b: Bool, i: Int32): Unit is"
+    ],
+    [ 12, "        var v: Int32 := 1;" ],
+    [ 13, "        printLn(nil + 1);" ],
+    [ 14, "        printLn(true + 1);" ],
+    [ 15, "        printLn(1.5 + 1.0);" ]
+  ]
+}

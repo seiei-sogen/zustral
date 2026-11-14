@@ -1,0 +1,15 @@
+module body Test is
+    record Holder: Free is
+        inner: Static;
+    end;
+
+    generic [R: Region]
+    function f(w: &![Holder, R], value: Static): Unit is
+        w->inner := value;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

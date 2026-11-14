@@ -6,20 +6,24 @@
 *)
 open Identifier
 open Id
-open Env
-open Stages.Mtast
 open CRepr
 
-val gen_decl_id : decl_id -> string
+val gen_function_id : function_id -> CIdent.t
 
-val gen_mono_id : mono_id -> string
+val gen_mono_id : mono_id -> CIdent.t
 
-val gen_ident : identifier -> string
+(** The C name of a variable or a parameter. *)
+val gen_ident : identifier -> CIdent.t
 
-val gen_module_name : module_name -> string
+(** The C type of a type that crosses the C boundary. *)
+val gen_foreign_type : MonoType.mono_ty ForeignType.foreign_ty -> c_ty
 
-val c_string_type : c_ty
+(** Generate the C for a module.
 
-val fn_type : c_ty
+    This should not be able to fail, and today it can: it finds states the
+    earlier stages should have ruled out. When the types rule them out (issue
+    #117), this returns a plain [c_unit].
 
-val gen_module : env -> mono_module -> c_unit
+    The variables it makes up are numbered from the supply, which comes back
+    without them. *)
+val gen_module : Pipeline.generate

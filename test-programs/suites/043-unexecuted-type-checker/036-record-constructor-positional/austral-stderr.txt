@@ -1,0 +1,21 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Arguments to " },
+    { "type": "text", "content": "record" },
+    { "type": "text", "content": " constructor must be named." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/036-record-constructor-positional/Test.aum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 7, "column": 29 }
+  },
+  "context": [
+    [ 5, "" ],
+    [ 6, "    function main(): ExitCode is" ],
+    [ 7, "        let n: Foo := Foo(1);" ],
+    [ 8, "        return ExitSuccess();" ],
+    [ 9, "    end;" ]
+  ]
+}

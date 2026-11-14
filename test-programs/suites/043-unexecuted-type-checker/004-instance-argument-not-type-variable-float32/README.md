@@ -1,0 +1,1 @@
+Covers the `SingleFloat` alternative of `is_tyvar` in `check_instance_argument_has_right_shape` (lib/TypeClasses.ml): the argument of the instance `Kind(Box[Float32])` holds a type that is not a type variable where the rules want one. Target line(s): lib/TypeClasses.ml line 35.

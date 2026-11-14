@@ -1,0 +1,28 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": " of " },
+    { "type": "code", "content": "accept" },
+    { "type": "text", "content": " is constrained by " },
+    { "type": "code", "content": "Foo" },
+    {
+      "type": "text",
+      "content": ", which is not a typeclass. A constraint must name a typeclass."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/014-constraint-not-typeclass/Test.aum",
+    "startp": { "line": 11, "column": 8 },
+    "end": { "line": 11, "column": 19 }
+  },
+  "context": [
+    [ 9, "" ],
+    [ 10, "    function main(): ExitCode is" ],
+    [ 11, "        accept(10);" ],
+    [ 12, "        return ExitSuccess();" ],
+    [ 13, "    end;" ]
+  ]
+}

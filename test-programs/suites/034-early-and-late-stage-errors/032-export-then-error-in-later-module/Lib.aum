@@ -1,0 +1,7 @@
+module body Lib is
+    pragma Foreign_Export(External_Name => "f");
+    function f(): Unit is
+        return nil;
+    end;
+
+end module body.

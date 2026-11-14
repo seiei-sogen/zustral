@@ -1,0 +1,11 @@
+module body Test is
+    generic [T: Free, R: Region]
+    function probe(x: &[T, R]): Unit is
+        &(x.a);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

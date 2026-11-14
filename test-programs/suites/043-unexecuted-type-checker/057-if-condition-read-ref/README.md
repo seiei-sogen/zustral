@@ -1,0 +1,1 @@
+Covers the `ReadRef` alternative of `is_boolean` (lib/TypingPass.ml): the condition of an `if` statement has the type `&[Int32, R]`, and the compiler reports that it is not `Bool`. Target line: lib/TypingPass.ml line 60.

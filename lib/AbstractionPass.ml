@@ -4,6 +4,7 @@
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
+
 open Imports
 open Cst
 module Ast = Stages.Ast
@@ -11,23 +12,18 @@ open Ast
 open Escape
 open Qualifier
 open Span
-open Common
 open Error
 
-let rec abs_stmt im stmt =
+let rec abs_stmt (place: place) im stmt =
   match stmt with
   | CSkip span ->
      ASkip span
-  | CLet _ ->
-     err "Let statement not in a list context"
-  | CDestructure _ ->
-     err "Destructure statement not in a list context"
   | CAssign (span, lvalue, value) ->
-     AAssign (span, abs_expr im lvalue, abs_expr im value)
+     AAssign (span, abs_lvalue place im lvalue, abs_expr place im value)
   | CIf (span, c, t, f) ->
-     let c = abs_expr im c
-     and t = abs_stmt im t
-     and f = abs_stmt im f
+     let c = abs_expr place im c
+     and t = abs_stmt place im t
+     and f = abs_stmt place im f
      in
      (match f with
       | ASkip _ ->
@@ -36,104 +32,63 @@ let rec abs_stmt im stmt =
             where we check all functions have a return value we need else-less
             whens. *)
          AWhen (span, c, t)
-      | _ ->
+      | ALet _ | ADestructure _ | AAssign _ | AIf _ | AWhen _
+      | ACase _ | AWhile _ | AFor _ | ABorrow _ | ABlock _ | ADiscarding _ | AReturn _ ->
          AIf (span, c, t, f))
   | CCase (span, e, cases) ->
-     ACase (span, abs_expr im e, List.map (abs_when im) cases)
+     ACase (span, abs_expr place im e, List.map (abs_when place im) cases)
   | CWhile (span, c, b) ->
-     AWhile (span, abs_expr im c, abs_stmt im b)
+     AWhile (span, abs_expr place im c, abs_stmt place im b)
   | CFor (span, n, i, f, b) ->
      AFor {
          span = span;
          name = n;
-         initial = abs_expr im i;
-         final = abs_expr im f;
-         body = abs_stmt im b
+         initial = abs_expr place im i;
+         final = abs_expr place im f;
+         body = abs_stmt place im b
        }
   | CBorrow { span; original; rename; region; body; mode; _ } ->
-     ABorrow { span; original; rename; region; body=abs_stmt im body; mode }
+     ABorrow { span; original; rename; region; body=abs_stmt place im body; mode }
   | CBlock (_, l) ->
-     let_reshape im l
+     let_reshape place im l
   | CDiscarding (span, e) ->
-     ADiscarding (span, abs_expr im e)
+     ADiscarding (span, abs_expr place im e)
   | CReturn (span, e) ->
-     AReturn (span, abs_expr im e)
+     AReturn (span, abs_expr place im e)
 
-and try_folding (e: aexpr): aexpr =
-  match try_folding' e with
-  | Some bi ->
-     IntConstant (Z.to_string bi)
-  | None ->
-     e
-
-and try_folding' (e: aexpr): Z.t option =
-  let parse_bigint (s: string): Z.t =
-    try
-      Z.of_string s
-    with
-    | Invalid_argument _ ->
-       internal_err ("Failed to parse '" ^ s ^ "' as a big int. This is a bug in the parser.")
-  in
-  match e with
-  | IntConstant i ->
-     Some (parse_bigint i)
-  | ArithmeticExpression (op, lhs, rhs) -> begin
-      match (try_folding' lhs) with
-      | Some lhs -> begin
-          match (try_folding' rhs) with
-          | Some rhs -> begin
-              Some (apply_op op lhs rhs)
-            end
-          | None -> None
-        end
-      | None -> None
-    end
-  | _ ->
-     None
-
-and apply_op (op: arithmetic_operator) (lhs: Z.t) (rhs: Z.t): Z.t =
-  let f =
-    match op with
-    | Add -> Z.add
-    | Subtract -> Z.sub
-    | Multiply -> Z.mul
-    | Divide -> Z.div
-  in
-  f lhs rhs
-
-and abs_expr im expr =
+and abs_expr place im expr =
   match expr with
   | CNilConstant _ -> NilConstant
   | CBoolConstant (_, b) -> BoolConstant b
   | CIntConstant (_, i) -> IntConstant i
   | CFloatConstant (_, f) -> FloatConstant f
-  | CStringConstant (_, s) -> StringConstant (escape_string s)
+  | CStringConstant (_, s) -> StringConstant (escape_string place s)
   | CVariable (_, i) -> Variable (qualify_identifier im i)
   | CFuncall (_, name, args) ->
-     FunctionCall (qualify_identifier im name, abs_arglist im args)
+     FunctionCall (qualify_identifier im name, abs_arglist place im args)
   | CArith (_, op, lhs, rhs) ->
-     let e: aexpr = ArithmeticExpression (op, abs_expr im lhs, abs_expr im rhs) in
-     try_folding e
+     let e: aexpr = ArithmeticExpression (op, abs_expr place im lhs, abs_expr place im rhs) in
+     LiteralTyping.fold_integer_arithmetic e
   | CComparison (_, op, lhs, rhs) ->
-     Comparison (op, abs_expr im lhs, abs_expr im rhs)
+     Comparison (op, abs_expr place im lhs, abs_expr place im rhs)
   | CConjunction (_, lhs, rhs) ->
-     Conjunction (abs_expr im lhs, abs_expr im rhs)
+     Conjunction (abs_expr place im lhs, abs_expr place im rhs)
   | CDisjunction (_, lhs, rhs) ->
-     Disjunction (abs_expr im lhs, abs_expr im rhs)
+     Disjunction (abs_expr place im lhs, abs_expr place im rhs)
   | CNegation (_, e) ->
-     Negation (abs_expr im e)
+     Negation (abs_expr place im e)
   | CIfExpression (_, c, t, f) ->
-     IfExpression (abs_expr im c, abs_expr im t, abs_expr im f)
+     IfExpression (abs_expr place im c, abs_expr place im t, abs_expr place im f)
   | CPath (_, head, es) ->
-     Path (qualify_identifier im head, List.map (abs_path_elem im) es)
+     Path (qualify_identifier im head, List.map (abs_path_elem place im) es)
   | CRefPath (_, head, es) ->
-     RefPath (qualify_identifier im head, List.map (abs_path_elem im) es)
+     RefPath (qualify_identifier im head, List.map (abs_path_elem place im) es)
   | CEmbed (_, ty, expr, args) ->
-     Embed (qualify_typespec im ty, expr, List.map (abs_expr im) args)
+     Embed (qualify_typespec im ty, expr, List.map (abs_expr place im) args)
   | CDeref (_, e) ->
-     Deref (abs_expr im e)
+     Deref (abs_expr place im e)
   | CTypecast (_, e, ty) ->
-     Typecast (abs_expr im e, qualify_typespec im ty)
+     Typecast (abs_expr place im e, qualify_typespec im ty)
   | CSizeOf (_, ty) ->
      SizeOf (qualify_typespec im ty)
   | CBorrowExpr (_, mode, var) ->
@@ -141,47 +96,49 @@ and abs_expr im expr =
   | CReborrow (_, name) ->
      Reborrow (qualify_identifier im name)
 
-and abs_when im (ConcreteWhen (name, bindings, body)) =
+and abs_when place im (ConcreteWhen (name, bindings, body)) =
   AbstractWhen (name,
                 List.map (fun (ConcreteBinding { name; ty; rename; }) -> QBinding { name; ty = qualify_typespec im ty; rename }) bindings,
-                abs_stmt im body)
+                abs_stmt place im body)
 
-and abs_arglist im args =
+and abs_arglist place im args =
   match args with
   | ConcretePositionalArgs l ->
-     Positional (List.map (abs_expr im) l)
+     Positional (List.map (abs_expr place im) l)
   | ConcreteNamedArgs l ->
-     Named (List.map (fun (n, v) -> (n, abs_expr im v)) l)
+     Named (List.map (fun (n, v) -> (n, abs_expr place im v)) l)
 
-and abs_path_elem im elem =
+and abs_lvalue place im (ConcreteLvalue (_, head, es)) =
+  LValue (qualify_identifier im head, List.map (abs_path_elem place im) es)
+
+and abs_path_elem place im elem =
   match elem with
   | CSlotAccessor i ->
      SlotAccessor i
   | CPointerSlotAccessor i ->
      PointerSlotAccessor i
   | CArrayIndex ie ->
-     ArrayIndex (abs_expr im ie)
+     ArrayIndex (abs_expr place im ie)
 
 (* Given a list of statements, find the first let statement, if any, and put the
    remainder of the list under its body. Then call let_reshape on that
    remainder. *)
-and let_reshape (im: import_map) (l: cstmt list): astmt =
+and let_reshape (place: place) (im: import_map) (l: concrete_block_elem list): astmt =
   match l with
   | first::rest ->
      (match first with
       | CLet (span, mut, n, t, v) ->
-         ALet (span, mut, n, qualify_typespec im t,
-               ABlock (empty_span, AInitialAssign (qualify_identifier im n, qualify_typespec im t, Typecast (abs_expr im v, qualify_typespec im t)), let_reshape im rest))
+         ALet (span, mut, n, qualify_typespec im t, qualify_identifier im n, abs_expr place im v, let_reshape place im rest)
       | CDestructure (span, mut, bs, e) ->
          let bs' = List.map (fun (ConcreteBinding {name; ty; rename; }) -> QBinding { name; ty = qualify_typespec im ty; rename; }) bs
-         and e' = abs_expr im e
-         and b = let_reshape im rest
+         and e' = abs_expr place im e
+         and b = let_reshape place im rest
          in
          ADestructure (span, mut, bs', e', b)
-      | s ->
+      | CStatement s ->
          (if rest = [] then
-            abs_stmt im s
+            abs_stmt place im s
           else
-            ABlock (empty_span, abs_stmt im s, let_reshape im rest)))
+            ABlock (empty_span, abs_stmt place im s, let_reshape place im rest)))
   | [] ->
      ASkip empty_span

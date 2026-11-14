@@ -1,0 +1,22 @@
+pragma Unsafe_Module;
+
+import Austral.Memory (Pointer);
+
+module body Test is
+    record Tri[A: Type, B: Type, R: Region]: Type is
+        a: Pointer[A];
+        b: Pointer[B];
+        r: &[Int32, R];
+    end;
+
+    generic [T: Type]
+    function pointed(t: Pointer[Tri[Int32, T, Static]]): Unit is
+        printLn("a pointer to a Tri");
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        printLn("Tri[Int32, T, Static] has the universe Type");
+        return ExitSuccess();
+    end;
+end module body.

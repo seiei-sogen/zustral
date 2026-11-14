@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "Cannot reborrow something that is not a mutable reference: Address[Int32]"
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/145-reborrow-address/Test.aum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 9, "column": 19 }
+  },
+  "context": [
+    [ 5, "module body Test is" ],
+    [ 6, "    function probe(x: Address[Int32]): Unit is" ],
+    [ 7, "        borrow r: &![Int32, Q] := &~x do" ],
+    [ 8, "            skip;" ],
+    [ 9, "        end borrow;" ],
+    [ 10, "        return nil;" ],
+    [ 11, "    end;" ]
+  ]
+}

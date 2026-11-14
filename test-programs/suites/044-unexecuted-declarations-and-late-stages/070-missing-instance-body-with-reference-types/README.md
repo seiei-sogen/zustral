@@ -1,0 +1,1 @@
+For lib/Cst.ml, typespec_string: every arm (a named type with arguments, `&`, `&!`, `Span`, `Span!`), which write the type of an instance that the interface declares and the body does not define (`MissingInstanceBodyDefinition`).

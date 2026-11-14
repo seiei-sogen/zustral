@@ -1,0 +1,1 @@
+Covers the `Record` alternative of the last arm of `get_union_type_definition` (lib/TypingPass.ml): a `case` on a value of a record type passes the first check of `augment_case`, and the declaration the type names is a record, not a union. Target line: lib/TypingPass.ml line 546.

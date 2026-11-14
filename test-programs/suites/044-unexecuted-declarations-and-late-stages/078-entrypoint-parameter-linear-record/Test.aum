@@ -1,0 +1,10 @@
+module body Test is
+    record Token: Linear is
+        x: Int32;
+    end;
+
+    function main(t: Token): ExitCode is
+        let { x: Int32 } := t;
+        return ExitSuccess();
+    end;
+end module body.

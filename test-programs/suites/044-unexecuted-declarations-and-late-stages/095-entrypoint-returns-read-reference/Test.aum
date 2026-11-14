@@ -1,0 +1,5 @@
+module body Test is
+    function main(): &[Int32, Static] is
+        return main();
+    end;
+end module body.

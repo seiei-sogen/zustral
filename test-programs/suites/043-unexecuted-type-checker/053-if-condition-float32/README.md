@@ -1,0 +1,1 @@
+Covers the `SingleFloat` alternative of `is_boolean` (lib/TypingPass.ml): the condition of an `if` statement has the type `Float32`, and the compiler reports that it is not `Bool`. Target line: lib/TypingPass.ml line 60.

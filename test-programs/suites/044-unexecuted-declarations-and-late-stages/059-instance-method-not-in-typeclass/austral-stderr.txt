@@ -1,0 +1,32 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The typeclass " },
+    { "type": "code", "content": "C" },
+    { "type": "text", "content": " has no method named " },
+    { "type": "code", "content": "other" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/059-instance-method-not-in-typeclass/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 14, "column": 8 }
+  },
+  "context": [
+    [ 2, "    typeclass C(T: Free) is" ],
+    [ 3, "        method m(x: T): Unit;" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    instance C(Int32) is" ],
+    [ 7, "        method m(x: Int32): Unit is" ],
+    [ 8, "            return nil;" ],
+    [ 9, "        end;" ],
+    [ 10, "" ],
+    [ 11, "        method other(x: Int32): Unit is" ],
+    [ 12, "            return nil;" ],
+    [ 13, "        end;" ],
+    [ 14, "    end;" ],
+    [ 15, "" ],
+    [ 16, "    function main(): ExitCode is" ]
+  ]
+}

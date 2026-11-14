@@ -1,0 +1,10 @@
+module body Test is
+    function f(r: Static): Unit is
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        printLn("ok");
+        return ExitSuccess();
+    end;
+end module body.

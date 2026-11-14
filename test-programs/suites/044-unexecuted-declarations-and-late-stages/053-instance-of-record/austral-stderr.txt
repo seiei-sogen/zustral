@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "Cannot create an instance for " },
+    { "type": "code", "content": "K" },
+    { "type": "text", "content": " because it is not a typeclass." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/053-instance-of-record/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 7, "column": 8 }
+  },
+  "context": [
+    [ 2, "    record K: Free is" ],
+    [ 3, "        x: Int32;" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    instance K(Int32) is" ],
+    [ 7, "    end;" ],
+    [ 8, "" ],
+    [ 9, "    function main(): ExitCode is" ]
+  ]
+}

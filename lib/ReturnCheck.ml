@@ -8,33 +8,21 @@
 open Identifier
 open Stages.Ast
 open Stages.Combined
-open Reporter
 open Error
 open Span
-
-module Errors = struct
-  let missing_return ~name ~declaration =
-    austral_raise DeclarationError [
-      Text "The ";
-      Text declaration;
-      Text " ";
-      Code (ident_string name);
-      Text " does not end in a return statement."
-    ]
-end
 
 let is_abort (name: qident): bool =
   let mn: module_name = source_module_name name
   and orig: identifier = original_name name
   in
-  (((mod_name_string mn) = "Austral.Pervasive")
-   && ((ident_string orig) = "abort"))
+  (((mod_name_string mn) = BuiltInNames.pervasive_module)
+   && ((ident_string orig) = BuiltInNames.abort_name))
 
 let rec ends_in_return (stmt: astmt): bool =
   match stmt with
   | ASkip _ ->
      false
-  | ALet (_, _, _, _, body) ->
+  | ALet (_, _, _, _, _, _, body) ->
      ends_in_return body
   | ADestructure (_, _, _, _, body) ->
      ends_in_return body
@@ -59,55 +47,52 @@ let rec ends_in_return (stmt: astmt): bool =
      (match e with
       | FunctionCall (name, _) ->
          is_abort name
-      | _ ->
+      | NilConstant | BoolConstant _ | IntConstant _ | FloatConstant _
+      | StringConstant _ | Variable _ | ArithmeticExpression _ | Comparison _
+      | Conjunction _ | Disjunction _ | Negation _ | IfExpression _ | Path _
+      | RefPath _ | Embed _ | Deref _ | Typecast _ | SizeOf _ | BorrowExpr _
+      | Reborrow _ ->
          false)
   | AReturn _ ->
      true
-  | AInitialAssign _ ->
-     false
 
-let check_ends_in_return (CombinedModule { decls; _ }): unit =
-  with_frame "Return check"
-    (fun _ ->
-      let check_method_ends_in_return (span: span) (CMethodDef (name, _, _, _, _, body)): unit =
-        adorn_error_with_span span
-          (fun _ ->
-            if ends_in_return body then
-              ()
-            else
-              Errors.missing_return
-                ~name:name
-                ~declaration:"method")
-      in
-      let check_decl_ends_in_return (decl: combined_definition): unit =
-        match decl with
-        | CConstant _ ->
+let check_method_ends_in_return (span: span) (CMethodDef (name, _, _, _, _, body)): unit =
+  if ends_in_return body then
+    ()
+  else
+    declaration_error (AtSpan span) (MissingReturn { name; declaration = MethodDeclaration })
+
+let check_decl_ends_in_return (decl: combined_definition): unit =
+  match decl with
+  | CConstant _ ->
+     ()
+  | CRecord _ ->
+     ()
+  | CUnion _ ->
+     ()
+  | CFunction (span, _, name, _, _, _, body, _, pragmas) ->
+     (match pragmas with
+      | [] ->
+         (* No pragmas: regular function. *)
+         if ends_in_return body then
            ()
-        | CRecord _ ->
-           ()
-        | CUnion _ ->
-           ()
-        | CFunction (span, _, name, _, _, _, body, _, pragmas) ->
-           adorn_error_with_span span
-             (fun _ ->
-               match pragmas with
-               | [] ->
-                  (* No pragmas: regular function. *)
-                  if ends_in_return body then
-                    ()
-                  else
-                    Errors.missing_return
-                      ~name
-                      ~declaration:"function"
-               | _ ->
-                  (* Yes pragmas: foreign function, ignore the body. *)
-                  ())
-        | CTypeclass _ ->
-           ()
-        | CInstance (span, _, _, _, _, methods, _) ->
-           let _ = List.map (check_method_ends_in_return span) methods in
-           ()
-      in
-      let _ = List.map check_decl_ends_in_return decls
-      in
-      ())
+         else
+           declaration_error (AtSpan span) (MissingReturn { name; declaration = FunctionDeclaration })
+      | [Common.ForeignImportPragma _] | [Common.ForeignExportPragma _] | [Common.UnsafeModulePragma] | _ :: _ :: _ ->
+         (* Yes pragmas: foreign function, ignore the body. *)
+         ())
+  | CTypeclass _ ->
+     ()
+  | CInstance (span, _, _, _, _, _, methods, _) ->
+     let _ = List.map (check_method_ends_in_return span) methods in
+     ()
+
+type returning_module = ReturningModule of combined_module
+
+let check_ends_in_return (md: combined_module): returning_module Outcome.t =
+  let (CombinedModule { decls; _ }) = md in
+  Outcome.map (fun (_: unit list) -> ReturningModule md)
+    (Outcome.traverse (fun decl -> Outcome.catch (fun () -> check_decl_ends_in_return decl)) decls)
+
+let as_combined_module (ReturningModule md): combined_module =
+  md

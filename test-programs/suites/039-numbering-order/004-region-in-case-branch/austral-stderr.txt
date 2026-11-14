@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "&[Int32, Region<0>]" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "&[Int32, Region<5>]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/039-numbering-order/004-region-in-case-branch/Test.aum",
+    "startp": { "line": 16, "column": 20 },
+    "end": { "line": 16, "column": 55 }
+  },
+  "context": [
+    [ 14, "            when Circle(radius: Int32) do" ],
+    [ 15, "                borrow ref: &[Int32, rho] := &n do" ],
+    [ 16, "                    let other: &[Int32, Static] := ref;" ],
+    [ 17, "                end borrow;" ],
+    [ 18, "            when Square(side: Int32) do" ]
+  ]
+}

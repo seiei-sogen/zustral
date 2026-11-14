@@ -1,0 +1,1 @@
+Covers a method of a generic instance whose return type is a region type parameter of the method, never called: accepted, because a generic instance is compiled only for the types of a call (lib/ExtractionPass.ml, check_instance_methods_hold_no_region).

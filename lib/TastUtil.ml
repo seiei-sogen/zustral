@@ -5,29 +5,17 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 
-open Common
 open Type
 open Stages.Tast
 open Identifier
 open StringSet
 open Error
 
-module Errors = struct
-  let arity_error ~expected ~actual =
-    austral_raise GenericError [
-      Text "Wrong number of arguments. Expected ";
-      Code (string_of_int expected);
-      Text " and got ";
-      Code (string_of_int actual);
-      Text "."
-    ]
-end
-
 let arglist_size = function
   | (TPositionalArglist l) -> List.length l
   | (TNamedArglist l) -> List.length l
 
-let rec arglist_to_positional (args, names): texpr list =
+let rec arglist_to_positional (place: place) (args, names): texpr list =
   let expected = List.length names
   and actual = arglist_size args
   in
@@ -37,7 +25,7 @@ let rec arglist_to_positional (args, names): texpr list =
     | (TPositionalArglist l) -> l
     | (TNamedArglist l) -> reorder_arglist l names
   else
-    Errors.arity_error ~expected ~actual
+    generic_error place (WrongNumberOfArguments { expected; actual })
 
 and names_match arglist names =
   match arglist with
@@ -54,7 +42,11 @@ and find_arg_with_name l name =
   let (_, value) = List.find (fun (n, _) -> name = n) l in
   value
 
-let rec get_type = function
+let reference_type (elem_ty: ty) (region: ref_region): Common.borrowing_mode -> ty = function
+  | ReadBorrow -> ReadRef (elem_ty, region)
+  | WriteBorrow -> WriteRef (elem_ty, region)
+
+let rec get_type (place: place) = function
   | TNilConstant ->
      Unit
   | TBoolConstant _ ->
@@ -83,7 +75,7 @@ let rec get_type = function
      rt
   | TFptrCall (_, _, rt) ->
      rt
-  | TCast (_, ty) ->
+  | TCast (_, ty) | TImplicitCast (_, ty) ->
      ty
   | TComparison _ ->
      Boolean
@@ -94,86 +86,79 @@ let rec get_type = function
   | TNegation _ ->
      Boolean
   | TIfExpression (_, t, _) ->
-     get_type t
+     get_type place t
   | TRecordConstructor (ty, _) ->
      ty
-  | TUnionConstructor (ty, _, _) ->
-     ty
+  | TUnionConstructor { union_id; type_name; tyargs; universe; _ } ->
+     NamedType (type_name, Id.UnionTypeId union_id, tyargs, universe)
   | TEmbed (ty, _, _) ->
      ty
-  | TDeref e ->
-     (match get_type e with
-      | ReadRef (t, _) ->
-         t
-      | WriteRef (t, _) ->
-         t
-      | _ ->
-         internal_err ("a dereference expression was constructed whose argument is not a reference type."))
+  | TDeref (_, ty) ->
+     ty
   | TSizeOf _ ->
      Integer (Unsigned, WidthByteSize)
   | TSlotAccessor (_, _, ty) -> ty
   | TPointerSlotAccessor (_, _, ty) -> ty
-  | TArrayIndex (_, _, ty) -> ty
-  | TSpanIndex (_, _, ty) -> ty
+  | TArrayIndex (_, _, elem_ty, region, mode) -> reference_type elem_ty region mode
+  | TSpanIndex (_, _, elem_ty, region, mode) -> reference_type elem_ty region mode
 
-let rec dump_stmt (stmt: tstmt): string =
-   pp stmt 0
-
-and pp (stmt: tstmt) (depth: int): string =
-  let indent (s: string): string =
-    (String.make depth ' ') ^ s
-
-  and inc: int = depth + 4
-  in
-  match stmt with
-  | TSkip _ ->
-     indent "skip\n"
-  | TLet (_, _, name, _, body) ->
-     (indent ("let " ^ (ident_string name) ^ "\n"))
-     ^ (pp body inc)
-     ^ (indent "end let\n")
-  | TDestructure (_, _, _, _, body) ->
-     (indent "let destructure\n")
-     ^ (pp body inc)
-     ^ (indent "end let destructure\n")
-  | TAssign (_, _, _) ->
-     indent "assign\n"
-  | TAssignVar _ ->
-     indent "assign var\n"
-  | TInitialAssign _ ->
-     indent "initial assign\n"
-  | TIf (_, _, t, f) ->
-     (indent "if\n")
-     ^ (pp t inc)
-     ^ (indent "else\n")
-     ^ (pp f inc)
-     ^ (indent "end if\n")
-  | TCase _ ->
-     indent "case\n"
-  | TWhile (_, _, body) ->
-     (indent "while\n")
-     ^ (pp body inc)
-     ^ (indent "end while\n")
-  | TFor (_, _, _, _, body) ->
-     (indent "for\n")
-     ^ (pp body inc)
-     ^ (indent "end for\n")
-  | TBorrow { body; original; rename; mode; _ } ->
-     let original = ident_string original
-     and rename = ident_string rename in
-     (indent ("borrow " ^ original ^ " as " ^ rename ^ "(" ^ (show_borrow_stmt_kind mode) ^ ")\n"))
-     ^ (pp body inc)
-     ^ (indent "end borrow\n")
-  | TBlock (_, a, b) ->
-     (indent "block\n")
-     ^ (pp a inc)
-     ^ (pp b inc)
-     ^ (indent "end block\n")
-  | TDiscarding _ ->
-     indent "discarding\n"
-  | TReturn _ ->
-     indent "return\n"
-  | TLetTmp _ ->
-     indent "let tmp\n"
-  | TAssignTmp _ ->
-     indent "assign tmp\n"
+let rec is_constant_expression (expr: texpr): bool =
+  match expr with
+  | TNilConstant ->
+     true
+  | TBoolConstant _ ->
+     true
+  | TIntConstant _ ->
+     true
+  | TFloatConstant _ ->
+     true
+  | TStringConstant _ ->
+     true
+  | TConstVar _ ->
+     true
+  | TParamVar _ ->
+     false
+  | TLocalVar _ ->
+     false
+  | TTemporary _ ->
+     false
+  | TFunVar _ ->
+     true
+  | TFuncall _ ->
+     false
+  | TMethodCall _ ->
+     false
+  | TVarMethodCall _ ->
+     false
+  | TFptrCall _ ->
+     false
+  | TCast _ | TImplicitCast _ ->
+     true
+  | TComparison (_, lhs, rhs) ->
+     (is_constant_expression lhs) && (is_constant_expression rhs)
+  | TConjunction (lhs, rhs) ->
+     (is_constant_expression lhs) && (is_constant_expression rhs)
+  | TDisjunction (lhs, rhs) ->
+     (is_constant_expression lhs) && (is_constant_expression rhs)
+  | TNegation e ->
+     is_constant_expression e
+  | TIfExpression (c, t, f) ->
+     (is_constant_expression c) && (is_constant_expression t) && (is_constant_expression f)
+  | TRecordConstructor (_, values) ->
+     List.for_all (fun (_, v) -> is_constant_expression v) values
+  | TUnionConstructor { args = values; _ } ->
+     List.for_all (fun (_, v) -> is_constant_expression v) values
+  | TEmbed _ ->
+     true
+  | TDeref _ ->
+     false
+  | TSizeOf _ ->
+     true
+  | TSlotAccessor _ ->
+     true
+  | TPointerSlotAccessor _ ->
+     true
+  | TArrayIndex (_, idx, _, _, _) ->
+     is_constant_expression idx
+  | TSpanIndex (_, idx, _, _, _) ->
+     is_constant_expression idx

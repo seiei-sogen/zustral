@@ -1,0 +1,7 @@
+module body Lib is
+    generic [T: Free(Describe)]
+    function show(x: T): Unit is
+        describe(x);
+        return nil;
+    end;
+end module body.

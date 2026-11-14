@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "The head of a reference transform expression must be of a reference type, but I got "
+    },
+    { "type": "type", "content": "Span[Int32, R]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/182-reference-slot-non-reference-span/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 15 }
+  },
+  "context": [
+    [ 2, "    generic [R: Region]" ],
+    [ 3, "    function probe(x: Span[Int32, R]): Unit is" ],
+    [ 4, "        &(x.a);" ],
+    [ 5, "        return nil;" ],
+    [ 6, "    end;" ]
+  ]
+}

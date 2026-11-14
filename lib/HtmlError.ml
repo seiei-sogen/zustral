@@ -1,5 +1,4 @@
 open Span
-open Util
 open Error
 open Identifier
 open SourceContext
@@ -264,19 +263,22 @@ let code_to_html_table (span: span option) (ctx: source_ctx option): string =
 
 
 let render_error_to_html (error: austral_error): string =
-    let (AustralError { span; kind; text; source_ctx; module_name }) = error
+    let (AustralError { location; error = cause; source_ctx }) = error
+    in
+    let span: span option = location_span location
+    and module_name: module_name option = location_module_name location
     in
     let main: string = "
     <div id='main'>
         <h1>Error Report</h1>
         <div id='split'>
             <div id='left'>
-                <h3><code>" ^  sanatize_string (error_title kind) ^ "</code>
+                <h3><code>" ^  sanatize_string (error_title cause) ^ "</code>
                      in module <code>" 
                         ^ sanatize_string (module_name_to_text module_name) 
                         ^ "</code></h3>
                 <pre id='description'>" 
-                    ^ error_text_to_html text
+                    ^ error_text_to_html (error_text cause)
                     ^ "</pre>
             </div>
 
@@ -288,8 +290,6 @@ let render_error_to_html (error: austral_error): string =
     <footer>
         <h3>Quick Links</h3>
         <div id='footer-list'>
-            <a target='_blank' href='./calltree.html'>
-                Compiler Call Tree</a>
             <a target='_blank' href='http://austral-lang.org'>
                 austral-lang.org</a>
             <a target='_blank' href='http://austral-lang.org/spec/spec.html'>
@@ -301,7 +301,4 @@ let render_error_to_html (error: austral_error): string =
     in
     prefix ^ main ^ suffix
 
-let html_error_dump (error: austral_error): unit =
-    let filename: string = "error.html" in
-    write_string_to_file filename (render_error_to_html error)
 

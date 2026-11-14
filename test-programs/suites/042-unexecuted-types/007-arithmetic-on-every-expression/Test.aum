@@ -1,0 +1,38 @@
+module body Test is
+    record Pair: Free is
+        x: Int32;
+    end;
+
+    function inc(x: Int32): Int32 is
+        return x + 1;
+    end;
+
+    generic [R: Region]
+    function operands(p: Pair, q: &[Pair, R], r: &[Int32, R], w: &![Int32, R], b: Bool, i: Int32): Unit is
+        var v: Int32 := 1;
+        printLn(nil + 1);
+        printLn(true + 1);
+        printLn(1.5 + 1.0);
+        printLn("text" + 1);
+        printLn(i + 1);
+        printLn(inc(i) + 1);
+        printLn((i < i) + 1);
+        printLn((b and b) + 1);
+        printLn((b or b) + 1);
+        printLn((not b) + 1);
+        printLn((if b then 1 else 2) + 1);
+        printLn(p.x + 1);
+        printLn(&(q.x) + 1);
+        printLn(@embed(Int32, "1") + 1);
+        printLn(!r + 1);
+        printLn((i : Int32) + 1);
+        printLn(sizeof(Int32) + 1);
+        printLn(&v + 1);
+        printLn(&~w + 1);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

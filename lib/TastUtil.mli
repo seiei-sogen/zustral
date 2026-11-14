@@ -10,8 +10,6 @@ open Type
 open Stages.Tast
 open Identifier
 
-val arglist_size : typed_arglist -> int
-
 (* This function converts an argument list to a list of typed expressions.
 
    The second argument is the list of parameter names of the function being
@@ -34,8 +32,12 @@ val arglist_size : typed_arglist -> int
        2. If the argument list is a named argument list, then the set of keys
           is exactly the same as the set of given parameter names.
 *)
-val arglist_to_positional : typed_arglist * identifier list -> texpr list
+val arglist_to_positional : Error.place -> typed_arglist * identifier list -> texpr list
 
-val get_type : texpr -> ty
+val get_type : Error.place -> texpr -> ty
 
-val dump_stmt : tstmt -> string
+(** Whether an expression may be the value of a constant: literals, other
+    constants, functions, constructors and casts of those, and the accesses
+    that do not read memory. A call is not, and neither is anything that names
+    a parameter, a local variable or a temporary. *)
+val is_constant_expression : texpr -> bool

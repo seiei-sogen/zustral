@@ -1,0 +1,12 @@
+module body Test is
+    union Choice[R: Region]: Free is
+        case Some is
+            r: R;
+        case None;
+    end;
+
+    function main(): ExitCode is
+        printLn("ok");
+        return ExitSuccess();
+    end;
+end module body.

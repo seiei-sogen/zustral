@@ -1,0 +1,9 @@
+module body Test is
+    function K(): Int32 is
+        return 1;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

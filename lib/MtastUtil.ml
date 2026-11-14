@@ -4,9 +4,14 @@
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
+
 open MonoType
 open Stages.Mtast
 open Error
+
+let mono_reference_type (elem_ty: mono_ty) (region: mono_ty): Common.borrowing_mode -> mono_ty = function
+  | ReadBorrow -> MonoReadRef (elem_ty, region)
+  | WriteBorrow -> MonoWriteRef (elem_ty, region)
 
 let rec get_type (e: mexpr): mono_ty =
   match e with
@@ -19,7 +24,7 @@ let rec get_type (e: mexpr): mono_ty =
   | MFloatConstant _ ->
      MonoDoubleFloat
   | MStringConstant _ ->
-     err "Type of the string constant"
+     generic_error NoSpan TypeOfStringConstant
   | MConstVar (_, ty) ->
      ty
   | MParamVar (_, ty) ->
@@ -56,23 +61,15 @@ let rec get_type (e: mexpr): mono_ty =
      get_type t
   | MRecordConstructor (ty, _) ->
      ty
-  | MUnionConstructor (ty, _, _) ->
-     ty
+  | MUnionConstructor (id, _, _) ->
+     MonoNamedType (Id.mono_id_of_union id)
   | MEmbed (ty, _, _) ->
      ty
-  | MDeref e ->
-     (match get_type e with
-      | MonoReadRef (t, _) ->
-         t
-      | MonoWriteRef (t, _) ->
-         t
-      | _ ->
-         internal_err ("a dereference expression was constructed whose argument is not a reference type."))
-  | MTypecast (_, ty) ->
+  | MDeref (_, ty) ->
      ty
   | MSizeOf _ ->
      MonoInteger (Unsigned, Width64)
   | MSlotAccessor (_, _, ty) -> ty
   | MPointerSlotAccessor (_, _, ty) -> ty
-  | MArrayIndex (_, _, ty) -> ty
-  | MSpanIndex (_, _, ty) -> ty
+  | MArrayIndex (_, _, elem_ty, region, mode) -> mono_reference_type elem_ty region mode
+  | MSpanIndex (_, _, elem_ty, region, mode) -> mono_reference_type elem_ty region mode

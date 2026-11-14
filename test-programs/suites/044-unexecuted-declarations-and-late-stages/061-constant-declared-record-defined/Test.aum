@@ -1,0 +1,9 @@
+module body Test is
+    record K: Free is
+        x: Int32;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

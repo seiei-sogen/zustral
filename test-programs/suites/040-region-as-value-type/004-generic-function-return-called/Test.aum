@@ -1,0 +1,17 @@
+module body Test is
+    generic [R: Region]
+    function f(x: &[Int32, R]): R is
+        return f(x);
+    end;
+
+    function main(): ExitCode is
+        let n: Int32 := 1;
+        if n > 5 then
+            borrow ref: &[Int32, Rho] := &n do
+                let y: Rho := f(ref);
+            end borrow;
+        end if;
+        printLn("ok");
+        return ExitSuccess();
+    end;
+end module body.

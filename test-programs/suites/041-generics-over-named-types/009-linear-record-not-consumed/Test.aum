@@ -1,0 +1,10 @@
+module body Test is
+    record Handle: Linear is
+        id: Int32;
+    end;
+
+    function main(): ExitCode is
+        let h: Handle := Handle(id => 5);
+        return ExitSuccess();
+    end;
+end module body.

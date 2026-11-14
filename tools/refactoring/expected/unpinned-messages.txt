@@ -1,0 +1,5 @@
+lib/CliErrors.ml	EmptyArgs	"Argument list must have at least one element in it, the path to the binary. Was the compiler invoked through a system call?"
+lib/DeclarationErrors.ml	InstanceArgumentRegion	"Typeclass arguments cannot be regions."
+lib/GenericErrors.ml	ParameterNotFound	"Parameter not found."
+lib/GenericErrors.ml	SymbolImportedTwice	"Cannot add symbol to the import map twice."
+lib/ParseErrors.ml	StringInvalidCharacter	"Character not allowed in string literal: "

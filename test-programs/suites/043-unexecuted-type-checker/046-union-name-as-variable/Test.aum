@@ -1,0 +1,10 @@
+module body Test is
+    union Choice: Free is
+        case First;
+    end;
+
+    function main(): ExitCode is
+        let x: Int32 := Choice;
+        return ExitSuccess();
+    end;
+end module body.

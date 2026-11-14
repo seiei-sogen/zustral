@@ -1,0 +1,19 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "No binding for this parameter: R" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/040-region-as-value-type/004-generic-function-return-called/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 20 }
+  },
+  "context": [
+    [ 2, "    generic [R: Region]" ],
+    [ 3, "    function f(x: &[Int32, R]): R is" ],
+    [ 4, "        return f(x);" ],
+    [ 5, "    end;" ],
+    [ 6, "" ]
+  ]
+}

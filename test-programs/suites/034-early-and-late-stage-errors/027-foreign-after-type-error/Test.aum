@@ -1,0 +1,16 @@
+pragma Unsafe_Module;
+
+module body Test is
+    function g(): Int32 is
+        let x: Int32 := true;
+        return x;
+    end;
+
+    pragma Foreign_Import(External_Name => "f");
+    function f(): Unit is
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

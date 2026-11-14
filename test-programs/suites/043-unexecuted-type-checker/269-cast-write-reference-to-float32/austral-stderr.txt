@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "Write references can only be casted to a read reference."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/269-cast-write-reference-to-float32/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 40 }
+  },
+  "context": [
+    [ 2, "    generic [R: Region]" ],
+    [ 3, "    function probe(x: &![Int32, R]): Unit is" ],
+    [ 4, "        let y: Float32 := (x : Float32);" ],
+    [ 5, "        return nil;" ],
+    [ 6, "    end;" ]
+  ]
+}

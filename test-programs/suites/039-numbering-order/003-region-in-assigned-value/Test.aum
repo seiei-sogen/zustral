@@ -1,0 +1,16 @@
+module body Test is
+    record S: Free is
+        a: Int32;
+    end;
+
+    function wantsStatic(s: &[S, Static]): Int32 is
+        return s->a;
+    end;
+
+    function main(): ExitCode is
+        var s: S := S(a => 1);
+        var t: S := S(a => 2);
+        s.a := wantsStatic(&t);
+        return ExitSuccess();
+    end;
+end module body.

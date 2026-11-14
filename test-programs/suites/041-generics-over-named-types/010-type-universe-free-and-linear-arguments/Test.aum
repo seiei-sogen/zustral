@@ -1,0 +1,29 @@
+module body Test is
+    record Point: Free is
+        x: Int32;
+    end;
+
+    record Handle: Linear is
+        id: Int32;
+    end;
+
+    record Box[T: Type]: Type is
+        value: T;
+    end;
+
+    generic [T: Type]
+    function box(value: T): Box[T] is
+        return Box(value => value);
+    end;
+
+    function main(): ExitCode is
+        let free: Box[Point] := box(Point(x => 1));
+        printLn(free.value.x);
+        printLn(free.value.x);
+        let linear: Box[Handle] := box(Handle(id => 2));
+        let { value: Handle } := linear;
+        let { id: Int32 } := value;
+        printLn(id);
+        return ExitSuccess();
+    end;
+end module body.

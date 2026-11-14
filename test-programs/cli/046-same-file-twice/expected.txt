@@ -1,0 +1,15 @@
+exit: 255
+files: error.html
+--- stdout
+--- stderr
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "A module with the name " },
+    { "type": "code", "content": "Test" },
+    { "type": "text", "content": " already exists." }
+  ],
+  "span": null,
+  "context": null
+}

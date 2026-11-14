@@ -116,36 +116,18 @@ open Span
 
 %type <Cst.concrete_module_interface> module_int
 %type <Cst.concrete_module_body> module_body
-%type <Cst.concrete_decl> standalone_interface_decl
-%type <Cst.cstmt> standalone_statement
 %type <Cst.cexpr> standalone_expression
-%type <Identifier.identifier> standalone_identifier
 
 %start module_int
 %start module_body
-%start standalone_interface_decl
-%start standalone_statement
 %start standalone_expression
-%start standalone_identifier
 
 %%
 
 /* Entrypoints */
 
-standalone_interface_decl:
-  | interface_decl EOF { $1 }
-  ;
-
-standalone_statement:
-  | statement EOF { $1 }
-  ;
-
 standalone_expression:
   | expression EOF { $1 }
-  ;
-
-standalone_identifier:
-  | identifier EOF { $1 }
   ;
 
 /* Module interfaces and bodies */
@@ -266,11 +248,11 @@ body_decl:
   ;
 
 body_decl_inner:
-  | constant_def { $1 }
-  | record { ConcreteRecordDef $1 }
-  | union { ConcreteUnionDef $1 }
-  | function_def { $1 }
-  | typeclass { ConcreteTypeClassDef $1 }
+  | constant_def { ConcreteNamedDef $1 }
+  | record { ConcreteNamedDef (ConcreteRecordDef $1) }
+  | union { ConcreteNamedDef (ConcreteUnionDef $1) }
+  | function_def { ConcreteNamedDef $1 }
+  | typeclass { ConcreteNamedDef (ConcreteTypeClassDef $1) }
   | instance_def { $1 }
   ;
 
@@ -312,16 +294,16 @@ method_def:
 /* Statements */
 
 statement:
-  | if_statement { $1 }
+  | if_statement { CStatement $1 }
   | let_stmt { $1 }
-  | lvalue ASSIGN expression SEMI { CAssign (from_loc $loc, $1, $3) }
-  | expression SEMI { CDiscarding (from_loc $loc, $1) }
-  | CASE expression OF when_stmt* END CASE SEMI { CCase (from_loc $loc, $2, $4) }
-  | WHILE expression DO block END WHILE SEMI { CWhile (from_loc $loc, $2, $4) }
-  | FOR identifier FROM expression TO expression DO block END FOR SEMI { CFor (from_loc $loc, $2, $4, $6, $8) }
-  | borrow_stmt { $1 }
-  | RETURN expression SEMI { CReturn (from_loc $loc, $2) }
-  | SKIP SEMI { CSkip (from_loc $loc) }
+  | lvalue ASSIGN expression SEMI { CStatement (CAssign (from_loc $loc, $1, $3)) }
+  | expression SEMI { CStatement (CDiscarding (from_loc $loc, $1)) }
+  | CASE expression OF when_stmt* END CASE SEMI { CStatement (CCase (from_loc $loc, $2, $4)) }
+  | WHILE expression DO block END WHILE SEMI { CStatement (CWhile (from_loc $loc, $2, $4)) }
+  | FOR identifier FROM expression TO expression DO block END FOR SEMI { CStatement (CFor (from_loc $loc, $2, $4, $6, $8)) }
+  | borrow_stmt { CStatement $1 }
+  | RETURN expression SEMI { CStatement (CReturn (from_loc $loc, $2)) }
+  | SKIP SEMI { CStatement (CSkip (from_loc $loc)) }
   ;
 
 if_statement:
@@ -362,7 +344,7 @@ var_mutability:
   ;
 
 lvalue:
-  | n=identifier elems=path_rest* { CPath (from_loc $loc, n, elems) }
+  | n=identifier elems=path_rest* { ConcreteLvalue (from_loc $loc, n, elems) }
   ;
 
 when_stmt:
@@ -422,15 +404,15 @@ atomic_expression:
   ;
 
 int_constant:
-  | DEC_CONSTANT { CIntConstant (from_loc $loc, remove_char $1 '\'') }
-  | HEX_CONSTANT { CIntConstant (from_loc $loc, string_of_int (parse_hex (remove_leading (remove_char $1 '\'') 2))) }
-  | BIN_CONSTANT { CIntConstant (from_loc $loc, string_of_int (parse_bin (remove_leading (remove_char $1 '\'') 2))) }
-  | OCT_CONSTANT { CIntConstant (from_loc $loc, string_of_int (parse_oct (remove_leading (remove_char $1 '\'') 2))) }
-  | CHAR_CONSTANT { CIntConstant (from_loc $loc, string_of_int (parse_ascii_char (remove_char $1 '\''))) }
+  | DEC_CONSTANT { CIntConstant (from_loc $loc, NumberLiteral.of_decimal $1) }
+  | HEX_CONSTANT { CIntConstant (from_loc $loc, NumberLiteral.of_hexadecimal $1) }
+  | BIN_CONSTANT { CIntConstant (from_loc $loc, NumberLiteral.of_binary $1) }
+  | OCT_CONSTANT { CIntConstant (from_loc $loc, NumberLiteral.of_octal $1) }
+  | CHAR_CONSTANT { CIntConstant (from_loc $loc, NumberLiteral.of_character $1 (parse_ascii_char (remove_char $1 '\''))) }
   ;
 
 float_constant:
-  | FLOAT_CONSTANT { CFloatConstant (from_loc $loc, remove_char $1 '\'') }
+  | FLOAT_CONSTANT { CFloatConstant (from_loc $loc, NumberLiteral.of_float $1) }
   ;
 
 string_constant:
@@ -524,7 +506,7 @@ arith_expr:
   | atomic_expression MINUS atomic_expression { CArith (from_loc $loc, Subtract, $1, $3) }
   | atomic_expression MUL atomic_expression   { CArith (from_loc $loc, Multiply, $1, $3) }
   | atomic_expression DIV atomic_expression   { CArith (from_loc $loc, Divide, $1, $3) }
-  | MINUS atomic_expression                   { CArith (from_loc $loc, Subtract, CIntConstant (from_loc $loc, "0"), $2) }
+  | MINUS atomic_expression                   { CArith (from_loc $loc, Subtract, CIntConstant (from_loc $loc, NumberLiteral.of_value Z.zero), $2) }
   ;
 
 /* Common */

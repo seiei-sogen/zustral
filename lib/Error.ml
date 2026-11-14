@@ -11,96 +11,137 @@ open ErrorText
 
 (* Types *)
 
-type error_kind =
-  | GenericError
-  | ParseError
-  | CliError
-  | TypeError
-  | LinearityError
-  | DeclarationError
-  | EntrypointError
-  | InternalError
+type error =
+  | Parse of ParseErrors.t
+  | Cli of CliErrors.t
+  | Type of TypeErrors.t
+  | Linearity of LinearityErrors.t
+  | Declaration of DeclarationErrors.t
+  | Entrypoint of EntrypointErrors.t
+  | Generic of GenericErrors.t
+  | Internal of string
+
+type place =
+  | AtSpan of span
+  | NoSpan
+
+type location =
+  | At of { module_name: module_name option; span: span }
+  | InModule of module_name
+  | Nowhere
 
 type austral_error = AustralError of {
-      module_name: module_name option;
-      kind: error_kind;
-      text: err_text;
-      span: span option;
+      location: location;
+      error: error;
       source_ctx: source_ctx option;
     }
 
 exception Austral_error of austral_error
 
-(* Raising *)
+let error_text (error: error): err_text =
+  match error with
+  | Parse e -> ParseErrors.render e
+  | Cli e -> CliErrors.render e
+  | Type e -> TypeErrors.render e
+  | Linearity e -> LinearityErrors.render e
+  | Declaration e -> DeclarationErrors.render e
+  | Entrypoint e -> EntrypointErrors.render e
+  | Generic e -> GenericErrors.render e
+  | Internal message ->
+     [
+       Text "Internal compiler error: ";
+       Text message;
+       Break;
+       Text "This is a bug in the compiler, please open an issue here: ";
+       Code "https://github.com/austral/austral/issues"
+     ]
 
-let austral_raise (kind: error_kind) (text: err_text): 'a =
-  let error: austral_error =
-    AustralError {
-        module_name = None;
-        kind = kind;
-        text = text;
-        span = None;
-        source_ctx = None;
-      }
-  in
-  raise (Austral_error error)
+(* Locations *)
+
+let locate (module_name: module_name option) (place: place): location =
+  match (place, module_name) with
+  | (AtSpan span, _) -> At { module_name; span }
+  | (NoSpan, Some module_name) -> InModule module_name
+  | (NoSpan, None) -> Nowhere
+
+let location_module_name (location: location): module_name option =
+  match location with
+  | At { module_name; _ } -> module_name
+  | InModule module_name -> Some module_name
+  | Nowhere -> None
+
+let location_span (location: location): span option =
+  match location with
+  | At { span; _ } -> Some span
+  | InModule _ | Nowhere -> None
+
+(* Raising. Every function takes the place first: the code that raises
+   says where the error is. *)
+
+let make_error (place: place) (error: error): austral_error =
+  AustralError { location = locate None place; error; source_ctx = None }
+
+let raise_error (place: place) (error: error): 'a =
+  raise (Austral_error (make_error place error))
+
+let parse_error (place: place) (e: ParseErrors.t): 'a = raise_error place (Parse e)
+
+let cli_error (place: place) (e: CliErrors.t): 'a = raise_error place (Cli e)
+
+let type_error (place: place) (e: TypeErrors.t): 'a = raise_error place (Type e)
+
+let linearity_error (place: place) (e: LinearityErrors.t): 'a = raise_error place (Linearity e)
+
+let declaration_error (place: place) (e: DeclarationErrors.t): 'a = raise_error place (Declaration e)
+
+let entrypoint_error (place: place) (e: EntrypointErrors.t): 'a = raise_error place (Entrypoint e)
+
+let generic_error (place: place) (e: GenericErrors.t): 'a = raise_error place (Generic e)
+
+let internal_err (place: place) (message: string): 'a = raise_error place (Internal message)
+
+let ok_or_raise (place: place) (result: ('a, error) result): 'a =
+  match result with
+  | Ok value -> value
+  | Error error -> raise_error place error
+
+let place_inside (outer: place) (span: span): place =
+  match outer with
+  | AtSpan _ when span = empty_span -> outer
+  | AtSpan _ | NoSpan -> AtSpan span
 
 (* Error context-augmenting functions *)
 
 let add_source_ctx (error: austral_error) (ctx: source_ctx): austral_error =
-  let (AustralError { module_name; kind; text; span; source_ctx }) = error in
+  let (AustralError { location; error = cause; source_ctx }) = error in
   match source_ctx with
   | Some _ ->
      error
   | None ->
-     AustralError { module_name; kind; text; span; source_ctx = Some ctx; }
+     AustralError { location; error = cause; source_ctx = Some ctx; }
 
-let adorn_error_with_module_name (new_module_name: module_name) (f: unit -> 'a): 'a =
-  try
-    f ()
-  with Austral_error error ->
-    let (AustralError { module_name; kind; text; span; source_ctx }) = error in
-    match module_name with
-    | Some _ ->
-       (* The error already has a module name, do nothing. *)
-       raise (Austral_error error)
-    | None ->
-       (* Add the span *)
-       let new_err = AustralError { module_name = Some new_module_name; kind; text; span; source_ctx } in
-       raise (Austral_error new_err)
-
-let adorn_error_with_span (new_span: span) (f: unit -> 'a): 'a =
-  try
-    f ()
-  with Austral_error error ->
-    let (AustralError { module_name; kind; text; span; source_ctx }) = error in
-    match span with
-    | Some span' ->
-       (* The error already has a span. *)
-       if span' = empty_span then
-         (* The error has the empty span, add ours. *)
-         let new_err = AustralError { module_name; kind; text; span = Some new_span; source_ctx } in
-         raise (Austral_error new_err)
-       else
-         (* The error has a non-empty span, reraise. *)
-         raise (Austral_error error)
-    | None ->
-       (* Add the span *)
-       let new_err = AustralError { module_name; kind; text; span = Some new_span; source_ctx } in
-       raise (Austral_error new_err)
+let add_module_name (error: austral_error) (new_module_name: module_name): austral_error =
+  let (AustralError { location; error = cause; source_ctx }) = error in
+  match location with
+  | At { module_name = Some _; _ } | InModule _ ->
+     error
+  | At { module_name = None; span } ->
+     AustralError { location = locate (Some new_module_name) (AtSpan span); error = cause; source_ctx }
+  | Nowhere ->
+     AustralError { location = locate (Some new_module_name) NoSpan; error = cause; source_ctx }
 
 (* Error rendering to plain text *)
 
-let error_title (kind: error_kind): string =
-  match kind with
-  | GenericError -> "Generic Error"
-  | ParseError -> "Parse Error"
-  | CliError -> "Command Line Arguments Error"
-  | TypeError -> "Type Error"
-  | LinearityError -> "Linearity Error"
-  | DeclarationError -> "Declaration Error"
-  | EntrypointError -> "Entrypoint Definition Error"
-  | InternalError -> "Internal Error"
+let error_title (error: error): string =
+  match error with
+  | Generic _ -> "Generic Error"
+  | Parse _ -> "Parse Error"
+  | Cli _ -> "Command Line Arguments Error"
+  | Type _ -> "Type Error"
+  | Linearity _ -> "Linearity Error"
+  | Declaration _ -> "Declaration Error"
+  | Entrypoint _ -> "Entrypoint Definition Error"
+  | Internal _ -> "Internal Error"
 
 let indent_text (text: string) (indent: int): string =
   let lines = String.split_on_char '\n' text in
@@ -115,9 +156,9 @@ let indent_text (text: string) (indent: int): string =
   String.concat "\n" lines
 
 let render_error_to_plain (error: austral_error): string =
-  let (AustralError { span; kind; text; source_ctx; module_name }) = error in
+  let (AustralError { location; error = cause; source_ctx }) = error in
   let mn_text: string =
-    match module_name with
+    match location_module_name location with
     | Some mn ->
        "  Module:\n"
        ^ "    " ^ (mod_name_string mn) ^ "\n"
@@ -125,9 +166,9 @@ let render_error_to_plain (error: austral_error): string =
        "  Module:\n"
        ^ "    [unknown]\n"
   in
-  let title: string = error_title kind in
+  let title: string = error_title cause in
   let span_text =
-    match span with
+    match location_span location with
     | Some (Span { filename; startp; endp }) ->
        "  Location:\n"
        ^ "    Filename: '" ^ filename ^ "'\n"
@@ -150,7 +191,7 @@ let render_error_to_plain (error: austral_error): string =
   ^ mn_text
   ^ span_text
   ^ "  Description:\n"
-  ^ (indent_text (error_text_to_plain text) 4) ^ "\n"
+  ^ (indent_text (error_text_to_plain (error_text cause)) 4) ^ "\n"
   ^ code_text
   ^ "\n"
 
@@ -178,15 +219,15 @@ let source_ctx_json (ctx: source_ctx): Yojson.Basic.t =
 
 let render_error_to_json (error: austral_error): Yojson.Basic.t =
   (* Break up the error. *)
-  let (AustralError { span; kind; text; source_ctx; module_name }) = error in
+  let (AustralError { location; error = cause; source_ctx }) = error in
   (* Render components to JSON. *)
   let module_name: Yojson.Basic.t =
-    match module_name with
+    match location_module_name location with
     | Some mn -> `String (mod_name_string mn)
     | None -> `Null
   in
   let span: Yojson.Basic.t =
-    match span with
+    match location_span location with
     | Some span -> span_json span
     | None -> `Null
   in
@@ -198,40 +239,8 @@ let render_error_to_json (error: austral_error): Yojson.Basic.t =
   (* Put it together. *)
   `Assoc [
       ("module", module_name);
-      ("kind", `String (error_title kind));
-      ("text", error_text_to_json text);
+      ("kind", `String (error_title cause));
+      ("text", error_text_to_json (error_text cause));
       ("span", span);
       ("context", source_ctx)
     ]
-
-(* Utility functions. *)
-
-let err (message: string) =
-  let e: austral_error =
-    AustralError {
-        module_name = None;
-        kind = GenericError;
-        text = [Text message];
-        span = None;
-        source_ctx = None;
-      }
-  in
-  raise (Austral_error e)
-
-let internal_err (message: string) =
-  let e: austral_error =
-    AustralError {
-        module_name = None;
-        kind = InternalError;
-        text = [
-            Text "Internal compiler error: ";
-            Text message;
-            Break;
-            Text "This is a bug in the compiler, please open an issue here: ";
-            Code "https://github.com/austral/austral/issues"
-          ];
-        span = None;
-        source_ctx = None;
-      }
-  in
-  raise (Austral_error e)

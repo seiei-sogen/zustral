@@ -1,0 +1,36 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "R" },
+    {
+      "type": "text",
+      "content": " is used as a type, but it is declared in the "
+    },
+    { "type": "code", "content": "Region" },
+    {
+      "type": "text",
+      "content": " universe, and regions are not types. A region can only be the region of a reference or of a span."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/040-region-as-value-type/018-pointer-argument-in-instance-method/Test.aum",
+    "startp": { "line": 9, "column": 8 },
+    "end": { "line": 16, "column": 8 }
+  },
+  "context": [
+    [ 7, "        generic [R: Region]" ],
+    [ 8, "        method area(x: T, y: Pointer[R]): Int32;" ],
+    [ 9, "    end;" ],
+    [ 10, "" ],
+    [ 11, "    instance Shape(Int32) is" ],
+    [ 12, "        generic [R: Region]" ],
+    [ 13, "        method area(x: Int32, y: Pointer[R]): Int32 is" ],
+    [ 14, "            return x;" ],
+    [ 15, "        end;" ],
+    [ 16, "    end;" ],
+    [ 17, "" ],
+    [ 18, "    function main(): ExitCode is" ]
+  ]
+}

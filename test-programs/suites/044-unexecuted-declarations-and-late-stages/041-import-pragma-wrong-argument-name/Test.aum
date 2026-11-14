@@ -1,0 +1,12 @@
+pragma Unsafe_Module;
+
+module body Test is
+    pragma Foreign_Import(Name => "abs");
+    function f(x: Int32): Int32 is
+        return 0;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

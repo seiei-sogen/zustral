@@ -1,0 +1,15 @@
+pragma Unsafe_Module;
+
+import Austral.Memory (Address, Pointer);
+
+module body Test is
+    generic [R: Region]
+    function probe(x: &![Int32, R]): Unit is
+        let y: Pointer[Int32] := (x : Pointer[Int32]);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,17 @@
+module body Test is
+    generic [T: Free]
+    function zero(): T is
+        return 0;
+    end;
+
+    function isZero(x: Int32): Bool is
+        return zero() = missing;
+    end;
+
+    function main(): ExitCode is
+        if isZero(0) then
+            printLn("zero");
+        end if;
+        return ExitSuccess();
+    end;
+end module body.

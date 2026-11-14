@@ -7,7 +7,12 @@
 
 open Cst
 
-val parse_module_int : string -> string -> concrete_module_interface
-val parse_module_body : string -> string -> concrete_module_body
-val parse_stmt : string -> cstmt
+(** Parse the text of a module interface. The second argument is the name of
+    the file, for the positions in errors. *)
+val parse_module_int : concrete_module_interface Pipeline.parse
+
+(** Parse the text of a module body. *)
+val parse_module_body : concrete_module_body Pipeline.parse
+
+(** Parse an expression. Raises [Austral_error] if it does not parse. *)
 val parse_expr : string -> cexpr

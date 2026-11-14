@@ -1,0 +1,1 @@
+Covers the error when the type arguments of a named type bind one type parameter to two types: the bindings of the arguments are merged in order (lib/TypeMatch.ml, the list of types; lib/TypeBindings.ml, merge_bindings).

@@ -1,0 +1,28 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": " of " },
+    { "type": "code", "content": "accept" },
+    { "type": "text", "content": " is constrained by " },
+    { "type": "code", "content": "Missing" },
+    {
+      "type": "text",
+      "content": ", but no typeclass with that name is declared or imported."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/015-constraint-unknown-typeclass/Test.aum",
+    "startp": { "line": 8, "column": 8 },
+    "end": { "line": 8, "column": 19 }
+  },
+  "context": [
+    [ 6, "" ],
+    [ 7, "    function main(): ExitCode is" ],
+    [ 8, "        accept(10);" ],
+    [ 9, "        return ExitSuccess();" ],
+    [ 10, "    end;" ]
+  ]
+}

@@ -1,0 +1,33 @@
+module body Test is
+    typeclass TC(T: Free) is
+        method accept(x: T): Unit;
+    end;
+
+    record Other: Free is
+    end;
+
+    instance TC(ExitCode) is
+        method accept(x: ExitCode): Unit is
+            printLn("exit code");
+            return nil;
+        end;
+    end;
+
+    instance TC(Other) is
+        method accept(x: Other): Unit is
+            printLn("other");
+            return nil;
+        end;
+    end;
+
+    generic [T: Free(TC)]
+    function f(x: T): Unit is
+        return accept(x);
+    end;
+
+    function main(): ExitCode is
+        f(ExitSuccess());
+        f(Other());
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,38 @@
+import Other (Thing);
+
+module body Test is
+    typeclass Describe(T: Free) is
+        method describe(x: T): Unit;
+    end;
+
+    instance Describe(Thing) is
+        method describe(t: Thing): Unit is
+            printLn("thing");
+            printLn(t.n);
+            return nil;
+        end;
+    end;
+
+    generic [T: Free(Describe)]
+    function show(x: T): Unit is
+        describe(x);
+        return nil;
+    end;
+
+    generic [T: Type]
+    function wrap(value: T): Option[T] is
+        return Some(value => value);
+    end;
+
+    function main(): ExitCode is
+        show(Thing(n => 11));
+        let opt: Option[Thing] := wrap(Thing(n => 12));
+        case opt of
+            when Some(value: Thing) do
+                printLn(value.n);
+            when None do
+                printLn("none");
+        end case;
+        return ExitSuccess();
+    end;
+end module body.

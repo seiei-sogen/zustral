@@ -1,0 +1,1 @@
+Covers the `DoubleFloat` alternative of the non-union arm of `get_union_type_definition` (lib/TypingPass.ml): a `case` on a reference `&[Float64, R]` whose pointed-to type is not a union is an error. Target line: lib/TypingPass.ml line 525.

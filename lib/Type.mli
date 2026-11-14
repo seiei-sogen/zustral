@@ -5,7 +5,6 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 
-open Id
 open Identifier
 open Region
 
@@ -14,7 +13,7 @@ type universe =
   | LinearUniverse
   | TypeUniverse
   | RegionUniverse
-[@@deriving (eq, show, sexp)]
+[@@deriving (eq, show)]
 
 type integer_width =
   | Width8
@@ -23,15 +22,15 @@ type integer_width =
   | Width64
   | WidthByteSize
   | WidthIndex
-[@@deriving (eq, show, sexp)]
+[@@deriving (eq, show)]
 
 type signedness =
   | Unsigned
   | Signed
-[@@deriving (eq, show, sexp)]
+[@@deriving (eq, show)]
 
 type type_var = TypeVariable of identifier * universe * qident * sident list
-[@@deriving (eq, show, sexp)]
+[@@deriving eq]
 
 type ty =
   | Unit
@@ -39,30 +38,39 @@ type ty =
   | Integer of signedness * integer_width
   | SingleFloat
   | DoubleFloat
-  | NamedType of qident * ty list * universe
+  | NamedType of qident * Id.type_decl_id * ty list * universe
+  (** The name, as the program wrote it, and the ID of the record or union
+      it stands for. *)
   | RegionTy of region
-  | ReadRef of ty * ty
-  | WriteRef of ty * ty
-  | Span of ty * ty
-  | SpanMut of ty * ty
+  | ReadRef of ty * ref_region
+  | WriteRef of ty * ref_region
+  | Span of ty * ref_region
+  | SpanMut of ty * ref_region
   | TyVar of type_var
   | Address of ty
   | Pointer of ty
   | FnPtr of ty list * ty
-  | MonoTy of mono_id
-  (** Special case, see the `mono_to_ty` function. We need this to be able to do
-     monomorph instantiation, but this doesn't correspond to anything in the
-     code. *)
-[@@deriving (show, sexp)]
+(** The region of a reference or span type. *)
+and ref_region =
+  | RefRegion of region
+  | RefRegionVar of type_var
+  (** A type variable of the Region universe. *)
+  | NotARegion of ty
+  (** Whatever else the program wrote in the region position: the type parser
+      does not check it, so [&\[Int32, Int32\]] is accepted (#90). *)
 
 type typed_slot = TypedSlot of identifier * ty
-[@@deriving sexp]
 
 type typed_case = TypedCase of identifier * typed_slot list
-[@@deriving sexp]
 
 type value_parameter = ValueParameter of identifier * ty
-[@@deriving (show, sexp)]
+
+(** The region field as a type. *)
+val ty_of_ref_region : ref_region -> ty
+
+(** A type in the region position: a region, a region variable, or anything
+    else as it was written (#90). *)
+val ref_region_of_ty : ty -> ref_region
 
 val universe_string : universe -> string
 

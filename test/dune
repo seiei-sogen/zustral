@@ -2,7 +2,17 @@
  (names
   ExpressionParserTest
   UtilTest
+  OsTest
   CliUtilTest
   CliParserTest
-  CRendererTest)
- (libraries austral_core ounit2))
+  CRendererTest
+  EnvTest
+  OutcomeTest
+  BuiltInNamesTest
+  CompilerTest
+  TypeCheckExprTest
+  TypeMatchTest
+  UnexecutedWordingTest
+  UnexecutedDeclarationsTest
+  UnexecutedCheckerTest)
+ (libraries austral_core austral_cli ounit2))

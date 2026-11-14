@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+  # To run the job on a branch by hand (Actions, "Run workflow").
+  workflow_dispatch:
 
 jobs:
   build-and-test-linux:
@@ -37,6 +39,54 @@ jobs:
 
       - name: end-to-end tests
         run: nix-shell --command 'python test-programs/runner.py'
+
+      - name: command-line tests
+        run: nix-shell --command 'python test-programs/cli-runner.py'
+
+      # The counts the refactoring plan wants to shrink (docs/refactoring-plan.md) equal the
+      # record in tools/refactoring/expected/. A commit that moves one, down as well as up,
+      # records it again (measure.sh --record): a record that lags lets new ones in unseen.
+      - name: metrics equal the record
+        run: nix-shell --command 'tools/refactoring/measure.sh'
+
+      - name: no unused exports
+        run: nix-shell --command 'tools/refactoring/unused-exports.sh'
+
+      - name: every error message has a test
+        run: nix-shell --command 'python tools/refactoring/unpinned-messages.py'
+
+      # The functions the driver calls return their errors as values (lib/Outcome.ml).
+      - name: no error escapes a stage
+        run: nix-shell --command 'python tools/refactoring/escape-check.py'
+
+      # IDs come from the supply of the compilation, which the environment holds.
+      - name: only the environment makes IDs
+        run: nix-shell --command 'python tools/refactoring/id-makers.py'
+
+      # Builds the compiler a second time, instrumented, and runs every program in the
+      # repository with it. A line of lib/*Errors.ml that none of them executes is wording
+      # that no program shows; it fails the job unless it is on the record of the lines
+      # that no program can reach (the unit tests execute those: the next step).
+      - name: every wording of an error message is shown by a program, or is on the record
+        run: nix-shell --command 'tools/refactoring/coverage.sh --messages'
+
+      # The instrumented compiler again, with the programs and the unit tests of test/,
+      # for every line of the compiler. A line that no test executes in full fails the job.
+      # The record of exceptions (tools/refactoring/expected/unexecuted-lines.tsv) is empty.
+      - name: every line is executed by a test
+        run: nix-shell --command 'tools/refactoring/coverage.sh --unexecuted --check'
+
+      # Compiles every program in the repository with the base branch's compiler and with
+      # this one. A refactoring pull request must show 0 differing programs. A bug fix
+      # shows the programs it changes, so a difference is reported and does not fail the job.
+      - name: equivalence with the base branch
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --depth=1 origin ${{ github.base_ref }}
+          status=0
+          nix-shell --command 'tools/refactoring/check.sh FETCH_HEAD --quick' || status=$?
+          # 1: the output differs, which a bug fix does on purpose. Anything else: the check could not run.
+          if [ "$status" -eq 1 ]; then echo "::warning::the compiler's output differs from the base branch"; elif [ "$status" -ne 0 ]; then exit "$status"; fi
 
       - name: examples
         run: nix-shell --command 'bash run-examples.sh'

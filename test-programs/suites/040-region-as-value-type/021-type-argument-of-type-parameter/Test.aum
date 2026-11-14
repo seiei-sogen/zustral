@@ -1,0 +1,15 @@
+module body Test is
+    record Box[T: Type]: Type is
+        value: T;
+    end;
+
+    generic [R: Region]
+    function f(x: &[Int32, R], b: Box[R]): Int32 is
+        return 1;
+    end;
+
+    function main(): ExitCode is
+        printLn("ok");
+        return ExitSuccess();
+    end;
+end module body.

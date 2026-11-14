@@ -1,0 +1,50 @@
+(*
+   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   See LICENSE file for details.
+
+   SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+*)
+
+(** What a stage of the compiler returns: its result, or the errors that
+    stopped it. Inside a stage an error travels as the exception
+    [Austral_error]; the functions the driver calls turn it into a value with
+    {!catch}, so that no exception leaves a stage
+    ([tools/refactoring/escape-check.py] checks this). *)
+open Error
+
+(** The errors of a stage that failed: the first, and the ones after it. There
+    is at least one, so nobody has to say what a failure without an error is. *)
+type errors = austral_error * austral_error list
+
+type 'a t = ('a, errors) result
+
+(** Run the callback, and return the error it raises as a value. Other
+    exceptions pass through. *)
+val catch : (unit -> 'a) -> 'a t
+
+(** [let*] gives the result of a step to the next step, or stops at the
+    failure. This is how stages are chained: a stage needs the value the one
+    before it returned. Open this module where the operator is used.
+
+    The operator is [Result.bind] at its own type, not at {!t}: the matching
+    of types returns one error with no place in the source, not a list of
+    {!Error.austral_error}, and chains its steps with the same operator. *)
+module Syntax : sig
+  val ( let* ) : ('a, 'e) result -> ('a -> ('b, 'e) result) -> ('b, 'e) result
+end
+
+(** Apply a function that cannot fail to the result. *)
+val map : ('a -> 'b) -> 'a t -> 'b t
+
+(** Apply a function to every error of a failure. *)
+val map_errors : (austral_error -> austral_error) -> 'a t -> 'a t
+
+(** Apply a function to the elements of a list, in order, and return the
+    results. This is how the declarations of a module are gone through. It
+    stops at the first failure: the elements after it are not looked at. *)
+val traverse : ('a -> 'b t) -> 'a list -> 'b list t
+
+(** {!traverse} for a loop whose steps hand a context on, the way the
+    declarations of a module hand on the environment. It cannot go on after a
+    failure: the next step needs the context the failed one did not return. *)
+val traverse_with_context : ('c * 'a -> ('c * 'b) t) -> 'c -> 'a list -> ('c * 'b list) t

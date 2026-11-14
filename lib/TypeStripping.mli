@@ -5,7 +5,6 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 
-open Id
 open Type
 open Identifier
 open Region
@@ -21,7 +20,7 @@ type stripped_ty =
   | SInteger of signedness * integer_width
   | SSingleFloat
   | SDoubleFloat
-  | SNamedType of qident * stripped_ty list
+  | SNamedType of qident * Id.type_decl_id * stripped_ty list
   | SRegionTy of region
   | SReadRef of stripped_ty * stripped_ty
   | SWriteRef of stripped_ty * stripped_ty
@@ -30,7 +29,6 @@ type stripped_ty =
   | SAddress of stripped_ty
   | SPointer of stripped_ty
   | SFnPtr of stripped_ty list * stripped_ty
-  | SMonoTy of mono_id
   | SRegionTyVar of identifier * qident
 
 (** Strip a type specifier. *)

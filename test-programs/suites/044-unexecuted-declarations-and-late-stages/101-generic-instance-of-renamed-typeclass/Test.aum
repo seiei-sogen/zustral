@@ -1,0 +1,20 @@
+import Lib (Show as Display, show);
+
+module body Test is
+    record Box[U: Free]: Free is
+        v: U;
+    end;
+
+    generic [U: Free]
+    instance Display(Box[U]) is
+        method show(x: Box[U]): Unit is
+            printLn("box");
+            return nil;
+        end;
+    end;
+
+    function main(): ExitCode is
+        show(Box(v => 1));
+        return ExitSuccess();
+    end;
+end module body.

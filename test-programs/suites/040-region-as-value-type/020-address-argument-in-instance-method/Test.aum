@@ -1,0 +1,22 @@
+pragma Unsafe_Module;
+
+import Austral.Memory (Pointer, Address);
+
+module body Test is
+    typeclass Shape(T: Type) is
+        generic [R: Region]
+        method area(x: T, y: Address[R]): Int32;
+    end;
+
+    instance Shape(Int32) is
+        generic [R: Region]
+        method area(x: Int32, y: Address[R]): Int32 is
+            return x;
+        end;
+    end;
+
+    function main(): ExitCode is
+        printLn("ok");
+        return ExitSuccess();
+    end;
+end module body.

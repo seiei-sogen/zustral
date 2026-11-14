@@ -7,7 +7,6 @@
 
 open Type
 open TypeVarSet
-open Error
 
 let type_universe = function
     Unit -> FreeUniverse
@@ -15,7 +14,7 @@ let type_universe = function
   | Integer _ -> FreeUniverse
   | SingleFloat -> FreeUniverse
   | DoubleFloat -> FreeUniverse
-  | NamedType (_, _, u) -> u
+  | NamedType (_, _, _, u) -> u
   | RegionTy _ -> RegionUniverse
   | ReadRef _ -> FreeUniverse
   | WriteRef _ -> LinearUniverse
@@ -25,7 +24,6 @@ let type_universe = function
   | Address _ -> FreeUniverse
   | Pointer _ -> FreeUniverse
   | FnPtr _ -> FreeUniverse
-  | MonoTy _ -> internal_err "You shouldn't be asking for the type_universe of a MonoTy"
 
 let is_numeric = function
   | Unit -> false
@@ -43,25 +41,6 @@ let is_numeric = function
   | Address _ -> false
   | Pointer _ -> false
   | FnPtr _ -> false
-  | MonoTy _ -> err "is_numeric called with MonoTy argument"
-
-let is_comparable = function
-  | Unit -> true
-  | Boolean -> true
-  | Integer _ -> true
-  | SingleFloat -> true
-  | DoubleFloat -> true
-  | NamedType _ -> false
-  | RegionTy _ -> false
-  | ReadRef _ -> false
-  | WriteRef _ -> false
-  | Span _ -> false
-  | SpanMut _ -> false
-  | TyVar _ -> false
-  | Address _ -> true
-  | Pointer _ -> true
-  | FnPtr _ -> true
-  | MonoTy _ -> err "is_comparable called with MonoTy argument"
 
 let rec type_variables = function
   | Unit ->
@@ -74,18 +53,18 @@ let rec type_variables = function
      TypeVarSet.empty
   | DoubleFloat ->
      TypeVarSet.empty
-  | NamedType (_, a, _) ->
+  | NamedType (_, _, a, _) ->
      List.fold_left TypeVarSet.union TypeVarSet.empty (List.map type_variables a)
   | RegionTy _ ->
      TypeVarSet.empty
   | ReadRef (ty, r) ->
-     TypeVarSet.union (type_variables ty) (type_variables r)
+     TypeVarSet.union (type_variables ty) (type_variables (ty_of_ref_region r))
   | WriteRef (ty, r) ->
-     TypeVarSet.union (type_variables ty) (type_variables r)
+     TypeVarSet.union (type_variables ty) (type_variables (ty_of_ref_region r))
   | Span (ty, r) ->
-     TypeVarSet.union (type_variables ty) (type_variables r)
+     TypeVarSet.union (type_variables ty) (type_variables (ty_of_ref_region r))
   | SpanMut (ty, r) ->
-     TypeVarSet.union (type_variables ty) (type_variables r)
+     TypeVarSet.union (type_variables ty) (type_variables (ty_of_ref_region r))
   | TyVar v ->
      TypeVarSet.singleton v
   | Address ty ->
@@ -97,44 +76,13 @@ let rec type_variables = function
      and rt' = type_variables rt
      in
      TypeVarSet.union args' rt'
-  | MonoTy _ ->
-    TypeVarSet.empty
-
-let rec is_concrete = function
-  | Unit -> true
-  | Boolean -> true
-  | Integer _ -> true
-  | SingleFloat -> true
-  | DoubleFloat -> true
-  | NamedType _ -> false
-  | RegionTy _ ->
-     true
-  | ReadRef (ty, _) ->
-     is_concrete ty
-  | WriteRef (ty, _) ->
-     is_concrete ty
-  | Span (ty, _) ->
-     is_concrete ty
-  | SpanMut (ty, _) ->
-     is_concrete ty
-  | TyVar _ ->
-     (* Individual type variables need not be instantiated. *)
-     true
-  | Address _ ->
-     true
-  | Pointer _ ->
-     true
-  | FnPtr _ ->
-     true
-  | MonoTy _ ->
-     true
 
 (** Given a list of types, return whether any of them are in the Linear
     universe. *)
 and any_arg_is_linear (args: ty list) =
   let is_linear = function
     | LinearUniverse -> true
-    | _ -> false
+    | FreeUniverse | TypeUniverse | RegionUniverse -> false
   in
   List.exists is_linear (List.map type_universe args)
 
@@ -143,6 +91,6 @@ and any_arg_is_linear (args: ty list) =
 and any_arg_is_type (args: ty list) =
   let is_type = function
     | TypeUniverse -> true
-    | _ -> false
+    | FreeUniverse | LinearUniverse | RegionUniverse -> false
   in
   List.exists is_type (List.map type_universe args)

@@ -1,0 +1,1 @@
+Covers the `RegionTy` alternative of `check_annotated` (lib/TypeCheckExpr.ml): a cast of a mutable reference to `Static`, which is not a read reference, is an error. Target line: lib/TypeCheckExpr.ml line 850.

@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "Cannot reborrow something that is not a mutable reference: Span![Int32, R]"
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/143-reborrow-span-mut/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 6, "column": 19 }
+  },
+  "context": [
+    [ 2, "    generic [R: Region]" ],
+    [ 3, "    function probe(x: Span![Int32, R]): Unit is" ],
+    [ 4, "        borrow r: &![Int32, Q] := &~x do" ],
+    [ 5, "            skip;" ],
+    [ 6, "        end borrow;" ],
+    [ 7, "        return nil;" ],
+    [ 8, "    end;" ]
+  ]
+}

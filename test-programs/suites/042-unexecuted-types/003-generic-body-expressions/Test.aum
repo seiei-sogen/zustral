@@ -1,0 +1,19 @@
+module body Test is
+    generic [T: Free]
+    function pick(c: Bool, d: Bool, a: T, b: T): T is
+        let half: Float64 := 0.5;
+        printLn(half);
+        let both: Bool := c and d;
+        let either: Bool := c or d;
+        let same: Bool := c = d;
+        printLn(either);
+        printLn(same);
+        return if not both then a else b;
+    end;
+
+    function main(): ExitCode is
+        printLn(pick(true, true, 1, 2));
+        printLn(pick(true, false, 1, 2));
+        return ExitSuccess();
+    end;
+end module body.

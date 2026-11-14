@@ -1,0 +1,20 @@
+module body Test is
+    typeclass Shape(T: Type) is
+        generic [R: Region]
+        method area(x: &[T, R]): Int32;
+    end;
+
+    instance Shape(Int32) is
+        generic [R: Region]
+        method area(x: &[Int32, R]): Int32 is
+            let y: R := y;
+            return !x;
+        end;
+    end;
+
+    function main(): ExitCode is
+        let n: Int32 := 7;
+        printLn(area(&n));
+        return ExitSuccess();
+    end;
+end module body.

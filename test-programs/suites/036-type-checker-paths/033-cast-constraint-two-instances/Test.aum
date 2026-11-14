@@ -1,0 +1,20 @@
+import Test_TC (Describe, describe);
+
+module body Test is
+    instance Describe(Int32) is
+        method describe(value: Int32): Int32 is
+            return 2;
+        end;
+    end;
+
+    generic [T: Free(Describe)]
+    function f(value: T): Unit is
+        let n: Int32 := 10;
+        let m: Int32 := n : T;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

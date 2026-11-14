@@ -1,0 +1,1 @@
+For lib/CstUtil.ml, make_pragma: the alternative `CConjunction` of the arm that rejects the argument of a `Foreign_Export` pragma that is not a string constant. Shows that `External_Name => true and false` is a declaration error.

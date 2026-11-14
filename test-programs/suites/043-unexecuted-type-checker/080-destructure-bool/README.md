@@ -1,0 +1,1 @@
+Covers the `Boolean` alternative of the non-record arm of `augment_destructure` (lib/TypingPass.ml): a destructuring `let` of a value of type `Bool` is an error. Target line: lib/TypingPass.ml line 256.

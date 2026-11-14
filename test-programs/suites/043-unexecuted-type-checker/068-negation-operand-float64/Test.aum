@@ -1,0 +1,10 @@
+module body Test is
+    function probe(x: Float64): Unit is
+        let y: Bool := not x;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

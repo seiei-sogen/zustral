@@ -1,0 +1,1 @@
+lib/LiteralTyping.ml line 138, annotation_types_literal, the `TNegation` alternative of the `Integer` arm. The expression `(not b)` is annotated with the type `Int32` (`((not b) : Int32)`): the annotation asks annotation_types_literal first, which answers no for this expression, and the cast is then rejected.

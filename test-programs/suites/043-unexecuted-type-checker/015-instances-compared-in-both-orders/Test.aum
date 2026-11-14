@@ -1,0 +1,107 @@
+pragma Unsafe_Module;
+
+import Austral.Memory (Address, Pointer);
+
+module body Test is
+    record Foo: Free is
+    end;
+
+    typeclass Later(T: Type) is
+    end;
+
+    generic [U: Type]
+    instance Later(Pointer[U]) is
+    end;
+
+    generic [A: Type, B: Type]
+    instance Later(Fn[A, B]) is
+    end;
+
+    generic [U: Type]
+    instance Later(Address[U]) is
+    end;
+
+    generic [U: Type, R: Region]
+    instance Later(Span![U, R]) is
+    end;
+
+    generic [U: Type, R: Region]
+    instance Later(Span[U, R]) is
+    end;
+
+    generic [U: Type, R: Region]
+    instance Later(&![U, R]) is
+    end;
+
+    generic [U: Type, R: Region]
+    instance Later(&[U, R]) is
+    end;
+
+    instance Later(Foo) is
+    end;
+
+    instance Later(Float64) is
+    end;
+
+    instance Later(Float32) is
+    end;
+
+    instance Later(Int32) is
+    end;
+
+    instance Later(Bool) is
+    end;
+
+    instance Later(Unit) is
+    end;
+
+    typeclass Earlier(T: Type) is
+    end;
+
+    instance Earlier(Unit) is
+    end;
+
+    instance Earlier(Bool) is
+    end;
+
+    instance Earlier(Int32) is
+    end;
+
+    instance Earlier(Float32) is
+    end;
+
+    instance Earlier(Float64) is
+    end;
+
+    instance Earlier(Foo) is
+    end;
+
+    generic [U: Type, R: Region]
+    instance Earlier(&[U, R]) is
+    end;
+
+    generic [U: Type, R: Region]
+    instance Earlier(&![U, R]) is
+    end;
+
+    generic [U: Type, R: Region]
+    instance Earlier(Span[U, R]) is
+    end;
+
+    generic [U: Type, R: Region]
+    instance Earlier(Span![U, R]) is
+    end;
+
+    generic [U: Type]
+    instance Earlier(Address[U]) is
+    end;
+
+    generic [A: Type, B: Type]
+    instance Earlier(Fn[A, B]) is
+    end;
+
+    function main(): ExitCode is
+        printLn("25 instances, none overlapping");
+        return ExitSuccess();
+    end;
+end module body.

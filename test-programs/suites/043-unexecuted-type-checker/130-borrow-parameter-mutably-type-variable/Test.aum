@@ -1,0 +1,13 @@
+module body Test is
+    generic [T: Free]
+    function probe(x: T): Unit is
+        borrow r: &![Int32, Q] := &!x do
+            skip;
+        end borrow;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

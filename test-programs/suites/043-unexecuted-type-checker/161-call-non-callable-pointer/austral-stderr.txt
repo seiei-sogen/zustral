@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type " },
+    { "type": "type", "content": "Pointer[Int32]" },
+    {
+      "type": "text",
+      "content": " is neither a function, method or function pointer, and cannot be called."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/161-call-non-callable-pointer/Test.aum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 7, "column": 13 }
+  },
+  "context": [
+    [ 5, "module body Test is" ],
+    [ 6, "    function probe(x: Pointer[Int32]): Unit is" ],
+    [ 7, "        x(1);" ],
+    [ 8, "        return nil;" ],
+    [ 9, "    end;" ]
+  ]
+}

@@ -1,0 +1,21 @@
+module body Lib is
+    typeclass Foo(T: Free) is
+        method foo(value: T): Int32;
+        method bar(value: T): Int32;
+    end;
+    instance Foo(Int32) is
+        method foo(value: Int32): Int32 is
+            return 1;
+        end;
+    end;
+    generic [K: Free]
+    instance Foo(Option[K]) is
+        method foo(value: Option[K]): Int32 is
+            return 1;
+        end;
+    end;
+    generic [T: Free(Foo)]
+    function callBar(value: T): Int32 is
+        return bar(value);
+    end;
+end module body.

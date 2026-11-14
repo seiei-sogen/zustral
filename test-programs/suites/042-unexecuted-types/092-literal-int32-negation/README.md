@@ -1,0 +1,1 @@
+lib/LiteralTyping.ml line 107, literal_matches, the `TNegation` alternative of the `Integer` arm. The expression `(not b)` is passed to a function that takes `Int32`: match_type_with_value asks literal_matches first, which answers no for this expression, and the types are then compared and differ.

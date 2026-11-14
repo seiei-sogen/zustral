@@ -1,0 +1,118 @@
+(*
+   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   See LICENSE file for details.
+
+   SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+*)
+
+open Austral_core
+open Error
+
+type arg =
+  | BoolFlag of string
+  | ValueFlag of string * string
+  | PositionalArg of string
+
+type arglist = ArgList of arg list
+
+let arglist_to_list (ArgList l) = l
+
+let arglist_from_list l = ArgList l
+
+let trim_flag (name: string): string =
+  String.sub name 2 ((String.length name) - 2)
+
+let parse_arg (arg: string): arg =
+  if String.starts_with ~prefix:"--" arg then
+    (* It's a flag. *)
+    match String.split_on_char '=' arg with
+    | [name] ->
+       (* It's a boolean flag, e.g. --help *)
+       BoolFlag (trim_flag name)
+    | [name; value] ->
+       (* It's a value flag, e.g. --foo=bar *)
+       ValueFlag (trim_flag name, value)
+    | _ ->
+       cli_error NoSpan (UnknownFlagType arg)
+  else
+    (* It's a positional flag. *)
+    PositionalArg arg
+
+let parse_args (args: string list): arglist =
+  (** At least one argument, the name of the binary. *)
+  if ((List.length args) < 1) then
+    cli_error NoSpan EmptyArgs
+  else
+    ArgList (List.map parse_arg (List.tl args))
+
+let arglist_size (ArgList l): int =
+  List.length l
+
+let arg_has_name (arg: arg) (name: string): bool =
+  match arg with
+  | BoolFlag n ->
+     name = n
+  | ValueFlag (n, _) ->
+     name = n
+  | PositionalArg _ ->
+     false
+
+(* For each flag with the name, its value if it is a value flag. *)
+let flag_values_with_name (arglist: arglist) (name: string): string option list =
+  let (ArgList l) = arglist in
+  List.filter_map (fun a ->
+      match a with
+      | BoolFlag n when n = name -> Some None
+      | ValueFlag (n, value) when n = name -> Some (Some value)
+      | BoolFlag _ | ValueFlag _ | PositionalArg _ -> None)
+    l
+
+let args_without_name (arglist: arglist) (name: string): arglist =
+  let (ArgList l) = arglist in
+  ArgList (List.filter (fun a -> not (arg_has_name a name)) l)
+
+let pop_flag (arglist: arglist) (name: string): (arglist * string option) option =
+  (* Find all flags with the name. *)
+  let flags: string option list = flag_values_with_name arglist name
+  (* Find all args without the name. *)
+  and args_rest: arglist = args_without_name arglist name
+  in
+  match flags with
+  | [flag] ->
+     (* One flag with the name. *)
+     Some (args_rest, flag)
+  | _::_ ->
+     (* Multiple flags with the name. *)
+     cli_error NoSpan (DuplicateFlags name)
+  | [] ->
+     (* No such flag. *)
+     None
+
+let pop_bool_flag (arglist: arglist) (name: string): arglist option =
+  match pop_flag arglist name with
+  | Some (arglist, None) ->
+     Some arglist
+  | Some (_, Some _) ->
+     cli_error NoSpan (ExpectedBoolFlag name)
+  | None ->
+     None
+
+let pop_value_flag (arglist: arglist) (name: string): (arglist * string) option =
+  match pop_flag arglist name with
+  | Some (arglist, Some value) ->
+     Some (arglist, value)
+  | Some (_, None) ->
+     cli_error NoSpan (ExpectedValueFlag name)
+  | None ->
+     None
+
+let pop_positional (arglist: arglist): (arglist * string list) =
+  let (ArgList l) = arglist in
+  let (pos, nonpos): string list * arg list =
+    List.partition_map (fun (arg: arg) ->
+        match arg with
+        | PositionalArg value -> Either.Left value
+        | BoolFlag _ | ValueFlag _ -> Either.Right arg)
+      l
+  in
+  (ArgList nonpos, pos)

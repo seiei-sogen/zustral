@@ -1,0 +1,1 @@
+Covers the `Boolean` alternative of `is_mut` in `augment_borrow` (lib/TypingPass.ml): a parameter of type `Bool` borrowed mutably is an error, because only a mutable reference parameter can be. Target line: lib/TypingPass.ml line 397.

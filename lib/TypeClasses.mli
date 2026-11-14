@@ -15,7 +15,7 @@ open EnvTypes
 
 (** Given the universe a typeclass accepts types from, and the argument to an
     instance of that typeclass, check the argument's universe is acceptable. *)
-val check_instance_argument_has_right_universe : universe -> ty -> unit
+val check_instance_argument_has_right_universe : Error.place -> universe -> ty -> unit
 
 (** Given the set of type parameters of a generic instance, and the instance's
     argument type, check the argument has the right shape. That is, it is
@@ -27,16 +27,12 @@ val check_instance_argument_has_right_universe : universe -> ty -> unit
        all the variables in the type parameter set.
 
  *)
-val check_instance_argument_has_right_shape : typarams -> ty -> unit
-
-(** Given the argument types to two instances of the same typeclass, check
-    whether they overlap. *)
-val overlapping_instances : ty -> ty -> bool
+val check_instance_argument_has_right_shape : Error.place -> typarams -> ty -> unit
 
 (** Given a list of instances of a given typeclass in a module, and a type
     argument, check if an instance with that type argument would overlap with
     any instance from the list. *)
-val check_instance_locally_unique : decl list -> ty -> unit
+val check_instance_locally_unique : Error.place -> instance_decl list -> ty -> unit
 
 (** Given the ID of the module an instance is defined in, the ID of the module
     the typeclass being implemented is from, and the argument type, check the
@@ -52,8 +48,11 @@ val check_instance_locally_unique : decl list -> ty -> unit
         2. Local typeclass and foreign type = ok
         3. Foreign typeclass and local type = ok
         4. Foreign typeclass and foreign type = bad
+
+    The second place is the instance's declaration, which an instance declared
+    before its type is reported at.
 *)
-val check_instance_orphan_rules : env -> mod_id -> mod_id -> ty -> unit
+val check_instance_orphan_rules : Error.place -> Error.place -> env -> mod_id -> mod_id -> ty -> unit
 
 (** We don't allow any of the type parameters of a generic instance to have the
     same name as the type parameter of the corresponding typeclass.
@@ -62,4 +61,4 @@ val check_instance_orphan_rules : env -> mod_id -> mod_id -> ty -> unit
 
   But this might, I suspect, become part of the language because it reduces
   confusion. *)
-val check_disjoint_typarams : identifier -> typarams -> unit
+val check_disjoint_typarams : Error.place -> identifier -> typarams -> unit

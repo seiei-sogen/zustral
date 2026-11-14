@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "Float64" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "ByteSize" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/131-annotation-float64-size-of/Test.aum",
+    "startp": { "line": 30, "column": 8 },
+    "end": { "line": 30, "column": 45 }
+  },
+  "context": [
+    [ 28, "        let b: Bool := true;" ],
+    [ 29, "        let i: Int32 := 1;" ],
+    [ 30, "        takeFloat((sizeof(Int32) : Float64));" ],
+    [ 31, "        return nil;" ],
+    [ 32, "    end;" ]
+  ]
+}

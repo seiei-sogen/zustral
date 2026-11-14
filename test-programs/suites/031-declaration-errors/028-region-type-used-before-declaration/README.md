@@ -1,0 +1,1 @@
+A record whose slot has the type of a record declared later in the Region universe is reported as a declaration error at the slot (lib/TypeParser.ml, effective_universe). The type parser reads the later signature before extraction rejects that declaration (issue #141).

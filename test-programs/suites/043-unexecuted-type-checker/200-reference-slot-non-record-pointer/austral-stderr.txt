@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Can't access the slot " },
+    { "type": "code", "content": "a" },
+    { "type": "text", "content": " because the type " },
+    { "type": "type", "content": "Pointer[Int32]" },
+    { "type": "text", "content": " is not a record." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/200-reference-slot-non-record-pointer/Test.aum",
+    "startp": { "line": 8, "column": 8 },
+    "end": { "line": 8, "column": 15 }
+  },
+  "context": [
+    [ 6, "    generic [R: Region]" ],
+    [ 7, "    function probe(x: &[Pointer[Int32], R]): Unit is" ],
+    [ 8, "        &(x.a);" ],
+    [ 9, "        return nil;" ],
+    [ 10, "    end;" ]
+  ]
+}

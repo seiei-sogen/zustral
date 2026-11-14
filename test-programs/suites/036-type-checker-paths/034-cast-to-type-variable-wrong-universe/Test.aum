@@ -1,0 +1,16 @@
+module body Test is
+    record Lin: Linear is
+    end;
+
+    generic [T: Free]
+    function f(value: T): Unit is
+        let l: Lin := Lin();
+        let m: Lin := l : T;
+        let {} := m;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

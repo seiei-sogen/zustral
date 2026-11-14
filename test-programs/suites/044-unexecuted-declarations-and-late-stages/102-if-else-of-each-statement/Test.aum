@@ -1,0 +1,38 @@
+module body Test is
+    record P: Free is
+        x: Int32;
+    end;
+
+    function side(): Int32 is
+        printLn("discarded");
+        return 0;
+    end;
+
+    function pick(c: Bool): Int32 is
+        if c then
+            return 1;
+        else
+            return 2;
+        end if;
+    end;
+
+    function main(): ExitCode is
+        var n: Int32 := 0;
+        let o: Option[Int32] := Some(value => 4);
+        if false then skip; else let a: Int32 := 1; printLn(a); end if;
+        if false then skip; else let { x: Int32 } := P(x => 5); printLn(x); end if;
+        if false then skip; else n := 6; end if;
+        printLn(n);
+        if false then skip; else if true then printLn("if"); else printLn("no"); end if;
+        if false then skip; else if true then printLn("when"); end if;
+        if false then skip; else case o of when Some(value: Int32) do printLn(value); when None do skip; end case; end if;
+        if false then skip; else while n < 8 do n := n + 1; end while; end if;
+        printLn(n);
+        if false then skip; else for i from 0 to 0 do printLn("for"); end for; end if;
+        if false then skip; else borrow r: &[Int32, R] := &n do printLn(!r); end borrow; end if;
+        if false then skip; else printLn("block"); printLn("block"); end if;
+        if false then skip; else side(); end if;
+        printLn(pick(false));
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,10 @@
+module body Test is
+    record Box[R: Region]: Free is
+        r: R;
+    end;
+
+    function main(): ExitCode is
+        printLn("ok");
+        return ExitSuccess();
+    end;
+end module body.

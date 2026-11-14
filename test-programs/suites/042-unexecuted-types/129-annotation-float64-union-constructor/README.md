@@ -1,0 +1,1 @@
+lib/LiteralTyping.ml line 151, annotation_types_literal, the `TUnionConstructor` alternative of the `SingleFloat | DoubleFloat` arm. The expression `Some(value => 1)` is annotated with the type `Float64` (`(Some(value => 1) : Float64)`): the annotation asks annotation_types_literal first, which answers no for this expression, and the cast is then rejected.

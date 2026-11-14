@@ -1,0 +1,19 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [ { "type": "text", "content": "Not allowed" } ],
+  "span": {
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/002-foreign-record-parameter/Test.aum",
+    "startp": { "line": 8, "column": 48 },
+    "end": { "line": 10, "column": 8 }
+  },
+  "context": [
+    [ 6, "    end;" ],
+    [ 7, "" ],
+    [ 8, "    pragma Foreign_Import(External_Name => \"f\");" ],
+    [ 9, "    function f(r: R): Int32 is" ],
+    [ 10, "    end;" ],
+    [ 11, "" ],
+    [ 12, "    function main(): ExitCode is" ]
+  ]
+}

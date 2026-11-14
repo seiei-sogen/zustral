@@ -10,53 +10,9 @@ open Lexing
 open Error
 open Parser
 
-module Errors = struct
-  let raise_err lexbuf kind text : 'a =
-    let error =
-      AustralError {
-        module_name = None;
-        kind = kind;
-        text = text;
-        span = Some (Span.from_lexbuf lexbuf);
-        source_ctx = None
-      }
-    in
-    raise (Austral_error error)
-
-  let invalid_character lexbuf =
-    raise_err lexbuf ParseError [
-      Text "Character not allowed in source text: ";
-      Code (Lexing.lexeme lexbuf)
-    ]
-
-  let single_string_invalid_character lexbuf =
-    raise_err lexbuf ParseError [
-      Text "Character not allowed in string literal: ";
-      Code (Lexing.lexeme lexbuf)
-    ]
-
-  let single_string_eof lexbuf =
-    raise_err lexbuf ParseError [
-      Text "End of file in string literal."
-    ]
-
-  let triple_string_eof lexbuf =
-    raise_err lexbuf ParseError [
-      Text "End of file in triple string literal."
-    ]
-end
-
-let advance_line lexbuf =
-  let pos = lexbuf.lex_curr_p in
-  let pos' = { pos with
-    pos_bol = lexbuf.lex_curr_pos;
-    pos_lnum = pos.pos_lnum + 1
-  } in
-  lexbuf.lex_curr_p <- pos'
-
-let string_acc: Buffer.t = Buffer.create 64
-
-let triple_string_acc: Buffer.t = Buffer.create 64
+(* The pieces of a string literal, last piece first. *)
+let literal_text (pieces: string list): string =
+  String.concat "" (List.rev pieces)
 }
 
 (* Helper regexes *)
@@ -93,7 +49,7 @@ let char_constant = '\'' (ascii_char | '\\' ['n' 'r' 't' '\\']) '\''
 
 rule token = parse
   (* Comments *)
-  | comment { advance_line lexbuf; token lexbuf }
+  | comment { new_line lexbuf; token lexbuf }
   (* Brackets *)
   | "(" { LPAREN }
   | ")" { RPAREN }
@@ -173,8 +129,8 @@ rule token = parse
   | ":=" { ASSIGN }
   | "!" { DEREF }
   (* Strings and docstrings *)
-  | "\"\"\"" { read_triple_string lexbuf }
-  | '"' { read_string lexbuf }
+  | "\"\"\"" { read_triple_string [] lexbuf }
+  | '"' { read_string [] lexbuf }
   (* Identifiers and constants *)
   | "nil" { NIL }
   | "true" { TRUE }
@@ -190,22 +146,25 @@ rule token = parse
   | "@embed" { EMBED }
   (* etc. *)
   | whitespace { token lexbuf }
-  | newline { advance_line lexbuf; token lexbuf }
+  | newline { new_line lexbuf; token lexbuf }
   | eof { EOF }
   | _ {
-    Errors.invalid_character lexbuf
+    parse_error (AtSpan (Span.from_lexbuf lexbuf)) (InvalidCharacter (Lexing.lexeme lexbuf))
   }
 
-and read_string = parse
-  | '"' { let c = Buffer.contents string_acc in Buffer.clear string_acc; STRING_CONSTANT c }
-  | '\\' '"' { Buffer.add_char string_acc '"'; read_string lexbuf }
-  | [^ '"'] { Buffer.add_string string_acc (Lexing.lexeme lexbuf); read_string lexbuf }
-  | eof { Errors.single_string_eof lexbuf }
-  | _ { Errors.single_string_invalid_character lexbuf }
+(* `pieces` holds the text of the literal read so far, last piece first.
+   Each literal starts from the empty list, so nothing is left over from the
+   literal before it or from a file that ended inside one. *)
+and read_string pieces = parse
+  | '"' { STRING_CONSTANT (literal_text pieces) }
+  | '\\' '"' { read_string ("\"" :: pieces) lexbuf }
+  | [^ '"'] { read_string (Lexing.lexeme lexbuf :: pieces) lexbuf }
+  | eof { parse_error (AtSpan (Span.from_lexbuf lexbuf)) StringEof }
+  | _ { parse_error (AtSpan (Span.from_lexbuf lexbuf)) (StringInvalidCharacter (Lexing.lexeme lexbuf)) }
 
-and read_triple_string = parse
-  | "\"\"\"" { let c = Buffer.contents triple_string_acc in Buffer.clear triple_string_acc; TRIPLE_STRING_CONSTANT c }
-  | '\n' { advance_line lexbuf; Buffer.add_string triple_string_acc "\n"; read_triple_string lexbuf }
-  | '\\' "\"\"\"" { Buffer.add_string triple_string_acc "\"\"\""; read_triple_string lexbuf }
-  | eof { Errors.triple_string_eof lexbuf }
-  | _ { Buffer.add_string triple_string_acc (Lexing.lexeme lexbuf); read_triple_string lexbuf }
+and read_triple_string pieces = parse
+  | "\"\"\"" { TRIPLE_STRING_CONSTANT (literal_text pieces) }
+  | '\n' { new_line lexbuf; read_triple_string ("\n" :: pieces) lexbuf }
+  | '\\' "\"\"\"" { read_triple_string ("\"\"\"" :: pieces) lexbuf }
+  | eof { parse_error (AtSpan (Span.from_lexbuf lexbuf)) TripleStringEof }
+  | _ { read_triple_string (Lexing.lexeme lexbuf :: pieces) lexbuf }

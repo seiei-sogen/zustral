@@ -1,0 +1,9 @@
+module body Test is
+    record R[T: Type]: Free is
+        b: T;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

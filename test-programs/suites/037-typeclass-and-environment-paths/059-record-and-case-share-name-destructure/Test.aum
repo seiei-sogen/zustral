@@ -1,0 +1,19 @@
+module body Test is
+    record Circle: Free is
+        radius: Int32;
+    end;
+
+    union Shape: Free is
+        case Circle;
+        case Point;
+    end;
+
+    function rad(c: Circle): Int32 is
+        let { radius: Int32 } := c;
+        return radius;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

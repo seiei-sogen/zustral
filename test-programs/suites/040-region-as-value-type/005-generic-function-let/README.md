@@ -1,0 +1,1 @@
+Covers a `let` whose type is a region type parameter in a generic function: accepted, because the function is compiled only for the types of a call (lib/ExtractionPass.ml, check_instance_methods_hold_no_region).

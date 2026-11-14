@@ -1,0 +1,1 @@
+lib/TypeParser.ml line 316, universe_compatible, the `RegionUniverse` alternative for a `Linear` parameter: a type specifier gives a record whose type parameter is `Linear` the argument `Static`, of universe `Region`, and the type parser reports it.

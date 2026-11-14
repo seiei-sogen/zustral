@@ -1,0 +1,1 @@
+lib/TypeBindings.ml line 39, universe_compatible, the `TypeUniverse` alternative for a `Region` parameter: a call binds a type parameter of universe `Region` to a type of universe `Type` (`U`), and try_add_binding reports it.

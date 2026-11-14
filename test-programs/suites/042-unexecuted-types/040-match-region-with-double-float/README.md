@@ -1,0 +1,1 @@
+lib/TypeMatch.ml, try_match_type, the `DoubleFloat _` alternative of the mismatch arm for an expected region (`RegionTy`, lines 111-113). A function takes `Pointer[Static]`, which the type parser accepts, and is called with a `Pointer[Float64]`: matching the two pointed-to types compares the region `Static` with `Float64`, and the call is a type mismatch.

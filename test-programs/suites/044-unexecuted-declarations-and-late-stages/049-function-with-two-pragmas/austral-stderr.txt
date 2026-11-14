@@ -1,0 +1,28 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The function " },
+    { "type": "code", "content": "f" },
+    { "type": "text", "content": " cannot have both the " },
+    { "type": "code", "content": "Foreign_Import" },
+    { "type": "text", "content": " and " },
+    { "type": "code", "content": "Foreign_Export" },
+    { "type": "text", "content": " pragmas simultaneously." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/049-function-with-two-pragmas/Test.aum",
+    "startp": { "line": 5, "column": 48 },
+    "end": { "line": 8, "column": 8 }
+  },
+  "context": [
+    [ 3, "module body Test is" ],
+    [ 4, "    pragma Foreign_Import(External_Name => \"abs\");" ],
+    [ 5, "    pragma Foreign_Export(External_Name => \"g\");" ],
+    [ 6, "    function f(x: Int32): Int32 is" ],
+    [ 7, "        return x;" ],
+    [ 8, "    end;" ],
+    [ 9, "" ],
+    [ 10, "    function main(): ExitCode is" ]
+  ]
+}

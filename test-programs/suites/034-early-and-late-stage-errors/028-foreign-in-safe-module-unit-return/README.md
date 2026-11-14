@@ -1,0 +1,1 @@
+Pins which error wins when a safe module declares a foreign function whose return type is `Unit`: `ForeignInSafeModule` (lib/TypingPass.ml) or `Not allowed` (lib/ForeignType.ml, check_ty, the rule for imports).

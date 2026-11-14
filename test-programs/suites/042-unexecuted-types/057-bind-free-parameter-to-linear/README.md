@@ -1,0 +1,1 @@
+lib/TypeBindings.ml line 27, universe_compatible, the `LinearUniverse` alternative for a `Free` parameter: a call binds a type parameter of universe `Free` to a type of universe `Linear` (`Lin`), and try_add_binding reports it.

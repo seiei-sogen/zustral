@@ -1,0 +1,1 @@
+Covers the positional-arguments arm of `augment_record_constructor` (lib/TypeCheckExpr.ml): a record constructor with positional arguments is an error. Target line(s): the arm at lib/TypeCheckExpr.ml line 289.

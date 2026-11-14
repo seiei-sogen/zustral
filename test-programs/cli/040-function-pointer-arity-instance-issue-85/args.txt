@@ -1,0 +1,1 @@
+compile Arity.aum --target-type=tc

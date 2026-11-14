@@ -1,0 +1,1 @@
+Pins which constraint is reported when a type satisfies none of the constraints of a type parameter: the first in the order of the names, not in the order they are written (lib/TypeMatch.ml, check_type_implements_constraints).

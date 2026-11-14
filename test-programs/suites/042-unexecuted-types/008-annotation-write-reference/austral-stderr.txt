@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "&![Int32, R]" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "&[Int32, R]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/008-annotation-write-reference/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 50 }
+  },
+  "context": [
+    [ 2, "    generic [R: Region]" ],
+    [ 3, "    function annotate(r: &[Int32, R]): Unit is" ],
+    [ 4, "        let w: &![Int32, R] := (r : &![Int32, R]);" ],
+    [ 5, "        return nil;" ],
+    [ 6, "    end;" ]
+  ]
+}

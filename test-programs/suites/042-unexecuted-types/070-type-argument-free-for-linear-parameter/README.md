@@ -1,0 +1,1 @@
+lib/TypeParser.ml line 316, universe_compatible, the `FreeUniverse` alternative for a `Linear` parameter: a type specifier gives a record whose type parameter is `Linear` the argument `Int32`, of universe `Free`, and the type parser reports it.

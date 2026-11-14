@@ -5,29 +5,9 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 
+open Id
 open Env
-open TypeStripping
-open MonoType
-open Stages.Tast
 open Stages.Mtast
-
-(** Monomorphize a type specifier, returning a monomorphic type and the updated
-   environment. *)
-val monomorphize_ty : env -> stripped_ty -> (mono_ty * env)
-
-(** Monomorphize an expression, returning a monomorphic expression and the
-   updated environment. *)
-val monomorphize_expr : env -> texpr -> (mexpr * env)
-
-(** Monomorphize a statement, returning a monomorphic statement and the updated
-   environment. *)
-val monomorphize_stmt : env -> tstmt -> (mstmt * env)
-
-(** Monomorphize a declaration, returning a monomorphic declaration and the
-   updated environment. Return {!None} where a declaration has no immediate
-   monomorph (e.g.: generic type definitions, which are monomorphized on
-   demand). *)
-val monomorphize_decl : env -> typed_decl -> (mdecl option * env)
 
 (** This is the entrypoint to the monomorphization pass.
 
@@ -51,6 +31,19 @@ val monomorphize_decl : env -> typed_decl -> (mdecl option * env)
     5. You're done.
 
 *)
-val monomorphize : env -> typed_module -> (env * mono_module)
+val monomorphize : Pipeline.monomorphize
 
-val monomorphize_wrappers : env -> env * mdecl list
+(** The monomorph of a record or a union for the given type arguments, as every
+    use of a type asks for it: registered the first time it is asked for. *)
+val monomorphize_named_type : env -> type_decl_id -> MonoType.mono_ty list -> (mono_id * env)
+
+(** Instantiate the monomorphs that are registered and not instantiated, and
+    those they register, until none is left. Returns their declarations. *)
+val instantiate_monomorphs_until_exhausted : env -> (env * mdecl list)
+
+(** Instantiate the functions the program exports, and everything they use.
+    Called once, after all modules. Returns the declarations, and for each
+    exported function, in the order the environment lists them, its export
+    name, the ID of the monomorph that its wrapper calls and its checked
+    signature. *)
+val monomorphize_wrappers : env -> (env * mdecl list * (string * mono_id * MonoType.mono_ty ForeignType.foreign_signature) list) Outcome.t

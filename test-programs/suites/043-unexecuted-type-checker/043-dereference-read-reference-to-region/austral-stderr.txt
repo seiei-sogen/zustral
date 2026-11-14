@@ -1,0 +1,20 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "Cannot dereference non-free type " },
+    { "type": "type", "content": "Region<0>" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/043-dereference-read-reference-to-region/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 11 }
+  },
+  "context": [
+    [ 2, "    generic [R: Region]" ],
+    [ 3, "    function f(r: &[Static, R]): Unit is" ],
+    [ 4, "        !r;" ],
+    [ 5, "        return nil;" ],
+    [ 6, "    end;" ]
+  ]
+}

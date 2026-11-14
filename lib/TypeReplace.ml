@@ -31,7 +31,7 @@ let rec replace_tyvars_expr (bindings: type_bindings) (expr: texpr): texpr =
      TLocalVar (name, ty)
   | TFunVar (id, ty, substs) ->
      let ty = replace_variables bindings ty
-     and substs = bindings_from_list (List.map (fun (n, t) -> (n, replace_variables bindings t)) (bindings_list substs)) in
+     and substs = bindings_from_list Error.NoSpan (List.map (fun (n, t) -> (n, replace_variables bindings t)) (bindings_list substs)) in
      TFunVar (id, ty, substs)
   | TTemporary (name, ty) ->
      let ty = replace_variables bindings ty in
@@ -39,12 +39,12 @@ let rec replace_tyvars_expr (bindings: type_bindings) (expr: texpr): texpr =
   | TFuncall (id, name, args, rt, substs) ->
      let args = List.map (replace_tyvars_expr bindings) args
      and rt = replace_variables bindings rt
-     and substs = bindings_from_list (List.map (fun (n, t) -> (n, replace_variables bindings t)) (bindings_list substs)) in
+     and substs = bindings_from_list Error.NoSpan (List.map (fun (n, t) -> (n, replace_variables bindings t)) (bindings_list substs)) in
      TFuncall (id, name, args, rt, substs)
   | TMethodCall (meth_id, name, instance, args, rt, substs) ->
      let args = List.map (replace_tyvars_expr bindings) args
      and rt = replace_variables bindings rt
-     and substs = bindings_from_list (List.map (fun (n, t) -> (n, replace_variables bindings t)) (bindings_list substs)) in
+     and substs = bindings_from_list Error.NoSpan (List.map (fun (n, t) -> (n, replace_variables bindings t)) (bindings_list substs)) in
      TMethodCall (meth_id, name, instance, args, rt, substs)
   | TVarMethodCall { source_module_name; typeclass_id; params; method_name; args; dispatch_ty; rt; bindings=bindings'; } ->
      (* FIXME: Do we have to replace the params and the bindings? *)
@@ -61,6 +61,10 @@ let rec replace_tyvars_expr (bindings: type_bindings) (expr: texpr): texpr =
      let expr = replace_tyvars_expr bindings expr
      and ty = replace_variables bindings ty in
      TCast (expr, ty)
+  | TImplicitCast (expr, ty) ->
+     let expr = replace_tyvars_expr bindings expr
+     and ty = replace_variables bindings ty in
+     TImplicitCast (expr, ty)
   | TComparison (oper, lhs, rhs) ->
      let lhs = replace_tyvars_expr bindings lhs
      and rhs = replace_tyvars_expr bindings rhs in
@@ -85,17 +89,19 @@ let rec replace_tyvars_expr (bindings: type_bindings) (expr: texpr): texpr =
      let ty = replace_variables bindings ty
      and args = List.map (fun (n, e) -> (n, replace_tyvars_expr bindings e)) args in
      TRecordConstructor (ty, args)
-  | TUnionConstructor (ty, case_name, args) ->
-     let ty = replace_variables bindings ty
-     and args = List.map (fun (n, e) -> (n, replace_tyvars_expr bindings e)) args in
-     TUnionConstructor (ty, case_name, args)
+  | TUnionConstructor { union_id; type_name; tyargs; universe; case_name; args } ->
+     let args = List.map (fun (n, e) -> (n, replace_tyvars_expr bindings e)) args in
+     let tyargs = List.map (replace_variables bindings) tyargs in
+     let universe = replaced_universe universe tyargs in
+     TUnionConstructor { union_id; type_name; tyargs; universe; case_name; args }
   | TEmbed (ty, fmt, args) ->
      let ty = replace_variables bindings ty
      and args = List.map (replace_tyvars_expr bindings) args in
      TEmbed (ty, fmt, args)
-  | TDeref expr ->
+  | TDeref (expr, ty) ->
      let expr = replace_tyvars_expr bindings expr in
-     TDeref expr
+     let ty = replace_variables bindings ty in
+     TDeref (expr, ty)
   | TSizeOf ty ->
      let ty = replace_variables bindings ty in
      TSizeOf ty
@@ -107,16 +113,18 @@ let rec replace_tyvars_expr (bindings: type_bindings) (expr: texpr): texpr =
      let expr = replace_tyvars_expr bindings expr in
      let ty = replace_variables bindings ty in
      TPointerSlotAccessor (expr, name, ty)
-  | TArrayIndex (expr, index, ty) ->
+  | TArrayIndex (expr, index, elem_ty, region, mode) ->
      let expr = replace_tyvars_expr bindings expr in
      let index = replace_tyvars_expr bindings index in
-     let ty = replace_variables bindings ty in
-     TArrayIndex (expr, index, ty)
-   | TSpanIndex (expr, index, ty) ->
+     let elem_ty = replace_variables bindings elem_ty in
+     let region = replace_region_variables bindings region in
+     TArrayIndex (expr, index, elem_ty, region, mode)
+   | TSpanIndex (expr, index, elem_ty, region, mode) ->
      let expr = replace_tyvars_expr bindings expr in
      let index = replace_tyvars_expr bindings index in
-     let ty = replace_variables bindings ty in
-     TSpanIndex (expr, index, ty)
+     let elem_ty = replace_variables bindings elem_ty in
+     let region = replace_region_variables bindings region in
+     TSpanIndex (expr, index, elem_ty, region, mode)
 
 let rec replace_tyvars_stmt (bindings: type_bindings) (stmt: tstmt): tstmt =
   match stmt with
@@ -146,10 +154,11 @@ let rec replace_tyvars_stmt (bindings: type_bindings) (stmt: tstmt): tstmt =
      and t = replace_tyvars_stmt bindings t
      and f = replace_tyvars_stmt bindings f in
      TIf (span, c, t, f)
-  | TCase (span, value, whens, mode) ->
+  | TCase (span, value, id, tyargs, whens, mode) ->
      let value = replace_tyvars_expr bindings value
      and whens = List.map (replace_tyvars_when bindings) whens in
-     TCase (span, value, whens, mode)
+     let tyargs = List.map (replace_variables bindings) tyargs in
+     TCase (span, value, id, tyargs, whens, mode)
   | TWhile (span, value, body) ->
       let value = replace_tyvars_expr bindings value
       and body = replace_tyvars_stmt bindings body in

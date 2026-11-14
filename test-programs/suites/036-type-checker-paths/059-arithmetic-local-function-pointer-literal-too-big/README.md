@@ -1,0 +1,1 @@
+Pins that the literal operand of such a call has to fit the parameter: 300 fits the Int64 of the other operand and not the Nat8 of the parameter (lib/TypeMatch.ml, match_type_with_value). The parameters of the `Fn` type are written in reverse because the compiler reads them so (issue #127).

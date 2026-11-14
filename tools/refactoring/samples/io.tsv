@@ -1,0 +1,38 @@
+# One line of OCaml per row, after the verdict the pattern of the column io must give it.
+# count: the line does input, output or process control. skip: it does not.
+count	  let ch = open_in path in
+count	  let out = open_out_bin path in
+count	  close_in ch;
+count	  close_out_noerr out
+count	  print_endline "done"
+count	  prerr_string message;
+count	  let line = input_line ch in
+count	  output_string out text;
+count	  Printf.printf "%d\n" n
+count	  Printf.eprintf "%s\n" message;
+count	  Printf.fprintf out "%s" text
+count	  Format.printf "%a" pp value
+count	  Format.fprintf Format.err_formatter "%s" message
+count	  exit 1
+count	  | Error _ -> exit(1)
+count	  Stdlib.exit code
+count	  at_exit (fun () -> remove_temporary_files ())
+count	  flush stdout
+count	  let lexbuf = Lexing.from_channel ch in
+count	  let args = Array.to_list Sys.argv in
+count	  let pid = Unix.getpid () in
+count	  let path = Filename.temp_file "austral" ".c" in
+count	  In_channel.with_open_bin path In_channel.input_all
+count	  let text = read_file_to_string path in
+count	  write_string_to_file path text
+count	  let result = run_command command in
+skip	  let text = Printf.sprintf "%d" n in
+skip	  Printf.bprintf buffer "%s" text
+skip	  Printf.ksprintf failwith "bad width %d" n
+skip	  Format.asprintf "%a" pp value
+skip	  Format.fprintf formatter "%s" text
+skip	  let lexbuf = Lexing.from_string text in
+skip	  | CCompilerError { command; exit_code; stdout; stderr } ->
+skip	  let output_path = get_output_path args in
+skip	  let code = result.exit in
+skip	  Text "Failed to write to file ";

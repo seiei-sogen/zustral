@@ -1,0 +1,1 @@
+Covers the `TypeClass` alternative of `augment_variable` (lib/TypeCheckExpr.ml): `Kind` names a declaration that is not a function, so it is looked up as a variable, and there is none. Target line(s): lib/TypeCheckExpr.ml line 571.

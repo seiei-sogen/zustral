@@ -1,0 +1,28 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "code", "content": "zero" },
+    {
+      "type": "text",
+      "content": " is generic but unconstrained, so its type is ambiguous."
+    },
+    { "type": "break" },
+    {
+      "type": "text",
+      "content": "Consider clarifying its type using a cast."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/042-expected-type-stops-at-comparison/Test.aum",
+    "startp": { "line": 8, "column": 8 },
+    "end": { "line": 8, "column": 32 }
+  },
+  "context": [
+    [ 6, "" ],
+    [ 7, "    function isZero(x: Int32): Bool is" ],
+    [ 8, "        return zero() = missing;" ],
+    [ 9, "    end;" ],
+    [ 10, "" ]
+  ]
+}

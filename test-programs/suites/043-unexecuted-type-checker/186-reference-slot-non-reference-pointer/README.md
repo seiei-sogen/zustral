@@ -1,0 +1,1 @@
+Covers the `Pointer` alternative of the first non-reference arm of `augment_slot_access` (lib/TypeCheckExpr.ml): the reference transform `&(x.a)` on a value of type `Pointer[Int32]` is an error. Target line: lib/TypeCheckExpr.ml line 667.

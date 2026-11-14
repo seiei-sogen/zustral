@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "I can't find a " },
+    { "type": "text", "content": "variable" },
+    { "type": "text", "content": " named " },
+    { "type": "code", "content": "a" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/055-name-not-visible-after-its-block/Test.aum",
+    "startp": { "line": 8, "column": 8 },
+    "end": { "line": 8, "column": 19 }
+  },
+  "context": [
+    [ 6, "            printLn(a);" ],
+    [ 7, "        end if;" ],
+    [ 8, "        printLn(a);" ],
+    [ 9, "        return ExitSuccess();" ],
+    [ 10, "    end;" ]
+  ]
+}

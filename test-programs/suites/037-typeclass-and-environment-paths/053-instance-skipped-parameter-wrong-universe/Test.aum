@@ -1,0 +1,29 @@
+module body Test is
+    record Lin: Linear is
+    end;
+
+    record Box[T: Type]: Type is
+        value: T;
+    end;
+
+    typeclass Outer(T: Type) is
+        generic [R: Region]
+        method outer(value: &[T, R]): Int32;
+    end;
+
+    generic [U: Free]
+    instance Outer(Box[U]) is
+        generic [R: Region]
+        method outer(value: &[Box[U], R]): Int32 is
+            return 2;
+        end;
+    end;
+
+    function main(): ExitCode is
+        let b: Box[Lin] := Box(value => Lin());
+        printLn(outer(&b));
+        let { value: Lin } := b;
+        let {} := value;
+        return ExitSuccess();
+    end;
+end module body.

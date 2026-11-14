@@ -1,0 +1,1 @@
+lib/LiteralTyping.ml line 119, literal_matches, the `TNegation` alternative of the `SingleFloat | DoubleFloat` arm. The expression `(not b)` is passed to a function that takes `Float64`: match_type_with_value asks literal_matches first, which answers no for this expression, and the types are then compared and differ.

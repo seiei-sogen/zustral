@@ -1,0 +1,11 @@
+module body Test is
+    typeclass Shape(T: Type) is
+        generic [R: Region]
+        method area(x: &[T, R]): R;
+    end;
+
+    function main(): ExitCode is
+        printLn("ok");
+        return ExitSuccess();
+    end;
+end module body.

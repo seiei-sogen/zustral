@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "The head of a reference transform expression must be of a reference type, but I got "
+    },
+    { "type": "type", "content": "Float64" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/179-reference-slot-non-reference-float64/Test.aum",
+    "startp": { "line": 3, "column": 8 },
+    "end": { "line": 3, "column": 15 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function probe(x: Float64): Unit is" ],
+    [ 3, "        &(x.a);" ],
+    [ 4, "        return nil;" ],
+    [ 5, "    end;" ]
+  ]
+}

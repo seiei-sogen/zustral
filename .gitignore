@@ -1,6 +1,5 @@
 _build
 austral
-calltree.html
 error.html
 *~
 lib/BuiltInModules.ml
@@ -11,3 +10,6 @@ result
 .claude/.headroom_wrap_settings.lock
 .serena/.gitignore
 .serena/project.yml
+.claude/worktrees/
+_build_coverage
+__pycache__/

@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "T" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "Int32" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/032-cast-constraint-unknown-typeclass/Test.aum",
+    "startp": { "line": 5, "column": 8 },
+    "end": { "line": 5, "column": 30 }
+  },
+  "context": [
+    [ 3, "    function f(value: T): Unit is" ],
+    [ 4, "        let n: Int32 := 10;" ],
+    [ 5, "        let m: Int32 := n : T;" ],
+    [ 6, "        return nil;" ],
+    [ 7, "    end;" ]
+  ]
+}

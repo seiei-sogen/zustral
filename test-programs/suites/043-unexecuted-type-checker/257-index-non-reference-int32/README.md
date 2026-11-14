@@ -1,0 +1,1 @@
+Covers the `Integer` alternative of the last arm of `augment_array_index` (lib/TypeCheckExpr.ml): the reference transform `&(x[0])` on a value of type `Int32` is an error. Target line: lib/TypeCheckExpr.ml line 809.

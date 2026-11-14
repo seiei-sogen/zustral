@@ -5,12 +5,12 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 (** This module creates wrappers around exported functions. *)
-open Env
 open Id
+open MonoType
 open CRepr
+open ForeignType
 
-(** Make a wrapper for an exported function. *)
-val make_wrapper : env -> decl_id -> string -> c_decl
-
-(** Make wrappers for all exported functions. *)
-val all_wrappers : env -> c_decl list
+(** Make the wrappers of the exported functions. Each is given as
+    {!Monomorphize.monomorphize_wrappers} returns it: its export name, the ID
+    of the monomorph the wrapper calls and its checked signature. *)
+val all_wrappers : (string * mono_id * mono_ty foreign_signature) list -> c_decl list Outcome.t

@@ -1,0 +1,35 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "The variable " },
+    { "type": "code", "content": "r" },
+    {
+      "type": "text",
+      "content": " is used inconsistently in the branches of "
+    },
+    { "type": "text", "content": "a case" },
+    { "type": "text", "content": " statement. In one branch it is " },
+    { "type": "text", "content": "consumed" },
+    { "type": "text", "content": " while in the other it is " },
+    { "type": "text", "content": "not yet consumed" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/032-other-errors/021-linearity-inconsistent-case-branches/Test.aum",
+    "startp": { "line": 9, "column": 8 },
+    "end": { "line": 14, "column": 17 }
+  },
+  "context": [
+    [ 7, "        let r: R := R(x => 32);" ],
+    [ 8, "        let o: Option[Int32] := Some(value => 10);" ],
+    [ 9, "        case o of" ],
+    [ 10, "            when Some(value: Int32) do" ],
+    [ 11, "                let { x: Int32 } := r;" ],
+    [ 12, "            when None do" ],
+    [ 13, "                skip;" ],
+    [ 14, "        end case;" ],
+    [ 15, "        return ExitSuccess();" ],
+    [ 16, "    end;" ]
+  ]
+}

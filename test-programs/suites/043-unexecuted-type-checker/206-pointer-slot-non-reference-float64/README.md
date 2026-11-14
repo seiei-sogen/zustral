@@ -1,0 +1,1 @@
+Covers the `DoubleFloat` alternative of the second non-reference arm of `augment_pointer_slot_access` (lib/TypeCheckExpr.ml): `x->a` on a value of type `Float64` is an error, because `->` needs a reference. Target line: lib/TypeCheckExpr.ml line 729.

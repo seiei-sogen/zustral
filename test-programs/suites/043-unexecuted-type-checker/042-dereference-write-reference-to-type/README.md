@@ -1,0 +1,1 @@
+Covers the `TypeUniverse` alternative of the mutable-reference arm of `augment_deref` (lib/TypeCheckExpr.ml): dereferencing a reference to `T`, which is not in the `Free` universe, is an error. Target line(s): lib/TypeCheckExpr.ml line 651.

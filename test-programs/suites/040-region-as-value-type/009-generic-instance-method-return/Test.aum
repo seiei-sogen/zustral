@@ -1,0 +1,23 @@
+module body Test is
+    record Wrap[T: Free]: Free is
+        v: T;
+    end;
+
+    typeclass Shape(T: Type) is
+        generic [R: Region]
+        method area(x: &[T, R]): R;
+    end;
+
+    generic [U: Free]
+    instance Shape(Wrap[U]) is
+        generic [R: Region]
+        method area(x: &[Wrap[U], R]): R is
+            return area(x);
+        end;
+    end;
+
+    function main(): ExitCode is
+        printLn("ok");
+        return ExitSuccess();
+    end;
+end module body.

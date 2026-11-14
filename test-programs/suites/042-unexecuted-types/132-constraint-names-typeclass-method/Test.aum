@@ -1,0 +1,15 @@
+module body Test is
+    typeclass Show(T: Free) is
+        method show(x: T): Int32;
+    end;
+
+    generic [T: Free(show)]
+    function f(x: T): Unit is
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        f(1);
+        return ExitSuccess();
+    end;
+end module body.

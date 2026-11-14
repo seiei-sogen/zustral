@@ -1,0 +1,1 @@
+Assigning to a constant is rejected with `Cannot assign a value to a constant.` (lib/TypingPass.ml, augment_assign_var). Before, the assignment looked the name up only among the local variables, did not find the constant, and reported `I can't find a variable named c`, although the name can be read.

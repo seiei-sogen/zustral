@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "Region<0>" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "Span[Int32, Region<0>]" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/044-match-region-with-span/Test.aum",
+    "startp": { "line": 19, "column": 8 },
+    "end": { "line": 19, "column": 16 }
+  },
+  "context": [
+    [ 17, "" ],
+    [ 18, "    function pass(p: Pointer[Span[Int32, Static]]): Unit is" ],
+    [ 19, "        take(p);" ],
+    [ 20, "        return nil;" ],
+    [ 21, "    end;" ]
+  ]
+}

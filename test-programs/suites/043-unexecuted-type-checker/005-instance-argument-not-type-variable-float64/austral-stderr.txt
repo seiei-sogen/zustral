@@ -1,0 +1,33 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The type " },
+    { "type": "type", "content": "Float64" },
+    {
+      "type": "text",
+      "content": " is not a type parameter, but generic instances must use either all type parameters or none of them in the argument."
+    },
+    { "type": "break" },
+    {
+      "type": "text",
+      "content": "Consider adding another generic parameter with universe "
+    },
+    { "type": "code", "content": "Free" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/005-instance-argument-not-type-variable-float64/Test.aum",
+    "startp": { "line": 11, "column": 8 },
+    "end": { "line": 14, "column": 8 }
+  },
+  "context": [
+    [ 9, "" ],
+    [ 10, "    typeclass Kind(T: Type) is" ],
+    [ 11, "    end;" ],
+    [ 12, "" ],
+    [ 13, "    instance Kind(Box[Float64]) is" ],
+    [ 14, "    end;" ],
+    [ 15, "" ],
+    [ 16, "    function main(): ExitCode is" ]
+  ]
+}

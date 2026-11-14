@@ -1,0 +1,1 @@
+Pins what a cast does when the constraint of the target type variable names no declaration: the internal error of 037-typeclass-and-environment-paths/015 is discarded, and the error is that the cast is invalid (lib/TypeCheckExpr.ml, check_annotated).
