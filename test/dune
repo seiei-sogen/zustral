@@ -13,5 +13,6 @@
   TypeCheckExprTest
   TypeMatchTest
   UnexecutedWordingTest
-  UnexecutedDeclarationsTest)
+  UnexecutedDeclarationsTest
+  UnexecutedCheckerTest)
  (libraries austral_core austral_cli ounit2))
