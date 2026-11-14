@@ -4,7 +4,7 @@
 
 スクリプトは `tools/refactoring/` にある。どれも再実行できる。数は `tools/refactoring/expected/` に記録してあり、スクリプトは今の木と比べて違いを報告する。作り直しの各項目は、`tools/refactoring/check.sh` で確かめる。
 
-対象のコミットは `f408e59` である。`lib/` と `bin/` は、それ以降変わっていない。
+対象のコミットは `86f2307` である。`lib/` と `bin/` は、それ以降変わっていない。
 
 この文書の数は、計画を作った時点のものである。カバレッジの数は、`lib/TypeParser.ml` と `lib/CliParser.ml` を誤って除いていた。名前が `Parser.ml` で終わるファイルを、生成された構文解析器と一緒に除いていたためである。2つを含めた計画時点の数は 77.27%（5273 / 6824）で、`tools/refactoring/baseline/coverage.txt` にある。その後、対象に `examples/` の 12 本を足したので、`tools/refactoring/expected/` の数は、ここより新しい。カバレッジは 77.33% から 77.88% になった。
 
@@ -156,7 +156,7 @@ Scott Wlaschin の "Domain Modeling Made Functional" のコード例を読んだ
 
 ## 後続の項目のための棚卸し
 
-`inventory-c7af9a6.md` は、コミット `c7af9a6` の時点で、後ろの項目が直す箇所を数え上げたものである。行番号は、そのコミットのものである。
+`inventory-c7af9a6.md` は、コミット `97c6041` の時点で（ファイルの名前の番号は、ブランチを master の上に載せ直す前の、同じコミットの番号である）、後ろの項目が直す箇所を数え上げたものである。行番号は、そのコミットのものである。
 
 | 節 | 使う項目 | 中身 |
 |---|---|---|

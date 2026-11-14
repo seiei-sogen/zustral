@@ -1,4 +1,4 @@
-# R22 で、作り直す前のコンパイラ（タグ refactoring-base、c7af9a6）と出力が変わったプログラム
+# R22 で、作り直す前のコンパイラ（タグ refactoring-base、97c6041）と出力が変わったプログラム
 # tools/refactoring/equivalence.py compare の出力。73 本。どれも、外部関数の型のエラーを出すプログラムである。
 # 行の末尾は、変わったもの（exit は終了コード、files は残すファイル、stderr と error.html はエラーの出力）。
 cli/041-foreign-unit-return-typecheck: stderr error.html

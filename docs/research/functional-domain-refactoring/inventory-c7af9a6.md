@@ -1,12 +1,12 @@
 # Inventories for R21, R24 and R25
 
-Source: the read-only copy of the compiler at commit c7af9a6 (`lib/` and `cli/`). `lib/BuiltInModules.ml` is generated and is left out. All line numbers are those of that copy. Nothing was built. The tables come from ripgrep and from reading the code around each hit; the one thing that was run is the already-built compiler binary, for the five probes in 2.3. The rows were typed by hand into a script (`inventory-tools/gen_inventory.py` next to this file) that checks every file:line against the source and computes the totals.
+Source: the read-only copy of the compiler at commit 97c6041 (`lib/` and `cli/`). `lib/BuiltInModules.ml` is generated and is left out. All line numbers are those of that copy. Nothing was built. The tables come from ripgrep and from reading the code around each hit; the one thing that was run is the already-built compiler binary, for the five probes in 2.3. The rows were typed by hand into a script (`inventory-tools/gen_inventory.py` next to this file) that checks every file:line against the source and computes the totals.
 
 ## 1. Environment lookups (for R21)
 
 ### 1.1 What `lib/Env.mli` exports
 
-Twelve lookup functions return `option`. The plan says 13; `Env.mli` was last changed by R7 (e2afef8).
+Twelve lookup functions return `option`. The plan says 13; `Env.mli` was last changed by R7 (e03270d).
 
 `get_module_by_id`, `get_module_by_name`, `get_decl_by_id`, `get_decl_by_name`, `get_method_from_typeclass_id_and_name`, `get_instance_method_from_instance_id_and_method_name`, `get_instance_method`, `get_callable`, `get_type_monomorph`, `get_function_monomorph`, `get_monomorph`, `get_variable`.
 
@@ -477,7 +477,7 @@ Guards on the same stage-crossing constructors that are not `internal_err` and s
 2. Separate searches for forms the first one misses: arms with a `when` guard or an `as` (none), a wildcard inside a tuple pattern (none on these types), a `match` written on one line (one, on `Type.ty`), a pattern that continues on the next line (none).
 3. For each hit a script printed the head of the `match` or `function` and the patterns of the sibling arms. The type was read from the constructors, the annotations and the `open` lines. Hits on other types (`Type.ty`, `MonoType.mono_ty`, lists, options, strings, `CRepr`, `Common.pragma`, the command-line `arg`) were dropped.
 4. A match on `decl option` is listed when an arm names a constructor of `decl` under `Some` and a later arm (`| _ ->` or `| Some _ ->`) takes the rest.
-5. Cross-check: `tools/refactoring/expected/fragile.tsv` holds the compiler's warning-4 output recorded at R7 (e2afef8). `lib/` has changed since, so it is evidence, not proof. Per file and per type, half of each recorded number equals the number of arms found here, for every type in scope.
+5. Cross-check: `tools/refactoring/expected/fragile.tsv` holds the compiler's warning-4 output recorded at R7 (e03270d). `lib/` has changed since, so it is evidence, not proof. Per file and per type, half of each recorded number equals the number of arms found here, for every type in scope.
 
 What this can miss: a catch-all hidden in an or-pattern on a single line with other constructors, and matches in `lib/Parser.mly` and `lib/Lexer.mll`, which were not searched.
 

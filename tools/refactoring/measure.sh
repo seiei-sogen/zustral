@@ -11,9 +11,9 @@
 #                         or recorded
 #
 # The numbers of the time the plan was made (baseline/totals.txt) are counted
-# with --tree, on the tree of commit befc0ad. That tree has no cli/: the edge
+# with --tree, on the tree of commit b3aa759. That tree has no cli/: the edge
 # was lib/Cli*.ml, so move those files to cli/ first, for coreio to mean the same.
-#   git archive befc0ad lib bin | tar -x -C "$D"
+#   git archive b3aa759 lib bin | tar -x -C "$D"
 #   mkdir "$D/cli" && mv "$D"/lib/Cli*.ml "$D/cli/"
 #   measure.sh --tree "$D"
 # Fragile matches (a catch-all arm over a variant type) are not counted here any
