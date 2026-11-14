@@ -21,7 +21,7 @@ type check = module_source list -> unit Outcome.t
 
 - `module_source` は、1つのモジュールのソースである。インターフェースと本体の2つか、本体だけである。それぞれ、ソースの文字列とファイル名を持つ。ファイルを読むのは、呼ぶ側（`cli/CliEngine.ml`）である。
 - `entrypoint` は、モジュールの名前と、その中の関数の名前の組である。
-- `Outcome.t` は、`('a, austral_error list) result` である。失敗は値で返る。
+- `Outcome.t` は、`('a, Outcome.errors) result` である。失敗は値で返る。`Outcome.errors` は、1 個以上のエラーの並び（`austral_error * austral_error list`）である。失敗したのにエラーがない、という値は作れない。
 - `compile` は、組み込みモジュール（`Austral.Pervasive`、`Austral.Memory` の順）をコンパイルし、渡されたモジュールを順にコンパイルし、最後に1回だけ仕上げ（`finish`）を行う。
 - `check` は、コマンドラインの型検査だけのモードが使う。仕上げを行わない。
 
