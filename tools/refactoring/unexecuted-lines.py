@@ -12,11 +12,15 @@ left out.
 
 A line is listed when one of the points on it was never hit (the line report
 of bisect_ppx counts lines the same way). The column `points` says whether
-that is all of them (`none` was hit) or not (`some` were). Two things follow
-from counting this way. A line of or-pattern alternatives is listed while one
-alternative on it is unexecuted. And where a call that raises (`type_error`
-and the like) is not the last thing of its arm, the tool puts a point after
-the call, which nothing reaches: such a line is always listed, with `some`.
+that is all of them (`none` was hit) or not (`some` were). A line of
+or-pattern alternatives is listed while one alternative on it is unexecuted.
+
+One kind of point is left out. For a call that is not the last thing of its
+arm, bisect_ppx adds a point that is hit when the call returns, and records
+it at the last character of the function's name. The functions that raise an
+error (`type_error` and the others of lib/Error.mli, `internal_err`,
+`report_and_exit`, `exit`) never return, so that point of theirs is hit by
+nothing, whatever the tests do. The points of the call's own arm stay.
 
 The record, expected/unexecuted-lines.tsv, has one row per listed line: file,
 the top-level definition the line is in (`name#2` for the second definition of
@@ -40,6 +44,13 @@ import sys
 
 GENERATED = re.compile(r"lib/(BuiltInModules|Parser|Lexer)\.ml$")
 DEFINITION = re.compile(r"^(?:let|and)(?: rec)? (?:\(?)([A-Za-z_][A-Za-z0-9_']*)")
+# The functions whose type says that they do not return (lib/Error.mli,
+# cli/CliEngine.mli), and `exit`.
+NEVER_RETURNS = {
+    "parse_error", "cli_error", "type_error", "linearity_error", "declaration_error",
+    "entrypoint_error", "generic_error", "internal_err", "report_and_exit", "exit",
+}
+NAME_AT_END = re.compile(r"[A-Za-z_][A-Za-z0-9_']*$")
 HERE = pathlib.Path(__file__).resolve().parent
 Row = tuple[str, int, str, int, str, str]
 
@@ -68,6 +79,10 @@ def unexecuted(coverage_file: str, root: pathlib.Path) -> tuple[list[Row], int]:
         text = (root / name).read_text(encoding="latin-1")
         hits = collections.defaultdict(list)
         for offset, count in points:
+            name_here = NAME_AT_END.search(text, max(0, offset - 80), offset + 1)
+            after_name = offset + 1 == len(text) or not (text[offset + 1].isalnum() or text[offset + 1] in "_'")
+            if count == 0 and name_here and after_name and name_here.group(0) in NEVER_RETURNS:
+                continue
             hits[text.count("\n", 0, offset) + 1].append(count)
         with_point += len(hits)
         # The definition every line is in, and which line with its text it is there.

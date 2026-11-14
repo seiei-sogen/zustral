@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Measures how much of the compiler the corpus of equivalence.py executes.
-# A line the corpus never runs is a line a refactoring can break unnoticed.
+# Measures how much of the compiler the tests execute: the corpus of
+# equivalence.py (every program in the repository) and the unit tests of test/.
+# A line no test runs is a line a refactoring can break unnoticed.
 #   coverage.sh              compare the per-file summary with expected/coverage.txt
 #   coverage.sh --record     rewrite expected/coverage.txt
 #   coverage.sh --lines F    print the line numbers of lib/F that no program executes
@@ -22,7 +23,8 @@
 #                            record is executed or gone
 #   coverage.sh --unexecuted --only DIR
 #                            the list when only the programs under DIR run (to see
-#                            which lines a new test executes)
+#                            which lines a new test executes); --only unit runs only
+#                            the unit tests of test/
 #   coverage.sh --kinds      count the lines that no program executes, by kind (an
 #                            arm that raises an internal error, a line of or-pattern
 #                            alternatives, ...); --kinds --files adds the count of
@@ -64,8 +66,18 @@ in_shell() {
 in_shell 'python3 concat_builtins.py && dune build --root . --build-dir _build_coverage --instrument-with bisect_ppx ./bin/austral.exe 2>&1' > "$T/build.log" 2>&1 \
   || { echo "instrumented build failed: $(tail -n 8 "$T/build.log")" >&2; exit 2; }
 
-ZUSTRAL_EQUIVALENCE_ONLY="$ONLY" BISECT_FILE="$T/cov/bisect" python3 "$HERE/equivalence.py" snapshot "$ROOT/_build_coverage/default/bin/austral.exe" "$T/snapshot" > "$T/snapshot.log" 2>&1 \
-  || { echo "corpus run failed: $(tail -n 5 "$T/snapshot.log")" >&2; exit 2; }
+if [[ $ONLY != unit ]]; then
+  ZUSTRAL_EQUIVALENCE_ONLY="$ONLY" BISECT_FILE="$T/cov/bisect" python3 "$HERE/equivalence.py" snapshot "$ROOT/_build_coverage/default/bin/austral.exe" "$T/snapshot" > "$T/snapshot.log" 2>&1 \
+    || { echo "corpus run failed: $(tail -n 5 "$T/snapshot.log")" >&2; exit 2; }
+fi
+
+# The unit tests (test/) call the compiler's functions directly, also with
+# values that no program makes them see. They count as tests: they run in a
+# measurement of everything, and alone with --only unit.
+if [[ -z $ONLY || $ONLY == unit ]]; then
+  in_shell "BISECT_FILE='$T/cov/bisect' dune test --root . --build-dir _build_coverage --instrument-with bisect_ppx --force 2>&1" > "$T/unit.log" 2>&1 \
+    || { echo "unit tests failed: $(tail -n 8 "$T/unit.log")" >&2; exit 2; }
+fi
 
 # The hits of every line, as XML. The report names the generated files too
 # (the parser, the lexer), which are in the instrumented build.
