@@ -15,9 +15,17 @@ let test_run_command _ =
   eq "derp" stdout;
   eq "" stderr
 
+(* `run_command` never sees a stopped process: it waits for the command to
+   finish. *)
+let test_exit_code _ =
+  eq 3 (Austral_cli.ProcessStatus.exit_code (Unix.WEXITED 3));
+  eq Sys.sigkill (Austral_cli.ProcessStatus.exit_code (Unix.WSIGNALED Sys.sigkill));
+  eq Sys.sigstop (Austral_cli.ProcessStatus.exit_code (Unix.WSTOPPED Sys.sigstop))
+
 let suite =
   "Operating system" >::: [
-      "run_command" >:: test_run_command
+      "run_command" >:: test_run_command;
+      "exit_code" >:: test_exit_code
     ]
 
 let _ = run_test_tt_main suite

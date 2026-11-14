@@ -35,11 +35,6 @@ let write_string_to_file (path: string) (contents: string): unit =
     close_out_noerr stream;
     cli_error NoSpan (WriteError { path; reason })
 
-let get_exit_code = function
-  | WEXITED i -> i
-  | WSIGNALED i -> i
-  | WSTOPPED i -> i
-
 type command_output =
   CommandOutput of { command: string; code: int; stdout: string; stderr: string }
 
@@ -50,7 +45,7 @@ let run_command (command: string): command_output =
   let proc_stat = close_process_full (stdout_chan, stdin_chan, stderr_chan) in
   CommandOutput {
       command = command;
-      code = get_exit_code proc_stat;
+      code = ProcessStatus.exit_code proc_stat;
       stdout = stdout;
       stderr = stderr
     }
