@@ -28,8 +28,7 @@ let error_of (f: unit -> 'a): error option =
 let outcome_error (outcome: 'a Outcome.t): error option =
   match outcome with
   | Ok _ -> None
-  | Error (AustralError { error; _ } :: _) -> Some error
-  | Error [] -> None
+  | Error (AustralError { error; _ }, _) -> Some error
 
 let internal (message: string): error option =
   Some (Internal message)
