@@ -38,11 +38,11 @@ let parse_params (imports: import_map) (params: concrete_param list): qparam lis
       QualifiedParameter (n, qualify_typespec imports t))
     params
 
+let name_typaram (im: import_map) (name: qident) (ConcreteTypeParam (n, u, cs): concrete_type_param): type_parameter =
+  make_typaram (n, u, name, List.map (fun i -> qident_to_sident (qualify_identifier im i)) cs)
+
 let name_typarams (place: place) (im: import_map) (params: concrete_type_param list) (name: qident): typarams =
-  let lst: type_parameter list =
-    List.map (fun (ConcreteTypeParam (n, u, cs)) -> make_typaram (n, u, name, List.map (fun i -> qident_to_sident (qualify_identifier im i)) cs)) params
-  in
-  typarams_from_list place lst
+  typarams_from_list place (List.map (name_typaram im name) params)
 
 let parse_method_decls (module_name: module_name) (imports: import_map) (methods: concrete_method_decl list): combined_method_decl list =
   List.map (fun (ConcreteMethodDecl (n, typarams, params, rt, method_docstring)) ->
@@ -63,110 +63,105 @@ let parse_method_defs (place: place) (module_name: module_name) (imports: import
                   abs_stmt place imports body))
     methods
 
-let match_decls (module_name: module_name) (ii: import_map) (bi: import_map) (decl: concrete_decl) (def: concrete_def): combined_definition =
+(* The declarations of the interface that need a definition in the body, each
+   with the definition of that name. *)
+let match_constant (ii: import_map) (bi: import_map) (span: Span.span) (name: identifier) (ty: typespec) (docstring: Common.docstring) (def: concrete_def): combined_definition =
+  match def with
+  | ConcreteConstantDef (defspan, name', ty', value, _) ->
+     if (name = name') && (ty = ty') then
+       CConstant (defspan, VisPublic, name, qualify_typespec ii ty, abs_expr (AtSpan span) bi value, docstring)
+     else
+       declaration_error (AtSpan span) (DeclarationTypeMismatch name)
+  | ConcreteRecordDef _ | ConcreteUnionDef _ | ConcreteFunctionDef _
+  | ConcreteTypeClassDef _ | ConcreteInstanceDef _ ->
+     declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = ConstantDeclaration })
+
+let match_opaque_type (module_name: module_name) (bi: import_map) (span: Span.span) (name: identifier) (typarams: concrete_type_param list) (universe: Type.universe) (docstring: Common.docstring) (def: concrete_def): combined_definition =
   let make_qname n =
     make_qident (module_name, n, n)
   in
-  match decl with
-  | ConcreteConstantDecl (span, name, ty, docstring) ->
-     (match def with
-         | ConcreteConstantDef (defspan, name', ty', value, _) ->
-            if (name = name') && (ty = ty') then
-              CConstant (defspan, VisPublic, name, qualify_typespec ii ty, abs_expr (AtSpan span) bi value, docstring)
-            else
-              declaration_error (AtSpan span) (DeclarationTypeMismatch name)
-         | ConcreteRecordDef _ | ConcreteUnionDef _ | ConcreteFunctionDef _
-         | ConcreteTypeClassDef _ | ConcreteInstanceDef _ ->
-            declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = ConstantDeclaration }))
-  | ConcreteOpaqueTypeDecl (span, name, typarams, universe, docstring) ->
-     (match def with
-         | ConcreteRecordDef (ConcreteRecord (defspan, name', typarams', universe', slots, _)) ->
-            if (name = name') && (typarams = typarams') && (universe = universe') then
-              let qname = make_qname name' in
-              CRecord (defspan,
-                       TypeVisOpaque,
-                       name,
-                       name_typarams (AtSpan span) bi typarams qname,
-                       universe,
-                       parse_slots bi slots,
-                       docstring)
-            else
-              if universe != universe' then
-                declaration_error (AtSpan span) (DeclarationUniverseMismatch name)
-              else
-                declaration_error (AtSpan span) (DeclarationTypeMismatch name)
-         | ConcreteUnionDef (ConcreteUnion (defspan, name', typarams', universe', cases, _)) ->
-            if (name = name') && (typarams = typarams') && (universe = universe') then
-              let qname = make_qname name' in
-              CUnion (defspan,
-                      TypeVisOpaque,
-                      name,
-                      name_typarams (AtSpan span) bi typarams qname,
-                      universe,
-                      parse_cases bi cases,
-                      docstring)
-            else
-              if universe <> universe' then
-                declaration_error (AtSpan span) (DeclarationUniverseMismatch name)
-              else
-                declaration_error (AtSpan span) (DeclarationTypeMismatch name)
-         | ConcreteConstantDef _ | ConcreteFunctionDef _ | ConcreteTypeClassDef _
-         | ConcreteInstanceDef _ ->
-            declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = TypeDeclaration }))
-  | ConcreteFunctionDecl (span, name, typarams, params, rt, docstring) ->
-     (match def with
-         | ConcreteFunctionDef (defspan, name', typarams', params', rt', body, _, pragmas) ->
-            if (name = name') && (typarams = typarams') && (params = params') && (rt = rt') then
-              let qname = make_qname name' in
-              CFunction (defspan,
-                         VisPublic,
-                         name,
-                         name_typarams (AtSpan span) bi typarams qname,
-                         parse_params ii params,
-                         qualify_typespec ii rt,
-                         abs_stmt (AtSpan span) bi body,
-                         docstring,
-                         pragmas)
-            else
-              let difference: DeclarationErrors.function_difference =
-                if typarams <> typarams' then
-                  DifferentTypeParameters
-                else if params <> params' then
-                  DifferentValueParameters
-                else if rt <> rt' then
-                  DifferentReturnTypes
-                else
-                  OtherDifference
-              in
-              declaration_error (AtSpan span) (FunctionMismatch { name; difference })
-         | ConcreteConstantDef _ | ConcreteRecordDef _ | ConcreteUnionDef _
-         | ConcreteTypeClassDef _ | ConcreteInstanceDef _ ->
-            declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = FunctionDeclaration }))
-  | ConcreteInstanceDecl (span, name, typarams, argument, docstring) ->
-     (match def with
-         | ConcreteInstanceDef (ConcreteInstance (defspan, name', typarams', argument', methods, _)) ->
-            if (name = name') && (typarams = typarams') && (argument = argument') then
-              (* Instance names might refer to an imported typeclass, so we have to
-                 qualify them. Since we're parsing a public declaration, which
-                 means the instance (and thus the name of the typeclass) appears in
-                 the interface file, we use the interface imports for
-                 qualification. *)
-              let qname = qualify_identifier ii name in
-              CInstance (defspan,
-                         span,
-                         VisPublic,
-                         qname,
-                         name_typarams (AtSpan span) bi typarams qname,
-                         qualify_typespec ii argument,
-                         parse_method_defs (AtSpan span) module_name bi methods,
-                         docstring)
-            else
-              declaration_error (AtSpan span) (DeclarationTypeMismatch name)
-         | ConcreteConstantDef _ | ConcreteRecordDef _ | ConcreteUnionDef _
-         | ConcreteFunctionDef _ | ConcreteTypeClassDef _ ->
-            declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = InstanceDeclaration }))
-  | ConcreteRecordDecl _ | ConcreteUnionDecl _ | ConcreteTypeClassDecl _ ->
-     generic_error NoSpan InvalidDeclInContext
+  match def with
+  | ConcreteRecordDef (ConcreteRecord (defspan, name', typarams', universe', slots, _)) ->
+     if (name = name') && (typarams = typarams') && (universe = universe') then
+       let qname = make_qname name' in
+       CRecord (defspan,
+                TypeVisOpaque,
+                name,
+                name_typarams (AtSpan span) bi typarams qname,
+                universe,
+                parse_slots bi slots,
+                docstring)
+     else
+       if universe != universe' then
+         declaration_error (AtSpan span) (DeclarationUniverseMismatch name)
+       else
+         declaration_error (AtSpan span) (DeclarationTypeMismatch name)
+  | ConcreteUnionDef (ConcreteUnion (defspan, name', typarams', universe', cases, _)) ->
+     if (name = name') && (typarams = typarams') && (universe = universe') then
+       let qname = make_qname name' in
+       CUnion (defspan,
+               TypeVisOpaque,
+               name,
+               name_typarams (AtSpan span) bi typarams qname,
+               universe,
+               parse_cases bi cases,
+               docstring)
+     else
+       if universe <> universe' then
+         declaration_error (AtSpan span) (DeclarationUniverseMismatch name)
+       else
+         declaration_error (AtSpan span) (DeclarationTypeMismatch name)
+  | ConcreteConstantDef _ | ConcreteFunctionDef _ | ConcreteTypeClassDef _
+  | ConcreteInstanceDef _ ->
+     declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = TypeDeclaration })
+
+(* The definition has the declaration's name: get_concrete_def found it by
+   that name. *)
+let match_function (module_name: module_name) (ii: import_map) (bi: import_map) (span: Span.span) (name: identifier) (typarams: concrete_type_param list) (params: concrete_param list) (rt: typespec) (docstring: Common.docstring) (def: concrete_def): combined_definition =
+  match def with
+  | ConcreteFunctionDef (defspan, name', typarams', params', rt', body, _, pragmas) ->
+     if (typarams = typarams') && (params = params') && (rt = rt') then
+       let qname = make_qident (module_name, name', name') in
+       CFunction (defspan,
+                  VisPublic,
+                  name,
+                  name_typarams (AtSpan span) bi typarams qname,
+                  parse_params ii params,
+                  qualify_typespec ii rt,
+                  abs_stmt (AtSpan span) bi body,
+                  docstring,
+                  pragmas)
+     else
+       let difference: DeclarationErrors.function_difference =
+         if typarams <> typarams' then
+           DifferentTypeParameters
+         else if params <> params' then
+           DifferentValueParameters
+         else
+           DifferentReturnTypes
+       in
+       declaration_error (AtSpan span) (FunctionMismatch { name; difference })
+  | ConcreteConstantDef _ | ConcreteRecordDef _ | ConcreteUnionDef _
+  | ConcreteTypeClassDef _ | ConcreteInstanceDef _ ->
+     declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = FunctionDeclaration })
+
+(* The definition is the one get_instance_def found by the declaration's name,
+   type parameters and argument. *)
+let match_instance (module_name: module_name) (ii: import_map) (bi: import_map) (span: Span.span) (name: identifier) (typarams: concrete_type_param list) (argument: typespec) (docstring: Common.docstring) (ConcreteInstance (defspan, _, _, _, methods, _)): combined_definition =
+  (* Instance names might refer to an imported typeclass, so we have to
+     qualify them. Since we're parsing a public declaration, which
+     means the instance (and thus the name of the typeclass) appears in
+     the interface file, we use the interface imports for
+     qualification. *)
+  let qname = qualify_identifier ii name in
+  CInstance (defspan,
+             span,
+             VisPublic,
+             qname,
+             name_typarams (AtSpan span) bi typarams qname,
+             qualify_typespec ii argument,
+             parse_method_defs (AtSpan span) module_name bi methods,
+             docstring)
 
 let private_def module_name im def =
   let make_qname n =
@@ -214,11 +209,7 @@ let private_def module_name im def =
      CTypeclass (span,
                  VisPrivate,
                  name,
-                 (match (typarams_as_list (name_typarams NoSpan im [typaram] qname)) with
-                  | [tp] ->
-                     tp
-                  | _ ->
-                     declaration_error NoSpan (MultiargTypeclass name)),
+                 name_typaram im qname typaram,
                  parse_method_decls module_name im methods,
                  docstring)
   | ConcreteInstanceDef (ConcreteInstance (span, name, typarams, argument, methods, docstring)) ->
@@ -268,57 +259,55 @@ and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb
   let make_qname n =
     make_qident (module_name, n, n)
   in
+  (* Some declarations need a matching definition in the body. *)
+  let definition (name: identifier): concrete_def =
+    match get_concrete_def cmb name with
+    | (Some def) ->
+       def
+    | None ->
+       declaration_error NoSpan (MissingBodyDefinition name)
+  in
   match decl with
-  | ConcreteInstanceDecl (_, name, typarams, argument, _) ->
+  | ConcreteInstanceDecl (span, name, typarams, argument, docstring) ->
      (* It's an instance declaration. Find the corresponding instance in the body. *)
      (match get_instance_def cmb name typarams argument with
       | (Some def) ->
-         match_decls module_name im bm decl (ConcreteInstanceDef def)
+         match_instance module_name im bm span name typarams argument docstring def
       | None ->
          declaration_error NoSpan (MissingInstanceBodyDefinition { name; ty = WrittenType (typespec_string argument) }))
-  | ConcreteConstantDecl (_, name, _, _) | ConcreteOpaqueTypeDecl (_, name, _, _, _)
-  | ConcreteRecordDecl (ConcreteRecord (_, name, _, _, _, _)) | ConcreteUnionDecl (ConcreteUnion (_, name, _, _, _, _))
-  | ConcreteFunctionDecl (_, name, _, _, _, _) | ConcreteTypeClassDecl (ConcreteTypeClass (_, name, _, _, _)) ->
-     (match decl with
-      (* Some declarations don't need to have a matching body *)
-      | ConcreteRecordDecl (ConcreteRecord (span, name, typarams, universe, slots, docstring)) ->
-         let qname = make_qname name in
-         CRecord (span,
-                  TypeVisPublic,
-                  name,
-                  name_typarams NoSpan im typarams qname,
-                  universe,
-                  parse_slots im slots,
-                  docstring)
-      | ConcreteUnionDecl (ConcreteUnion (span, name, typarams, universe, cases, docstring)) ->
-         let qname = make_qname name in
-         CUnion (span,
-                 TypeVisPublic,
+  | ConcreteConstantDecl (span, name, ty, docstring) ->
+     match_constant im bm span name ty docstring (definition name)
+  | ConcreteOpaqueTypeDecl (span, name, typarams, universe, docstring) ->
+     match_opaque_type module_name bm span name typarams universe docstring (definition name)
+  | ConcreteFunctionDecl (span, name, typarams, params, rt, docstring) ->
+     match_function module_name im bm span name typarams params rt docstring (definition name)
+  (* Some declarations don't need to have a matching body *)
+  | ConcreteRecordDecl (ConcreteRecord (span, name, typarams, universe, slots, docstring)) ->
+     let qname = make_qname name in
+     CRecord (span,
+              TypeVisPublic,
+              name,
+              name_typarams NoSpan im typarams qname,
+              universe,
+              parse_slots im slots,
+              docstring)
+  | ConcreteUnionDecl (ConcreteUnion (span, name, typarams, universe, cases, docstring)) ->
+     let qname = make_qname name in
+     CUnion (span,
+             TypeVisPublic,
+             name,
+             name_typarams NoSpan im typarams qname,
+             universe,
+             parse_cases im cases,
+             docstring)
+  | ConcreteTypeClassDecl (ConcreteTypeClass (span, name, typaram, methods, docstring)) ->
+     let qname = make_qname name in
+     CTypeclass (span,
+                 VisPublic,
                  name,
-                 name_typarams NoSpan im typarams qname,
-                 universe,
-                 parse_cases im cases,
+                 name_typaram im qname typaram,
+                 parse_method_decls module_name im methods,
                  docstring)
-      | ConcreteTypeClassDecl (ConcreteTypeClass (span, name, typaram, methods, docstring)) ->
-         let qname = make_qname name in
-         CTypeclass (span,
-                     VisPublic,
-                     name,
-                 (match (typarams_as_list (name_typarams NoSpan im [typaram] qname)) with
-                  | [tp] ->
-                     tp
-                  | _ ->
-                     declaration_error NoSpan (MultiargTypeclass name)),
-                     parse_method_decls module_name im methods,
-                     docstring)
-      | ConcreteConstantDecl _ | ConcreteOpaqueTypeDecl _ | ConcreteFunctionDecl _
-      | ConcreteInstanceDecl _ ->
-         (* Other declarations need to match a body *)
-         (match get_concrete_def cmb name with
-          | (Some def) ->
-             match_decls module_name im bm decl def
-          | None ->
-             declaration_error NoSpan (MissingBodyDefinition name)))
 
 and parse_defs (mn: module_name) (cmi: concrete_module_interface) (im: import_map) (defs: concrete_def list): combined_definition list Outcome.t =
   Outcome.map (List.filter_map (fun def -> def))

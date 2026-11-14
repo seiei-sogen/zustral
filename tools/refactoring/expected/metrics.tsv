@@ -12,8 +12,8 @@ lib/CIdent.ml	41	0	0	0	0	0	1	0	0	0	0
 lib/CRenderer.ml	305	0	0	0	0	0	1	0	0	0	0
 lib/CRepr.ml	107	0	0	0	0	0	5	0	0	0	0
 lib/CliErrors.ml	135	0	1	0	0	0	10	0	0	0	0
-lib/CodeGen.ml	685	0	0	0	0	1	0	0	0	0	0
-lib/CombiningPass.ml	378	17	0	0	0	2	0	0	0	0	0
+lib/CodeGen.ml	688	0	0	0	0	1	0	0	0	0	0
+lib/CombiningPass.ml	367	12	0	0	0	0	0	0	0	0	0
 lib/Common.ml	64	0	0	0	0	0	3	0	0	0	0
 lib/Compiler.ml	151	0	0	0	0	0	0	0	0	0	0
 lib/Cst.ml	163	0	0	0	0	0	2	0	0	0	0
@@ -38,7 +38,7 @@ lib/GenericErrors.ml	219	0	0	0	0	0	0	0	0	0	0
 lib/HtmlError.ml	304	0	0	0	0	0	0	0	0	0	0
 lib/Id.ml	142	0	0	0	0	0	0	0	0	0	0
 lib/Identifier.ml	62	0	0	0	0	0	2	0	0	0	0
-lib/IdentifierMap.ml	24	0	0	0	0	0	0	0	0	0	0
+lib/IdentifierMap.ml	15	0	0	0	0	0	0	0	0	0	0
 lib/IdentifierSet.ml	24	0	0	0	0	0	0	0	0	0	0
 lib/ImportResolution.ml	100	4	0	0	0	0	0	0	0	0	0
 lib/Imports.ml	56	1	0	0	0	0	0	0	0	0	0

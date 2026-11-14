@@ -664,14 +664,17 @@ and slots_depth slots decls =
   let depth = 1 + dep_depth in
   depth
 
+let struct_slots (decl: c_decl): c_slot list option =
+  match decl with
+  | CNamedStructDefinition (_, _, slots) -> Some slots
+  | CMacro _ | CStructForwardDeclaration _ | CEnumDefinition _ | CFunctionDeclaration _
+  | CFunctionDefinition _ -> None
+
 let detail_compare decls a b =
-  match (a, b) with
-  | (CNamedStructDefinition (_, _, s1), CNamedStructDefinition (_, _, s2)) ->
+  match (struct_slots a, struct_slots b) with
+  | (Some s1, Some s2) ->
      (slots_depth s1 decls) - (slots_depth s2 decls)
-  | ((CMacro _ | CStructForwardDeclaration _ | CEnumDefinition _
-      | CFunctionDeclaration _ | CFunctionDefinition _), _)
-  | (CNamedStructDefinition _, (CMacro _ | CStructForwardDeclaration _
-      | CEnumDefinition _ | CFunctionDeclaration _ | CFunctionDefinition _)) ->
+  | (None, (Some _ | None)) | (Some _, None) ->
      compare (decl_order a) (decl_order b)
 
 (* end declaration sorting code *)

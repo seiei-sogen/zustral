@@ -150,10 +150,10 @@ let definition_span (def: combined_definition): Span.span =
    module is extracted, because a slot's type may be declared after the
    instance. *)
 let check_instance_methods_hold_no_region (env: env) (def: combined_definition) (ldef: linked_definition): unit =
+  let place: place = AtSpan (definition_span def) in
   match ldef with
   | LInstance (_, _, _, typarams, _, methods, _) ->
      if typarams_size typarams = 0 then
-       let place: place = AtSpan (definition_span def) in
        let check (ty: ty): unit =
          match region_held_by_value place env [] ty with
          | Some name ->
