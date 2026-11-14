@@ -1,0 +1,16 @@
+module body Test is
+    constant C: Int32 := 1;
+
+    union U: Free is
+        case A;
+    end;
+
+    typeclass Show(T: Free) is
+        method show(x: T): Int32;
+    end;
+
+    function main(): ExitCode is
+        let x: Int32 := C();
+        return ExitSuccess();
+    end;
+end module body.

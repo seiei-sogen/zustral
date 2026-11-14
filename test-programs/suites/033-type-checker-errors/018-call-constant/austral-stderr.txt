@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "I can't find a " },
+    { "type": "text", "content": "callable" },
+    { "type": "text", "content": " named " },
+    { "type": "code", "content": "C" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/033-type-checker-errors/018-call-constant/Test.aum",
+    "startp": { "line": 13, "column": 8 },
+    "end": { "line": 13, "column": 28 }
+  },
+  "context": [
+    [ 11, "" ],
+    [ 12, "    function main(): ExitCode is" ],
+    [ 13, "        let x: Int32 := C();" ],
+    [ 14, "        return ExitSuccess();" ],
+    [ 15, "    end;" ]
+  ]
+}

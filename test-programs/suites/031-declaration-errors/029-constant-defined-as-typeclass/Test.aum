@@ -1,0 +1,9 @@
+module body Test is
+    typeclass Foo(T: Free) is
+        method foo(x: T): T;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.
