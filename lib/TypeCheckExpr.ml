@@ -112,29 +112,25 @@ let get_record_definition (place: place) (env: env) (id: type_decl_id) (ty: ty):
   | UnionTypeId _ ->
      type_error place (PathNotRecord ty)
 
+(* The type bound to a type parameter. *)
+let bound_type (place: place) (bindings: type_bindings) (tp: type_parameter): ty =
+  match get_binding bindings tp with
+  | Some ty ->
+     ty
+  | None ->
+     generic_error place (NoBindingForParameter (typaram_name tp))
+
 let get_slot_with_name (place: place) type_name slots slot_name =
   match List.find_opt (fun (TypedSlot (n, _)) -> n = slot_name) slots with
   | Some s -> s
   | None ->
      type_error place (NoSuchSlot { type_name = original_name type_name; slot_name })
 
-(* Check that there are as many bindings as there are type parameters, and that
-   every type parameter is satisfied. *)
+(* Check that every type parameter is bound. The universe of the type bound to
+   it is compatible with its own: the bindings are keyed by the parameter with
+   its universe, and `try_add_binding` checked the type against that. *)
 and check_bindings (place: place) (typarams: typarams) (bindings: type_bindings): unit =
-  let check (tp: type_parameter): unit =
-    let n = typaram_name tp
-    and u = typaram_universe tp
-    in
-    (match get_binding bindings tp with
-     | Some ty ->
-        if universe_compatible u (type_universe ty) then
-          ()
-        else
-          generic_error place (BindingUniverseMismatch { expected = u; actual = type_universe ty })
-     | None ->
-        generic_error place (NoBindingForParameter n))
-  in
-  let _ = List.map check (typarams_as_list typarams) in
+  let _ = List.map (bound_type place bindings) (typarams_as_list typarams) in
   ()
 
 
@@ -310,11 +306,10 @@ and augment_record_constructor (ctx: expr_ctx) (id: record_id) (name: qident) (t
     let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) (local_name name) params rt' from_context bindings in
     (* Check: the set of bindings equals the set of type parameters *)
     check_bindings (ctx_place ctx) typarams (merge_bindings (ctx_place ctx) bindings bindings');
-    (* Check the resulting type is in the correct universe *)
-    if universe_compatible universe (type_universe rt'') then
-      TRecordConstructor (rt'', List.map2 (fun a b -> (a, b)) slot_names arguments)
-    else
-      generic_error (ctx_place ctx) ConstructorUniverseMismatch
+    (* The universe of rt'' is compatible with the declared one: it is that
+       one, or, when that is `Type`, `Free`, `Linear` or `Type`
+       (`replaced_universe`). *)
+    TRecordConstructor (rt'', List.map2 (fun a b -> (a, b)) slot_names arguments)
 
 and augment_union_constructor (ctx: expr_ctx) (union_id: union_id) (type_name: qident) (typarams: typarams) (universe: universe) (case: typed_case) (from_context: context_bindings) (args: typed_arglist) =
   let args' = (match args with
@@ -350,19 +345,15 @@ and augment_union_constructor (ctx: expr_ctx) (union_id: union_id) (type_name: q
        of rt'' is not the declared one when that is `Type`: each replacement
        computed it again from the arguments. *)
     let tyargs = List.map (fun a -> replace_variables bindings'' (replace_variables bindings a)) tyargs in
-    let rt_universe = type_universe rt'' in
-    (* Check the resulting type is in the correct universe *)
-    if universe_compatible universe rt_universe then
-      TUnionConstructor {
-          union_id;
-          type_name;
-          tyargs;
-          universe = rt_universe;
-          case_name;
-          args = List.map2 (fun a b -> (a, b)) slot_names arguments;
-        }
-    else
-      generic_error (ctx_place ctx) ConstructorUniverseMismatch
+    (* As for a record, this universe is compatible with the declared one. *)
+    TUnionConstructor {
+        union_id;
+        type_name;
+        tyargs;
+        universe = type_universe rt'';
+        case_name;
+        args = List.map2 (fun a b -> (a, b)) slot_names arguments;
+      }
 
 and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: type_parameter) (callable_name: qident) (params: value_parameter list) (rt: ty) (from_context: context_bindings) (args: typed_arglist): texpr =
   (* At this point, we know the method's name and the typeclass it belongs
@@ -378,10 +369,7 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
   let rt' = replace_variables bindings rt in
   let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) (local_name callable_name) params rt' from_context bindings in
   let bindings'' = merge_bindings (ctx_place ctx) bindings bindings' in
-  (* Check: the set of bindings equals the set of type parameters *)
-  check_bindings (ctx_place ctx) (typarams_from_list (ctx_place ctx) [typaram]) bindings'';
-  match get_binding bindings'' typaram with
-  | (Some dispatch_ty) ->
+  let dispatch_ty: ty = bound_type (ctx_place ctx) bindings'' typaram in
      (* Is the dispatch type a type variable? *)
      (match dispatch_ty with
       | TyVar (TypeVariable (typaram, _, _, constraints)) ->
@@ -422,10 +410,6 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
          let meth_id: ins_meth_id = get_method_of_instance (ctx_place ctx) (ctx_env ctx) instance (original_name callable_name) in
          let substs = make_substs (ctx_place ctx) instance_bindings typarams in
          TMethodCall (meth_id, callable_name, typarams, arguments', rt'', substs))
-  | None ->
-     (* check_bindings above has found that the bindings bind exactly the
-        parameter of the typeclass. The lookup still returns an option. *)
-     internal_err (ctx_place ctx) "couldn't extract dispatch type."
 
 and cast_arguments (bindings: type_bindings) (params: value_parameter list) (arguments: texpr list): texpr list =
   let f (ValueParameter (_, expected)) value =

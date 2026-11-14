@@ -92,30 +92,19 @@ let trim_free (tbl: state_tbl): state_tbl =
   let entries = List.filter_map trim entries in
   StateTable (entries, pending)
 
+(* A name this pass updates or removes is in the table: the statement that
+   declares it added it, and every statement removes only the names it added
+   itself, which `add_entry` keeps distinct. *)
 let update_tbl (place: place) (tbl: state_tbl) (name: identifier) (state: var_state): state_tbl =
-  match get_entry tbl name with
-  | None ->
-     (* The justification for this being an internal error is the compiler
-        should have caught a use of a variable that doesn't exist. *)
-     internal_err place ("Tried to update the state of the variable `"
-                   ^ (ident_string name)
-                   ^ "`, but no such variable exists in the state table. Table contents: \n\n"
-                   ^ (show_state_tbl tbl))
-  | Some (ty, depth, _) ->
-     let (StateTable (rows, pending)) = tbl in
-     let other_entries = List.filter (fun (n, _, _,_) -> not (equal_identifier name n)) rows
-     in
-     StateTable ((name, ty, depth, state) :: other_entries, pending)
+  let (ty, depth, _) = get_entry_or_fail place tbl name in
+  let (StateTable (rows, pending)) = tbl in
+  let other_entries = List.filter (fun (n, _, _,_) -> not (equal_identifier name n)) rows
+  in
+  StateTable ((name, ty, depth, state) :: other_entries, pending)
 
 let remove_entry (place: place) (tbl: state_tbl) (name: identifier): state_tbl =
-  match get_entry tbl name with
-  | None ->
-     (* Internal because it should have been caught by the compiler. *)
-     internal_err place ("Tried to update the state of the variable `"
-                   ^ (ident_string name)
-                   ^ "`, but no such variable exists in the state table. Table contents: \n\n"
-                   ^ (show_state_tbl tbl))
-  | Some (ty, _, state) ->
+  match get_entry_or_fail place tbl name with
+  | (ty, _, state) ->
      let is_write_ref: bool =
        match ty with
        | WriteRef _ -> true
@@ -277,12 +266,6 @@ let get_loop_depth (place: place) (tbl: state_tbl) (name: identifier): loop_dept
   let (_, depth, _) = get_entry_or_fail place tbl name in
   depth
 
-let is_unconsumed (place: place) (tbl: state_tbl) (name: identifier): bool =
-  let state = get_state place tbl name in
-  match state with
-  | Unconsumed -> true
-  | BorrowedRead | BorrowedWrite | Consumed -> false
-
 type partitions =
   | Zero
   | One
@@ -366,8 +349,8 @@ let rec check_var_in_expr (place: place) (tbl: state_tbl) (depth: loop_depth) (n
   | (       Consumed,         Zero) -> (* Already consumed, and unused. *)
      tbl
   | (       Consumed,            _) -> (* Already consumed, and consumed again zero or more times. *)
-     error_already_consumed place name ty;
-     tbl
+     (* Only a variable of a linear type is ever Consumed (`consume_once`). *)
+     linearity_error place (AlreadyConsumed name)
 
 and consume_once (place: place) (tbl: state_tbl) (depth: loop_depth) (name: identifier) (ty: ty): state_tbl =
   let tbl: state_tbl =
@@ -401,12 +384,6 @@ and error_read_borrowed_and_consumed (place: place) (name: identifier) (ty: ty) 
 and error_write_borrowed_and_consumed (place: place) (name: identifier) (ty: ty) =
   if universe_linear_ish (type_universe ty) then
     linearity_error place (ConsumedWhileBorrowedWrite name)
-  else
-    ()
-
-and error_already_consumed (place: place) (name: identifier) (ty: ty) =
-  if universe_linear_ish (type_universe ty) then
-    linearity_error place (AlreadyConsumed name)
   else
     ()
 
@@ -548,38 +525,21 @@ let rec check_stmt (place: place) (tbl: state_tbl) (depth: loop_depth) (stmt: ts
        tbl
   | TBorrow { original; mode; body; rename; ref_type; span; _ } ->
      let place: place = place_inside place span in
-     (* Ensure the original variable is unconsumed to be borrowed. *)
-     if is_unconsumed place tbl original then
-       let tbl: state_tbl =
-         match mode with
-         | Read ->
-            (* Mark the original as being read-borrowed. *)
-            update_tbl place tbl original BorrowedRead
-         | Write ->
-            (* Mark the original as being write-borrowed. *)
-            update_tbl place tbl original BorrowedWrite
-         | Reborrow ->
-            (* Mark the original as being write-borrowed. *)
-            update_tbl place tbl original BorrowedWrite
-       in
-       (* Add the rename. *)
-       let tbl: state_tbl = add_entry place tbl rename ref_type depth in
-       (* Traverse the body. *)
-       let tbl: state_tbl = check_stmt place tbl depth body in
-       (* After the body, unborrow the variable. *)
-       let tbl: state_tbl = update_tbl place tbl original Unconsumed in
-       (* Remove the rename from the table. *)
-       let tbl: state_tbl = remove_entry place tbl rename in
-       tbl
-     else
-       (* If we're read-borrowing, and the variable is already read-borrowed, that's also allowed. *)
-       let state: var_state = get_state place tbl original in
-       let read_borrowed_again: bool =
-         match (mode, state) with
-         | (Read, BorrowedRead) -> true
-         | (Read, (Unconsumed | BorrowedWrite | Consumed)) | ((Write | Reborrow), (Unconsumed | BorrowedRead | BorrowedWrite | Consumed)) -> false
-       in
-       if read_borrowed_again then
+     let state: var_state = get_state place tbl original in
+     (match (mode, state) with
+      | ((Read | Write | Reborrow), Unconsumed) ->
+         let tbl: state_tbl =
+           match mode with
+           | Read ->
+              (* Mark the original as being read-borrowed. *)
+              update_tbl place tbl original BorrowedRead
+           | Write ->
+              (* Mark the original as being write-borrowed. *)
+              update_tbl place tbl original BorrowedWrite
+           | Reborrow ->
+              (* Mark the original as being write-borrowed. *)
+              update_tbl place tbl original BorrowedWrite
+         in
          (* Add the rename. *)
          let tbl: state_tbl = add_entry place tbl rename ref_type depth in
          (* Traverse the body. *)
@@ -589,8 +549,19 @@ let rec check_stmt (place: place) (tbl: state_tbl) (depth: loop_depth) (stmt: ts
          (* Remove the rename from the table. *)
          let tbl: state_tbl = remove_entry place tbl rename in
          tbl
-       else
-         linearity_error place (CannotBorrow { mode; name = original; state = reported_state state })
+      | (Read, BorrowedRead) ->
+         (* If we're read-borrowing, and the variable is already read-borrowed, that's also allowed. *)
+         (* Add the rename. *)
+         let tbl: state_tbl = add_entry place tbl rename ref_type depth in
+         (* Traverse the body. *)
+         let tbl: state_tbl = check_stmt place tbl depth body in
+         (* After the body, unborrow the variable. *)
+         let tbl: state_tbl = update_tbl place tbl original Unconsumed in
+         (* Remove the rename from the table. *)
+         let tbl: state_tbl = remove_entry place tbl rename in
+         tbl
+      | (Read, (BorrowedWrite | Consumed)) | ((Write | Reborrow), (BorrowedRead | BorrowedWrite | Consumed)) ->
+         linearity_error place (CannotBorrow { mode; name = original; state = reported_state state }))
   | TBlock (_, a, b) ->
      let tbl: state_tbl = check_stmt place tbl depth a in
      let tbl: state_tbl = check_stmt place tbl depth b in

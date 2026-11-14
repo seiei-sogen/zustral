@@ -43,9 +43,7 @@ type t =
   | ParameterArgumentLengthMismatch of { parameters: type_parameter list; arguments: mono_ty list }
   | TypeOfStringConstant
   | RegionAlreadyExists
-  | BindingUniverseMismatch of { expected: universe; actual: universe }
   | NoBindingForParameter of identifier
-  | ConstructorUniverseMismatch
   | InstanceOverlapTypeNotAllowed
   | FreeTypeWithNonFreeArgument of qident
   | TypeVariableNotReplaced of identifier
@@ -173,20 +171,9 @@ let render (error: t): err_text =
      [
        Text "Region map already has a region with this name"
      ]
-  | BindingUniverseMismatch { expected; actual } ->
-     [
-       Text ("Mismatched universes: expected "
-             ^ (show_universe expected)
-             ^ " and got "
-             ^ (show_universe actual))
-     ]
   | NoBindingForParameter name ->
      [
        Text ("No binding for this parameter: " ^ (ident_string name))
-     ]
-  | ConstructorUniverseMismatch ->
-     [
-       Text "Universe mismatch"
      ]
   | InstanceOverlapTypeNotAllowed ->
      [

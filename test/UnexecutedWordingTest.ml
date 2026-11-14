@@ -9,7 +9,6 @@
 open OUnit2
 open Austral_core
 open Austral_core.Identifier
-open Austral_core.Type
 open Austral_core.Error
 open Austral_core.SourceContext
 open TestUtil
@@ -28,9 +27,6 @@ let test_generic_wording _ =
   let open GenericErrors in
   eq "Cannot add symbol to the import map twice." (wording (Generic SymbolImportedTwice));
   eq "Parameter not found." (wording (Generic ParameterNotFound));
-  eq "Mismatched universes: expected Type.FreeUniverse and got Type.LinearUniverse"
-    (wording (Generic (BindingUniverseMismatch { expected = FreeUniverse; actual = LinearUniverse })));
-  eq "Universe mismatch" (wording (Generic ConstructorUniverseMismatch));
   eq "Not allowed" (wording (Generic InstanceOverlapTypeNotAllowed))
 
 let test_declaration_wording _ =

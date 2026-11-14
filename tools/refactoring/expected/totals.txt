@@ -1,12 +1,12 @@
 files 87
-lines 15915
-raise 223
+lines 15857
+raise 217
 catch 6
 state 1
 io 53
 wildcard 14
 strings 61
-internal 14
+internal 11
 adhoc 0
 coreio 0
 names 0

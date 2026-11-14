@@ -24,14 +24,14 @@ open Outcome.Syntax
 let get (outcome: 'a Outcome.t): 'a =
   match outcome with
   | Ok v -> v
-  | Error errors ->
-     assert_failure (String.concat "\n" (List.map render_error_to_plain errors))
+  | Error (first, rest) ->
+     assert_failure (String.concat "\n" (List.map render_error_to_plain (first :: rest)))
 
 (* The one error of a failed result. *)
 let the_error (outcome: 'a Outcome.t): error =
   match outcome with
   | Ok _ -> assert_failure "the stage did not fail"
-  | Error [AustralError { error; _ }] -> error
+  | Error (AustralError { error; _ }, []) -> error
   | Error _ -> assert_failure "the stage failed with more than one error"
 
 (* The error a function stops with. *)
