@@ -33,12 +33,17 @@ and concrete_decl =
   | ConcreteInstanceDecl of span * identifier * concrete_type_param list * typespec * docstring
 
 and concrete_def =
+  | ConcreteNamedDef of concrete_named_def
+  | ConcreteInstanceDef of concrete_instance
+
+(** A definition that has a name. An instance has none: it is found by its
+    typeclass's name, its type parameters and its argument. *)
+and concrete_named_def =
   | ConcreteConstantDef of span * identifier * typespec * cexpr * docstring
   | ConcreteRecordDef of concrete_record
   | ConcreteUnionDef of concrete_union
   | ConcreteFunctionDef of span * identifier * concrete_type_param list * concrete_param list * typespec * cstmt * docstring * pragma list
   | ConcreteTypeClassDef of concrete_typeclass
-  | ConcreteInstanceDef of concrete_instance
 
 and concrete_record =
   ConcreteRecord of span * identifier * concrete_type_param list * universe * concrete_slot list * docstring

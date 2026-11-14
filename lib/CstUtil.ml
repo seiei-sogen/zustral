@@ -35,13 +35,13 @@ let concrete_decl_name = function
   | ConcreteTypeClassDecl (ConcreteTypeClass (_, n, _, _, _)) -> Some n
   | ConcreteInstanceDecl _ -> None
 
-let def_name = function
-  | ConcreteConstantDef (_, n, _, _, _) -> Some n
-  | ConcreteRecordDef (ConcreteRecord (_, n, _, _, _, _)) -> Some n
-  | ConcreteUnionDef (ConcreteUnion (_, n, _, _, _, _)) -> Some n
-  | ConcreteFunctionDef (_, n, _, _, _, _, _, _) -> Some n
-  | ConcreteTypeClassDef (ConcreteTypeClass (_, n, _, _, _)) -> Some n
-  | ConcreteInstanceDef _ -> None
+let def_name (def: concrete_named_def): identifier =
+  match def with
+  | ConcreteConstantDef (_, n, _, _, _) -> n
+  | ConcreteRecordDef (ConcreteRecord (_, n, _, _, _, _)) -> n
+  | ConcreteUnionDef (ConcreteUnion (_, n, _, _, _, _)) -> n
+  | ConcreteFunctionDef (_, n, _, _, _, _, _, _) -> n
+  | ConcreteTypeClassDef (ConcreteTypeClass (_, n, _, _, _)) -> n
 
 let get_concrete_decl (ConcreteModuleInterface (_, _, _, decls)) name =
   let pred decl =
@@ -54,14 +54,14 @@ let get_concrete_decl (ConcreteModuleInterface (_, _, _, decls)) name =
   List.find_opt pred decls
 
 let get_concrete_def (ConcreteModuleBody (_, _, _, _, defs)) name =
-  let pred def =
-    match def_name def with
-    | (Some name') ->
-       name = name'
-    | None ->
-       false
+  let pick (def: concrete_def): concrete_named_def option =
+    match def with
+    | ConcreteNamedDef named ->
+       if def_name named = name then Some named else None
+    | ConcreteInstanceDef _ ->
+       None
   in
-  List.find_opt pred defs
+  List.find_map pick defs
 
 let has_instance_decl (ConcreteModuleInterface (_, _, _, decls)) (name: identifier) (typarams: concrete_type_param list) (ty: typespec): bool =
   let pred = function
@@ -76,8 +76,7 @@ let has_instance_decl (ConcreteModuleInterface (_, _, _, decls)) (name: identifi
 let get_instance_def (ConcreteModuleBody (_, _, _, _, defs)) (name: identifier) (typarams: concrete_type_param list) (ty: typespec): concrete_instance option =
   let filter = function
     | ConcreteInstanceDef ci -> Some ci
-    | ConcreteConstantDef _ | ConcreteRecordDef _ | ConcreteUnionDef _
-    | ConcreteFunctionDef _ | ConcreteTypeClassDef _ -> None
+    | ConcreteNamedDef _ -> None
   and pred (ConcreteInstance (_, name', typarams', ty', _, _)) =
     (name = name') && (typarams = typarams') && (ty = ty')
   in
@@ -159,15 +158,15 @@ let decl_replace_docstring_and_pragmas (decl: concrete_decl) (docstring: docstri
 
 let def_replace_docstring_and_pragmas (decl: concrete_def) (docstring: docstring) (pragmas: pragma list): concrete_def =
   match decl with
-  | ConcreteConstantDef (span, name, ty, expr, _) ->
-     ConcreteConstantDef (span, name, ty, expr, docstring)
-  | ConcreteRecordDef (ConcreteRecord (span, name, typarams, universe, slots, _)) ->
-     ConcreteRecordDef (ConcreteRecord (span, name, typarams, universe, slots, docstring))
-  | ConcreteUnionDef (ConcreteUnion (span, name, typarams, universe, cases, _)) ->
-     ConcreteUnionDef (ConcreteUnion (span, name, typarams, universe, cases, docstring))
-  | ConcreteFunctionDef (span, name, typarams, params, ty, body, _, _) ->
-     ConcreteFunctionDef (span, name, typarams, params, ty, body, docstring, pragmas)
-  | ConcreteTypeClassDef (ConcreteTypeClass (span, name, typarams, methods, _)) ->
-     ConcreteTypeClassDef (ConcreteTypeClass (span, name, typarams, methods, docstring))
+  | ConcreteNamedDef (ConcreteConstantDef (span, name, ty, expr, _)) ->
+     ConcreteNamedDef (ConcreteConstantDef (span, name, ty, expr, docstring))
+  | ConcreteNamedDef (ConcreteRecordDef (ConcreteRecord (span, name, typarams, universe, slots, _))) ->
+     ConcreteNamedDef (ConcreteRecordDef (ConcreteRecord (span, name, typarams, universe, slots, docstring)))
+  | ConcreteNamedDef (ConcreteUnionDef (ConcreteUnion (span, name, typarams, universe, cases, _))) ->
+     ConcreteNamedDef (ConcreteUnionDef (ConcreteUnion (span, name, typarams, universe, cases, docstring)))
+  | ConcreteNamedDef (ConcreteFunctionDef (span, name, typarams, params, ty, body, _, _)) ->
+     ConcreteNamedDef (ConcreteFunctionDef (span, name, typarams, params, ty, body, docstring, pragmas))
+  | ConcreteNamedDef (ConcreteTypeClassDef (ConcreteTypeClass (span, name, typarams, methods, _))) ->
+     ConcreteNamedDef (ConcreteTypeClassDef (ConcreteTypeClass (span, name, typarams, methods, docstring)))
   | ConcreteInstanceDef (ConcreteInstance (span, name, typarams, ty, methods, _)) ->
      ConcreteInstanceDef (ConcreteInstance (span, name, typarams, ty, methods, docstring))

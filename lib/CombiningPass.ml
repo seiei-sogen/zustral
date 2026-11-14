@@ -65,7 +65,7 @@ let parse_method_defs (place: place) (module_name: module_name) (imports: import
 
 (* The declarations of the interface that need a definition in the body, each
    with the definition of that name. *)
-let match_constant (ii: import_map) (bi: import_map) (span: Span.span) (name: identifier) (ty: typespec) (docstring: Common.docstring) (def: concrete_def): combined_definition =
+let match_constant (ii: import_map) (bi: import_map) (span: Span.span) (name: identifier) (ty: typespec) (docstring: Common.docstring) (def: concrete_named_def): combined_definition =
   match def with
   | ConcreteConstantDef (defspan, name', ty', value, _) ->
      if (name = name') && (ty = ty') then
@@ -73,10 +73,10 @@ let match_constant (ii: import_map) (bi: import_map) (span: Span.span) (name: id
      else
        declaration_error (AtSpan span) (DeclarationTypeMismatch name)
   | ConcreteRecordDef _ | ConcreteUnionDef _ | ConcreteFunctionDef _
-  | ConcreteTypeClassDef _ | ConcreteInstanceDef _ ->
+  | ConcreteTypeClassDef _ ->
      declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = ConstantDeclaration })
 
-let match_opaque_type (module_name: module_name) (bi: import_map) (span: Span.span) (name: identifier) (typarams: concrete_type_param list) (universe: Type.universe) (docstring: Common.docstring) (def: concrete_def): combined_definition =
+let match_opaque_type (module_name: module_name) (bi: import_map) (span: Span.span) (name: identifier) (typarams: concrete_type_param list) (universe: Type.universe) (docstring: Common.docstring) (def: concrete_named_def): combined_definition =
   let make_qname n =
     make_qident (module_name, n, n)
   in
@@ -111,13 +111,12 @@ let match_opaque_type (module_name: module_name) (bi: import_map) (span: Span.sp
          declaration_error (AtSpan span) (DeclarationUniverseMismatch name)
        else
          declaration_error (AtSpan span) (DeclarationTypeMismatch name)
-  | ConcreteConstantDef _ | ConcreteFunctionDef _ | ConcreteTypeClassDef _
-  | ConcreteInstanceDef _ ->
+  | ConcreteConstantDef _ | ConcreteFunctionDef _ | ConcreteTypeClassDef _ ->
      declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = TypeDeclaration })
 
 (* The definition has the declaration's name: get_concrete_def found it by
    that name. *)
-let match_function (module_name: module_name) (ii: import_map) (bi: import_map) (span: Span.span) (name: identifier) (typarams: concrete_type_param list) (params: concrete_param list) (rt: typespec) (docstring: Common.docstring) (def: concrete_def): combined_definition =
+let match_function (module_name: module_name) (ii: import_map) (bi: import_map) (span: Span.span) (name: identifier) (typarams: concrete_type_param list) (params: concrete_param list) (rt: typespec) (docstring: Common.docstring) (def: concrete_named_def): combined_definition =
   match def with
   | ConcreteFunctionDef (defspan, name', typarams', params', rt', body, _, pragmas) ->
      if (typarams = typarams') && (params = params') && (rt = rt') then
@@ -142,7 +141,7 @@ let match_function (module_name: module_name) (ii: import_map) (bi: import_map) 
        in
        declaration_error (AtSpan span) (FunctionMismatch { name; difference })
   | ConcreteConstantDef _ | ConcreteRecordDef _ | ConcreteUnionDef _
-  | ConcreteTypeClassDef _ | ConcreteInstanceDef _ ->
+  | ConcreteTypeClassDef _ ->
      declaration_error (AtSpan span) (DeclarationKindMismatch { name; expected = FunctionDeclaration })
 
 (* The definition is the one get_instance_def found by the declaration's name,
@@ -168,14 +167,14 @@ let private_def module_name im def =
     make_qident (module_name, n, n)
   in
   match def with
-  | ConcreteConstantDef (span, name, ty, value, docstring) ->
+  | ConcreteNamedDef (ConcreteConstantDef (span, name, ty, value, docstring)) ->
      CConstant (span,
                 VisPrivate,
                 name,
                 qualify_typespec im ty,
                 abs_expr NoSpan im value,
                 docstring)
-  | ConcreteRecordDef (ConcreteRecord (span, name, typarams, universe, slots, docstring)) ->
+  | ConcreteNamedDef (ConcreteRecordDef (ConcreteRecord (span, name, typarams, universe, slots, docstring))) ->
      let qname = make_qname name in
      CRecord (span,
               TypeVisPrivate,
@@ -184,7 +183,7 @@ let private_def module_name im def =
               universe,
               parse_slots im slots,
               docstring)
-  | ConcreteUnionDef (ConcreteUnion (span, name, typarams, universe, cases, docstring)) ->
+  | ConcreteNamedDef (ConcreteUnionDef (ConcreteUnion (span, name, typarams, universe, cases, docstring))) ->
      let qname = make_qname name in
      CUnion (span,
              TypeVisPrivate,
@@ -193,7 +192,7 @@ let private_def module_name im def =
              universe,
              parse_cases im cases,
              docstring)
-  | ConcreteFunctionDef (span, name, typarams, params, rt, body, docstring, pragmas) ->
+  | ConcreteNamedDef (ConcreteFunctionDef (span, name, typarams, params, rt, body, docstring, pragmas)) ->
      let qname = make_qname name in
      CFunction (span,
                 VisPrivate,
@@ -204,7 +203,7 @@ let private_def module_name im def =
                 abs_stmt NoSpan im body,
                 docstring,
                 pragmas)
-  | ConcreteTypeClassDef (ConcreteTypeClass (span, name, typaram, methods, docstring)) ->
+  | ConcreteNamedDef (ConcreteTypeClassDef (ConcreteTypeClass (span, name, typaram, methods, docstring))) ->
      let qname = make_qname name in
      CTypeclass (span,
                  VisPrivate,
@@ -260,7 +259,7 @@ and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb
     make_qident (module_name, n, n)
   in
   (* Some declarations need a matching definition in the body. *)
-  let definition (name: identifier): concrete_def =
+  let definition (name: identifier): concrete_named_def =
     match get_concrete_def cmb name with
     | (Some def) ->
        def
@@ -315,11 +314,9 @@ and parse_defs (mn: module_name) (cmi: concrete_module_interface) (im: import_ma
 
 and parse_def (module_name: module_name) (cmi: concrete_module_interface) (im: import_map) (def: concrete_def): combined_definition option =
   match def with
-  | ConcreteConstantDef (_, name, _, _, _) | ConcreteRecordDef (ConcreteRecord (_, name, _, _, _, _))
-  | ConcreteUnionDef (ConcreteUnion (_, name, _, _, _, _)) | ConcreteFunctionDef (_, name, _, _, _, _, _, _)
-  | ConcreteTypeClassDef (ConcreteTypeClass (_, name, _, _, _)) ->
+  | ConcreteNamedDef named ->
      (* If this def exists in the interface, skip it *)
-     (match get_concrete_decl cmi name with
+     (match get_concrete_decl cmi (def_name named) with
       | (Some _) ->
          None
       | None ->

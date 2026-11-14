@@ -248,11 +248,11 @@ body_decl:
   ;
 
 body_decl_inner:
-  | constant_def { $1 }
-  | record { ConcreteRecordDef $1 }
-  | union { ConcreteUnionDef $1 }
-  | function_def { $1 }
-  | typeclass { ConcreteTypeClassDef $1 }
+  | constant_def { ConcreteNamedDef $1 }
+  | record { ConcreteNamedDef (ConcreteRecordDef $1) }
+  | union { ConcreteNamedDef (ConcreteUnionDef $1) }
+  | function_def { ConcreteNamedDef $1 }
+  | typeclass { ConcreteNamedDef (ConcreteTypeClassDef $1) }
   | instance_def { $1 }
   ;
 

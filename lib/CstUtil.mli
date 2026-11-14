@@ -14,7 +14,10 @@ val make_module_body : module_name -> concrete_import_list list -> pragma list -
 
 val get_concrete_decl : concrete_module_interface -> identifier -> concrete_decl option
 
-val get_concrete_def : concrete_module_body -> identifier -> concrete_def option
+(** The name of a definition. *)
+val def_name : concrete_named_def -> identifier
+
+val get_concrete_def : concrete_module_body -> identifier -> concrete_named_def option
 
 val has_instance_decl : concrete_module_interface -> identifier -> concrete_type_param list -> typespec -> bool
 
