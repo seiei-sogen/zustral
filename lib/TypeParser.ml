@@ -36,8 +36,6 @@ let decl_type_signature (decl: decl): type_signature option =
      None
   | TypeClassMethod _ ->
      None
-  | Instance _ ->
-     None
 
 let parse_function_pointer (place: place) (args: ty list): ty =
   match args with

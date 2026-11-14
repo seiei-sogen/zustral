@@ -548,7 +548,7 @@ and get_union_type_definition (place: place) (importing_module: module_name) (en
      else
        type_error place CaseNonPublic
   | None | Some (Constant _ | Record _ | UnionCase _ | Function _ | TypeClass _
-      | TypeClassMethod _ | Instance _) ->
+      | TypeClassMethod _) ->
      type_error place (CaseNonUnion ty)
 
 and group_cases_whens (cases: union_case_decl list) (whens: abstract_when list): (typed_case * abstract_when) list =

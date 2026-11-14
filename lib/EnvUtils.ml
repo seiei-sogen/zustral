@@ -19,18 +19,16 @@ let decl_mod_id (decl: decl): mod_id =
   | Function { mod_id; _ } -> mod_id
   | TypeClass { mod_id; _ } -> mod_id
   | TypeClassMethod { mod_id; _ } -> mod_id
-  | Instance { mod_id; _ } -> mod_id
 
-let decl_name (decl: decl): identifier option =
+let decl_name (decl: decl): identifier =
   match decl with
-  | Constant { name; _ } -> Some name
-  | Record { name; _ } -> Some name
-  | Union { name; _ } -> Some name
-  | UnionCase { name; _ } -> Some name
-  | Function { name; _ } -> Some name
-  | TypeClass { name; _ } -> Some name
-  | TypeClassMethod { name; _ } -> Some name
-  | Instance _ -> None
+  | Constant { name; _ } -> name
+  | Record { name; _ } -> name
+  | Union { name; _ } -> name
+  | UnionCase { name; _ } -> name
+  | Function { name; _ } -> name
+  | TypeClass { name; _ } -> name
+  | TypeClassMethod { name; _ } -> name
 
 let is_importable (decl: decl): bool =
   let importable_vis = function
@@ -49,7 +47,6 @@ let is_importable (decl: decl): bool =
   | Function { vis; _ } -> importable_vis vis
   | TypeClass { vis; _ } -> importable_vis vis
   | TypeClassMethod { vis; _ } -> importable_vis vis
-  | Instance _ -> true
 
 let union_case_to_typed_case (case: union_case_decl): typed_case =
   TypedCase (case.name, case.slots)

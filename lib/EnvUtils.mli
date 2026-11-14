@@ -14,7 +14,7 @@ open Type
 val decl_mod_id : decl -> mod_id
 
 (** Return the name of a declaration. *)
-val decl_name : decl -> identifier option
+val decl_name : decl -> identifier
 
 (** Return whether a declaration is importable by a foreign module. *)
 val is_importable: decl -> bool

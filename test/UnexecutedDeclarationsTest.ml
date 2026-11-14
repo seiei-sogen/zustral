@@ -273,13 +273,6 @@ let test_only_a_constant_is_a_variable _ =
   List.iter (fun name -> assert_equal ~msg:name None (variable name)) ["f"; "C"; "m"; "R"; "U"; "K"];
   assert_equal (Some (Boolean, LexEnv.VarConstant)) (variable "c")
 
-let test_an_instance_is_importable _ =
-  let (env, mod_id) = add_example Env.empty_env in
-  let (env, typeclass_id) = register_typeclass env mod_id in
-  let (env, instance_id) = register_instance env mod_id typeclass_id TypeParameters.empty_typarams Unit in
-  assert_bool "an instance is importable"
-    (EnvUtils.is_importable (Instance (Env.get_instance_decl NoSpan env instance_id)))
-
 let test_a_symbol_imported_twice _ =
   let imports = Imports.add_symbol (Imports.empty_map example) (named "f") in
   assert_equal (Some (Generic SymbolImportedTwice))
@@ -614,7 +607,6 @@ let suite =
       "a function body stored twice" >:: test_a_function_body_stored_twice;
       "a method body stored twice" >:: test_a_method_body_stored_twice;
       "only a constant is a variable" >:: test_only_a_constant_is_a_variable;
-      "an instance is importable" >:: test_an_instance_is_importable;
       "a symbol imported twice" >:: test_a_symbol_imported_twice;
       "signed ByteSize and Index" >:: test_signed_byte_size_and_index;
       "universes of arguments" >:: test_universes_of_arguments;

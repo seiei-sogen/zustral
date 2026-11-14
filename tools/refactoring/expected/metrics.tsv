@@ -22,12 +22,12 @@ lib/DeclarationErrors.ml	370	0	0	0	0	0	1	0	0	0	0
 lib/DesugarBorrows.ml	244	1	0	0	0	0	0	0	0	0	0
 lib/DesugarPaths.ml	146	0	0	0	0	0	0	0	0	0	0
 lib/DesugaringPass.ml	43	0	0	0	0	0	0	0	0	0	0
-lib/Entrypoint.ml	146	8	0	0	0	0	0	0	0	0	0
+lib/Entrypoint.ml	145	8	0	0	0	0	0	0	0	0	0
 lib/EntrypointErrors.ml	63	0	0	0	0	0	0	0	0	0	0
-lib/Env.ml	654	7	0	0	0	0	1	4	0	0	0
+lib/Env.ml	652	7	0	0	0	0	1	4	0	0	0
 lib/EnvExtras.ml	15	0	0	0	0	0	0	0	0	0	0
-lib/EnvTypes.ml	317	0	0	0	0	0	1	0	0	0	0
-lib/EnvUtils.ml	55	0	0	0	0	0	0	0	0	0	0
+lib/EnvTypes.ml	316	0	0	0	0	0	1	0	0	0	0
+lib/EnvUtils.ml	52	0	0	0	0	0	0	0	0	0	0
 lib/Error.ml	246	12	0	0	0	0	1	1	0	0	0
 lib/ErrorText.ml	57	0	0	0	0	0	2	0	0	0	0
 lib/Escape.ml	52	1	0	0	0	1	1	0	0	0	0
@@ -77,7 +77,7 @@ lib/TypeErrors.ml	500	0	0	0	0	0	0	0	0	0	0
 lib/TypeMatch.ml	348	4	0	0	0	0	0	0	0	0	0
 lib/TypeParameter.ml	35	0	0	0	0	0	0	0	0	0	0
 lib/TypeParameters.ml	60	2	0	0	0	0	0	0	0	0	0
-lib/TypeParser.ml	327	9	0	0	0	2	0	0	0	0	0
+lib/TypeParser.ml	325	9	0	0	0	2	0	0	0	0	0
 lib/TypeReplace.ml	207	0	0	0	0	0	0	0	0	0	0
 lib/TypeSignature.ml	22	0	0	0	0	0	0	0	0	0	0
 lib/TypeStripping.ml	81	1	0	0	0	0	0	0	0	0	0

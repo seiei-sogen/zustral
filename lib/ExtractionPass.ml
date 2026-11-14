@@ -482,7 +482,7 @@ and reserve_definition (env: env) (mod_id: mod_id) (mn: module_name) (def: combi
                | TypeClass { id; mod_id; param; _ } ->
                   (id, mod_id, typaram_name param, typaram_universe param)
                | Constant _ | Record _ | Union _ | UnionCase _ | Function _
-               | TypeClassMethod _ | Instance _ ->
+               | TypeClassMethod _ ->
                   declaration_error place (InstanceForNonTypeclass typeclass_name))
            | None ->
               declaration_error place (UnknownTypeclass typeclass_name)

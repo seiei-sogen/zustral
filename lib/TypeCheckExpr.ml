@@ -553,7 +553,7 @@ and augment_variable (ctx: expr_ctx) (name: qident) (from_context: context_bindi
        (* Function is concrete. *)
        TFunVar (id, fn_ty, empty_bindings)
   | None | Some (Constant _ | Record _ | Union _ | UnionCase _ | TypeClass _
-      | TypeClassMethod _ | Instance _) ->
+      | TypeClassMethod _) ->
      (match get_variable (ctx_place ctx) (ctx_env ctx) (ctx_lexenv ctx) name with
       | Some (ty, src) ->
          (match src with

@@ -152,7 +152,6 @@ type decl =
   | Function of function_decl
   | TypeClass of typeclass_decl
   | TypeClassMethod of typeclass_method_decl
-  | Instance of instance_decl
 
 (** Represents an instance method. *)
 type ins_meth_rec = InsMethRec of {

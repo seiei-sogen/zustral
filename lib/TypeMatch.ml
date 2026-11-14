@@ -250,7 +250,7 @@ and try_constraint (ctx: ctx) (tv: type_var) (ty: ty) (typeclass_name: sident): 
      name in a type parameter constraint is not looked up where the constraint
      is declared (#128). *)
   | Some (Constant _ | Record _ | Union _ | UnionCase _ | Function _
-      | TypeClassMethod _ | Instance _) ->
+      | TypeClassMethod _) ->
      Error (Type (ConstraintNotTypeclass { tyvar = tv; typeclass = typeclass_name }))
   | None ->
      Error (Type (ConstraintUnknownTypeclass { tyvar = tv; typeclass = typeclass_name }))

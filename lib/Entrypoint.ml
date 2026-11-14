@@ -64,8 +64,7 @@ let rec check_entrypoint_validity (env: env) (name: qident): function_id * entry
              entrypoint_error NoSpan NotMonomorphic
          else
            entrypoint_error NoSpan NotPublic
-      | Constant _ | Record _ | Union _ | UnionCase _ | TypeClass _ | TypeClassMethod _
-      | Instance _ ->
+      | Constant _ | Record _ | Union _ | UnionCase _ | TypeClass _ | TypeClassMethod _ ->
          entrypoint_error NoSpan NotFunction)
   | None ->
       entrypoint_error NoSpan (NoSuchFunction {
