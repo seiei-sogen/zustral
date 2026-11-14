@@ -67,6 +67,12 @@ jobs:
       - name: every wording of an error message is executed by a test
         run: nix-shell --command 'tools/refactoring/coverage.sh --messages'
 
+      # The same instrumented run, for every line of the compiler. A line that no program
+      # executes fails the job unless the record says why none can
+      # (tools/refactoring/expected/unexecuted-lines.tsv).
+      - name: every line is executed by a test, or has a reason on the record
+        run: nix-shell --command 'tools/refactoring/coverage.sh --unexecuted --check'
+
       # Compiles every program in the repository with the base branch's compiler and with
       # this one. A refactoring pull request must show 0 differing programs. A bug fix
       # shows the programs it changes, so a difference is reported and does not fail the job.

@@ -135,6 +135,8 @@ sexp の導出が生成したコードには、別に 52 個ある。11 ファ�
 measure.sh                 # 数を expected/ と比べる
 unused-exports.sh          # 外から使われていない公開関数を、expected/ と比べる
 coverage.sh                # カバレッジを expected/ と比べる。ビルドが要る
+coverage.sh --unexecuted --check   # どのプログラムも実行しない行の1行ずつに、届かない理由の記録があるかを見る
+coverage.sh --kinds        # 実行されない行を、種類ごとに数える
 ```
 
 ビルドの要るものは、nix の入力を取得できない環境では `ZUSTRAL_NIX_FLAGS` に `--override-input` を渡す（issue #42）。
