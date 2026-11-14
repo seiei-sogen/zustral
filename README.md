@@ -228,7 +228,7 @@ $ gcc -fwrapv generated.c -lm
 
 ## 貢献
 
-[`CONTRIBUTING.md`](https://github.com/austral/austral/blob/master/CONTRIBUTING.md) を参照のこと。
+[`CONTRIBUTING.md`](CONTRIBUTING.md) を参照のこと。
 
 ## コミュニティ
 
@@ -238,7 +238,7 @@ $ gcc -fwrapv generated.c -lm
 
 現在の作業：
 
-- [標準ライブラリ](https://github.com/austral/austral/tree/master/standard)を
+- [標準ライブラリ](standard)を
   広げる。
 
 近いうちの作業：
@@ -258,4 +258,4 @@ Copyright 2018–2023 [Fernando Borretti][fernando].
 
 [apache]: https://www.apache.org/licenses/LICENSE-2.0
 [llvmex]: https://spdx.org/licenses/LLVM-exception.html
-[license]: https://github.com/austral/austral/blob/master/LICENSE
+[license]: LICENSE
