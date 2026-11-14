@@ -108,15 +108,16 @@ $ make
 
 ## Nix を使わずにビルドする
 
-`austral` コンパイラのビルドには、`make` と、OCaml のビルドシステム `dune` が
+Zustral のコンパイラのビルドには、`make` と、OCaml のビルドシステム `dune` が
 要る。出力されたものをビルドするには、C コンパイラが要る。OCaml は 4.13.0 以上を
-入れること。
+入れること。コンパイラの実行ファイルの名前は、Austral から受け継いだ `austral` の
+ままである。
 
 まず、次を実行する。
 
 ```bash
-$ git clone git@github.com:austral/austral.git
-$ cd austral
+$ git clone git@github.com:seiei-sogen/zustral.git
+$ cd zustral
 ```
 
 次に、[opam][opam] を入れる。Debian や Ubuntu なら、次のとおりでよい。
@@ -126,7 +127,7 @@ $ sudo apt-get install opam
 $ opam init
 ```
 
-それから、austral 用の opam の switch を作り、opam で依存パッケージを入れる。
+それから、`austral` という名前の opam の switch を作り、opam で依存パッケージを入れる。
 
 ```bash
 opam switch create austral 4.13.0
