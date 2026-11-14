@@ -1,52 +1,24 @@
-# Austral
+# Zustralのコンセプト
 
-![Build status badge](https://github.com/austral/austral/actions/workflows/build-and-test.yml/badge.svg)
+ZustralはAustralをフォークした、業務バッチ処理のためのプログラミング言語である。次の4つを柱とする。
 
-Austral is a new language.
+## 1. コンパクトなCOBOLの代替
 
-Features:
+Zustralは、Rustのような汎用言語を目指さない。大艦巨砲主義も目指さない。用途をCOBOLの代替、すなわち金融をはじめとする業務の10進計算とバッチ処理に特化する。
 
-- **Linear types**: linear types allow resources to be handled in a
-  provably-safe manner. Memory can be managed safely and without runtime
-  overhead, avoiding double `free()`, use-after-`free` errors, and double fetch
-  errors. Other resources like file or database handles can also be handled
-  safely.
+理想はコンパクトな言語である。ただし、COBOLの代替として最善を尽くした結果、中規模程度の大きさになる可能性はある。それでも大艦巨砲主義に陥らないよう、常に努める。
 
-- **Capabilities**: linear [capabilities][cap] enable fine-grained permissioned
-  access to low-level facilities. Third-party dependencies can be constrained in
-  what types of resources they can access. This makes the language less
-  vulnerable to [supply chain attacks][sca].
+## 2. メモリ安全
 
-- **Typeclasses**: typeclasses, borrowed from Haskell, allow for bounded ad-hoc
-  polymorphism.
+Australの線形型を受け継ぎ、ガベージコレクションに頼らずにメモリ安全性を保証する。
 
-- **Safe Arithmetic**: Austral has well-defined semantics for all arithmetic
-  operations on numeric types. There are distinct operations for
-  trap-on-overflow arithmetic and modular arithmetic, as in Ada.
+## 3. 明示的であること（驚き最小の原則）
 
-- **Algebraic Data Types**: algebraic data types, as in ML or Haskell, with
-  exhaustiveness checking.
+コードに書かれていないことは起きない。暗黙の型変換、隠れた制御フロー、見えないメモリ確保を排し、読んだとおりに動く言語にする。この点ではAustralの設計を土台に、Zigの良いところを取り入れる。
 
-Anti-features:
+## 4. 金銭計算のバグを言語で防ぐ
 
-- No garbage collection.
-- No destructors.
-- No exceptions (and no surprise control flow).
-- No implicit function calls.
-- No implicit type conversions.
-- No implicit copies.
-- No global state.
-- No subtyping.
-- No macros.
-- No reflection.
-- No Java-style @Annotations.
-- No type inference, type information flows in one direction.
-- No uninitialized variables.
-- No pre/post increment/decrement (`x++` in C).
-- No first-class async.
-- No function overloading (except through typeclasses, where it is bounded).
-- No arithmetic precedence.
-- No variable shadowing.
+金銭の計算、とりわけ10進計算で起きがちなバグを、プログラマの注意力ではなく言語と型システムによって防ぐ。誤った計算は実行前に弾く。これがZustralの核であり、1〜3はそれを支える土台である。
 
 ## Example
 
