@@ -140,16 +140,10 @@ and exec_compile (modules: mod_source list) (target: target) (error_reporting_mo
   match Result.join (Outcome.catch (fun () -> exec_target mods target)) with
   | Ok () ->
      ()
-  | Error (first :: _) ->
-     (* The compiler stops at its first error (issue #57), so there is one. *)
+  | Error (first, _) ->
+     (* The compiler stops at its first error (issue #57), so there are none
+        after it. *)
      report_and_exit error_reporting_mode (try_adding_source_ctx first source_map)
-  | Error [] ->
-     (* Nothing in the compiler fails without an error. If something ever
-        does, say so: exiting with a failure status and no message is worse. *)
-     let no_error: austral_error =
-       make_error NoSpan (Internal "The compiler failed without an error.")
-     in
-     report_and_exit error_reporting_mode no_error
 
 and try_adding_source_ctx (error: austral_error) (source_map: source_map): austral_error =
   let (AustralError { location; _ }) = error in

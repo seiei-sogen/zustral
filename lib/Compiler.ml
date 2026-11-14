@@ -53,7 +53,7 @@ open Outcome.Syntax
    and puts the name in the errors of everything that runs once the name is
    known. *)
 let in_module (name: module_name) (outcome: 'a Outcome.t): 'a Outcome.t =
-  Result.map_error (List.map (fun error -> add_module_name error name)) outcome
+  Outcome.map_errors (fun error -> add_module_name error name) outcome
 
 let parse_and_combine (env: env) (source: module_source): (module_name * Combined.combined_module) Outcome.t =
   match source with

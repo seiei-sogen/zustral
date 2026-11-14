@@ -12,7 +12,11 @@
     ([tools/refactoring/escape-check.py] checks this). *)
 open Error
 
-type 'a t = ('a, austral_error list) result
+(** The errors of a stage that failed: the first, and the ones after it. There
+    is at least one, so nobody has to say what a failure without an error is. *)
+type errors = austral_error * austral_error list
+
+type 'a t = ('a, errors) result
 
 (** Run the callback, and return the error it raises as a value. Other
     exceptions pass through. *)
@@ -31,6 +35,9 @@ end
 
 (** Apply a function that cannot fail to the result. *)
 val map : ('a -> 'b) -> 'a t -> 'b t
+
+(** Apply a function to every error of a failure. *)
+val map_errors : (austral_error -> austral_error) -> 'a t -> 'a t
 
 (** Apply a function to the elements of a list, in order, and return the
     results. This is how the declarations of a module are gone through. It

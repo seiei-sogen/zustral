@@ -14,7 +14,7 @@ let error (message: string): austral_error =
 
 let test_catch _ =
   assert_equal (Ok 1) (Outcome.catch (fun () -> 1));
-  assert_equal (Error [error "a"]) (Outcome.catch (fun () -> internal_err NoSpan "a"));
+  assert_equal (Error (error "a", [])) (Outcome.catch (fun () -> internal_err NoSpan "a"));
   (* Only the compiler's own exception becomes a value. *)
   assert_raises Not_found (fun () -> Outcome.catch (fun () -> raise Not_found))
 
@@ -23,7 +23,7 @@ let test_traverse _ =
   let f (n: int): int Outcome.t =
     seen := n :: !seen;
     if n < 0 then
-      Error [error (string_of_int n)]
+      Error (error (string_of_int n), [])
     else
       Ok (n * 2)
   in
@@ -31,19 +31,19 @@ let test_traverse _ =
   assert_equal [3; 2; 1] !seen;
   seen := [];
   (* The first failure is the result, and nothing after it is looked at. *)
-  assert_equal (Error [error "-2"]) (Outcome.traverse f [1; -2; -3; 4]);
+  assert_equal (Error (error "-2", [])) (Outcome.traverse f [1; -2; -3; 4]);
   assert_equal [-2; 1] !seen
 
 let test_traverse_with_context _ =
   let f ((sum, n): (int * int)): (int * string) Outcome.t =
     if n < 0 then
-      Error [error (string_of_int sum)]
+      Error (error (string_of_int sum), [])
     else
       Ok (sum + n, string_of_int n)
   in
   assert_equal (Ok (6, ["1"; "2"; "3"])) (Outcome.traverse_with_context f 0 [1; 2; 3]);
   (* The step that fails was given the context of the steps before it. *)
-  assert_equal (Error [error "3"]) (Outcome.traverse_with_context f 0 [1; 2; -1; 4])
+  assert_equal (Error (error "3", [])) (Outcome.traverse_with_context f 0 [1; 2; -1; 4])
 
 let suite =
   "Outcome" >::: [

@@ -171,7 +171,7 @@ let test_same_error_twice _ =
   let errors (outcome: CRepr.c_program Outcome.t): Error.austral_error list =
     match outcome with
     | Ok _ -> assert_failure "the program compiles"
-    | Error errors -> errors
+    | Error (first, rest) -> first :: rest
   in
   let first: Error.austral_error list = errors (compile numbered_region) in
   let second: Error.austral_error list = errors (compile numbered_region) in

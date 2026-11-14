@@ -1,6 +1,6 @@
 file	lines	raise	catch	state	io	wildcard	strings	internal	adhoc	names	planstate
 cli/Cli.ml	23	0	1	0	1	0	0	0	0	0	0
-cli/CliEngine.ml	194	0	0	0	39	0	0	0	0	0	0
+cli/CliEngine.ml	188	0	0	0	39	0	0	0	0	0	0
 cli/CliParser.ml	173	11	0	0	0	4	4	0	0	0	0
 cli/CliUtil.ml	118	5	0	0	0	1	3	0	0	0	0
 cli/Os.ml	68	2	2	0	13	0	1	0	0	0	0
@@ -54,7 +54,7 @@ lib/MonoTypeBindings.ml	44	0	0	0	0	0	0	0	0	0	0
 lib/Monomorphize.ml	776	5	0	0	0	0	0	2	0	0	0
 lib/MtastUtil.ml	75	1	0	0	0	0	0	0	0	0	0
 lib/NumberLiteral.ml	89	0	0	0	0	0	2	0	0	0	0
-lib/Outcome.ml	53	0	1	0	0	0	0	0	0	0	0
+lib/Outcome.ml	58	0	1	0	0	0	0	0	0	0	0
 lib/ParseErrors.ml	52	0	0	0	0	0	3	0	0	0	0
 lib/Parser.mly	570	0	0	0	0	0	0	0	0	0	0
 lib/ParserInterface.ml	27	1	1	1	0	0	0	0	0	0	0

@@ -6,13 +6,15 @@
 *)
 open Error
 
-type 'a t = ('a, austral_error list) result
+type errors = austral_error * austral_error list
+
+type 'a t = ('a, errors) result
 
 let catch (f: unit -> 'a): 'a t =
   try
     Ok (f ())
   with Austral_error error ->
-    Error [error]
+    Error (error, [])
 
 module Syntax = struct
   let ( let* ) = Result.bind
@@ -20,6 +22,9 @@ end
 open Syntax
 
 let map: ('a -> 'b) -> 'a t -> 'b t = Result.map
+
+let map_errors (f: austral_error -> austral_error) (outcome: 'a t): 'a t =
+  Result.map_error (fun (first, rest) -> (f first, List.map f rest)) outcome
 
 let rec traverse (f: 'a -> 'b t) (list: 'a list): 'b list t =
   match list with
