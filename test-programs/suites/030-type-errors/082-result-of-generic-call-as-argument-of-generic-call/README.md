@@ -1,0 +1,1 @@
+Test that a generic function can pass the result of a call to a generic function as the argument of a call to another one, and can return the result of a generic call that has its own type parameter.

@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "T" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "U" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/079-return-result-of-call-to-itself-with-parameters-swapped/Test.aum",
+    "startp": { "line": 7, "column": 12 },
+    "end": { "line": 7, "column": 40 }
+  },
+  "context": [
+    [ 5, "            return x;" ],
+    [ 6, "        else" ],
+    [ 7, "            return swapped(y, x, n - 1);" ],
+    [ 8, "        end if;" ],
+    [ 9, "    end;" ]
+  ]
+}

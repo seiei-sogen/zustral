@@ -1,0 +1,1 @@
+Test that a generic function cannot return, as the type parameter `T`, the result of a call to another generic function that has the type parameter `U`: the place of the call binds only the type parameters of the function that is called (issue #151).

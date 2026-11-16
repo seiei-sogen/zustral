@@ -1,0 +1,1 @@
+Test that a generic function cannot return, as the type parameter `T`, the result of a call to itself with its two parameters in the other order, which has the type parameter `U`: the bindings of a call replace the variables of the return type once (issue #151).

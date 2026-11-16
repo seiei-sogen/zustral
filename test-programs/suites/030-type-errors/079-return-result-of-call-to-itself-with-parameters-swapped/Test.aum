@@ -1,0 +1,16 @@
+module body Test is
+    generic [T: Free, U: Free]
+    function swapped(x: T, y: U, n: Int32): T is
+        if n = 0 then
+            return x;
+        else
+            return swapped(y, x, n - 1);
+        end if;
+    end;
+
+    function main(): ExitCode is
+        let b: Bool := swapped(true, 7, 1);
+        printLn(b);
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,1 @@
+Test that a generic function cannot return, as an `Option[T]`, a union constructed with a value of the type parameter `U` (issue #151).
