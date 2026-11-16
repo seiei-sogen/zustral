@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The integer " },
+    { "type": "code", "content": "18446744073709551616" },
+    { "type": "text", "content": " does not fit the type " },
+    { "type": "type", "content": "Nat64" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/035-literal-forms/006-hexadecimal-literal-does-not-fit/Test.aum",
+    "startp": { "line": 3, "column": 8 },
+    "end": { "line": 3, "column": 44 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        let a: Nat64 := #x10000000000000000;" ],
+    [ 4, "        printLn(a);" ],
+    [ 5, "        return ExitSuccess();" ]
+  ]
+}

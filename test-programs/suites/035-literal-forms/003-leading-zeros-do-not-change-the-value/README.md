@@ -1,0 +1,1 @@
+Test that leading zeros do not change the value of a decimal literal: `010` is ten, also when the literal has the digits 8 or 9, has separators, is negative, or is an operand of a folded expression (issue #88).

@@ -1,0 +1,1 @@
+Test that a hexadecimal literal of 2^64, one more than the largest value of `Nat64`, is a compile error (issue #121).
