@@ -119,10 +119,13 @@ class TestFailure(Test):
 class TestProgramFailure(Test):
     """
     A test that is expected to compile successfully, but the compiled program
-    should return a failure exit code, and print to stderr.
+    should return a failure exit code, and print to stderr. If the test also
+    says what the program writes to stdout before it fails, that is compared
+    too.
     """
 
     expected_program_stderr: str
+    expected_program_stdout: str | None
 
     def __init__(
         self,
@@ -131,9 +134,11 @@ class TestProgramFailure(Test):
         directory: str,
         cli: str | None,
         expected_program_stderr: str,
+        expected_program_stdout: str | None,
     ):
         super().__init__(name, suite_name, directory, cli)
         self.expected_program_stderr = expected_program_stderr
+        self.expected_program_stdout = expected_program_stdout
 
 
 class TestResult(object):
@@ -292,6 +297,19 @@ def collect_tests() -> list[Test]:
                         expected_compiler_error=expected_error,
                     )
                 )
+            elif (program_stderr is not None) and (expected_output is not None):
+                # The program should compile, write this stdout, then return a
+                # failure exit code and print this stderr.
+                tests.append(
+                    TestProgramFailure(
+                        name=test_name,
+                        suite_name=suite_name,
+                        directory=test_dir,
+                        cli=cli,
+                        expected_program_stderr=program_stderr,
+                        expected_program_stdout=expected_output,
+                    )
+                )
             elif (expected_error is None) and (expected_output is not None):
                 # The program should compile, run successfully, produce stdout
                 # that matches the contents of the file.
@@ -328,6 +346,7 @@ def collect_tests() -> list[Test]:
                             directory=test_dir,
                             cli=cli,
                             expected_program_stderr=program_stderr,
+                            expected_program_stdout=None,
                         )
                     )
     return tests
@@ -630,6 +649,20 @@ def _run_program_failure_test(test: TestProgramFailure) -> TestResult:
                 ("STDERR", result.stderr.decode("utf-8")),
             ],
         )
+    # Did it write to stdout what it should have written before it failed?
+    if test.expected_program_stdout is not None:
+        stdout: str = result.stdout.decode("utf-8").strip()
+        if stdout != test.expected_program_stdout.strip():
+            return TestFail(
+                test=test,
+                austral_cmd=compile_cmd,
+                cc_cmd=gcc_cmd,
+                reason="Program failed as expected, but its stdout was not what we expected",
+                outputs=[
+                    ("ACTUAL STDOUT", stdout),
+                    ("EXPECTED STDOUT", test.expected_program_stdout),
+                ],
+            )
     # Did it produce output?
     stderr: str = result.stderr.decode("utf-8").strip()
     if stderr:

@@ -23,7 +23,9 @@ Each test directory contains some Austral source files (in the simplest cases, `
 
 2. `program-stdout.txt` is the compiled program's stdout if the compiler is expected to succeed and the program is expected to produce stdout and return normally.
 
-3. If neither file is present, the test is expected to compile and run successfully but produce no output.
+3. `program-stderr.txt` is the compiled program's stderr if the compiler is expected to succeed and the program is expected to stop with a failure exit code. If `program-stdout.txt` is present too, it is what the program writes to stdout before it stops.
+
+4. If none of these files is present, the test is expected to compile and run successfully but produce no output.
 
 Suite and test directories are numbered so that tests run in a predictable order.
 

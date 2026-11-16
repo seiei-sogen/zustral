@@ -1,0 +1,6 @@
+module body Test is
+    function main(): ExitCode is
+        printLn("before the abort");
+        abort("stopped by abort");
+    end;
+end module body.
