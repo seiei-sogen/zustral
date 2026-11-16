@@ -813,7 +813,7 @@ and augment_pointer_slot_access (ctx: expr_ctx) (expr: aexpr) (slot_name: identi
 and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr =
   (* Augment the expression and the index expression. *)
   let expr: texpr = infer ctx expr
-  and index_expr: texpr = infer ctx index_expr in
+  and index_expr: texpr = check ctx index_expr index_type in
   (* The type of the expression is a read reference, or a span. *)
   match (get_type (ctx_place ctx) expr) with
   | ReadRef (ty, reg) -> begin
