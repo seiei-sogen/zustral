@@ -1,0 +1,1 @@
+Test that a `borrow` statement fails when it declares a read reference and borrows mutably (issue #132).

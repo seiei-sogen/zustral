@@ -1,0 +1,1 @@
+Test that a `borrow` statement fails when it declares a write reference and borrows immutably (issue #132).
