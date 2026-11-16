@@ -63,7 +63,7 @@ lib/Pipeline.mli	91	0	0	0	0	0	6	0	0	0	0
 lib/Qualifier.ml	30	0	0	0	0	0	0	0	0	0	0
 lib/Region.ml	16	0	0	0	0	0	0	0	0	0	0
 lib/RegionMap.ml	24	1	0	0	0	0	0	0	0	0	0
-lib/ReturnCheck.ml	98	2	0	0	0	0	0	0	0	0	0
+lib/ReturnCheck.ml	101	2	0	0	0	0	0	0	0	0	0
 lib/SourceContext.ml	53	0	0	0	0	0	1	0	0	0	0
 lib/Span.ml	62	0	0	0	0	0	1	0	0	0	0
 lib/Stages.ml	710	0	0	0	0	0	8	0	0	0	0

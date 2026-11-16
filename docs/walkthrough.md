@@ -63,7 +63,7 @@ type combine_body = env -> concrete_module_body -> Combined.combined_module Outc
 type check_returns = Combined.combined_module -> ReturnCheck.returning_module Outcome.t
 ```
 
-`lib/ReturnCheck.ml` の `check_ends_in_return` が、関数とメソッドの本体が、`return` 文か `Abort` の呼び出しで終わることを確かめる。確かめるのは、文の形だけである。最後の文が `while`、`for`、`borrow` なら、その本体の最後の文を見る。ループが1回も回らない場合は、考えない。`else` のない `if` で終わる関数も通る（issue #89）。プラグマの付いた関数は、調べない。
+`lib/ReturnCheck.ml` の `check_ends_in_return` が、関数とメソッドの本体が、`return` 文か `Abort` の呼び出しで終わることを確かめる。確かめるのは、文の形だけである。最後の文が `if` なら2つの枝の、`case` ならすべての枝の、`borrow` なら本体の、最後の文を見る。`else` のない `if`、`while`、`for` で終わる本体は、通らない。条件が偽のときや、ループが1回も回らないときに、`return` を通らないからである。条件が必ず真になるループも通らない。後ろに `return` 文か `Abort` の呼び出しを書く。外部から取り込む関数（`Foreign_Import`）は、本体がないので調べない。公開する関数（`Foreign_Export`）は、調べる。
 
 ## 脱糖
 
