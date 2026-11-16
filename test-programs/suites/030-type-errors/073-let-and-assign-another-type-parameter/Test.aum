@@ -1,0 +1,14 @@
+module body Test is
+    generic [T: Free, U: Free]
+    function overwrite(x: T, y: U): T is
+        var v: T := x;
+        v := y;
+        return v;
+    end;
+
+    function main(): ExitCode is
+        let b: Bool := overwrite(true, 7);
+        printLn(b);
+        return ExitSuccess();
+    end;
+end module body.

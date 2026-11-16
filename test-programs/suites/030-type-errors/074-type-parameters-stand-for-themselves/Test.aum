@@ -1,0 +1,37 @@
+module body Test is
+    generic [T: Free]
+    function same(x: T): T is
+        let y: T := x;
+        return y;
+    end;
+
+    generic [T: Free, U: Free]
+    function first(x: T, y: U): T is
+        var v: T := same(x);
+        v := x;
+        return v;
+    end;
+
+    generic [T: Free]
+    function depth(x: T, level: Int32): Int32 is
+        if level > 2 then
+            return level;
+        else
+            return depth(level, level + 1);
+        end if;
+    end;
+
+    generic [R: Region]
+    function through(x: &[Int32, R]): &[Int32, R] is
+        return x;
+    end;
+
+    function main(): ExitCode is
+        printLn(first(true, 7));
+        printLn(first(7, true));
+        printLn(depth(true, 0));
+        let n: Int32 := 4;
+        printLn(!through(&n));
+        return ExitSuccess();
+    end;
+end module body.

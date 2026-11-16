@@ -1,0 +1,1 @@
+Test that a generic function cannot return a value of the type parameter `U` where it declares the type parameter `T` (issue #151).

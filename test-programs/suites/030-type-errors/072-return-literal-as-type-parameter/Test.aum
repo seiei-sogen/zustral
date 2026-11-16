@@ -1,0 +1,12 @@
+module body Test is
+    generic [T: Free]
+    function five(x: T): T is
+        return 5;
+    end;
+
+    function main(): ExitCode is
+        let b: Bool := five(true);
+        printLn(b);
+        return ExitSuccess();
+    end;
+end module body.
