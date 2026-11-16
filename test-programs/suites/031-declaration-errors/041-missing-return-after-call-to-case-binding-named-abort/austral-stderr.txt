@@ -1,0 +1,32 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The " },
+    { "type": "text", "content": "function" },
+    { "type": "text", "content": " " },
+    { "type": "code", "content": "f" },
+    { "type": "text", "content": " does not end in a return statement." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/041-missing-return-after-call-to-case-binding-named-abort/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 13, "column": 8 }
+  },
+  "context": [
+    [ 2, "    function quiet(x: Int32): Unit is" ],
+    [ 3, "        return nil;" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    function f(o: Option[Fn[Int32, Unit]]): Int32 is" ],
+    [ 7, "        case o of" ],
+    [ 8, "            when Some(value as abort: Fn[Int32, Unit]) do" ],
+    [ 9, "                abort(7);" ],
+    [ 10, "            when None do" ],
+    [ 11, "                return 0;" ],
+    [ 12, "        end case;" ],
+    [ 13, "    end;" ],
+    [ 14, "" ],
+    [ 15, "    function main(): ExitCode is" ]
+  ]
+}

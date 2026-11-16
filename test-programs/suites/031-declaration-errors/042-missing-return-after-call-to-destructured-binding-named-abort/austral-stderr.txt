@@ -1,0 +1,28 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The " },
+    { "type": "text", "content": "function" },
+    { "type": "text", "content": " " },
+    { "type": "code", "content": "f" },
+    { "type": "text", "content": " does not end in a return statement." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/042-missing-return-after-call-to-destructured-binding-named-abort/Test.aum",
+    "startp": { "line": 8, "column": 8 },
+    "end": { "line": 13, "column": 8 }
+  },
+  "context": [
+    [ 6, "    record Handler: Free is" ],
+    [ 7, "        run: Fn[Int32, Unit];" ],
+    [ 8, "    end;" ],
+    [ 9, "" ],
+    [ 10, "    function f(h: Handler): Int32 is" ],
+    [ 11, "        let { run as abort: Fn[Int32, Unit] } := h;" ],
+    [ 12, "        abort(7);" ],
+    [ 13, "    end;" ],
+    [ 14, "" ],
+    [ 15, "    function main(): ExitCode is" ]
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The " },
+    { "type": "text", "content": "method" },
+    { "type": "text", "content": " " },
+    { "type": "code", "content": "run" },
+    { "type": "text", "content": " does not end in a return statement." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/043-missing-return-in-method-after-call-to-parameter-named-abort/Test.aum",
+    "startp": { "line": 8, "column": 8 },
+    "end": { "line": 14, "column": 8 }
+  },
+  "context": [
+    [ 6, "    typeclass Runner(T: Free) is" ],
+    [ 7, "        method run(self: T, abort: Fn[Int32, Unit]): Int32;" ],
+    [ 8, "    end;" ],
+    [ 9, "" ],
+    [ 10, "    instance Runner(Int32) is" ],
+    [
+      11, "        method run(self: Int32, abort: Fn[Int32, Unit]): Int32 is"
+    ],
+    [ 12, "            abort(self);" ],
+    [ 13, "        end;" ],
+    [ 14, "    end;" ],
+    [ 15, "" ],
+    [ 16, "    function main(): ExitCode is" ]
+  ]
+}

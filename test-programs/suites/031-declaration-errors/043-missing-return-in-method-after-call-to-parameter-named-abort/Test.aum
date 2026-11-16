@@ -1,0 +1,21 @@
+module body Test is
+    function quiet(x: Int32): Unit is
+        return nil;
+    end;
+
+    typeclass Runner(T: Free) is
+        method run(self: T, abort: Fn[Int32, Unit]): Int32;
+    end;
+
+    instance Runner(Int32) is
+        method run(self: Int32, abort: Fn[Int32, Unit]): Int32 is
+            abort(self);
+        end;
+    end;
+
+    function main(): ExitCode is
+        let n: Int32 := 7;
+        printLn(run(n, quiet));
+        return ExitSuccess();
+    end;
+end module body.
