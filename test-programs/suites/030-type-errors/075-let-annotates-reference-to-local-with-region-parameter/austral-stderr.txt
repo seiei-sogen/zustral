@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "&[Int32, R]" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "&[Int32, Region<2>]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/075-let-annotates-reference-to-local-with-region-parameter/Test.aum",
+    "startp": { "line": 6, "column": 12 },
+    "end": { "line": 6, "column": 36 }
+  },
+  "context": [
+    [ 4, "        let n: Int32 := 5;" ],
+    [ 5, "        borrow r: &[Int32, S] := &n do" ],
+    [ 6, "            let d: &[Int32, R] := r;" ],
+    [ 7, "            return d;" ],
+    [ 8, "        end borrow;" ]
+  ]
+}

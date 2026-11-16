@@ -1,0 +1,17 @@
+module body Test is
+    function show(b: Bool): Unit is
+        printLn(b);
+        return nil;
+    end;
+
+    generic [T: Free]
+    function callWithInteger(f: Fn[T, Unit], x: T): Unit is
+        let n: Int32 := 41;
+        return f(n);
+    end;
+
+    function main(): ExitCode is
+        callWithInteger(show, true);
+        return ExitSuccess();
+    end;
+end module body.
