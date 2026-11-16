@@ -21,7 +21,7 @@ import sys
 # Closed decision tickets and merged pull requests that the documents cite on purpose.
 CLOSED_ON_PURPOSE = set(range(1, 16)) | {17, 18, 19, 23, 24, 45}
 # Issues that a fix closed. The plan keeps their rows, marked as done.
-FIXED = {52, 88, 89, 121, 129, 131, 132, 134, 135, 148, 149}
+FIXED = {36, 52, 88, 89, 121, 129, 131, 132, 134, 135, 148, 149, 150}
 TRACKING_ISSUES = (71, 84)
 
 docs = pathlib.Path(__file__).parent

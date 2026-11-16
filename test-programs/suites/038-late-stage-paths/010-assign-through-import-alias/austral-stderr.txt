@@ -5,7 +5,7 @@
     { "type": "text", "content": "Internal compiler error: " },
     {
       "type": "text",
-      "content": "variable `y` not in state table. Table contents: \n\nEntries:\n_t127\t0\tLinearityCheck.Unconsumed\nargumentCount\t0\tLinearityCheck.Unconsumed\nPending:\n"
+      "content": "variable `y` not in state table. Table contents: \n\nEntries:\n_t127\tLinearityCheck.Unconsumed\nargumentCount\tLinearityCheck.Unconsumed"
     },
     { "type": "break" },
     {

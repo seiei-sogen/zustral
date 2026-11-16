@@ -53,6 +53,7 @@ type t =
   | FreeContainsLinear of { name: identifier; universe: universe; parameter: bool }
   | ForgotToConsume of identifier
   | ConsumedInLoop of identifier list
+  | AssignedInLoop of identifier list
   | InconsistentBranches of { name: identifier; statement: branching; state_a: reported_state; state_b: reported_state }
   | ConsumedMoreThanOnce of identifier
   | ConsumedOnSomePathsOnly of { name: identifier; expression: partly_evaluated_expression }
@@ -63,6 +64,22 @@ type t =
   | CannotBorrow of { mode: borrow_stmt_kind; name: identifier; state: reported_state }
   | NotConsumedAtReturn of identifier
   | AssignToNonFreePath of ty
+
+(* The start of a sentence about one variable or several. *)
+let the_variables_were (names: identifier list): err_text =
+  let c: int = List.length names in
+  [
+    Text "The ";
+    if (c = 1) then
+      Text " variable "
+    else
+      Text " variables ";
+    Code (String.concat ", " (List.map ident_string names));
+    if (c = 1) then
+      Text " was "
+    else
+      Text " were "
+  ]
 
 let render (error: t): err_text =
   match error with
@@ -89,20 +106,11 @@ let render (error: t): err_text =
        Text "."
      ]
   | ConsumedInLoop names ->
-     let c: int = List.length names in
-     [
-       Text "The ";
-       if (c = 1) then
-         Text " variable "
-       else
-         Text " variables ";
-       Code (String.concat ", " (List.map ident_string names));
-       if (c = 1) then
-         Text " was "
-       else
-         Text " were ";
-       Text "consumed in the loop, without afterwards being reassigned."
-     ]
+     the_variables_were names
+     @ [ Text "consumed in the loop, without afterwards being reassigned." ]
+  | AssignedInLoop names ->
+     the_variables_were names
+     @ [ Text "consumed before the loop and assigned in the loop, without afterwards being consumed again." ]
   | InconsistentBranches { name; statement; state_a; state_b } ->
      [
        Text "The variable ";
