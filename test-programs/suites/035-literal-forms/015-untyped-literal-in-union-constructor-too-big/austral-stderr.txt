@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The integer " },
+    { "type": "code", "content": "4294967297" },
+    { "type": "text", "content": " does not fit the type " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/035-literal-forms/015-untyped-literal-in-union-constructor-too-big/Test.aum",
+    "startp": { "line": 3, "column": 8 },
+    "end": { "line": 3, "column": 58 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        let o: Option[Int32] := Some(value => 4294967297);" ],
+    [ 4, "        case o of" ],
+    [ 5, "            when Some(value: Int32) do" ]
+  ]
+}

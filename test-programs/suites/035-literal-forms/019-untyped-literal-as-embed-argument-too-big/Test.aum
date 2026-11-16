@@ -1,0 +1,9 @@
+pragma Unsafe_Module;
+
+module body Test is
+    function main(): ExitCode is
+        let x: Int64 := @embed(Int64, "$1", 4294967296);
+        printLn(x);
+        return ExitSuccess();
+    end;
+end module body.

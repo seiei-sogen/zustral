@@ -1,0 +1,7 @@
+module body Test is
+    function main(): ExitCode is
+        let c: Bool := true;
+        printLn(if c then 1 else 4294967296);
+        return ExitSuccess();
+    end;
+end module body.

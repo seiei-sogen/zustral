@@ -1,0 +1,8 @@
+module body Test is
+    function main(): ExitCode is
+        if 4294967296 = 0 then
+            printLn("equal");
+        end if;
+        return ExitSuccess();
+    end;
+end module body.
