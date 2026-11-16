@@ -773,18 +773,17 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
       TArrayIndex (expr, index_expr, elem_ty, reg, ReadBorrow)
     end
   | WriteRef (ty, reg) -> begin
-      let elem_ty: ty =
-        match ty with
-        | Span (ty, _) ->
-           ty
-        | SpanMut (ty, _) ->
-           ty
-        | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
-        | RegionTy _ | ReadRef _ | WriteRef _ | TyVar _ | Address _ | Pointer _
-        | FnPtr _ ->
-           type_error (ctx_place ctx) (CantIndexNotSpan ty)
-      in
-      TArrayIndex (expr, index_expr, elem_ty, reg, WriteBorrow)
+      match ty with
+      | Span (elem_ty, _) ->
+         (* The write reference is to the variable that holds the span. The
+            span is read-only, so its elements are. *)
+         TArrayIndex (expr, index_expr, elem_ty, reg, ReadBorrow)
+      | SpanMut (elem_ty, _) ->
+         TArrayIndex (expr, index_expr, elem_ty, reg, WriteBorrow)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ ->
+         type_error (ctx_place ctx) (CantIndexNotSpan ty)
     end
   | Span (ty, reg) ->
      TSpanIndex (expr, index_expr, ty, reg, ReadBorrow)
