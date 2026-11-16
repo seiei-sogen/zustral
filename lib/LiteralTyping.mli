@@ -60,7 +60,7 @@ val int_literal_default_type : ty
     place to type the literal:
 
     - where it infers a literal that stands where no type reaches
-    - where a literal stands where a type is expected, and the rules for
-      literals do not accept it there ([literal_matches] is [false]), so the
-      literal's own type is the one compared *)
+    - where a literal is the argument of a parameter whose type is a type
+      parameter, which is bound to the literal's own type
+      ([TypeMatch.match_type_with_value]) *)
 val check_int_literal_fits_default_type : Error.place -> texpr -> unit

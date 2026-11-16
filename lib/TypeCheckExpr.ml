@@ -88,6 +88,10 @@ let match_type_with_value_ctx (ctx: expr_ctx) (expected: ty) (value: texpr): typ
   and module_name: module_name = ctx_module_name ctx in
   match_type_with_value (env, module_name, ctx_place ctx) expected value
 
+(** Wrapper around expect_value_of_type. *)
+let expect_value_of_type_ctx (ctx: expr_ctx) (expected: ty) (value: texpr): unit =
+  expect_value_of_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) expected value
+
 (** Wrapper around match_typarams_ctx. *)
 let match_typarams_ctx (ctx: expr_ctx) (typarams: typarams) (type_args: ty list): type_bindings =
   match_typarams (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) typarams type_args
@@ -500,8 +504,10 @@ let rec infer (ctx: expr_ctx) (expr: aexpr): texpr =
    returned without a check of its value. The caller compares the result with
    the type of the place, with `match_type_with_value`, `expect_value_of_type`
    or `LiteralTyping.annotation_types_literal`. Those check the literal against
-   the type of the place, or against its default type when the place does not
-   type it. Every other caller uses `infer`. *)
+   the type of the place when that is an integer type. When it is not,
+   `match_type_with_value` checks the literal against its default type, which
+   is what it binds a type parameter to, and after the other two the literal
+   is reported as a value of another type. Every other caller uses `infer`. *)
 and infer_before_place_types_literal (ctx: expr_ctx) (expr: aexpr): texpr =
   (* Dispatch on the AST *)
   match expr with
@@ -555,7 +561,7 @@ and infer_before_place_types_literal (ctx: expr_ctx) (expr: aexpr): texpr =
 
 and check (ctx: expr_ctx) (expr: aexpr) (expected: ty): texpr =
   let value: texpr = infer_with_expected ctx expr expected in
-  let _ = expect_value_of_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) expected value in
+  let _ = expect_value_of_type_ctx ctx expected value in
   value
 
 (* `expr` in a place that expects the type `expected`, before the two types are
@@ -633,9 +639,9 @@ and augment_comparison ctx op lhs rhs =
     match (LiteralTyping.is_numeric_literal lhs, LiteralTyping.is_numeric_literal rhs) with
     | (true, false) ->
        (* A lone literal on the left takes the type of the right operand. *)
-       expect_value_of_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) (get_type (ctx_place ctx) rhs') lhs'
+       expect_value_of_type_ctx ctx (get_type (ctx_place ctx) rhs') lhs'
     | (false, true) | (false, false) | (true, true) ->
-       expect_value_of_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) (get_type (ctx_place ctx) lhs') rhs'
+       expect_value_of_type_ctx ctx (get_type (ctx_place ctx) lhs') rhs'
   in
   TComparison (op, lhs', rhs')
 
@@ -932,10 +938,10 @@ and augment_arithmetic (ctx: expr_ctx) (op: arithmetic_operator) (lhs: aexpr) (r
   let operand_ty =
     match (LiteralTyping.is_numeric_literal lhs, LiteralTyping.is_numeric_literal rhs) with
     | (true, false) ->
-       expect_value_of_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) rhs_ty lhs';
+       expect_value_of_type_ctx ctx rhs_ty lhs';
        rhs_ty
     | (false, true) ->
-       expect_value_of_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) lhs_ty rhs';
+       expect_value_of_type_ctx ctx lhs_ty rhs';
        lhs_ty
     | _ ->
        lhs_ty

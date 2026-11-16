@@ -356,10 +356,11 @@ let expect_value_of_type (ctx: ctx) (expected: ty) (value: texpr): unit =
      type. *)
   if LiteralTyping.literal_matches (ctx_place ctx) expected value then
     ()
-  else begin
-    expect_same_type ctx expected (get_type (ctx_place ctx) value);
-    LiteralTyping.check_int_literal_fits_default_type (ctx_place ctx) value
-  end
+  else
+    (* An integer literal does not get past this: the rules for literals
+       accept it for every integer type, and no other type is the same as its
+       default type. *)
+    expect_same_type ctx expected (get_type (ctx_place ctx) value)
 
 let match_type_with_value (ctx: ctx) (ty: ty) (expr: texpr): type_bindings =
   (* Like match_type, but a literal that the rules for literals accept does not
