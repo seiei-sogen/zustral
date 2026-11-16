@@ -1,0 +1,12 @@
+module body Test is
+    generic [T: Free(TrappingArithmetic)]
+    function f(x: T): T is
+        return x + 300;
+    end;
+
+    function main(): ExitCode is
+        let n: Nat8 := 7;
+        printLn(f(n));
+        return ExitSuccess();
+    end;
+end module body.

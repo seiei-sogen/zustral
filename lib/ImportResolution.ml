@@ -41,7 +41,7 @@ let flatten_imports (list: concrete_import_list list): import_decl list =
              list in
   List.concat ll
 
-let resolve_import (env: env) (kind: module_kind) (imports: import_map) (idecl: import_decl): import_map =
+let resolve_import (env: env) (imports: import_map) (idecl: import_decl): import_map =
   let (ImportDecl (module_name, name, nickname)) = idecl in
   let sname = make_sident module_name name in
   match get_decl_by_name NoSpan env sname with
@@ -51,7 +51,7 @@ let resolve_import (env: env) (kind: module_kind) (imports: import_map) (idecl: 
        | Some _ -> declaration_error NoSpan (DoubleImport name)
        | None ->
           let safe: bool =
-            match kind with
+            match importing_module_kind imports with
             | SafeModule -> true
             | UnsafeModule -> false
           in
@@ -64,10 +64,10 @@ let resolve_import (env: env) (kind: module_kind) (imports: import_map) (idecl: 
   | None ->
      declaration_error NoSpan (ImportUnresolved { name; module_name })
 
-let rec resolve' (env: env) (kind: module_kind) (imports: import_map) (list: import_decl list): import_map =
+let rec resolve' (env: env) (imports: import_map) (list: import_decl list): import_map =
   match list with
   | (first::rest) ->
-     resolve' env kind (resolve_import env kind imports first) rest
+     resolve' env (resolve_import env imports first) rest
   | [] ->
      imports
 
@@ -95,6 +95,6 @@ let import_instances (env: env) (list: concrete_import_list list): instance_id l
   List.flatten instances
 
 let resolve (importing_module: module_name) (kind: module_kind) (env: env) (list: concrete_import_list list): import_map =
-  let im: import_map = resolve' env kind (empty_map importing_module) (flatten_imports list) in
+  let im: import_map = resolve' env (empty_map importing_module kind) (flatten_imports list) in
   let ins: instance_id list = import_instances env list in
   add_instances im ins

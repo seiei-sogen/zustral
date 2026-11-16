@@ -155,3 +155,12 @@ let annotation_types_literal (place: place) (ty: ty) (expr: texpr): bool =
   | Unit | Boolean | NamedType _ | RegionTy _ | ReadRef _ | WriteRef _ | Span _
   | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
      false
+
+(* A Literal Where No Type Reaches *)
+
+let int_literal_default_type: ty = Integer (Signed, Width32)
+
+let check_int_literal_fits_default_type (place: place) (expr: texpr): unit =
+  (* The literal is as if annotated with its default type. *)
+  let _ = annotation_types_literal place int_literal_default_type expr in
+  ()

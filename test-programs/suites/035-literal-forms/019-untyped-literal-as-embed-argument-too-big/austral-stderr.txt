@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The integer " },
+    { "type": "code", "content": "4294967296" },
+    { "type": "text", "content": " does not fit the type " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/035-literal-forms/019-untyped-literal-as-embed-argument-too-big/Test.aum",
+    "startp": { "line": 5, "column": 8 },
+    "end": { "line": 5, "column": 56 }
+  },
+  "context": [
+    [ 3, "module body Test is" ],
+    [ 4, "    function main(): ExitCode is" ],
+    [ 5, "        let x: Int64 := @embed(Int64, \"$1\", 4294967296);" ],
+    [ 6, "        printLn(x);" ],
+    [ 7, "        return ExitSuccess();" ]
+  ]
+}

@@ -1,0 +1,11 @@
+module body Test is
+    record Box[T: Free]: Free is
+        value: T;
+    end;
+
+    function main(): ExitCode is
+        let b: Box[Int32] := Box(value => 4294967296);
+        printLn(b.value);
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,3 +1,5 @@
+pragma Unsafe_Module;
+
 module body Test is
     function Print_Char(c: Nat8): Unit is
         return @embed(Unit, "au_printf(\"%c\", $1)", c);

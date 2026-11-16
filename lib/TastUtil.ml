@@ -52,7 +52,7 @@ let rec get_type (place: place) = function
   | TBoolConstant _ ->
      Boolean
   | TIntConstant _ ->
-     Integer (Signed, Width32)
+     LiteralTyping.int_literal_default_type
   | TFloatConstant _ ->
      DoubleFloat
   | TStringConstant _ ->

@@ -4,6 +4,9 @@
 --
 -- SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 --
+-- `@embed` is only allowed in an unsafe module.
+pragma Unsafe_Module;
+
 module body Austral.Memory is
     record Address[T: Type]: Free is end;
     record Pointer[T: Type]: Free is end;

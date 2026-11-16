@@ -1,0 +1,31 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The " },
+    { "type": "text", "content": "function" },
+    { "type": "text", "content": " " },
+    { "type": "code", "content": "f" },
+    { "type": "text", "content": " does not end in a return statement." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/046-missing-return-after-call-to-let-variable-named-as-abort-nickname/Test.aum",
+    "startp": { "line": 6, "column": 8 },
+    "end": { "line": 14, "column": 8 }
+  },
+  "context": [
+    [ 4, "    function quiet(x: Int32): Unit is" ],
+    [ 5, "        return nil;" ],
+    [ 6, "    end;" ],
+    [ 7, "" ],
+    [ 8, "    function f(c: Bool): Int32 is" ],
+    [ 9, "        let die: Fn[Int32, Unit] := quiet;" ],
+    [ 10, "        if c then" ],
+    [ 11, "            return 1;" ],
+    [ 12, "        end if;" ],
+    [ 13, "        die(7);" ],
+    [ 14, "    end;" ],
+    [ 15, "" ],
+    [ 16, "    function main(): ExitCode is" ]
+  ]
+}

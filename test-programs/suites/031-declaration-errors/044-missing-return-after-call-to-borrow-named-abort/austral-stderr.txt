@@ -1,0 +1,27 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The " },
+    { "type": "text", "content": "function" },
+    { "type": "text", "content": " " },
+    { "type": "code", "content": "f" },
+    { "type": "text", "content": " does not end in a return statement." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/044-missing-return-after-call-to-borrow-named-abort/Test.aum",
+    "startp": { "line": 1, "column": 19 },
+    "end": { "line": 7, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function f(): Int32 is" ],
+    [ 3, "        let x: Int32 := 1;" ],
+    [ 4, "        borrow abort: &[Int32, R] := &x do" ],
+    [ 5, "            abort(7);" ],
+    [ 6, "        end borrow;" ],
+    [ 7, "    end;" ],
+    [ 8, "" ],
+    [ 9, "    function main(): ExitCode is" ]
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "T" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "Float64" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/092-multiply-value-of-type-parameter-by-float-literal/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 23 }
+  },
+  "context": [
+    [ 2, "    generic [T: Free(TrappingArithmetic)]" ],
+    [ 3, "    function f(x: T): T is" ],
+    [ 4, "        return x * 1.5;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ]
+  ]
+}

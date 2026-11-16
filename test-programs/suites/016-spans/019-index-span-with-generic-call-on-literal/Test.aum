@@ -1,0 +1,12 @@
+module body Test is
+    generic [T: Free]
+    function ident(x: T): T is
+        return x;
+    end;
+
+    function main(): ExitCode is
+        let s: Span[Nat8, Static] := "abc";
+        printLn(s[ident(1)]);
+        return ExitSuccess();
+    end;
+end module body.

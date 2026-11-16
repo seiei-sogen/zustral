@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The integer " },
+    { "type": "code", "content": "4294967296" },
+    { "type": "text", "content": " does not fit the type " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/035-literal-forms/020-untyped-literal-in-record-constructor-too-big/Test.aum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 7, "column": 54 }
+  },
+  "context": [
+    [ 5, "" ],
+    [ 6, "    function main(): ExitCode is" ],
+    [ 7, "        let b: Box[Int32] := Box(value => 4294967296);" ],
+    [ 8, "        printLn(b.value);" ],
+    [ 9, "        return ExitSuccess();" ]
+  ]
+}

@@ -357,7 +357,7 @@ let body_as_combined (env: env) (body: concrete_module_body): combined_module Ou
           name = mn;
           kind = kind;
           interface_docstring = Docstring "";
-          interface_imports = empty_map mn;
+          interface_imports = empty_map mn kind;
           body_docstring = body_docstring;
           body_imports = imports;
           decls = decls;

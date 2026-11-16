@@ -1,0 +1,3 @@
+module Forge is
+    function forge(): Int32;
+end module.

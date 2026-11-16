@@ -1,0 +1,13 @@
+module body Test is
+    function f(): Int32 is
+        let x: Int32 := 1;
+        borrow abort: &[Int32, R] := &x do
+            abort(7);
+        end borrow;
+    end;
+
+    function main(): ExitCode is
+        printLn(f());
+        return ExitSuccess();
+    end;
+end module body.

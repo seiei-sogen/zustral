@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "Can't use " },
+    { "type": "code", "content": "@embed" },
+    { "type": "text", "content": " in a safe module." },
+    { "type": "break" },
+    { "type": "text", "content": "Consider adding " },
+    { "type": "code", "content": "pragma Unsafe_Module;" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/036-embed-in-safe-module-constant/Test.aum",
+    "startp": { "line": 2, "column": 30 },
+    "end": { "line": 2, "column": 52 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    constant Forged: Int32 := @embed(Int32, \"12345\");" ],
+    [ 3, "" ],
+    [ 4, "    function main(): ExitCode is" ]
+  ]
+}

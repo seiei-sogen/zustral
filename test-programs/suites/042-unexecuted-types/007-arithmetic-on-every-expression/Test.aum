@@ -1,3 +1,5 @@
+pragma Unsafe_Module;
+
 module body Test is
     record Pair: Free is
         x: Int32;

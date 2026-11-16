@@ -1,0 +1,20 @@
+import Austral.Pervasive (abort as die);
+
+module body Test is
+    function quiet(x: Int32): Unit is
+        return nil;
+    end;
+
+    function f(c: Bool): Int32 is
+        let die: Fn[Int32, Unit] := quiet;
+        if c then
+            return 1;
+        end if;
+        die(7);
+    end;
+
+    function main(): ExitCode is
+        printLn(f(false));
+        return ExitSuccess();
+    end;
+end module body.

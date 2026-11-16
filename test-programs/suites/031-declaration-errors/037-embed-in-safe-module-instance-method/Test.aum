@@ -1,0 +1,19 @@
+module body Test is
+    typeclass Forger(T: Free) is
+        method forge(x: T): Int32;
+    end;
+
+    instance Forger(Int32) is
+        method forge(x: Int32): Int32 is
+            if x > 0 then
+                return x + (@embed(Int32, "$1 * 2", x));
+            end if;
+            return 0;
+        end;
+    end;
+
+    function main(): ExitCode is
+        printLn(forge(7));
+        return ExitSuccess();
+    end;
+end module body.

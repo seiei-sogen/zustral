@@ -1,0 +1,1 @@
+Test the indexes that pass: a literal, a literal beyond `Int32` where it is not evaluated, a variable of type `Index`, arithmetic on one, a call that returns one, and the variable of a `for` loop (issue #158).

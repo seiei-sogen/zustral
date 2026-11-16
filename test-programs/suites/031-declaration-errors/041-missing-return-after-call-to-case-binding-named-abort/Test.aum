@@ -1,0 +1,20 @@
+module body Test is
+    function quiet(x: Int32): Unit is
+        return nil;
+    end;
+
+    function f(o: Option[Fn[Int32, Unit]]): Int32 is
+        case o of
+            when Some(value as abort: Fn[Int32, Unit]) do
+                abort(7);
+            when None do
+                return 0;
+        end case;
+    end;
+
+    function main(): ExitCode is
+        let o: Option[Fn[Int32, Unit]] := Some(value => quiet);
+        printLn(f(o));
+        return ExitSuccess();
+    end;
+end module body.

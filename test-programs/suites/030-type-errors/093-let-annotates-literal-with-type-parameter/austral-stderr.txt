@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "T" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "Int32" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/093-let-annotates-literal-with-type-parameter/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 24 }
+  },
+  "context": [
+    [ 2, "    generic [T: Free]" ],
+    [ 3, "    function make(x: T): T is" ],
+    [ 4, "        let y: T := 300;" ],
+    [ 5, "        return y;" ],
+    [ 6, "    end;" ]
+  ]
+}

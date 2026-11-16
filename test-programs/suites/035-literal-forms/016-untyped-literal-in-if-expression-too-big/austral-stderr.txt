@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The integer " },
+    { "type": "code", "content": "4294967296" },
+    { "type": "text", "content": " does not fit the type " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/035-literal-forms/016-untyped-literal-in-if-expression-too-big/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 45 }
+  },
+  "context": [
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        let c: Bool := true;" ],
+    [ 4, "        printLn(if c then 1 else 4294967296);" ],
+    [ 5, "        return ExitSuccess();" ],
+    [ 6, "    end;" ]
+  ]
+}

@@ -83,8 +83,12 @@ and abs_expr place im expr =
      Path (qualify_identifier im head, List.map (abs_path_elem place im) es)
   | CRefPath (_, head, es) ->
      RefPath (qualify_identifier im head, List.map (abs_path_elem place im) es)
-  | CEmbed (_, ty, expr, args) ->
-     Embed (qualify_typespec im ty, expr, List.map (abs_expr place im) args)
+  | CEmbed (span, ty, expr, args) ->
+     (match importing_module_kind im with
+      | Common.UnsafeModule ->
+         Embed (qualify_typespec im ty, expr, List.map (abs_expr place im) args)
+      | Common.SafeModule ->
+         declaration_error (place_inside place span) DeclarationErrors.EmbedInSafeModule)
   | CDeref (_, e) ->
      Deref (abs_expr place im e)
   | CTypecast (_, e, ty) ->

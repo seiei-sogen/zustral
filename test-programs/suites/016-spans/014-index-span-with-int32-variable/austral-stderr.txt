@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "Index" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/016-spans/014-index-span-with-int32-variable/Test.aum",
+    "startp": { "line": 5, "column": 8 },
+    "end": { "line": 5, "column": 22 }
+  },
+  "context": [
+    [ 3, "        let s: Span[Nat8, Static] := \"abc\";" ],
+    [ 4, "        let i: Int32 := 1;" ],
+    [ 5, "        printLn(s[i]);" ],
+    [ 6, "        return ExitSuccess();" ],
+    [ 7, "    end;" ]
+  ]
+}

@@ -1,0 +1,19 @@
+module body Test is
+    function quiet(x: Int32): Unit is
+        return nil;
+    end;
+
+    record Handler: Free is
+        run: Fn[Int32, Unit];
+    end;
+
+    function f(h: Handler): Int32 is
+        let { run as abort: Fn[Int32, Unit] } := h;
+        abort(7);
+    end;
+
+    function main(): ExitCode is
+        printLn(f(Handler(run => quiet)));
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,3 +1,5 @@
+pragma Unsafe_Module;
+
 module body Embed is
     function main(): ExitCode is
         let c: Nat8 := @embed(Nat8, "$1", @embed(Nat8, "'\1'"));

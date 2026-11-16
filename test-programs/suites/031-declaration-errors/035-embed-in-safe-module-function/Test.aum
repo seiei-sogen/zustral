@@ -1,0 +1,7 @@
+module body Test is
+    function main(): ExitCode is
+        let p: &[Int32, Static] := @embed(&[Int32, Static], "(au_int32_t*)12345");
+        printLn(!p);
+        return ExitSuccess();
+    end;
+end module body.

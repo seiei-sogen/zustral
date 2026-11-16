@@ -1,0 +1,1 @@
+Test that integer literals at the bounds of `Int32` pass where no type reaches them, and that a literal beyond `Int32` passes where a wider type reaches it: an annotation, a parameter, a slot, a `return`, an assignment, the other operand (issue #155).

@@ -339,7 +339,7 @@ and augment_initial_assign (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (
      does not see the variable, and neither does an anonymous borrow around
      this statement. The statements after this one see it. *)
   let rvalue: texpr = check_annotated_expr place module_name env rm typarams lexenv rvalue ty in
-  (TInitialAssign (name, rvalue), mark_var_initialized lexenv (original_name name), supply)
+  (TInitialAssign (name, rvalue), mark_var_initialized lexenv (local_name name), supply)
 
 and augment_if (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (c: aexpr) (t: astmt) (f: astmt): tstmt * lexenv * Supply.t =
   let ctx = stmt_at ctx span in
