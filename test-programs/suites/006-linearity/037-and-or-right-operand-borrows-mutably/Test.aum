@@ -1,0 +1,32 @@
+module body Test is
+    record Counter: Linear is
+        n: Int32;
+    end;
+
+    generic [R: Region]
+    function bump(c: &![Counter, R]): Bool is
+        c->n := c->n + 1;
+        return true;
+    end;
+
+    generic [R: Region]
+    function bumpUnless(c: &![Counter, R], skipped: Bool): Bool is
+        return skipped or bump(&~c);
+    end;
+
+    function main(): ExitCode is
+        var counter: Counter := Counter(n => 0);
+        let enabled: Bool := true;
+        if enabled and bump(&!counter) then
+            printLn("bumped");
+        end if;
+        if (not enabled) and bump(&!counter) then
+            printLn("not reached");
+        end if;
+        printLn(bumpUnless(&!counter, false));
+        printLn(bumpUnless(&!counter, true));
+        let { n: Int32 } := counter;
+        printLn(n);
+        return ExitSuccess();
+    end;
+end module body.

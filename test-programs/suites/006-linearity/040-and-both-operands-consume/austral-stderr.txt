@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "The variable " },
+    { "type": "code", "content": "a" },
+    {
+      "type": "text",
+      "content": " is consumed multiple times within the same expression."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/006-linearity/040-and-both-operands-consume/Test.aum",
+    "startp": { "line": 13, "column": 8 },
+    "end": { "line": 13, "column": 55 }
+  },
+  "context": [
+    [ 11, "    function main(): ExitCode is" ],
+    [ 12, "        let a: Foo := Foo(x => 1);" ],
+    [ 13, "        let b: Bool := isPositive(a) and isPositive(a);" ],
+    [ 14, "        printLn(b);" ],
+    [ 15, "        return ExitSuccess();" ]
+  ]
+}

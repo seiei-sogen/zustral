@@ -1,0 +1,1 @@
+Test that the error for a linear variable that both operands of `and` consume says that the expression consumes it more than once.
