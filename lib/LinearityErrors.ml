@@ -61,6 +61,7 @@ type t =
   | ConsumedWhileBorrowedWrite of identifier
   | AlreadyConsumed of identifier
   | AssignToUnconsumed of identifier
+  | AssignToBorrowed of { name: identifier; state: reported_state }
   | CannotBorrow of { mode: borrow_stmt_kind; name: identifier; state: reported_state }
   | NotConsumedAtReturn of identifier
   | AssignToNonFreePath of ty
@@ -160,6 +161,14 @@ let render (error: t): err_text =
        Text "Cannot assign to the variable ";
        Code (ident_string name);
        Text " because it is not yet consumed."
+     ]
+  | AssignToBorrowed { name; state } ->
+     [
+       Text "Cannot assign to the variable ";
+       Code (ident_string name);
+       Text " because it is ";
+       Text (humanize_state state);
+       Text "."
      ]
   | CannotBorrow { mode; name; state } ->
      let mode_string = match mode with

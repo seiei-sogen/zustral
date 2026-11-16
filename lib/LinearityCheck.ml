@@ -473,11 +473,15 @@ let rec check_stmt (place: place) (tbl: state_tbl) (stmt: tstmt): state_tbl =
      let (ty, state) = get_entry_or_fail place tbl name in
      begin
        match state with
-       | Unconsumed | BorrowedRead | BorrowedWrite ->
+       | Unconsumed ->
           if universe_linear_ish (type_universe ty) then
             linearity_error place (AssignToUnconsumed name)
           else
             tbl
+       | BorrowedRead | BorrowedWrite ->
+          (* Whatever the universe of the type: a reference into the old
+             value would point into the new one. *)
+          linearity_error place (AssignToBorrowed { name; state = reported_state state })
        | Consumed ->
           update_tbl place tbl name Unconsumed
      end

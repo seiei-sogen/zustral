@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "Cannot assign to the variable " },
+    { "type": "code", "content": "n" },
+    { "type": "text", "content": " because it is " },
+    { "type": "text", "content": "borrowed (read-only)" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/038-late-stage-paths/007-assign-free-variable-while-borrowed/Test.aum",
+    "startp": { "line": 6, "column": 12 },
+    "end": { "line": 6, "column": 19 }
+  },
+  "context": [
+    [ 4, "        n := 6;" ],
+    [ 5, "        borrow r: &[Int32, R] := &n do" ],
+    [ 6, "            n := 7;" ],
+    [ 7, "            printLn(!r);" ],
+    [ 8, "        end borrow;" ]
+  ]
+}

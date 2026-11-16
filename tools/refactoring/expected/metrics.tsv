@@ -47,8 +47,8 @@ lib/InstanceIdSet.ml	15	0	0	0	0	0	0	0	0	0	0
 lib/LexEnv.ml	66	2	0	0	0	0	0	1	0	0	0
 lib/Lexer.mll	170	4	0	0	0	0	0	0	0	0	0
 lib/LiftControlPass.ml	225	0	0	0	0	0	0	0	0	0	0
-lib/LinearityCheck.ml	647	15	0	0	0	0	0	2	0	0	0
-lib/LinearityErrors.ml	188	0	0	0	0	0	0	0	0	0	0
+lib/LinearityCheck.ml	651	16	0	0	0	0	0	2	0	0	0
+lib/LinearityErrors.ml	197	0	0	0	0	0	0	0	0	0	0
 lib/LiteralTyping.ml	157	1	0	0	0	0	0	0	0	0	0
 lib/MonoType.ml	37	0	0	0	0	0	0	0	0	0	0
 lib/MonoTypeBindings.ml	44	0	0	0	0	0	0	0	0	0	0
