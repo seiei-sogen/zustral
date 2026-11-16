@@ -164,13 +164,42 @@ let subtract (a: identifier list) (b: identifier list): identifier list =
   in
   List.filter (fun elem -> not (is_in elem b)) a
 
-type appearances = { consumed: int; }
+(* How many times the evaluation of an expression consumes a variable. *)
+type appearances =
+  | OnEveryPath of int
+  (* The same number of times, whichever branches the evaluation takes. *)
+  | OnSomePathsOnly of LinearityErrors.partly_evaluated_expression
+  (* More times on one path than on another. The paths part at this
+     expression. *)
 
-let zero_appearances: appearances = { consumed = 0; }
+let zero_appearances: appearances = OnEveryPath 0
 
-let consumed_once: appearances = { consumed = 1; }
+let consumed_once: appearances = OnEveryPath 1
 
-let merge (a: appearances) (b: appearances): appearances = { consumed = a.consumed + b.consumed; }
+(* The appearances in two expressions that are evaluated one after the other. *)
+let merge (a: appearances) (b: appearances): appearances =
+  match (a, b) with
+  | (OnEveryPath times_in_a, OnEveryPath times_in_b) ->
+     OnEveryPath (times_in_a + times_in_b)
+  | (OnSomePathsOnly expression, (OnEveryPath _ | OnSomePathsOnly _))
+  | (OnEveryPath _, OnSomePathsOnly expression) ->
+     OnSomePathsOnly expression
+
+(* The appearances in the two branches of an `if` expression. The evaluation
+   takes one of the branches. *)
+let merge_if_expression_branches (then_branch: appearances) (else_branch: appearances): appearances =
+  match (then_branch, else_branch) with
+  | (OnEveryPath times_in_then, OnEveryPath times_in_else) ->
+     if times_in_then = times_in_else then
+       OnEveryPath times_in_then
+     else if times_in_then > 0 && times_in_else > 0 then
+       (* Both branches consume the variable, and one of them more than once. *)
+       OnEveryPath (max times_in_then times_in_else)
+     else
+       OnSomePathsOnly IfExpressionBranches
+  | (OnSomePathsOnly expression, (OnEveryPath _ | OnSomePathsOnly _))
+  | (OnEveryPath _, OnSomePathsOnly expression) ->
+     OnSomePathsOnly expression
 
 let merge_list (l: appearances list): appearances =
   List.fold_left merge zero_appearances l
@@ -229,7 +258,7 @@ let rec count (name: identifier) (expr: texpr): appearances =
   | TNegation e ->
      c e
   | TIfExpression (e, t, f) ->
-     merge (c e) (merge (c t) (c f))
+     merge (c e) (merge_if_expression_branches (c t) (c f))
   | TRecordConstructor (_, args) ->
      merge_list (List.map (fun (_, e) -> c e) args)
   | TUnionConstructor { args; _ } ->
@@ -310,9 +339,16 @@ let case_branch_tables_are_consistent (place: place) (lst: state_tbl list): unit
 
 let rec check_var_in_expr (place: place) (tbl: state_tbl) (depth: loop_depth) (name: identifier) (ty: ty) (expr: texpr): state_tbl =
   (* Count the appearances of the variable in the expression. *)
-  let apps: appearances = count name expr in
-  (* Destructure apps. *)
-  let { consumed: int; } = apps in
+  match count name expr with
+  | OnSomePathsOnly expression ->
+     if universe_linear_ish (type_universe ty) then
+       linearity_error place (ConsumedOnSomePathsOnly { name; expression })
+     else
+       tbl
+  | OnEveryPath consumed ->
+     check_var_consumed_on_every_path place tbl depth name ty consumed
+
+and check_var_consumed_on_every_path (place: place) (tbl: state_tbl) (depth: loop_depth) (name: identifier) (ty: ty) (consumed: int): state_tbl =
   (* What is the current state of this variable? *)
   let state: var_state = get_state place tbl name in
   (* Make a tuple with the variable's state, and the partitioned appearances. *)

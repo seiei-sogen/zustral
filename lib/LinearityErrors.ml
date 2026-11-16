@@ -36,6 +36,14 @@ let branching_words (statement: branching): string =
   | CaseBranching -> "a case"
   | IfBranching -> "an if"
 
+(** The expressions that evaluate only some of their operands. *)
+type partly_evaluated_expression =
+  | IfExpressionBranches
+
+let where_consumed_on_some_paths_only (expression: partly_evaluated_expression): string =
+  match expression with
+  | IfExpressionBranches -> "in one branch of an if expression but not in the other"
+
 type t =
   | DereferenceNonFree of ty
   | FreeContainsLinear of { name: identifier; universe: universe; parameter: bool }
@@ -43,6 +51,7 @@ type t =
   | ConsumedInLoop of identifier list
   | InconsistentBranches of { name: identifier; statement: branching; state_a: reported_state; state_b: reported_state }
   | ConsumedMoreThanOnce of identifier
+  | ConsumedOnSomePathsOnly of { name: identifier; expression: partly_evaluated_expression }
   | ConsumedWhileBorrowedRead of identifier
   | ConsumedWhileBorrowedWrite of identifier
   | AlreadyConsumed of identifier
@@ -107,6 +116,14 @@ let render (error: t): err_text =
        Text "The variable ";
        Code (ident_string name);
        Text " is consumed multiple times within the same expression.";
+     ]
+  | ConsumedOnSomePathsOnly { name; expression } ->
+     [
+       Text "The variable ";
+       Code (ident_string name);
+       Text " is consumed ";
+       Text (where_consumed_on_some_paths_only expression);
+       Text "."
      ]
   | ConsumedWhileBorrowedRead name ->
      [
