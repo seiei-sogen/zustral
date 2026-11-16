@@ -85,6 +85,16 @@ let add_entry (place: place) (tbl: state_tbl) (name: identifier) (ty: ty) (depth
         should already have caught a duplicate variable. *)
      internal_err place ("An entry exists in the state table with this name: " ^ (ident_string name))
 
+(* A write reference and a write span are in the Linear universe, so that they
+   are not copied, and can be dropped without being used. *)
+let need_not_be_consumed (ty: ty): bool =
+  match ty with
+  | WriteRef _ | SpanMut _ ->
+     true
+  | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+  | ReadRef _ | Span _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
+     false
+
 let trim_free (tbl: state_tbl): state_tbl =
   let (StateTable (entries, pending)) = tbl in
   let trim tuple =
@@ -110,15 +120,7 @@ let update_tbl (place: place) (tbl: state_tbl) (name: identifier) (state: var_st
 let remove_entry (place: place) (tbl: state_tbl) (name: identifier): state_tbl =
   match get_entry_or_fail place tbl name with
   | (ty, _, state) ->
-     let is_write_ref: bool =
-       match ty with
-       | WriteRef _ -> true
-       | SpanMut _ -> true
-       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
-       | ReadRef _ | Span _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
-          false
-     in
-     if is_consumed state || is_write_ref then
+     if is_consumed state || need_not_be_consumed ty then
        let (StateTable (rows, pending)) = tbl in
        let others = List.filter (fun (n, _, _, _) -> not (equal_identifier name n)) rows in
        StateTable (others, pending)
@@ -168,38 +170,41 @@ let subtract (a: identifier list) (b: identifier list): identifier list =
 type appearances =
   | OnEveryPath of int
   (* The same number of times, whichever branches the evaluation takes. *)
-  | OnSomePathsOnly of LinearityErrors.partly_evaluated_expression
-  (* More times on one path than on another. The paths part at this
-     expression. *)
+  | OnSomePathsOnly of { at_most: int; parts_at: LinearityErrors.partly_evaluated_expression }
+  (* Fewer times on one path than on another, and never more than `at_most`
+     times. The paths part at the expression `parts_at`. *)
 
 let zero_appearances: appearances = OnEveryPath 0
 
 let consumed_once: appearances = OnEveryPath 1
+
+let most_times (appearances: appearances): int =
+  match appearances with
+  | OnEveryPath times -> times
+  | OnSomePathsOnly { at_most; _ } -> at_most
 
 (* The appearances in two expressions that are evaluated one after the other. *)
 let merge (a: appearances) (b: appearances): appearances =
   match (a, b) with
   | (OnEveryPath times_in_a, OnEveryPath times_in_b) ->
      OnEveryPath (times_in_a + times_in_b)
-  | (OnSomePathsOnly expression, (OnEveryPath _ | OnSomePathsOnly _))
-  | (OnEveryPath _, OnSomePathsOnly expression) ->
-     OnSomePathsOnly expression
+  | (OnSomePathsOnly { parts_at; _ }, (OnEveryPath _ | OnSomePathsOnly _))
+  | (OnEveryPath _, OnSomePathsOnly { parts_at; _ }) ->
+     OnSomePathsOnly { at_most = most_times a + most_times b; parts_at }
 
 (* The appearances in the two branches of an `if` expression. The evaluation
    takes one of the branches. *)
 let merge_if_expression_branches (then_branch: appearances) (else_branch: appearances): appearances =
+  let at_most: int = max (most_times then_branch) (most_times else_branch) in
   match (then_branch, else_branch) with
   | (OnEveryPath times_in_then, OnEveryPath times_in_else) ->
      if times_in_then = times_in_else then
-       OnEveryPath times_in_then
-     else if times_in_then > 0 && times_in_else > 0 then
-       (* Both branches consume the variable, and one of them more than once. *)
-       OnEveryPath (max times_in_then times_in_else)
+       then_branch
      else
-       OnSomePathsOnly IfExpressionBranches
-  | (OnSomePathsOnly expression, (OnEveryPath _ | OnSomePathsOnly _))
-  | (OnEveryPath _, OnSomePathsOnly expression) ->
-     OnSomePathsOnly expression
+       OnSomePathsOnly { at_most; parts_at = IfExpressionBranches }
+  | (OnSomePathsOnly { parts_at; _ }, (OnEveryPath _ | OnSomePathsOnly _))
+  | (OnEveryPath _, OnSomePathsOnly { parts_at; _ }) ->
+     OnSomePathsOnly { at_most; parts_at }
 
 (* The appearances in the right operand of `and` or of `or`. The evaluation
    skips that operand when the left one decides the result. *)
@@ -209,7 +214,7 @@ let in_right_operand_evaluated_on_some_paths (expression: LinearityErrors.partly
      if times = 0 then
        right_operand
      else
-       OnSomePathsOnly expression
+       OnSomePathsOnly { at_most = times; parts_at = expression }
   | OnSomePathsOnly _ ->
      right_operand
 
@@ -352,9 +357,15 @@ let case_branch_tables_are_consistent (place: place) (lst: state_tbl list): unit
 let rec check_var_in_expr (place: place) (tbl: state_tbl) (depth: loop_depth) (name: identifier) (ty: ty) (expr: texpr): state_tbl =
   (* Count the appearances of the variable in the expression. *)
   match count name expr with
-  | OnSomePathsOnly expression ->
-     if universe_linear_ish (type_universe ty) then
-       linearity_error place (ConsumedOnSomePathsOnly { name; expression })
+  | OnSomePathsOnly { at_most; parts_at } ->
+     if at_most > 1 || need_not_be_consumed ty then
+       (* Checked as if every path consumed the variable `at_most` times. More
+          than once is an error whichever path the evaluation takes. A value
+          that need not be consumed loses nothing on the path that does not
+          use it, and cannot be used again after a path that may have. *)
+       check_var_consumed_on_every_path place tbl depth name ty at_most
+     else if universe_linear_ish (type_universe ty) then
+       linearity_error place (ConsumedOnSomePathsOnly { name; expression = parts_at })
      else
        tbl
   | OnEveryPath consumed ->
@@ -599,24 +610,12 @@ let rec check_stmt (place: place) (tbl: state_tbl) (depth: loop_depth) (stmt: ts
      (* Ensure that all variables are Consumed. *)
      let _ =
        List.map (fun (name, ty, _, state) ->
-           if is_consumed state then
+           if is_consumed state || need_not_be_consumed ty then
              ()
+           else if universe_linear_ish (type_universe ty) then
+             linearity_error place (NotConsumedAtReturn name)
            else
-             (* Is the type of this variable a write reference? *)
-             (match ty with
-              | WriteRef _ ->
-                 (* Write references can be dropped implicitly. *)
-                 ()
-              | SpanMut _ ->
-                 (* Write spans can be dropped implicitly. *)
-                 ()
-              | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat
-              | NamedType _ | RegionTy _ | ReadRef _ | Span _ | TyVar _ | Address _
-              | Pointer _ | FnPtr _ ->
-                 if universe_linear_ish (type_universe ty) then
-                   linearity_error place (NotConsumedAtReturn name)
-                 else
-                   ()))
+             ())
          (tbl_to_list tbl)
      in
      tbl
