@@ -11,16 +11,17 @@
   ],
   "span": {
     "filename": "test-programs/suites/034-early-and-late-stage-errors/019-export-write-reference-return/Test.aum",
-    "startp": { "line": 2, "column": 48 },
-    "end": { "line": 5, "column": 8 }
+    "startp": { "line": 4, "column": 48 },
+    "end": { "line": 7, "column": 8 }
   },
   "context": [
-    [ 1, "module body Test is" ],
-    [ 2, "    pragma Foreign_Export(External_Name => \"f\");" ],
-    [ 3, "    function f(): &![Int32, Static] is" ],
-    [ 4, "        return @embed(&![Int32, Static], \"0\");" ],
-    [ 5, "    end;" ],
-    [ 6, "" ],
-    [ 7, "    function main(): ExitCode is" ]
+    [ 2, "" ],
+    [ 3, "module body Test is" ],
+    [ 4, "    pragma Foreign_Export(External_Name => \"f\");" ],
+    [ 5, "    function f(): &![Int32, Static] is" ],
+    [ 6, "        return @embed(&![Int32, Static], \"0\");" ],
+    [ 7, "    end;" ],
+    [ 8, "" ],
+    [ 9, "    function main(): ExitCode is" ]
   ]
 }

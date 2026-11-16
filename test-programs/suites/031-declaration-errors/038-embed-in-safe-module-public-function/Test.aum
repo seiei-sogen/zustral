@@ -1,0 +1,8 @@
+import Forge (forge);
+
+module body Test is
+    function main(): ExitCode is
+        printLn(forge());
+        return ExitSuccess();
+    end;
+end module body.

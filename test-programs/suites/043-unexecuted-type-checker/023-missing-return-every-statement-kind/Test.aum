@@ -1,3 +1,5 @@
+pragma Unsafe_Module;
+
 module body Test is
     record Foo: Free is
         a: Int32;

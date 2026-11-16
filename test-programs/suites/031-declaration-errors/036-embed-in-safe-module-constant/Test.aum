@@ -1,0 +1,8 @@
+module body Test is
+    constant Forged: Int32 := @embed(Int32, "12345");
+
+    function main(): ExitCode is
+        printLn(Forged);
+        return ExitSuccess();
+    end;
+end module body.

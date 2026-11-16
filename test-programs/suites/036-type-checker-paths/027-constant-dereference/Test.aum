@@ -1,3 +1,5 @@
+pragma Unsafe_Module;
+
 module body Test is
     constant Ref: &[Int32, Static] := @embed(&[Int32, Static], "NULL");
 

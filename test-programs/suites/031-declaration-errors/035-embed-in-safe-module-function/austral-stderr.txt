@@ -1,0 +1,27 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "Can't use " },
+    { "type": "code", "content": "@embed" },
+    { "type": "text", "content": " in a safe module." },
+    { "type": "break" },
+    { "type": "text", "content": "Consider adding " },
+    { "type": "code", "content": "pragma Unsafe_Module;" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/035-embed-in-safe-module-function/Test.aum",
+    "startp": { "line": 3, "column": 35 },
+    "end": { "line": 3, "column": 81 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function main(): ExitCode is" ],
+    [
+      3,
+      "        let p: &[Int32, Static] := @embed(&[Int32, Static], \"(au_int32_t*)12345\");"
+    ],
+    [ 4, "        printLn(!p);" ],
+    [ 5, "        return ExitSuccess();" ]
+  ]
+}
