@@ -84,6 +84,6 @@ lib/TypeSignature.ml	22	0	0	0	0	0	0	0	0	0	0
 lib/TypeStripping.ml	81	1	0	0	0	0	0	0	0	0	0
 lib/TypeSystem.ml	96	0	0	0	0	0	0	0	0	0	0
 lib/TypeVarSet.ml	15	0	0	0	0	0	0	0	0	0	0
-lib/TypingPass.ml	721	30	0	0	0	0	0	0	0	0	0
+lib/TypingPass.ml	726	30	0	0	0	0	0	0	0	0	0
 lib/Util.ml	132	1	0	0	0	3	1	0	0	0	0
 lib/Version.ml	18	0	0	0	0	0	0	0	0	0	0

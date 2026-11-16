@@ -704,7 +704,12 @@ and lexenv_from_params (params: value_parameter list): lexenv =
 and augment_method_decl _ _ _ (LMethodDecl (decl_id, name, params, rt, _)) =
   TypedMethodDecl (decl_id, name, params, rt)
 
-and augment_method_def module_name menv rm typarams supply (LMethodDef (ins_meth_id, name, params, rt, _, body)) =
+and augment_method_def module_name menv rm instance_typarams supply (LMethodDef (ins_meth_id, name, params, rt, _, body)) =
+  (* The body can name the type parameters of the instance and those of the
+     method itself, as the signature can (ExtractionPass). The environment
+     keeps the method's own. *)
+  let (InsMethRec { typarams = method_typarams; _ }) = get_instance_method menv ins_meth_id in
+  let typarams = merge_typarams NoSpan instance_typarams method_typarams in
   let lexenv = lexenv_from_params params in
   let ctx = StmtCtx (module_name, menv, rm, typarams, rt, NoSpan) in
   let _ =
