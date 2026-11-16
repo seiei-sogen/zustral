@@ -29,6 +29,7 @@ CI（`.github/workflows/build-and-test.yml`）は、これ以外にも `tools/re
 - `cli/`, `bin/`: コマンドラインの入口。
 - `standard/`: 標準ライブラリ。
 - `docs/`: 仕様（`decimal.md` など）、計画、調査。
+- `.claude/skills/pstack/`, `.claude/skills/superpowers/`: コーディングエージェント用のプラグイン pstack と superpowers を取り込んだもの。上流のものをそのまま置いているので、手で編集しない。
 
 ## 設計の考え方
 
@@ -50,10 +51,21 @@ CI（`.github/workflows/build-and-test.yml`）は、これ以外にも `tools/re
 - ディレクトリ名も、上の「命名」に従う。
 - ディレクトリ構造も、コードに手を入れるたびに見直して改善する。
 
+## ファイルの分け方
+
+- 一つのファイルに、関数をいくつも詰め込まない。これは AI がやりがちなことである。原則は、1ファイルに1関数である。
+- 1ファイルは、原則として、コメントなどを除いて200行以内に収める。
+
 ## 作業の進め方
 
 - 作業は、基本的に pstack の `poteto-mode` で行う。あるいは、pstack のスキルを場面に合わせて使う。
+  - pstack は `.claude/skills/pstack/` に取り込んである。セッションがこれをプラグインとして読み込んでいれば、`/pstack:poteto-mode` で呼べる。
+  - 読み込んでいないセッションでは、`.claude/skills/pstack/skills/poteto-mode/SKILL.md` を読んで、それに従う。他のスキルも `.claude/skills/pstack/skills/<スキル名>/SKILL.md` にある。
+  - 取り込み元は https://github.com/cursor/plugins の `harness/pstack/claude-code`（Claude Code 向けの生成版）で、版は 0.15.42、コミットは `bf0c7cd80abdbf7fe47b634978a7d1b4071f71a7` である。更新するときは、上流の同じディレクトリで丸ごと置き換え、この行の版とコミットを書き換える。
 - テストについては、superpowers のテスト関連のスキルを参考にする。
+  - superpowers は `.claude/skills/superpowers/` に取り込んである。セッションがこれをプラグインとして読み込んでいれば、`/superpowers:test-driven-development` のように呼べる。
+  - 読み込んでいないセッションでは、`.claude/skills/superpowers/skills/<スキル名>/SKILL.md` を読んで、それに従う。テスト関連のスキルは `test-driven-development` と `verification-before-completion` である。
+  - 取り込み元は https://github.com/obra/superpowers のリポジトリ全体で、版は 7.0.2、コミットは `22f0b463e7a5e579904dd6211a520321035526f7` である。更新するときは、上流のリポジトリで丸ごと置き換え、この行の版とコミットを書き換える。
 
 ## 書き方の約束
 
