@@ -50,6 +50,11 @@ CI（`.github/workflows/build-and-test.yml`）は、これ以外にも `tools/re
 - ディレクトリ名も、上の「命名」に従う。
 - ディレクトリ構造も、コードに手を入れるたびに見直して改善する。
 
+## 作業の進め方
+
+- 作業は、基本的に pstack の `poteto-mode` で行う。あるいは、pstack のスキルを場面に合わせて使う。
+- テストについては、superpowers のテスト関連のスキルを参考にする。
+
 ## 書き方の約束
 
 - Decimal まわりの用語は `CONTEXT.md` に従う。`_Avoid_` に挙がった言い換えは使わない。
