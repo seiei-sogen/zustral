@@ -1,7 +1,7 @@
 module body Test is
     function main(): ExitCode is
         let foo: Unit := nil;
-        borrow fooref: &[Foo, R] := &foo do
+        borrow fooref: &[Unit, R] := &foo do
             skip;
         end borrow;
         return ExitSuccess();

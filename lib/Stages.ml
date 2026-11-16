@@ -52,6 +52,7 @@ module Ast = struct
         span: span;
         original: identifier;
         rename: identifier;
+        declared_reference: borrowing_mode * qtypespec;
         region: identifier;
         body: astmt;
         mode: borrow_stmt_kind
@@ -174,6 +175,7 @@ module AstLC = struct
         span: span;
         original: identifier;
         rename: identifier;
+        declared_reference: borrowing_mode * qtypespec;
         region: identifier;
         body: astmt;
         mode: borrow_stmt_kind
@@ -257,6 +259,7 @@ module AstDP = struct
         span: span;
         original: identifier;
         rename: identifier;
+        declared_reference: borrowing_mode * qtypespec;
         region: identifier;
         body: astmt;
         mode: borrow_stmt_kind
@@ -334,6 +337,9 @@ module AstDB = struct
         span: span;
         original: identifier;
         rename: identifier;
+        declared_reference: (borrowing_mode * qtypespec) option;
+        (* None when the statement stands for an anonymous borrow (`&x`),
+           which declares no type. *)
         region: identifier;
         body: astmt;
         mode: borrow_stmt_kind

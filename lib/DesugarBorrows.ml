@@ -140,6 +140,7 @@ let wrap_stmt_with_borrows (supply: Supply.t) (stmt: AstDB.astmt) (acc: acc): As
         span = empty_span;
         original = original_name acc_rec.original;
         rename = original_name acc_rec.rename;
+        declared_reference = None;
         region;
         body = stmt;
         mode = acc_rec.mode;
@@ -222,9 +223,9 @@ let rec transform_stmt (supply: Supply.t) (stmt: AstDP.astmt): AstDB.astmt * Sup
      let (expr, acc, supply) = lift_borrows supply expr [] in
      let stmt = AstDB.AReturn (span, expr) in
      wrap_stmt_with_borrows supply stmt acc
-  | AstDP.ABorrow { span; original; rename; region; body; mode } ->
+  | AstDP.ABorrow { span; original; rename; declared_reference; region; body; mode } ->
      let (body, supply) = transform_stmt supply body in
-     (AstDB.ABorrow { span; original; rename; region; body; mode }, supply)
+     (AstDB.ABorrow { span; original; rename; declared_reference = Some declared_reference; region; body; mode }, supply)
 
 and transform_whens (supply: Supply.t) (whens: AstDP.abstract_when list): AstDB.abstract_when list * Supply.t =
   Supply.map (fun supply (AstDP.AbstractWhen (id, bindings, body)) ->

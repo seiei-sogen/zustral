@@ -157,8 +157,8 @@ let rec augment_stmt (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (stmt: 
      augment_while ctx lexenv supply span c body
   | AFor { span; name; initial; final; body; } ->
      augment_for ctx lexenv supply span name initial final body
-  | ABorrow { span; original; rename; region; body; mode; } ->
-     augment_borrow ctx lexenv supply span original rename region body mode
+  | ABorrow { span; original; rename; declared_reference; region; body; mode; } ->
+     augment_borrow ctx lexenv supply span original rename declared_reference region body mode
   | ABlock (span, f, r) ->
      augment_block ctx lexenv supply span f r
   | ADiscarding (span, e) ->
@@ -378,9 +378,9 @@ and augment_for (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span)
       let (b', lexenv, supply) = augment_stmt ctx lexenv supply body in
       (TFor (span, name, i', f', b'), remove_var lexenv name, supply))
 
-and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (original: identifier) (rename: identifier) (region: identifier) (body: astmt) (mode: borrow_stmt_kind): tstmt * lexenv * Supply.t =
+and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (original: identifier) (rename: identifier) (declared_reference: (borrowing_mode * qtypespec) option) (region: identifier) (body: astmt) (mode: borrow_stmt_kind): tstmt * lexenv * Supply.t =
   let ctx = stmt_at ctx span in
-  let (StmtCtx (_, _, rm, _, _, place)) = ctx in
+  let (StmtCtx (_, env, rm, typarams, _, place)) = ctx in
   (let _ = check_var_doesnt_collide_with_decl ctx rename in
       (match get_var lexenv original with
        | (Some (orig_ty, src)) ->
@@ -430,6 +430,23 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
                   end
                 in
                 WriteRef (pointed_ty, RefRegion region_obj))
+          in
+          (* The reference has the type the statement declares for it. *)
+          let _ =
+            match declared_reference with
+            | Some (declared_mode, declared_referent) ->
+               let declared_referent: ty = parse_typespec place env rm typarams declared_referent in
+               let declared_refty: ty =
+                 match declared_mode with
+                 | ReadBorrow -> ReadRef (declared_referent, RefRegion region_obj)
+                 | WriteBorrow -> WriteRef (declared_referent, RefRegion region_obj)
+               in
+               if equal_ty declared_refty refty then
+                 ()
+               else
+                 type_error place (TypeMismatch { expected = declared_refty; actual = refty })
+            | None ->
+               ()
           in
           let lexenv = push_var place lexenv rename refty (VarLocal Immutable) in
           let rm' = add_region place rm region region_obj in

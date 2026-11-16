@@ -47,8 +47,8 @@ let rec abs_stmt (place: place) im stmt =
          final = abs_expr place im f;
          body = abs_stmt place im b
        }
-  | CBorrow { span; original; rename; region; body; mode; _ } ->
-     ABorrow { span; original; rename; region; body=abs_stmt place im body; mode }
+  | CBorrow { span; original; rename; declared_reference = (declared_mode, declared_referent); region; body; mode } ->
+     ABorrow { span; original; rename; declared_reference = (declared_mode, qualify_typespec im declared_referent); region; body=abs_stmt place im body; mode }
   | CBlock (_, l) ->
      let_reshape place im l
   | CDiscarding (span, e) ->

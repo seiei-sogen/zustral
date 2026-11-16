@@ -124,8 +124,8 @@ and transform_stmt (stmt: AstLC.astmt): AstDP.astmt =
      AstDP.AWhile (span, transform_expr e, transform_stmt s)
   | AstLC.AFor { span; name; initial; final; body } ->
      AstDP.AFor { span; name; initial=transform_expr initial; final=transform_expr final; body=transform_stmt body}
-  | AstLC.ABorrow {span; original; rename; region; body; mode} ->
-     AstDP.ABorrow {span; original; rename; region; body=transform_stmt body; mode}
+  | AstLC.ABorrow {span; original; rename; declared_reference; region; body; mode} ->
+     AstDP.ABorrow {span; original; rename; declared_reference; region; body=transform_stmt body; mode}
   | AstLC.ABlock (span, s1, s2) ->
      AstDP.ABlock (span, transform_stmt s1, transform_stmt s2)
   | AstLC.ADiscarding (span, e) ->

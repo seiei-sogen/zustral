@@ -141,9 +141,9 @@ let rec lift (supply: Supply.t) (stmt: Ast.astmt): AstLC.astmt * Supply.t =
                }
            )
        ), supply)
-  | Ast.ABorrow {span; original; rename; region; body; mode} ->
+  | Ast.ABorrow {span; original; rename; declared_reference; region; body; mode} ->
      let (body, supply) = lift supply body in
-     (AstLC.ABorrow {span; original; rename; region; body; mode}, supply)
+     (AstLC.ABorrow {span; original; rename; declared_reference; region; body; mode}, supply)
   | Ast.ABlock (span, s1, s2) ->
      let (s2, supply) = lift supply s2 in
      let (s1, supply) = lift supply s1 in

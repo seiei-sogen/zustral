@@ -35,7 +35,7 @@ module body Standard.StringBuilder is
     generic [R: Region, S: Region]
     function writeString(builder: &![StringBuilder, R], string: &[String, S]): Unit is
         for i from 0 to length(string) - 1 do
-            borrow ref: &[String, T] := &~builder do
+            borrow ref: &![StringBuilder, T] := &~builder do
                 insertBack(&(ref->buffer), nthByte(string, i));
             end borrow;
         end for;
