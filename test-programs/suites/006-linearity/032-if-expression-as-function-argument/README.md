@@ -1,0 +1,1 @@
+Test that a function call fails when one of its arguments is an `if` expression that consumes a linear variable in only one branch (issue #135).

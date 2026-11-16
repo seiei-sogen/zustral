@@ -1,0 +1,1 @@
+Test that an `if` expression compiles when both of its branches consume the same linear variable once, and when its condition consumes a linear variable (issue #135).

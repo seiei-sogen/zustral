@@ -1,0 +1,25 @@
+module body Test is
+    record Foo: Linear is
+        x: Int32;
+    end;
+
+    function incremented(foo: Foo): Foo is
+        let { x: Int32 } := foo;
+        return Foo(x => x + 1);
+    end;
+
+    function isPositive(foo: Foo): Bool is
+        let { x: Int32 } := foo;
+        return x > 0;
+    end;
+
+    function main(): ExitCode is
+        let a: Foo := Foo(x => 1);
+        let { x: Int32 } := if false then a else incremented(a);
+        printLn(x);
+        let b: Foo := Foo(x => 5);
+        let n: Int32 := if isPositive(b) then 10 else 20;
+        printLn(n);
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,29 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "The variable " },
+    { "type": "code", "content": "a" },
+    { "type": "text", "content": " is consumed " },
+    {
+      "type": "text",
+      "content": "in one branch of an if expression but not in the other"
+    },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/006-linearity/032-if-expression-as-function-argument/Test.aum",
+    "startp": { "line": 14, "column": 8 },
+    "end": { "line": 14, "column": 74 }
+  },
+  "context": [
+    [ 12, "    function main(): ExitCode is" ],
+    [ 13, "        let a: Foo := Foo(x => 1);" ],
+    [
+      14,
+      "        let n: Int32 := sum(Foo(x => 4), if true then a else Foo(x => 2));"
+    ],
+    [ 15, "        printLn(n);" ],
+    [ 16, "        return ExitSuccess();" ]
+  ]
+}

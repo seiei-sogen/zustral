@@ -1,0 +1,1 @@
+Test that a variable of a Free type can be used in only one branch of an `if` expression, wherever the `if` expression is: in one argument or in both, in one branch of another `if` expression or in both.

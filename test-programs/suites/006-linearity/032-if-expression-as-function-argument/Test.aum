@@ -1,0 +1,18 @@
+module body Test is
+    record Foo: Linear is
+        x: Int32;
+    end;
+
+    function sum(first: Foo, second: Foo): Int32 is
+        let { x: Int32 } := first;
+        let { x as y: Int32 } := second;
+        return x + y;
+    end;
+
+    function main(): ExitCode is
+        let a: Foo := Foo(x => 1);
+        let n: Int32 := sum(Foo(x => 4), if true then a else Foo(x => 2));
+        printLn(n);
+        return ExitSuccess();
+    end;
+end module body.

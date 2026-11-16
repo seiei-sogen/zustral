@@ -1,0 +1,12 @@
+module body Test is
+    record Foo: Linear is
+        x: Int32;
+    end;
+
+    function main(): ExitCode is
+        let a: Foo := Foo(x => 1);
+        let { x: Int32 } := if true then (if true then a else Foo(x => 2)) else Foo(x => 3);
+        printLn(x);
+        return ExitSuccess();
+    end;
+end module body.
