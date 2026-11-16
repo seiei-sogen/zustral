@@ -1,0 +1,13 @@
+module body Test is
+    generic [T: Free]
+    function make(x: T): T is
+        let y: T := 300;
+        return y;
+    end;
+
+    function main(): ExitCode is
+        let n: Nat8 := 7;
+        printLn(make(n));
+        return ExitSuccess();
+    end;
+end module body.
