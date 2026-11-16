@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The integer " },
+    { "type": "code", "content": "18446744073709551616" },
+    { "type": "text", "content": " does not fit the type " },
+    { "type": "type", "content": "Index" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/016-spans/015-index-span-with-literal-beyond-index/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 41 }
+  },
+  "context": [
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        let s: Span[Nat8, Static] := \"abc\";" ],
+    [ 4, "        printLn(s[18446744073709551616]);" ],
+    [ 5, "        return ExitSuccess();" ],
+    [ 6, "    end;" ]
+  ]
+}

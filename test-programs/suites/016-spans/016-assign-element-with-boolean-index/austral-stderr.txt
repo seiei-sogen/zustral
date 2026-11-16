@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "Index" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "Bool" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/016-spans/016-assign-element-with-boolean-index/Test.aum",
+    "startp": { "line": 26, "column": 8 },
+    "end": { "line": 26, "column": 23 }
+  },
+  "context": [
+    [ 24, "    function writeFirst(ref: &![Pointer[Int32], R]): Unit is" ],
+    [ 25, "        var sp: Span![Int32, R] := spanWrite(ref, 0, 9);" ],
+    [ 26, "        sp[false] := 7;" ],
+    [ 27, "        return nil;" ],
+    [ 28, "    end;" ]
+  ]
+}

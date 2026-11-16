@@ -1,0 +1,12 @@
+module body Test is
+    generic [T: Free]
+    function at(s: Span[Nat8, Static], x: T): Nat8 is
+        return s[x];
+    end;
+
+    function main(): ExitCode is
+        let s: Span[Nat8, Static] := "abc";
+        printLn(at(s, false));
+        return ExitSuccess();
+    end;
+end module body.

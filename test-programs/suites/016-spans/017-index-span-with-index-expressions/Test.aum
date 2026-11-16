@@ -1,0 +1,22 @@
+module body Test is
+    function second(): Index is
+        return 1;
+    end;
+
+    function main(): ExitCode is
+        let s: Span[Nat8, Static] := "abc";
+        printLn(s[0]);
+        let i: Index := 1;
+        printLn(s[i]);
+        printLn(s[i + 1]);
+        printLn(s[second()]);
+        printLn(s[(2 : Index)]);
+        if spanLength(s) > 4294967296 then
+            printLn(s[4294967296]);
+        end if;
+        for j from 0 to 2 do
+            printLn(s[j]);
+        end for;
+        return ExitSuccess();
+    end;
+end module body.
