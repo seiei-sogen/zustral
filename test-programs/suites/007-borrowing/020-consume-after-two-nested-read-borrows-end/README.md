@@ -1,0 +1,1 @@
+Test that a linear variable cannot be consumed inside a read borrow of it, after two nested read borrows of the same variable, one inside the other, have ended (issue #134).

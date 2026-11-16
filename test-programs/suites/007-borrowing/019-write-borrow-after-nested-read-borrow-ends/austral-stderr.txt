@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "Cannot borrow (mutably) the variable " },
+    { "type": "code", "content": "foo" },
+    { "type": "text", "content": " because it is already " },
+    { "type": "text", "content": "borrowed (read-only)" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/007-borrowing/019-write-borrow-after-nested-read-borrow-ends/Test.aum",
+    "startp": { "line": 12, "column": 12 },
+    "end": { "line": 14, "column": 23 }
+  },
+  "context": [
+    [ 10, "                skip;" ],
+    [ 11, "            end borrow;" ],
+    [ 12, "            borrow w: &![Foo, T] := &!foo do" ],
+    [ 13, "                printLn(w->x);" ],
+    [ 14, "            end borrow;" ],
+    [ 15, "            printLn(a->x);" ],
+    [ 16, "        end borrow;" ]
+  ]
+}

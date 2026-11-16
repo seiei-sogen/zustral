@@ -1,0 +1,1 @@
+Test that a variable cannot be borrowed mutably inside a read borrow of it, after a nested read borrow of the same variable has ended (issue #134).
