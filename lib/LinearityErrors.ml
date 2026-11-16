@@ -39,10 +39,14 @@ let branching_words (statement: branching): string =
 (** The expressions that evaluate only some of their operands. *)
 type partly_evaluated_expression =
   | IfExpressionBranches
+  | ConjunctionRightOperand
+  | DisjunctionRightOperand
 
 let where_consumed_on_some_paths_only (expression: partly_evaluated_expression): string =
   match expression with
   | IfExpressionBranches -> "in one branch of an if expression but not in the other"
+  | ConjunctionRightOperand -> "in the right operand of a conjunction (and), which is evaluated only when the left operand is true"
+  | DisjunctionRightOperand -> "in the right operand of a disjunction (or), which is evaluated only when the left operand is false"
 
 type t =
   | DereferenceNonFree of ty

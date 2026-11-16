@@ -201,6 +201,18 @@ let merge_if_expression_branches (then_branch: appearances) (else_branch: appear
   | (OnEveryPath _, OnSomePathsOnly expression) ->
      OnSomePathsOnly expression
 
+(* The appearances in the right operand of `and` or of `or`. The evaluation
+   skips that operand when the left one decides the result. *)
+let in_right_operand_evaluated_on_some_paths (expression: LinearityErrors.partly_evaluated_expression) (right_operand: appearances): appearances =
+  match right_operand with
+  | OnEveryPath times ->
+     if times = 0 then
+       right_operand
+     else
+       OnSomePathsOnly expression
+  | OnSomePathsOnly _ ->
+     right_operand
+
 let merge_list (l: appearances list): appearances =
   List.fold_left merge zero_appearances l
 
@@ -252,9 +264,9 @@ let rec count (name: identifier) (expr: texpr): appearances =
   | TComparison (_, lhs, rhs) ->
      merge (c lhs) (c rhs)
   | TConjunction (lhs, rhs) ->
-     merge (c lhs) (c rhs)
+     merge (c lhs) (in_right_operand_evaluated_on_some_paths ConjunctionRightOperand (c rhs))
   | TDisjunction (lhs, rhs) ->
-     merge (c lhs) (c rhs)
+     merge (c lhs) (in_right_operand_evaluated_on_some_paths DisjunctionRightOperand (c rhs))
   | TNegation e ->
      c e
   | TIfExpression (e, t, f) ->
