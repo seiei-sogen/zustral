@@ -75,7 +75,7 @@ lib/TypeBindings.ml	171	2	0	0	0	0	0	0	0	0	0
 lib/TypeCheckExpr.ml	906	40	0	0	0	1	0	0	0	0	0
 lib/TypeClasses.ml	253	12	0	0	0	0	0	0	0	0	0
 lib/TypeErrors.ml	500	0	0	0	0	0	0	0	0	0	0
-lib/TypeMatch.ml	348	4	0	0	0	0	0	0	0	0	0
+lib/TypeMatch.ml	368	5	0	0	0	0	0	0	0	0	0
 lib/TypeParameter.ml	35	0	0	0	0	0	0	0	0	0	0
 lib/TypeParameters.ml	60	2	0	0	0	0	0	0	0	0	0
 lib/TypeParser.ml	325	9	0	0	0	2	0	0	0	0	0

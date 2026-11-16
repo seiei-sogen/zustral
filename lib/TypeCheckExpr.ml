@@ -509,7 +509,7 @@ let rec infer (ctx: expr_ctx) (expr: aexpr): texpr =
 
 and check (ctx: expr_ctx) (expr: aexpr) (expected: ty): texpr =
   let value: texpr = infer_with_expected ctx expr expected in
-  let _ = match_type_with_value_ctx ctx expected value in
+  let _ = expect_value_of_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) expected value in
   value
 
 (* `expr` in a place that expects the type `expected`, before the two types are

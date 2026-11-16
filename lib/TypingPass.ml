@@ -195,7 +195,7 @@ and augment_assign_tmp (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (name
   let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
   let value = infer_expr place module_name env rm typarams lexenv value in
   let ty = get_temporary_type place lexenv name in
-  let _ = match_type (env, module_name, place) ty (get_type place value) in
+  let _ = expect_same_type (env, module_name, place) ty (get_type place value) in
   (TAssignTmp (name, value), lexenv, supply)
 
 and augment_destructure (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (mut: mutability) (bindings: qbinding list) (value: aexpr) (body: astmt): tstmt * lexenv * Supply.t =
@@ -236,7 +236,7 @@ and augment_destructure (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (spa
               in
               let newvars: (identifier * ty * var_source) list =
                 List.map (fun (_, ty, actual, rename) ->
-                    let _ = match_type (env, module_name, place) ty actual in
+                    let _ = expect_same_type (env, module_name, place) ty actual in
                     (rename, ty, VarLocal mut))
                   bindings''
               in
@@ -279,7 +279,7 @@ and augment_assign (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
       let lexenv = declare_assigned_temporary place lexenv rvalue pointed_ty in
       let rvalue: texpr = infer_expr place module_name env rm typarams lexenv rvalue in
       (* The pointed to type and the type of the rvalue must match. *)
-      let _ = match_type_with_value (env, module_name, place) pointed_ty rvalue in
+      let _ = expect_value_of_type (env, module_name, place) pointed_ty rvalue in
       (* The pointed-to type must be in the free universe. *)
       let _ =
         match type_universe pointed_ty with
@@ -324,7 +324,7 @@ and augment_assign_var (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span
       let lexenv = declare_assigned_temporary place lexenv rvalue lvalue_ty in
       let rvalue: texpr = infer_expr place module_name env rm typarams lexenv rvalue in
       (* Types must match. *)
-      let _ = match_type_with_value (env, module_name, place) lvalue_ty rvalue in
+      let _ = expect_value_of_type (env, module_name, place) lvalue_ty rvalue in
       (* Construct the assignment. *)
       (TAssignVar (span, name, rvalue), lexenv, supply))
 

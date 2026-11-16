@@ -1,7 +1,7 @@
 module body Test is
     generic [T: Free]
     function zero(): T is
-        return 0;
+        abort("no value of every type");
     end;
 
     function isZero(x: Int32): Bool is
