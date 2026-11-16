@@ -304,14 +304,12 @@ let tables_are_consistent (place: place) (statement: LinearityErrors.branching) 
         ())
     common
 
-let rec table_list_is_consistent (place: place) (lst: state_tbl list): unit =
+(* The branches of a `case` leave every variable in the same state when each
+   of them agrees with the first. *)
+let case_branch_tables_are_consistent (place: place) (lst: state_tbl list): unit =
   match lst with
-  | a::b::rest ->
-     let _ = tables_are_consistent place CaseBranching a b in
-     table_list_is_consistent place rest
-  | [a] ->
-     let _ = a in
-     ()
+  | first :: rest ->
+     List.iter (tables_are_consistent place CaseBranching first) rest
   | [] ->
      ()
 
@@ -491,7 +489,7 @@ let rec check_stmt (place: place) (tbl: state_tbl) (depth: loop_depth) (stmt: ts
      let place: place = place_inside place span in
      let tbl: state_tbl = check_expr place tbl depth expr in
      let tbls: state_tbl list = check_whens place tbl depth whens in
-     let _ = table_list_is_consistent place tbls in
+     let _ = case_branch_tables_are_consistent place tbls in
      (match tbls with
       | first::rest ->
          let _ = rest in
