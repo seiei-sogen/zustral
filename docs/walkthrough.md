@@ -65,7 +65,7 @@ type combine_body = env -> concrete_module_body -> Combined.combined_module Outc
 type check_returns = Combined.combined_module -> ReturnCheck.returning_module Outcome.t
 ```
 
-`lib/ReturnCheck.ml` の `check_ends_in_return` が、関数とメソッドの本体が、`return` 文か `Abort` の呼び出しで終わることを確かめる。確かめるのは、文の形だけである。最後の文が `if` なら2つの枝の、`case` ならすべての枝の、`borrow` なら本体の、最後の文を見る。`else` のない `if`、`while`、`for` で終わる本体は、通らない。条件が偽のときや、ループが1回も回らないときに、`return` を通らないからである。条件が必ず真になるループも通らない。後ろに `return` 文か `Abort` の呼び出しを書く。外部から取り込む関数（`Foreign_Import`）は、本体がないので調べない。公開する関数（`Foreign_Export`）は、調べる。
+`lib/ReturnCheck.ml` の `check_ends_in_return` が、関数とメソッドの本体が、`return` 文か `Abort` の呼び出しで終わることを確かめる。確かめるのは、文の形だけである。最後の文が `if` なら2つの枝の、`case` ならすべての枝の、`borrow` なら本体の、最後の文を見る。`else` のない `if`、`while`、`for` で終わる本体は、通らない。条件が偽のときや、ループが1回も回らないときに、`return` を通らないからである。条件が必ず真になるループも通らない。後ろに `return` 文か `Abort` の呼び出しを書く。`Abort` の呼び出しと認めるのは、その名前の変数が有効範囲にないときだけである。引数、`let`、分解、`case` の束縛、`borrow` 文が付けた名前を、本体をたどりながら集める。型検査は、呼び出しの名前と同じ名前の変数を、宣言より先に呼ぶ（`TypeCheckExpr.augment_call`）。その呼び出しは関数ポインタの呼び出しで、戻ってくる（issue #157）。外部から取り込む関数（`Foreign_Import`）は、本体がないので調べない。公開する関数（`Foreign_Export`）は、調べる。
 
 ## 脱糖
 
