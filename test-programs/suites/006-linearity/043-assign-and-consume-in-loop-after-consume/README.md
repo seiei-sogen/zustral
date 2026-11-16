@@ -1,0 +1,1 @@
+Test that a loop can assign a linear variable that was consumed before the loop when it also consumes the new value: every turn leaves the variable consumed, as it was.

@@ -1,0 +1,1 @@
+Test that a `while` loop cannot assign a linear variable that was consumed before the loop and leave it not consumed: when the body runs zero times, the code after the loop consumes the old value again (issue #150).
