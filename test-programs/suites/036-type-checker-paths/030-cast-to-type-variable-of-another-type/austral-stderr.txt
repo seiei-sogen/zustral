@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "T" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "Int32" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/030-cast-to-type-variable-of-another-type/Test.aum",
+    "startp": { "line": 15, "column": 8 },
+    "end": { "line": 15, "column": 30 }
+  },
+  "context": [
+    [ 13, "    function f(value: T): Int32 is" ],
+    [ 14, "        let n: Int32 := 10;" ],
+    [ 15, "        let m: Int32 := n : T;" ],
+    [ 16, "        return m;" ],
+    [ 17, "    end;" ]
+  ]
+}

@@ -72,7 +72,7 @@ lib/Supply.ml	73	0	0	0	0	0	0	0	0	0	0
 lib/TastUtil.ml	164	1	0	0	0	0	0	0	0	0	0
 lib/Type.ml	281	0	0	0	0	1	0	0	0	0	0
 lib/TypeBindings.ml	171	2	0	0	0	0	0	0	0	0	0
-lib/TypeCheckExpr.ml	906	40	0	0	0	1	0	0	0	0	0
+lib/TypeCheckExpr.ml	922	42	0	0	0	1	0	0	0	0	0
 lib/TypeClasses.ml	253	12	0	0	0	0	0	0	0	0	0
 lib/TypeErrors.ml	500	0	0	0	0	0	0	0	0	0	0
 lib/TypeMatch.ml	368	5	0	0	0	0	0	0	0	0	0

@@ -1,0 +1,1 @@
+Pins that a value of the type `Int32` cannot be cast to a type variable, also when `Int32` satisfies the constraint of the type variable: in the body of a generic function a type parameter stands for itself (lib/TypeCheckExpr.ml, check_annotated). Before issue #151 was fixed, the cast was accepted and changed nothing.

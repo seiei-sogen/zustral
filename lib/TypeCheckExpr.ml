@@ -236,6 +236,16 @@ and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (from_c
   let params: value_parameter list = List.map (fun paramty -> ValueParameter (make_ident BuiltInNames.fake_parameter_name, paramty)) paramtys in
   (* Check synthetic parameter list against argument list. *)
   let bindings = check_argument_list ctx name params args in
+  (* A function pointer has no type parameters of its own. A type variable in
+     its type is a type parameter of the declaration being checked, and stands
+     for itself: an argument of another type does not bind it. *)
+  let _ =
+    match bindings_list bindings with
+    | [] ->
+       ()
+    | (parameter, argument_ty) :: _ ->
+       type_error (ctx_place ctx) (TypeMismatch { expected = TyVar (typaram_to_tyvar parameter); actual = argument_ty })
+  in
   (* Use the bindings to get the effective return type *)
   let rt' = replace_variables bindings rt in
   let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) name params rt' from_context bindings in
@@ -837,8 +847,14 @@ and check_annotated (ctx: expr_ctx) (expr: aexpr) (target_type: ty): texpr =
      | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
      | FnPtr _ ->
         (match try_match_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) target_type (get_type (ctx_place ctx) expr') with
-         | Ok _ ->
-            expr'
+         | Ok bindings ->
+            (* The two types are of the body being checked: a type variable
+               stands for itself (TypeMatch.expect_same_type). *)
+            (match bindings_list bindings with
+             | [] ->
+                expr'
+             | _ :: _ ->
+                type_error (ctx_place ctx) (CastInvalid { target = target_type; source = get_type (ctx_place ctx) expr' }))
          | Error _ ->
             (* Every failure becomes this error, also a type error from
                checking a constraint of a type variable in the target type: a
