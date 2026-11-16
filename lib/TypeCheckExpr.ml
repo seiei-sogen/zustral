@@ -203,7 +203,7 @@ let rec augment_call (ctx: expr_ctx) (name: qident) (args: typed_arglist) (from_
   (* First, check if the callable name is a variable. *)
   match get_var (ctx_lexenv ctx) (local_name name) with
   | Some (ty, _) ->
-     augment_fptr_call ctx (local_name name) ty from_context args
+     augment_fptr_call ctx (local_name name) ty args
   | None ->
      (* Otherwise, find a callable from the environment. *)
      (match get_callable (ctx_place ctx) (ctx_env ctx) (ctx_module_name ctx) (qident_to_sident name) with
@@ -212,7 +212,7 @@ let rec augment_call (ctx: expr_ctx) (name: qident) (args: typed_arglist) (from_
       | None ->
          generic_error (ctx_place ctx) (UnknownName { kind = CallableName; name = original_name name }))
 
-and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (from_context: context_bindings) (args: typed_arglist): texpr =
+and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (args: typed_arglist): texpr =
   (* Because function pointers don't preserve value parameter names, we can't
      accept named argument lists. *)
   let args: texpr list =
@@ -246,10 +246,10 @@ and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (from_c
     | (parameter, argument_ty) :: _ ->
        type_error (ctx_place ctx) (TypeMismatch { expected = TyVar (typaram_to_tyvar parameter); actual = argument_ty })
   in
-  (* Use the bindings to get the effective return type *)
-  let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) name params rt from_context bindings in
-  let arguments = cast_arguments bindings' params args in
-  TFptrCall (name, arguments, rt'')
+  (* The call has the return type of the pointer's type, wherever the call is:
+     no type variable of that type is bound by the place either. *)
+  let arguments = cast_arguments bindings params args in
+  TFptrCall (name, arguments, rt)
 
 and augment_callable (ctx: expr_ctx) (name: qident) (callable: callable) (from_context: context_bindings) (args: typed_arglist) =
   match callable with
@@ -442,18 +442,24 @@ and handle_return_type_polymorphism (place: place) (name: identifier) (params: v
      checked, which stand for themselves. *)
   if is_return_type_polymorphic params declared_rt then
     let bindings' = from_context name rt in
-    let _ = List.iter (check_bound_by_context place declared_rt) (bindings_list bindings') in
+    let _ = List.iter (check_bound_by_context place params declared_rt) (bindings_list bindings') in
     (merge_bindings place bindings bindings', replace_variables bindings' rt)
   else
     (empty_bindings, rt)
 
-(* The place of a call binds only type parameters of what is called. A binding
-   of another variable is of a type parameter of the declaration being
-   checked: the call has a type of that parameter where the place expects
-   another type. *)
-and check_bound_by_context (place: place) (declared_rt: ty) ((parameter, expected): type_parameter * ty): unit =
+(* The place of a call binds only a type parameter of what is called that no
+   parameter mentions: one of the declared return type, and of no parameter
+   type. A binding of another variable is of a type parameter of the
+   declaration being checked, which stands for itself. It came in with the
+   type of an argument, or it is a parameter of the declaration itself, when
+   the declaration calls itself: there the arguments gave it no binding,
+   because it already is what the parameter type says. *)
+and check_bound_by_context (place: place) (params: value_parameter list) (declared_rt: ty) ((parameter, expected): type_parameter * ty): unit =
   let variable: type_var = typaram_to_tyvar parameter in
-  if TypeVarSet.mem variable (type_variables declared_rt) then
+  let in_a_parameter_type: bool =
+    List.exists (fun (ValueParameter (_, ty)) -> TypeVarSet.mem variable (type_variables ty)) params
+  in
+  if TypeVarSet.mem variable (type_variables declared_rt) && not in_a_parameter_type then
     ()
   else
     type_error place (TypeMismatch { expected; actual = TyVar variable })
