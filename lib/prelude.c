@@ -96,6 +96,9 @@ au_unit_t au_abort_internal(const char* message) {
 
   void* stderr = au_stderr();
 
+  /* _Exit does not write out the buffers of the open streams. Write them out
+     first, so that what the program wrote before it stopped is not lost. */
+  fflush(0);
   fprintf(stderr, "%s\n", message);
   fflush(stderr);
   _Exit(-1);
@@ -110,6 +113,8 @@ au_unit_t au_abort(au_span_t message) {
 
   void* stderr = au_stderr();
 
+  /* As in au_abort_internal. */
+  fflush(0);
   fprintf(stderr, "%s\n", (char*) message.data);
   fflush(stderr);
   _Exit(-1);
