@@ -1,0 +1,1 @@
+Test that the elements of a read-only span can be read when a mutable variable holds the span, and that the variable can be assigned another span.
