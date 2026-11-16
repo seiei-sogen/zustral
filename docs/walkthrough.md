@@ -77,6 +77,8 @@ type desugar = Supply.t -> ReturnCheck.returning_module -> (SmallCombined.combin
 2. パス式の書き換え（`lib/DesugarPaths.ml`）。出力は `AstDP` である。
 3. 無名の借用の書き換え（`lib/DesugarBorrows.ml`）。出力は `AstDB` である。
 
+無名の借用は、それを書いた文を包む `borrow` 文になる。借用は、その文が終わると終わる。レコードを分解する `let` は、後に続く文を本体として持つ。値に無名の借用があるときは、値を一時変数に入れる文を作り、その文だけを包む。借用は、値を計算し終えたところで終わり、本体には及ばない。変数を1つ宣言する `let` と同じである。
+
 脱糖が出す利用者のエラーは、定数の値の中の借用の1つである。借用を包む文がないからである。
 
 ## 抽出
@@ -94,6 +96,8 @@ type check_types = env -> Supply.t -> Linked.linked_module -> (Tast.typed_module
 ```
 
 `lib/TypingPass.ml` の `augment_module` が、文と式に型を付ける。出力は `Tast` である。借用の領域の番号を、番号の元から取る。
+
+`let` が宣言する変数は、初期値を代入する文が終わるまで、値を持たない。字句環境（`lib/LexEnv.ml`）は、その間、変数に「初期値を待っている」という印を付ける。名前は取られているが、変数は見つからない。初期値の式からも、初期値の中の無名の借用やパスからも、宣言している変数は見えない（issue #154）。
 
 式の型検査の入口は、`lib/TypeCheckExpr.mli` の3つである。
 

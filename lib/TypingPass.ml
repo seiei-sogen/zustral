@@ -171,7 +171,10 @@ and augment_let (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span)
   let (StmtCtx (_, env, rm, typarams, _, place)) = ctx in
   (let _ = check_var_doesnt_collide_with_decl ctx name in
       let ty = parse_typespec place env rm typarams ty in
-      let lexenv = push_var place lexenv name ty (VarLocal mut) in
+      (* The body starts with the statement that assigns the initial value
+         (LiftControlPass). The variable has no value before that statement
+         has run, so nothing in it can name the variable. *)
+      let lexenv = push_var_awaiting_initial_value place lexenv name ty (VarLocal mut) in
       let (body', lexenv, supply) = augment_stmt ctx lexenv supply body in
       (TLet (span, mut, name, ty, body'), remove_var lexenv name, supply))
 
@@ -332,12 +335,11 @@ and augment_initial_assign (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (
   let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
   (* The type of the `let` annotates its value. *)
   let ty = parse_typespec place env rm typarams ty in
-  (* The `let` put its variable in the lexical environment for the statements
-     after it. The initial value is evaluated before the variable has one, so
-     it does not see the variable. *)
-  let lexenv_of_value: lexenv = remove_var lexenv (original_name name) in
-  let rvalue: texpr = check_annotated_expr place module_name env rm typarams lexenv_of_value rvalue ty in
-  (TInitialAssign (name, rvalue), lexenv, supply)
+  (* The `let` declared its variable without a value, so the initial value
+     does not see the variable, and neither does an anonymous borrow around
+     this statement. The statements after this one see it. *)
+  let rvalue: texpr = check_annotated_expr place module_name env rm typarams lexenv rvalue ty in
+  (TInitialAssign (name, rvalue), mark_var_initialized lexenv (original_name name), supply)
 
 and augment_if (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (c: aexpr) (t: astmt) (f: astmt): tstmt * lexenv * Supply.t =
   let ctx = stmt_at ctx span in

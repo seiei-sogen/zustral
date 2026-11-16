@@ -72,9 +72,9 @@ let the_variables_were (names: identifier list): err_text =
   [
     Text "The ";
     if (c = 1) then
-      Text " variable "
+      Text "variable "
     else
-      Text " variables ";
+      Text "variables ";
     Code (String.concat ", " (List.map ident_string names));
     if (c = 1) then
       Text " was "

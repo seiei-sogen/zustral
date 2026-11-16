@@ -35,6 +35,17 @@ val empty_lexenv : lexenv
     so: a program that declares a name twice in one scope gets here. *)
 val push_var : Error.place -> lexenv -> identifier -> ty -> var_source -> lexenv
 
+(** {!push_var} for the variable of a `let` whose initial value is not
+    assigned yet. The name is taken, and {!get_var} does not find the
+    variable until {!mark_var_initialized}: the initial value is evaluated
+    before the variable has one, so neither an expression nor a borrow can
+    name the variable there. *)
+val push_var_awaiting_initial_value : Error.place -> lexenv -> identifier -> ty -> var_source -> lexenv
+
+(** The lexenv where the variable of that name has its initial value, so
+    {!get_var} finds it. *)
+val mark_var_initialized : lexenv -> identifier -> lexenv
+
 (** Add a list of variables. *)
 val push_vars : Error.place -> lexenv -> (identifier * ty * var_source) list -> lexenv
 
@@ -43,7 +54,8 @@ val remove_var : lexenv -> identifier -> lexenv
 
 val remove_vars : lexenv -> identifier list -> lexenv
 
-(** Retrieve a variable by name. *)
+(** Retrieve a variable by name. A variable whose `let` has not assigned its
+    initial value yet is not found ({!push_var_awaiting_initial_value}). *)
 val get_var : lexenv -> identifier -> (ty * var_source) option
 
 (** The type of a temporary, given its name. The temporary must be in the

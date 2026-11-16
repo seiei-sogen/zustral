@@ -3,7 +3,7 @@
   "kind": "Linearity Error",
   "text": [
     { "type": "text", "content": "The " },
-    { "type": "text", "content": " variable " },
+    { "type": "text", "content": "variable " },
     { "type": "code", "content": "a" },
     { "type": "text", "content": " was " },
     {
