@@ -628,17 +628,13 @@ and augment_comparison ctx op lhs rhs =
   let lhs' = infer_operand ctx lhs rhs
   and rhs' = infer_operand ctx rhs lhs in
   let _ =
-    (* A lone literal on the left takes the type of the right operand. *)
+    (* Two types of the body being checked: a type variable stands for itself
+       (TypeMatch.expect_same_type), and no literal has its type. *)
     match (LiteralTyping.is_numeric_literal lhs, LiteralTyping.is_numeric_literal rhs) with
     | (true, false) ->
-       let _ = match_type_with_value_ctx ctx (get_type (ctx_place ctx) rhs') lhs' in
-       ()
-    | (false, true) ->
-       let _ = match_type_with_value_ctx ctx (get_type (ctx_place ctx) lhs') rhs' in
-       ()
-    | (false, false) | (true, true) ->
-       (* Two types of the body being checked: a type variable stands for
-          itself (TypeMatch.expect_same_type). *)
+       (* A lone literal on the left takes the type of the right operand. *)
+       expect_value_of_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) (get_type (ctx_place ctx) rhs') lhs'
+    | (false, true) | (false, false) | (true, true) ->
        expect_value_of_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) (get_type (ctx_place ctx) lhs') rhs'
   in
   TComparison (op, lhs', rhs')
@@ -930,14 +926,16 @@ and augment_arithmetic (ctx: expr_ctx) (op: arithmetic_operator) (lhs: aexpr) (r
   and rhs_ty = get_type (ctx_place ctx) rhs'
   in
   (* A lone literal takes the type of the other operand, and has to fit it like
-     the initial value of a `let`. Otherwise the left operand decides. *)
+     the initial value of a `let`. Otherwise the left operand decides. The
+     other operand's type is of the body being checked: a type variable stands
+     for itself, and no literal has its type. *)
   let operand_ty =
     match (LiteralTyping.is_numeric_literal lhs, LiteralTyping.is_numeric_literal rhs) with
     | (true, false) ->
-       let _ = match_type_with_value_ctx ctx rhs_ty lhs' in
+       expect_value_of_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) rhs_ty lhs';
        rhs_ty
     | (false, true) ->
-       let _ = match_type_with_value_ctx ctx lhs_ty rhs' in
+       expect_value_of_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) lhs_ty rhs';
        lhs_ty
     | _ ->
        lhs_ty
