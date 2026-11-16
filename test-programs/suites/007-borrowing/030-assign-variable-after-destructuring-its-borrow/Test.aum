@@ -1,0 +1,16 @@
+module body Test is
+    record P: Free is
+        a: Int32;
+    end;
+    generic [R: Region]
+    function get(r: &[Int32, R]): P is
+        return P(a => !r);
+    end;
+    function main(): ExitCode is
+        var x: Int32 := 1;
+        let { a: Int32 } := get(&x);
+        x := a + 5;
+        printLn(x);
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "I can't find a " },
+    { "type": "text", "content": "variable" },
+    { "type": "text", "content": " named " },
+    { "type": "code", "content": "r" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/033-type-checker-errors/024-let-initial-value-names-the-variable-in-a-path/Test.aum",
+    "startp": { "line": 6, "column": 8 },
+    "end": { "line": 6, "column": 32 }
+  },
+  "context": [
+    [ 4, "    end;" ],
+    [ 5, "    function main(): ExitCode is" ],
+    [ 6, "        let r: R := R(a => r.a);" ],
+    [ 7, "        printLn(r.a);" ],
+    [ 8, "        return ExitSuccess();" ]
+  ]
+}

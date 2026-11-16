@@ -1,0 +1,1 @@
+Test that a variable can be assigned after a destructuring `let` whose value is a path into it: the borrow of the head of the path ends when the value has been computed (issue #152).

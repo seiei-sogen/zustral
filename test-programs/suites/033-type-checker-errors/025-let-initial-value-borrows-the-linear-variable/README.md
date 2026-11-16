@@ -1,0 +1,1 @@
+Test that the initial value of a `let` of a linear type cannot borrow the variable the `let` declares (issue #154).

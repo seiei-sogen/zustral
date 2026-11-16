@@ -1,0 +1,19 @@
+module body Test is
+    record Foo: Linear is
+        x: Int32;
+    end;
+    record P: Free is
+        a: Int32;
+    end;
+    generic [R: Region]
+    function peek(r: &[Foo, R]): P is
+        return P(a => r->x);
+    end;
+    function main(): ExitCode is
+        let f: Foo := Foo(x => 3);
+        let { x: Int32 } := f;
+        let { a: Int32 } := peek(&f);
+        printLn(a + x);
+        return ExitSuccess();
+    end;
+end module body.

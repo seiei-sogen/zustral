@@ -1,0 +1,1 @@
+Test that the initial value of a `let` cannot borrow the variable the `let` declares: the borrow would be of a variable that has no value yet (issue #154).

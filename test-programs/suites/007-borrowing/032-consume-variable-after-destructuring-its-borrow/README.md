@@ -1,0 +1,1 @@
+Test that a linear variable can be consumed after a destructuring `let` whose value borrowed it: the anonymous borrow ends when the value has been computed.
