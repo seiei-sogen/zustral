@@ -1,0 +1,17 @@
+module body Test is
+    record Foo: Linear is
+        x: Int32;
+    end;
+
+    function isPositive(foo: Foo): Bool is
+        let { x: Int32 } := foo;
+        return x > 0;
+    end;
+
+    function main(): ExitCode is
+        let a: Foo := Foo(x => 1);
+        let b: Bool := true or isPositive(a);
+        printLn(b);
+        return ExitSuccess();
+    end;
+end module body.
