@@ -1,0 +1,62 @@
+module body Test is
+    union Two[A: Free, B: Free]: Free is
+        case First is
+            first: A;
+        case Second is
+            second: B;
+    end;
+
+    typeclass Relabel(T: Free) is
+        generic [R: Region, S: Region]
+        method relabel(self: T, r: &[Int32, R]): Two[&[Int32, R], &[Int32, S]];
+    end;
+
+    instance Relabel(Bool) is
+        generic [R: Region, S: Region]
+        method relabel(self: Bool, r: &[Int32, R]): Two[&[Int32, R], &[Int32, S]] is
+            return First(first => r);
+        end;
+    end;
+
+    instance Relabel(Int32) is
+        generic [R: Region, S: Region]
+        method relabel(self: Int32, r: &[Int32, R]): Two[&[Int32, R], &[Int32, S]] is
+            let swapped: Two[&[Int32, S], &[Int32, R]] := relabel(true, r);
+            case swapped of
+                when First(first: &[Int32, S]) do
+                    return Second(second => first);
+                when Second(second: &[Int32, R]) do
+                    return First(first => second);
+            end case;
+        end;
+    end;
+
+    function dangling(): &[Int32, Static] is
+        let n: Int32 := 1041;
+        let zero: Int32 := 0;
+        borrow r: &[Int32, R] := &n do
+            let two: Two[&[Int32, R], &[Int32, Static]] := relabel(zero, r);
+            case two of
+                when First(first: &[Int32, R]) do
+                    abort("first");
+                when Second(second: &[Int32, Static]) do
+                    return second;
+            end case;
+        end borrow;
+    end;
+
+    function clobber(): Int32 is
+        let a: Int32 := 7;
+        let b: Int32 := 8;
+        let c: Int32 := 9;
+        return (a + b) + c;
+    end;
+
+    function main(): ExitCode is
+        let p: &[Int32, Static] := dangling();
+        printLn(!p);
+        printLn(clobber());
+        printLn(!p);
+        return ExitSuccess();
+    end;
+end module body.

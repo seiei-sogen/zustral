@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "U" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "T" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/085-call-to-itself-with-type-parameters-swapped-by-its-place/Test.aum",
+    "startp": { "line": 12, "column": 12 },
+    "end": { "line": 12, "column": 53 }
+  },
+  "context": [
+    [ 10, "    function wrap(x: T, again: Bool): Two[T, U] is" ],
+    [ 11, "        if again then" ],
+    [ 12, "            let swapped: Two[U, T] := wrap(x, false);" ],
+    [ 13, "            case swapped of" ],
+    [ 14, "                when First(first: U) do" ]
+  ]
+}
