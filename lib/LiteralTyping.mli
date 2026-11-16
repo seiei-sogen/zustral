@@ -47,3 +47,20 @@ val literal_matches : Error.place -> ty -> texpr -> bool
     literal annotated with a float type. A literal under a cast is not a
     literal here. *)
 val annotation_types_literal : Error.place -> ty -> texpr -> bool
+
+(** {1 A literal where no type reaches} *)
+
+(** The type of an integer literal that no place gives a type. *)
+val int_literal_default_type : ty
+
+(** An integer literal that no place gives a type has the default type, and
+    has to fit it: if it does not, this raises the error that says so. Any
+    other value passes, and so does a literal under a cast, which has the type
+    of the cast. The type checker calls this where it stops waiting for a
+    place to type the literal:
+
+    - where it infers a literal that stands where no type reaches
+    - where a literal stands where a type is expected, and the rules for
+      literals do not accept it there ([literal_matches] is [false]), so the
+      literal's own type is the one compared *)
+val check_int_literal_fits_default_type : Error.place -> texpr -> unit

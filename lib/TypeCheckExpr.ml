@@ -489,6 +489,20 @@ and is_return_type_polymorphic (params: value_parameter list) (rt: ty): bool =
 (* Type Checking: Interface *)
 
 let rec infer (ctx: expr_ctx) (expr: aexpr): texpr =
+  let value: texpr = infer_before_place_types_literal ctx expr in
+  (* No type reaches the expression: an integer literal has its default
+     type. *)
+  LiteralTyping.check_int_literal_fits_default_type (ctx_place ctx) value;
+  value
+
+(* `expr` in a place that can still give an integer literal its type: where a
+   type is expected, an argument, a lone literal operand. The literal is
+   returned without a check of its value. The caller compares the result with
+   the type of the place, with `match_type_with_value`, `expect_value_of_type`
+   or `LiteralTyping.annotation_types_literal`. Those check the literal against
+   the type of the place, or against its default type when the place does not
+   type it. Every other caller uses `infer`. *)
+and infer_before_place_types_literal (ctx: expr_ctx) (expr: aexpr): texpr =
   (* Dispatch on the AST *)
   match expr with
   | NilConstant ->
@@ -562,7 +576,16 @@ and infer_with_expected (ctx: expr_ctx) (expr: aexpr) (expected: ty): texpr =
   | Temporary _ | Comparison _ | Conjunction _ | Disjunction _ | Negation _
   | IfExpression _ | Embed _ | Deref _ | Typecast _ | SizeOf _ | SlotAccessor _
   | PointerSlotAccessor _ | ArrayIndex _ ->
-     infer ctx expr
+     infer_before_place_types_literal ctx expr
+
+(* An operand of a comparison or of an arithmetic expression. A lone literal
+   takes the type of the other operand: the caller matches it against that
+   type. Two literals, and any other operand, stand where no type reaches. *)
+and infer_operand (ctx: expr_ctx) (operand: aexpr) (other_operand: aexpr): texpr =
+  if LiteralTyping.is_numeric_literal operand && not (LiteralTyping.is_numeric_literal other_operand) then
+    infer_before_place_types_literal ctx operand
+  else
+    infer ctx operand
 
 (* Type Checking: Internals *)
 
@@ -602,8 +625,8 @@ and augment_temporary (ctx: expr_ctx) (name: identifier): texpr =
   TTemporary (name, get_temporary_type (ctx_place ctx) (ctx_lexenv ctx) name)
 
 and augment_comparison ctx op lhs rhs =
-  let lhs' = infer ctx lhs
-  and rhs' = infer ctx rhs in
+  let lhs' = infer_operand ctx lhs rhs
+  and rhs' = infer_operand ctx rhs lhs in
   let _ =
     (* A lone literal on the left takes the type of the right operand. *)
     match (LiteralTyping.is_numeric_literal lhs, LiteralTyping.is_numeric_literal rhs) with
@@ -894,14 +917,14 @@ and check_annotated (ctx: expr_ctx) (expr: aexpr) (target_type: ty): texpr =
 and augment_arglist (ctx: expr_ctx) (args: abstract_arglist): typed_arglist =
   match args with
   | Positional args' ->
-     TPositionalArglist (List.map (fun a -> infer ctx a) args')
+     TPositionalArglist (List.map (fun a -> infer_before_place_types_literal ctx a) args')
   | Named pairs ->
-     TNamedArglist (List.map (fun (n, v) -> (n, infer ctx v)) pairs)
+     TNamedArglist (List.map (fun (n, v) -> (n, infer_before_place_types_literal ctx v)) pairs)
 
 and augment_arithmetic (ctx: expr_ctx) (op: arithmetic_operator) (lhs: aexpr) (rhs: aexpr) (from_context: context_bindings): texpr =
   (* Augment operands. *)
-  let lhs' = infer ctx lhs
-  and rhs' = infer ctx rhs in
+  let lhs' = infer_operand ctx lhs rhs
+  and rhs' = infer_operand ctx rhs lhs in
   (* Get the types. *)
   let lhs_ty = get_type (ctx_place ctx) lhs'
   and rhs_ty = get_type (ctx_place ctx) rhs'

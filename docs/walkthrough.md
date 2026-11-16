@@ -119,6 +119,8 @@ type check_types = env -> Supply.t -> Linked.linked_module -> (Tast.typed_module
 
 数値リテラルだけに当てはまる規則は、`lib/LiteralTyping.ml` にある。
 
+整数リテラルは、自分の型を持たない。型が届く位置では、届いた型になり、その型に収まらなければエラーである。型の届かない位置では、既定の型 `Int32` になり、`Int32` に収まらなければエラーである（issue #155）。型の届かない位置とは、型引数に束縛される引数（`printLn(5)`）、`if` 式の枝、リテラルどうしの比較、`@embed` の引数などである。`infer` は、型の届かない位置の式に使う。整数リテラルを、ここで既定の型に照らす。引数、演算子の片方だけのリテラル、`check` と `check_annotated` に渡した式は、後で位置の型と照らす。その照合（`match_type_with_value`、`expect_value_of_type`）は、位置の型が整数型でなければ、リテラルを既定の型に照らす。
+
 ## 線形性の検査
 
 ```ocaml

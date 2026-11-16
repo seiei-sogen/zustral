@@ -24,7 +24,8 @@ val make_ctx : Error.place -> module_name -> env -> region_map -> typarams -> le
     an operand, an argument, a condition. The type of the result is the type
     of the expression. A generic function used as a value, and a call whose
     return type has a type variable that none of its parameters mentions, are
-    errors here. *)
+    errors here. An integer literal has its default type here, and has to fit
+    it ({!LiteralTyping.check_int_literal_fits_default_type}). *)
 val infer : expr_ctx -> aexpr -> texpr
 
 (** Type check an expression that stands where a type is expected: the value

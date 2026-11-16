@@ -356,8 +356,10 @@ let expect_value_of_type (ctx: ctx) (expected: ty) (value: texpr): unit =
      type. *)
   if LiteralTyping.literal_matches (ctx_place ctx) expected value then
     ()
-  else
-    expect_same_type ctx expected (get_type (ctx_place ctx) value)
+  else begin
+    expect_same_type ctx expected (get_type (ctx_place ctx) value);
+    LiteralTyping.check_int_literal_fits_default_type (ctx_place ctx) value
+  end
 
 let match_type_with_value (ctx: ctx) (ty: ty) (expr: texpr): type_bindings =
   (* Like match_type, but a literal that the rules for literals accept does not
@@ -365,4 +367,8 @@ let match_type_with_value (ctx: ctx) (ty: ty) (expr: texpr): type_bindings =
   if LiteralTyping.literal_matches (ctx_place ctx) ty expr then
     empty_bindings
   else
-    match_type ctx ty (get_type (ctx_place ctx) expr)
+    (* The place did not type a literal: it has its default type, which is
+       what a type variable of `ty` is bound to. *)
+    let bindings = match_type ctx ty (get_type (ctx_place ctx) expr) in
+    LiteralTyping.check_int_literal_fits_default_type (ctx_place ctx) expr;
+    bindings
