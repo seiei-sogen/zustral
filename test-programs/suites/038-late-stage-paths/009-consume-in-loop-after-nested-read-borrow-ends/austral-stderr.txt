@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "The variable " },
+    { "type": "code", "content": "foo" },
+    {
+      "type": "text",
+      "content": " cannot be consumed while it is borrowed (immutably)."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/038-late-stage-paths/009-consume-in-loop-after-nested-read-borrow-ends/Test.aum",
+    "startp": { "line": 13, "column": 16 },
+    "end": { "line": 13, "column": 40 }
+  },
+  "context": [
+    [ 11, "                    skip;" ],
+    [ 12, "                end borrow;" ],
+    [ 13, "                let { x: Int32 } := foo;" ],
+    [ 14, "            end borrow;" ],
+    [ 15, "            let { x as y: Int32 } := foo;" ]
+  ]
+}

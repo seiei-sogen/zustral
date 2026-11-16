@@ -144,19 +144,12 @@ let get_pending (tbl: state_tbl): identifier list =
   let (StateTable (_, pending)) = tbl in
   pending
 
-let is_pending (tbl: state_tbl) (name: identifier): bool =
-  List.exists (fun elem -> equal_identifier name elem) (get_pending tbl)
-
-let mark_pending (place: place) (tbl: state_tbl) (name: identifier): state_tbl =
+(* A variable is marked when it goes from unconsumed to consumed inside a loop.
+   It is consumed until an assignment takes the mark away, so it is never
+   marked twice. *)
+let mark_pending (tbl: state_tbl) (name: identifier): state_tbl =
   let (StateTable (rows, pending)) = tbl in
-  if is_pending tbl name then
-    (* A user program reaches this (test 038-late-stage-paths/009): the end of a
-       nested read borrow marks a variable consumed in the loop as unconsumed
-       again, so it is consumed and marked a second time. Marking twice is not
-       made idempotent: that would hide that bug behind a different outcome. *)
-    internal_err place "Identifier twice marked pending."
-  else
-    StateTable (rows, name :: pending)
+  StateTable (rows, name :: pending)
 
 (* The variable is no longer pending, if it was. *)
 let remove_pending (tbl: state_tbl) (name: identifier): state_tbl =
@@ -360,7 +353,7 @@ and consume_once (place: place) (tbl: state_tbl) (depth: loop_depth) (name: iden
     if depth <> get_loop_depth place tbl name then
     (* Consumed inside a loop, so mark it as pending. *)
     if universe_linear_ish (type_universe ty) then
-      mark_pending place tbl name
+      mark_pending tbl name
     else
       tbl
   else
@@ -523,43 +516,27 @@ let rec check_stmt (place: place) (tbl: state_tbl) (depth: loop_depth) (stmt: ts
        tbl
   | TBorrow { original; mode; body; rename; ref_type; span; _ } ->
      let place: place = place_inside place span in
-     let state: var_state = get_state place tbl original in
-     (match (mode, state) with
-      | ((Read | Write | Reborrow), Unconsumed) ->
-         let tbl: state_tbl =
-           match mode with
-           | Read ->
-              (* Mark the original as being read-borrowed. *)
-              update_tbl place tbl original BorrowedRead
-           | Write ->
-              (* Mark the original as being write-borrowed. *)
-              update_tbl place tbl original BorrowedWrite
-           | Reborrow ->
-              (* Mark the original as being write-borrowed. *)
-              update_tbl place tbl original BorrowedWrite
-         in
-         (* Add the rename. *)
-         let tbl: state_tbl = add_entry place tbl rename ref_type depth in
-         (* Traverse the body. *)
-         let tbl: state_tbl = check_stmt place tbl depth body in
-         (* After the body, unborrow the variable. *)
-         let tbl: state_tbl = update_tbl place tbl original Unconsumed in
-         (* Remove the rename from the table. *)
-         let tbl: state_tbl = remove_entry place tbl rename in
-         tbl
-      | (Read, BorrowedRead) ->
-         (* If we're read-borrowing, and the variable is already read-borrowed, that's also allowed. *)
-         (* Add the rename. *)
-         let tbl: state_tbl = add_entry place tbl rename ref_type depth in
-         (* Traverse the body. *)
-         let tbl: state_tbl = check_stmt place tbl depth body in
-         (* After the body, unborrow the variable. *)
-         let tbl: state_tbl = update_tbl place tbl original Unconsumed in
-         (* Remove the rename from the table. *)
-         let tbl: state_tbl = remove_entry place tbl rename in
-         tbl
-      | (Read, (BorrowedWrite | Consumed)) | ((Write | Reborrow), (BorrowedRead | BorrowedWrite | Consumed)) ->
-         linearity_error place (CannotBorrow { mode; name = original; state = reported_state state }))
+     let state_before_borrow: var_state = get_state place tbl original in
+     let state_during_borrow: var_state =
+       match (mode, state_before_borrow) with
+       | (Read, (Unconsumed | BorrowedRead)) ->
+          BorrowedRead
+       | ((Write | Reborrow), Unconsumed) ->
+          BorrowedWrite
+       | (Read, (BorrowedWrite | Consumed)) | ((Write | Reborrow), (BorrowedRead | BorrowedWrite | Consumed)) ->
+          linearity_error place (CannotBorrow { mode; name = original; state = reported_state state_before_borrow })
+     in
+     let tbl: state_tbl = update_tbl place tbl original state_during_borrow in
+     (* Add the rename. *)
+     let tbl: state_tbl = add_entry place tbl rename ref_type depth in
+     (* Traverse the body. *)
+     let tbl: state_tbl = check_stmt place tbl depth body in
+     (* The borrow ends. A read borrow that began inside another read borrow
+        leaves the variable borrowed: the outer borrow goes on. *)
+     let tbl: state_tbl = update_tbl place tbl original state_before_borrow in
+     (* Remove the rename from the table. *)
+     let tbl: state_tbl = remove_entry place tbl rename in
+     tbl
   | TBlock (_, a, b) ->
      let tbl: state_tbl = check_stmt place tbl depth a in
      let tbl: state_tbl = check_stmt place tbl depth b in

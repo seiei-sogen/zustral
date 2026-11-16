@@ -1,0 +1,1 @@
+Covers the consumption of a linear variable inside a loop, in a read borrow of it, after a nested read borrow of the same variable has ended (lib/LinearityCheck.ml, the TBorrow case of check_stmt). Before issue #134 was fixed, the end of the inner borrow marked the variable as not consumed, and this program stopped with the internal error "Identifier twice marked pending."
