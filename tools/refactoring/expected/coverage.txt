@@ -1,11 +1,11 @@
-total-with-generated	83.54	11198/13405
+total-with-generated	83.66	11240/13436
 cli/Cli.ml	85.71	6/7
 cli/CliEngine.ml	100.00	92/92
 cli/CliParser.ml	100.00	71/71
 cli/CliUtil.ml	100.00	56/56
 cli/Os.ml	100.00	30/30
 cli/ProcessStatus.ml	100.00	4/4
-lib/AbstractionPass.ml	100.00	134/134
+lib/AbstractionPass.ml	100.00	135/135
 lib/BodyExtractionPass.ml	100.00	12/12
 lib/BuiltIn.ml	100.00	17/17
 lib/BuiltInNames.ml	100.00	29/29
@@ -43,8 +43,8 @@ lib/Imports.ml	100.00	11/11
 lib/InstanceIdSet.ml	100.00	0/0
 lib/LexEnv.ml	100.00	23/23
 lib/LiftControlPass.ml	100.00	107/107
-lib/LinearityCheck.ml	100.00	413/413
-lib/LinearityErrors.ml	100.00	49/49
+lib/LinearityCheck.ml	99.77	428/429
+lib/LinearityErrors.ml	100.00	56/56
 lib/LiteralTyping.ml	100.00	253/253
 lib/MonoType.ml	100.00	30/30
 lib/MonoTypeBindings.ml	100.00	19/19
@@ -65,7 +65,7 @@ lib/Supply.ml	100.00	15/15
 lib/TastUtil.ml	100.00	101/101
 lib/Type.ml	100.00	377/377
 lib/TypeBindings.ml	100.00	117/117
-lib/TypeCheckExpr.ml	98.31	812/826
+lib/TypeCheckExpr.ml	98.42	812/825
 lib/TypeClasses.ml	100.00	329/329
 lib/TypeErrors.ml	100.00	131/131
 lib/TypeMatch.ml	100.00	379/379
@@ -76,8 +76,8 @@ lib/TypeReplace.ml	100.00	162/162
 lib/TypeStripping.ml	100.00	37/37
 lib/TypeSystem.ml	100.00	73/73
 lib/TypeVarSet.ml	100.00	0/0
-lib/TypingPass.ml	97.90	512/523
+lib/TypingPass.ml	97.74	519/531
 lib/Util.ml	100.00	82/82
 lib/Version.ml	100.00	3/3
-programs-alone-hand-written	96.09	8009/8335
-total-hand-written	99.57	8299/8335
+programs-alone-hand-written	96.09	8039/8366
+total-hand-written	99.56	8329/8366
