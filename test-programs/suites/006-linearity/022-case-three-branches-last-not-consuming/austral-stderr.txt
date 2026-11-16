@@ -1,0 +1,37 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "The variable " },
+    { "type": "code", "content": "r" },
+    {
+      "type": "text",
+      "content": " is used inconsistently in the branches of "
+    },
+    { "type": "text", "content": "a case" },
+    { "type": "text", "content": " statement. In one branch it is " },
+    { "type": "text", "content": "not yet consumed" },
+    { "type": "text", "content": " while in the other it is " },
+    { "type": "text", "content": "consumed" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/006-linearity/022-case-three-branches-last-not-consuming/Test.aum",
+    "startp": { "line": 21, "column": 8 },
+    "end": { "line": 28, "column": 17 }
+  },
+  "context": [
+    [ 19, "        let r: R := R(x => 32);" ],
+    [ 20, "        let u: U := A();" ],
+    [ 21, "        case u of" ],
+    [ 22, "            when A do" ],
+    [ 23, "                consume(r);" ],
+    [ 24, "            when B do" ],
+    [ 25, "                consume(r);" ],
+    [ 26, "            when C do" ],
+    [ 27, "                skip;" ],
+    [ 28, "        end case;" ],
+    [ 29, "        return ExitSuccess();" ],
+    [ 30, "    end;" ]
+  ]
+}

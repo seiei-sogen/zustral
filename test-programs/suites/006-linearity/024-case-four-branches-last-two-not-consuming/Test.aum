@@ -1,0 +1,34 @@
+module body Test is
+    record R: Linear is
+        x: Int32;
+    end;
+
+    union U: Free is
+        case A;
+        case B;
+        case C;
+        case D;
+    end;
+
+    function consume(r: R): Unit is
+        let { x: Int32 } := r;
+        printLn(x);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        let r: R := R(x => 32);
+        let u: U := A();
+        case u of
+            when A do
+                consume(r);
+            when B do
+                consume(r);
+            when C do
+                skip;
+            when D do
+                skip;
+        end case;
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,1 @@
+Test that a `case` statement with three branches compiles when every branch consumes the linear variable.
