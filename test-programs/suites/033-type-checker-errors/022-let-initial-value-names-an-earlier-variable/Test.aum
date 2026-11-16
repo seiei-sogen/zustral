@@ -1,0 +1,9 @@
+module body Test is
+    function main(): ExitCode is
+        let x: Int32 := 4;
+        var y: Int32 := x + 1;
+        y := y + x;
+        printLn(y);
+        return ExitSuccess();
+    end;
+end module body.
