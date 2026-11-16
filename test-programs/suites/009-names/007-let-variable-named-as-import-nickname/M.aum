@@ -1,0 +1,5 @@
+module body M is
+    function first(x: Int32): Int32 is
+        return 111;
+    end;
+end module body.

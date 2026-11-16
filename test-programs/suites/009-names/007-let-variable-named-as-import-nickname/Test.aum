@@ -1,0 +1,22 @@
+import M (first as pick);
+
+module body Test is
+    function second(x: Int32): Int32 is
+        return 222;
+    end;
+
+    function viaLet(): Int32 is
+        let pick: Fn[Int32, Int32] := second;
+        return pick(1);
+    end;
+
+    function viaParameter(pick: Fn[Int32, Int32]): Int32 is
+        return pick(1);
+    end;
+
+    function main(): ExitCode is
+        printLn(viaLet());
+        printLn(viaParameter(second));
+        return ExitSuccess();
+    end;
+end module body.
