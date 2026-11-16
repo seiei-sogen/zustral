@@ -29,6 +29,7 @@ CI（`.github/workflows/build-and-test.yml`）は、これ以外にも `tools/re
 - `cli/`, `bin/`: コマンドラインの入口。
 - `standard/`: 標準ライブラリ。
 - `docs/`: 仕様（`decimal.md` など）、計画、調査。
+- `tools/coding-agent-setup/`: Claude Code のプラグインとスキルを入れるスクリプト。クラウド環境のセットアップスクリプトから呼ぶ。
 
 ## 設計の考え方
 
