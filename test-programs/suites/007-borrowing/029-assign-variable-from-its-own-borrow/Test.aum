@@ -1,0 +1,25 @@
+module body Test is
+    generic [R: Region]
+    function next(n: &[Int32, R]): Int32 is
+        return !n + 1;
+    end;
+
+    generic [R: Region]
+    function bump(n: &![Int32, R]): Int32 is
+        return !n + 10;
+    end;
+
+    function main(): ExitCode is
+        var n: Int32 := 5;
+        n := next(&n);
+        printLn(n);
+        n := bump(&!n);
+        printLn(n);
+        borrow r: &[Int32, R] := &n do
+            printLn(!r);
+        end borrow;
+        n := 0;
+        printLn(n);
+        return ExitSuccess();
+    end;
+end module body.

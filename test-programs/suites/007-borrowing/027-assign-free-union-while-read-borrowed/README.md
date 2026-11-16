@@ -1,0 +1,1 @@
+Test that a variable of a Free type cannot be assigned while it is borrowed: a reference into the old value of a union would point at a value of another case (issue #152).

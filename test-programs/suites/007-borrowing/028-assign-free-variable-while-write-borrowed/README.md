@@ -1,0 +1,1 @@
+Test that a variable of a Free type cannot be assigned while it is borrowed mutably (issue #152).

@@ -1,0 +1,1 @@
+Test that a variable can be assigned the result of a call that borrows the same variable: the borrow ends before the assignment.
