@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "The variable " },
+    { "type": "code", "content": "a" },
+    {
+      "type": "text",
+      "content": " is consumed multiple times within the same expression."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/006-linearity/030-if-expression-branch-consumes-twice/Test.aum",
+    "startp": { "line": 19, "column": 8 },
+    "end": { "line": 19, "column": 61 }
+  },
+  "context": [
+    [ 17, "    function main(): ExitCode is" ],
+    [ 18, "        let a: Foo := Foo(x => 1);" ],
+    [ 19, "        let n: Int32 := if true then value(a) else sum(a, a);" ],
+    [ 20, "        printLn(n);" ],
+    [ 21, "        return ExitSuccess();" ]
+  ]
+}

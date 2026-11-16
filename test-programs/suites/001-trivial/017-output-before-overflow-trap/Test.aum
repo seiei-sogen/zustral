@@ -1,0 +1,9 @@
+module body Test is
+    function main(): ExitCode is
+        printLn("before the trap");
+        var x: Int8 := 127;
+        x := x + 1;
+        printLn(x);
+        return ExitSuccess();
+    end;
+end module body.

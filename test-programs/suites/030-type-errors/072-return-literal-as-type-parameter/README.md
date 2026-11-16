@@ -1,0 +1,1 @@
+Test that a generic function cannot return an integer literal where it declares a type parameter (issue #151).

@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "T" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "U" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/071-return-another-type-parameter/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 17 }
+  },
+  "context": [
+    [ 2, "    generic [T: Free, U: Free]" ],
+    [ 3, "    function second(x: T, y: U): T is" ],
+    [ 4, "        return y;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ]
+  ]
+}

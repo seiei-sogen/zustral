@@ -1,0 +1,1 @@
+Test that, when a method of an instance calls the method of the same name, the place of the call cannot swap the region parameters of the method that its parameters mention (issue #151).

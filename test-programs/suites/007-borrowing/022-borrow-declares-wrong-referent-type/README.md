@@ -1,0 +1,1 @@
+Test that a `borrow` statement fails when the reference type it declares points to another type than that of the borrowed variable (issue #132).

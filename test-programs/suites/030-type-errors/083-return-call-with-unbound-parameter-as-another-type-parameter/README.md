@@ -1,0 +1,1 @@
+Test that the place of a call binds only the type parameters of the function that is called. `leftOnly` has the type parameter `B` that none of its parameters mentions, so the place of the call gives `B` its type. The same place cannot make the type parameter `U`, which came in with the argument, be the type parameter `T` (issue #151).

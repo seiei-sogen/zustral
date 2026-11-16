@@ -1,0 +1,1 @@
+Test that the value of a destructuring `let` cannot borrow a variable that is already consumed, and that the error is reported at the `let`.

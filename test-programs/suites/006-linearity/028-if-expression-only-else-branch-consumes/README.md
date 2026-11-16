@@ -1,0 +1,1 @@
+Test that an `if` expression fails when only its `else` branch consumes a linear variable (issue #135).

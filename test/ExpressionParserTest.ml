@@ -67,8 +67,10 @@ let test_parse_float_constant _ =
 
 let test_number_literal_text _ =
   eq "1000" (int_text (of_decimal "1'000"));
-  eq "010" (int_text (of_decimal "010"));
+  eq "10" (int_text (of_decimal "010"));
+  eq "24" (int_text (of_decimal "+24"));
   eq "65535" (int_text (of_hexadecimal "#xFF'FF"));
+  eq "18446744073709551615" (int_text (of_hexadecimal "#xFFFFFFFFFFFFFFFF"));
   eq "97" (int_text (of_character "'a'" 97));
   eq "-3" (int_text (of_value (Z.of_int (-3))));
   eq "1000.0001e-3" (float_text (of_float "1'000.000'1e-3"))

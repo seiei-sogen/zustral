@@ -1,0 +1,17 @@
+module body Test is
+    generic [A: Free]
+    function id(a: A): A is
+        return a;
+    end;
+
+    generic [T: Free, U: Free]
+    function second(x: T, y: U): T is
+        return id(y);
+    end;
+
+    function main(): ExitCode is
+        let b: Bool := second(true, 7);
+        printLn(b);
+        return ExitSuccess();
+    end;
+end module body.

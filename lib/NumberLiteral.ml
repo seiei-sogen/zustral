@@ -30,15 +30,12 @@ type float_literal = {
 let without_separators (written: string): string =
   String.concat "" (String.split_on_char '\'' written)
 
-(* Issues #121 and #85: the digits after a `#x`, `#b` or `#o` prefix are read
-   through OCaml's 63-bit `int`. A literal from 2^62 to 2^63 - 1 silently
-   becomes a negative value (#121), and one of 2^63 or more raises
-   `Failure "int_of_string"` (#85). Tests pin both. Reading the digits with
-   `Z.of_string` here fixes both. *)
-let value_through_native_int (ocaml_prefix: string) (written: string): Z.t =
+(* The digits after a `#x`, `#b` or `#o` prefix, read in that radix. The lexer
+   admits only digits of the radix and separators, so this cannot fail. *)
+let value_in_radix (zarith_prefix: string) (written: string): Z.t =
   let unseparated: string = without_separators written in
   let digits: string = String.sub unseparated 2 (String.length unseparated - 2) in
-  Z.of_int (int_of_string (ocaml_prefix ^ digits))
+  Z.of_string (zarith_prefix ^ digits)
 
 let of_decimal (written: string): int_literal =
   (* The lexer admits a sign, digits and separators, all of which `Z.of_string`
@@ -46,13 +43,13 @@ let of_decimal (written: string): int_literal =
   { written; radix = Decimal; value = Z.of_string (without_separators written) }
 
 let of_hexadecimal (written: string): int_literal =
-  { written; radix = Hexadecimal; value = value_through_native_int "0x" written }
+  { written; radix = Hexadecimal; value = value_in_radix "0x" written }
 
 let of_binary (written: string): int_literal =
-  { written; radix = Binary; value = value_through_native_int "0b" written }
+  { written; radix = Binary; value = value_in_radix "0b" written }
 
 let of_octal (written: string): int_literal =
-  { written; radix = Octal; value = value_through_native_int "0o" written }
+  { written; radix = Octal; value = value_in_radix "0o" written }
 
 let of_character (written: string) (code: int): int_literal =
   { written; radix = Character; value = Z.of_int code }
@@ -75,15 +72,11 @@ let of_float (written: string): float_literal =
 let of_value (value: Z.t): int_literal =
   { written = Z.to_string value; radix = Decimal; value }
 
+(* The value in decimal, whatever the literal looked like. C reads a literal
+   that starts with a zero as octal, so the text as written cannot go into the
+   C. *)
 let int_text (literal: int_literal): string =
-  match literal.radix with
-  | Decimal ->
-     (* Issue #88: a decimal literal goes into the C as it was written, so C
-        reads one with a leading zero as octal. A test pins it. Printing
-        `literal.value` here fixes it. *)
-     without_separators literal.written
-  | Hexadecimal | Binary | Octal | Character ->
-     Z.to_string literal.value
+  Z.to_string literal.value
 
 let float_text (literal: float_literal): string =
   without_separators literal.written

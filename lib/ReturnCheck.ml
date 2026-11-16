@@ -30,15 +30,15 @@ let rec ends_in_return (stmt: astmt): bool =
      false
   | AIf (_, _, tb, fb) ->
      (ends_in_return tb) && (ends_in_return fb)
-  | AWhen (_, _, b) ->
-     ends_in_return b
+  | AWhen _ ->
+     (* When the condition is false, control goes past the statement. *)
+     false
   | ACase (_, _, whens) ->
      let l = List.map (fun (AbstractWhen (_, _, body)) -> ends_in_return body) whens in
      List.for_all (fun x -> x) l
-  | AWhile (_, _, body) ->
-     ends_in_return body
-  | AFor { body; _ } ->
-     ends_in_return body
+  | AWhile _ | AFor _ ->
+     (* When the body runs zero times, control goes past the loop. *)
+     false
   | ABorrow { body; _ } ->
      ends_in_return body
   | ABlock (_, _, body) ->
@@ -72,14 +72,17 @@ let check_decl_ends_in_return (decl: combined_definition): unit =
      ()
   | CFunction (span, _, name, _, _, _, body, _, pragmas) ->
      (match pragmas with
-      | [] ->
-         (* No pragmas: regular function. *)
+      | [] | [Common.ForeignExportPragma _] ->
+         (* A regular function, or one that is also exported: it has a body. *)
          if ends_in_return body then
            ()
          else
            declaration_error (AtSpan span) (MissingReturn { name; declaration = FunctionDeclaration })
-      | [Common.ForeignImportPragma _] | [Common.ForeignExportPragma _] | [Common.UnsafeModulePragma] | _ :: _ :: _ ->
-         (* Yes pragmas: foreign function, ignore the body. *)
+      | [Common.ForeignImportPragma _] ->
+         (* An imported function has no body. *)
+         ()
+      | [Common.UnsafeModulePragma] | _ :: _ :: _ ->
+         (* Not the pragmas of a function. The type checker rejects them. *)
          ())
   | CTypeclass _ ->
      ()

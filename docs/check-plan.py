@@ -20,6 +20,8 @@ import sys
 
 # Closed decision tickets and merged pull requests that the documents cite on purpose.
 CLOSED_ON_PURPOSE = set(range(1, 16)) | {17, 18, 19, 23, 24, 45}
+# Issues that a fix closed. The plan keeps their rows, marked as done.
+FIXED = {36, 52, 88, 89, 121, 129, 131, 132, 134, 135, 148, 149, 150, 151, 152, 154}
 TRACKING_ISSUES = (71, 84)
 
 docs = pathlib.Path(__file__).parent
@@ -39,6 +41,8 @@ def cited(text: str) -> set[int]:
 
 for number in sorted(open_issues - cited(plan)):
     findings.append(f"open issue #{number} is not in the plan")
+for number in sorted(FIXED & open_issues):
+    findings.append(f"#{number} is recorded as fixed, and is open")
 for number in TRACKING_ISSUES:
     if number not in open_issues:
         findings.append(f"tracking issue #{number} is not open")
@@ -46,7 +50,7 @@ for number in TRACKING_ISSUES:
 not_included = spec[spec.index("## 15.") : spec.index("## 16.")]
 known_problems = spec[spec.index("## 17.") : spec.index("## 18.")]
 for name, text in (("plan", plan), ("refactoring plan", refactoring), ("spec 15", not_included), ("spec 17", known_problems)):
-    for number in sorted(cited(text) - open_issues - CLOSED_ON_PURPOSE):
+    for number in sorted(cited(text) - open_issues - CLOSED_ON_PURPOSE - FIXED):
         findings.append(f"{name} cites #{number}, which is not open")
 
 rows = [r for r in not_included.splitlines() if r.startswith("| ") and "---" not in r][1:]

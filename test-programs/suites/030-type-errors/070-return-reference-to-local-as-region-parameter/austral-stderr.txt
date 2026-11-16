@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "&[Int32, R]" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "&[Int32, Region<2>]" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/070-return-reference-to-local-as-region-parameter/Test.aum",
+    "startp": { "line": 6, "column": 12 },
+    "end": { "line": 6, "column": 21 }
+  },
+  "context": [
+    [ 4, "        let n: Int32 := 5;" ],
+    [ 5, "        borrow r: &[Int32, S] := &n do" ],
+    [ 6, "            return r;" ],
+    [ 7, "        end borrow;" ],
+    [ 8, "    end;" ]
+  ]
+}

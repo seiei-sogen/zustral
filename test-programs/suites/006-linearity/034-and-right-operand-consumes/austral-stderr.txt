@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "The variable " },
+    { "type": "code", "content": "a" },
+    { "type": "text", "content": " is consumed " },
+    {
+      "type": "text",
+      "content": "in the right operand of a conjunction (and), which is evaluated only when the left operand is true"
+    },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/006-linearity/034-and-right-operand-consumes/Test.aum",
+    "startp": { "line": 13, "column": 8 },
+    "end": { "line": 13, "column": 47 }
+  },
+  "context": [
+    [ 11, "    function main(): ExitCode is" ],
+    [ 12, "        let a: Foo := Foo(x => 1);" ],
+    [ 13, "        let b: Bool := false and isPositive(a);" ],
+    [ 14, "        printLn(b);" ],
+    [ 15, "        return ExitSuccess();" ]
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "&[Int32, Region<2>]" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "&![Int32, Region<2>]" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/007-borrowing/023-borrow-declares-read-reference-for-write-borrow/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 6, "column": 19 }
+  },
+  "context": [
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        var x: Int32 := 7;" ],
+    [ 4, "        borrow r: &[Int32, R] := &!x do" ],
+    [ 5, "            printLn(!r);" ],
+    [ 6, "        end borrow;" ],
+    [ 7, "        return ExitSuccess();" ],
+    [ 8, "    end;" ]
+  ]
+}

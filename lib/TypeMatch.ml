@@ -339,6 +339,26 @@ let match_typarams (ctx: ctx) (typarams: typarams) (args: ty list): type_binding
   let typarams' = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams) in
   ok_or_raise (ctx_place ctx) (try_match_type_list ctx typarams' args)
 
+(* A type parameter of the declaration being checked stands for itself in the
+   body of the declaration. `match_type` binds a type variable of the expected
+   type to whatever the actual type has in its place, which is right for the
+   signature of a function that is called, and wrong for two types of the
+   body: the body would have to be right for one type argument only. *)
+let expect_same_type (ctx: ctx) (expected: ty) (actual: ty): unit =
+  match bindings_list (match_type ctx expected actual) with
+  | [] ->
+     ()
+  | _ :: _ ->
+     type_error (ctx_place ctx) (TypeMismatch { expected; actual })
+
+let expect_value_of_type (ctx: ctx) (expected: ty) (value: texpr): unit =
+  (* A literal that the rules for literals accept does not have to have the
+     type. *)
+  if LiteralTyping.literal_matches (ctx_place ctx) expected value then
+    ()
+  else
+    expect_same_type ctx expected (get_type (ctx_place ctx) value)
+
 let match_type_with_value (ctx: ctx) (ty: ty) (expr: texpr): type_bindings =
   (* Like match_type, but a literal that the rules for literals accept does not
      have to have the type. *)

@@ -1,0 +1,1 @@
+Test that the right operand of `and` and of `or` can borrow a variable mutably and can reborrow a write reference: a write reference need not be used, so nothing is lost when the operand is not evaluated.

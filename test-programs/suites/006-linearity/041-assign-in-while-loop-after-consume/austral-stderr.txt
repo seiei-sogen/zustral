@@ -1,0 +1,28 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "The " },
+    { "type": "text", "content": "variable " },
+    { "type": "code", "content": "a" },
+    { "type": "text", "content": " was " },
+    {
+      "type": "text",
+      "content": "consumed before the loop and assigned in the loop, without afterwards being consumed again."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/006-linearity/041-assign-in-while-loop-after-consume/Test.aum",
+    "startp": { "line": 17, "column": 8 },
+    "end": { "line": 19, "column": 18 }
+  },
+  "context": [
+    [ 15, "        let again: Bool := false;" ],
+    [ 16, "        consume(a);" ],
+    [ 17, "        while again do" ],
+    [ 18, "            a := Foo(x => 2);" ],
+    [ 19, "        end while;" ],
+    [ 20, "        consume(a);" ],
+    [ 21, "        return ExitSuccess();" ]
+  ]
+}

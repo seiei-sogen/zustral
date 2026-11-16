@@ -1,0 +1,1 @@
+Test that a variable can be assigned after a destructuring `let` whose value borrowed it: the anonymous borrow ends when the value has been computed, before the statements after the `let` (issue #152).

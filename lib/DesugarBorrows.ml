@@ -133,19 +133,26 @@ let anonymous_region (supply: Supply.t): identifier * Supply.t =
   let (fresh_id, supply) = Supply.next_borrow_region supply in
   (make_ident ("_tmp_region_" ^ string_of_int fresh_id), supply)
 
-let wrap_stmt_with_borrows (supply: Supply.t) (stmt: AstDB.astmt) (acc: acc): AstDB.astmt * Supply.t =
+(* `span` is where an error of the borrows is reported, and an error of a
+   statement in them that has no span of its own. *)
+let wrap_stmt_with_borrows_at (span: span) (supply: Supply.t) (stmt: AstDB.astmt) (acc: acc): AstDB.astmt * Supply.t =
   let wrap_with_borrow ((stmt, supply): AstDB.astmt * Supply.t) (acc_rec: acc_rec): AstDB.astmt * Supply.t =
     let (region, supply) = anonymous_region supply in
     (AstDB.ABorrow {
-        span = empty_span;
+        span;
         original = original_name acc_rec.original;
         rename = original_name acc_rec.rename;
+        declared_reference = None;
         region;
         body = stmt;
         mode = acc_rec.mode;
       }, supply)
   in
   List.fold_left wrap_with_borrow (stmt, supply) acc
+
+(* The borrows of a statement that has a span of its own. *)
+let wrap_stmt_with_borrows (supply: Supply.t) (stmt: AstDB.astmt) (acc: acc): AstDB.astmt * Supply.t =
+  wrap_stmt_with_borrows_at empty_span supply stmt acc
 
 (* Transform statements. *)
 
@@ -160,8 +167,17 @@ let rec transform_stmt (supply: Supply.t) (stmt: AstDP.astmt): AstDB.astmt * Sup
   | AstDP.ADestructure (span, mutability, bindings, value, body) ->
      let (value, acc, supply) = lift_borrows supply value [] in
      let (body, supply) = transform_stmt supply body in
-     let stmt = AstDB.ADestructure (span, mutability, bindings, value, body) in
-     wrap_stmt_with_borrows supply stmt acc
+     (match acc with
+      | [] ->
+         (AstDB.ADestructure (span, mutability, bindings, value, body), supply)
+      | _ :: _ ->
+         (* The statement holds its body. The borrows last while the value is
+            computed and end before the body, as they do for a `let` that
+            declares one variable. A temporary holds the value in between. *)
+         let (destructured_value, supply) = fresh_ident supply in
+         let (borrowed_value, supply) = wrap_stmt_with_borrows_at span supply (AstDB.LetTmp (destructured_value, value)) acc in
+         let stmt = AstDB.ADestructure (span, mutability, bindings, AstDB.Temporary destructured_value, body) in
+         (AstDB.ABlock (empty_span, borrowed_value, stmt), supply))
   | AstDP.AAssign (span, path, value) ->
      let (path, acc, supply) = lift_borrows supply path [] in
      let (value, acc, supply) = lift_borrows supply value acc in
@@ -222,9 +238,9 @@ let rec transform_stmt (supply: Supply.t) (stmt: AstDP.astmt): AstDB.astmt * Sup
      let (expr, acc, supply) = lift_borrows supply expr [] in
      let stmt = AstDB.AReturn (span, expr) in
      wrap_stmt_with_borrows supply stmt acc
-  | AstDP.ABorrow { span; original; rename; region; body; mode } ->
+  | AstDP.ABorrow { span; original; rename; declared_reference; region; body; mode } ->
      let (body, supply) = transform_stmt supply body in
-     (AstDB.ABorrow { span; original; rename; region; body; mode }, supply)
+     (AstDB.ABorrow { span; original; rename; declared_reference = Some declared_reference; region; body; mode }, supply)
 
 and transform_whens (supply: Supply.t) (whens: AstDP.abstract_when list): AstDB.abstract_when list * Supply.t =
   Supply.map (fun supply (AstDP.AbstractWhen (id, bindings, body)) ->

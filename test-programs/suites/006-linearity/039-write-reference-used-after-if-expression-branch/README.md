@@ -1,0 +1,1 @@
+Test that a write reference that one branch of an `if` expression used cannot be used again after the expression: the branch may have been taken.

@@ -1,0 +1,16 @@
+module body Test is
+    generic [T: Free]
+    function callAsReference(f: Fn[T]): Int32 is
+        let p: &[Int32, Static] := f();
+        return !p;
+    end;
+
+    function big(): Int64 is
+        return 12345;
+    end;
+
+    function main(): ExitCode is
+        printLn(callAsReference(big));
+        return ExitSuccess();
+    end;
+end module body.

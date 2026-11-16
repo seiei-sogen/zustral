@@ -1,0 +1,11 @@
+module body Test is
+    generic [T: Free, U: Free]
+    function same(x: T, y: U): Bool is
+        return x = y;
+    end;
+
+    function main(): ExitCode is
+        printLn(same(true, 7));
+        return ExitSuccess();
+    end;
+end module body.

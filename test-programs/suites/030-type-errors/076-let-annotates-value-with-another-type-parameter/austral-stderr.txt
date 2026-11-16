@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "T" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "U" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/076-let-annotates-value-with-another-type-parameter/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 22 }
+  },
+  "context": [
+    [ 2, "    generic [T: Free, U: Free]" ],
+    [ 3, "    function second(x: T, y: U): T is" ],
+    [ 4, "        let v: T := y;" ],
+    [ 5, "        return v;" ],
+    [ 6, "    end;" ]
+  ]
+}

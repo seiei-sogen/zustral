@@ -1,0 +1,1 @@
+Test that an `if` expression fails when only its `then` branch consumes a linear variable (issue #135).

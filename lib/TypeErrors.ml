@@ -473,8 +473,8 @@ let render (error: t): err_text =
        Text "Consider importing it, if it is defined in another module."
      ]
   | IntegerDoesNotFit { literal; ty } ->
-     (* The message shows the literal's text, not its value: a decimal literal
-        appears as it was written. *)
+     (* The message shows the literal's value in decimal, whatever the literal
+        looked like (NumberLiteral.int_text). *)
      [
        Text "The integer ";
        Code (NumberLiteral.int_text literal);

@@ -1,0 +1,12 @@
+module body Test is
+    function f(last: Index): Int64 is
+        for i from 1 to last do
+            return 1;
+        end for;
+    end;
+
+    function main(): ExitCode is
+        printLn(f(0));
+        return ExitSuccess();
+    end;
+end module body.

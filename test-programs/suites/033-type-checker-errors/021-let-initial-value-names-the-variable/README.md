@@ -1,0 +1,1 @@
+Test that the initial value of a `let` cannot name the variable the `let` declares: the variable has no value yet (issue #154).

@@ -1,0 +1,22 @@
+module body Test is
+    record Foo: Linear is
+        x: Int32;
+    end;
+
+    function consume(foo: Foo): Unit is
+        let { x: Int32 } := foo;
+        print("consume ");
+        printLn(x);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        var a: Foo := Foo(x => 1);
+        consume(a);
+        for i from 0 to 2 do
+            a := Foo(x => 2);
+        end for;
+        consume(a);
+        return ExitSuccess();
+    end;
+end module body.

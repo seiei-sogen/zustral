@@ -400,9 +400,11 @@ let body_of (decl: typed_decl): tstmt =
 
 (* The value of an assignment that is not a temporary is typed where it
    stands, as it is when it is discarded, and has to have the type of the
-   variable. *)
+   variable. The `let` assigns its initial value first: before that, nothing
+   can name the variable. *)
 let test_assigned_value_in_place _ =
-  let in_let (s: A.astmt): A.astmt = A.ALet (sp, Mutable, i "y", int32_spec, A.ABlock (sp, A.ASkip sp, s)) in
+  let initial: A.astmt = A.AInitialAssign (q "y", int32_spec, A.IntConstant one) in
+  let in_let (s: A.astmt): A.astmt = A.ALet (sp, Mutable, i "y", int32_spec, A.ABlock (sp, initial, s)) in
   List.iter (fun v ->
       let assigned = typing params (in_let (A.AAssignVar (sp, q "y", v))) in
       match typing params (in_let (A.ADiscarding (sp, v))) with

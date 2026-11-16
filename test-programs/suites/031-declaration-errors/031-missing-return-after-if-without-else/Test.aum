@@ -1,0 +1,12 @@
+module body Test is
+    function f(c: Bool): Int64 is
+        if c then
+            return 1;
+        end if;
+    end;
+
+    function main(): ExitCode is
+        printLn(f(false));
+        return ExitSuccess();
+    end;
+end module body.

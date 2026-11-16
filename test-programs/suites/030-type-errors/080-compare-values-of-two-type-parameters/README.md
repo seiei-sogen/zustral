@@ -1,0 +1,1 @@
+Test that a generic function cannot compare a value of the type parameter `T` with a value of the type parameter `U` (issue #151).

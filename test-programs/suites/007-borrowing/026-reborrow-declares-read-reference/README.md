@@ -1,0 +1,1 @@
+Test that a `borrow` statement that reborrows fails when it declares a read reference (issue #132).

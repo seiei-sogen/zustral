@@ -1,0 +1,1 @@
+Test that what a program wrote to stdout before a call to `abort` is not lost (issue #52).

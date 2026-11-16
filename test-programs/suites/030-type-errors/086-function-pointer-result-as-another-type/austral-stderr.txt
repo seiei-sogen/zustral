@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "&[Int32, Region<0>]" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "T" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/086-function-pointer-result-as-another-type/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 39 }
+  },
+  "context": [
+    [ 2, "    generic [T: Free]" ],
+    [ 3, "    function callAsReference(f: Fn[T]): Int32 is" ],
+    [ 4, "        let p: &[Int32, Static] := f();" ],
+    [ 5, "        return !p;" ],
+    [ 6, "    end;" ]
+  ]
+}

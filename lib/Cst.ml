@@ -110,6 +110,9 @@ and cstmt =
       span: span;
       original: identifier;
       rename: identifier;
+      declared_reference: borrowing_mode * typespec;
+      (* The type the statement declares for `rename`, without its region:
+         `&[T, R]` is (ReadBorrow, T), `&![T, R]` is (WriteBorrow, T). *)
       region: identifier;
       body: cstmt;
       mode: borrow_stmt_kind

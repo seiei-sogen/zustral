@@ -1,0 +1,1 @@
+Test that, in a generic function, a `let` cannot annotate a value of the type parameter `U` with the type parameter `T` (issue #151).

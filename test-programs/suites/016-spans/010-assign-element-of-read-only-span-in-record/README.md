@@ -1,0 +1,1 @@
+Test that an element of a read-only span that a record holds cannot be assigned (issue #131).

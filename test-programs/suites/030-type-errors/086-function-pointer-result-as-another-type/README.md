@@ -1,0 +1,1 @@
+Test that the result of a call through a function pointer of the type `Fn[T]`, where `T` is a type parameter of the enclosing function, is a `T` wherever the call is: its place cannot make it a reference (issue #151).

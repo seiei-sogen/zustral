@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "T" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "U" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/078-return-result-of-generic-call-as-another-type-parameter/Test.aum",
+    "startp": { "line": 9, "column": 8 },
+    "end": { "line": 9, "column": 21 }
+  },
+  "context": [
+    [ 7, "    generic [T: Free, U: Free]" ],
+    [ 8, "    function second(x: T, y: U): T is" ],
+    [ 9, "        return id(y);" ],
+    [ 10, "    end;" ],
+    [ 11, "" ]
+  ]
+}

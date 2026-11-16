@@ -1,0 +1,1 @@
+Test that the right operand of `and`, which is not evaluated when the left operand is false, cannot consume a linear variable (issue #148).

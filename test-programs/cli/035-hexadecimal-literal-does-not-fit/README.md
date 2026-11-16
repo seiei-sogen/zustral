@@ -1,0 +1,1 @@
+A hexadecimal literal with more digits than a 64-bit type holds is reported as a literal that does not fit its type. It used to make the compiler die with an OCaml exception (issues #121 and #85).

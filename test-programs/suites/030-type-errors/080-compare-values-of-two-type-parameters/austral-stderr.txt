@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "T" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "U" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/080-compare-values-of-two-type-parameters/Test.aum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 21 }
+  },
+  "context": [
+    [ 2, "    generic [T: Free, U: Free]" ],
+    [ 3, "    function same(x: T, y: U): Bool is" ],
+    [ 4, "        return x = y;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ]
+  ]
+}

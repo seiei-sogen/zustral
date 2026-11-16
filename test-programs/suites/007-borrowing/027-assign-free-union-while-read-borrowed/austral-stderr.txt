@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "Cannot assign to the variable " },
+    { "type": "code", "content": "s" },
+    { "type": "text", "content": " because it is " },
+    { "type": "text", "content": "borrowed (read-only)" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/007-borrowing/027-assign-free-union-while-read-borrowed/Test.aum",
+    "startp": { "line": 16, "column": 20 },
+    "end": { "line": 16, "column": 53 }
+  },
+  "context": [
+    [ 14, "                    skip;" ],
+    [ 15, "                when Name(text: &[Span[Nat8, Static], R]) do" ],
+    [ 16, "                    s := Circle(radius => 123456789);" ],
+    [ 17, "                    let t: Span[Nat8, Static] := !text;" ],
+    [ 18, "                    printLn(t[0]);" ]
+  ]
+}

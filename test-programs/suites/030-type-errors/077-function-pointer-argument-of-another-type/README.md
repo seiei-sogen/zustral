@@ -1,0 +1,1 @@
+Test that a call through a function pointer of the type `Fn[T, T]`, where `T` is a type parameter of the enclosing function, cannot pass a value of another type (issue #151).

@@ -1,0 +1,18 @@
+module body Test is
+    function sum(first: Int32, second: Int32): Int32 is
+        return first + second;
+    end;
+
+    function main(): ExitCode is
+        let n: Int32 := 1;
+        let yes: Bool := true;
+        let no: Bool := false;
+        printLn(sum(if yes then n else 2, 30));
+        printLn(sum(30, if no then n else 2));
+        printLn(if yes then (if no then 5 else n) else 6);
+        printLn(if no then 6 else (if yes then n else 5));
+        printLn(sum(if yes then n else 2, if no then n else 40));
+        printLn(if yes then (if no then 5 else n) else (if yes then n else 5));
+        return ExitSuccess();
+    end;
+end module body.

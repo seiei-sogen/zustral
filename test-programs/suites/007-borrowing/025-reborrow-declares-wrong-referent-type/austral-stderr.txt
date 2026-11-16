@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "&![Bool, Region<3>]" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "&![Int32, Region<3>]" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/007-borrowing/025-reborrow-declares-wrong-referent-type/Test.aum",
+    "startp": { "line": 5, "column": 12 },
+    "end": { "line": 7, "column": 23 }
+  },
+  "context": [
+    [ 3, "        var x: Int32 := 7;" ],
+    [ 4, "        borrow r: &![Int32, R] := &!x do" ],
+    [ 5, "            borrow r2: &![Bool, S] := &~r do" ],
+    [ 6, "                printLn(!r2);" ],
+    [ 7, "            end borrow;" ],
+    [ 8, "        end borrow;" ],
+    [ 9, "        return ExitSuccess();" ]
+  ]
+}

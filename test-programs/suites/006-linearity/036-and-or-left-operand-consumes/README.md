@@ -1,0 +1,1 @@
+Test that the left operand of `and` and of `or`, which is always evaluated, can consume a linear variable, and that the right operand can use a variable of a Free type, also in one branch of an `if` expression.

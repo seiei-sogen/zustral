@@ -1,0 +1,1 @@
+Test that a generic function can return its parameters, pass them to another generic function, and call itself with other types: its own type parameters stand for themselves in its body, and those of the function it calls are bound at the call.

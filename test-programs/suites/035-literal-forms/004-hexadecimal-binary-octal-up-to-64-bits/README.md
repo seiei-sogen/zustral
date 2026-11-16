@@ -1,0 +1,1 @@
+Test that a hexadecimal, binary or octal literal has the value it was written with, up to the largest value of a 64-bit type (issue #121).

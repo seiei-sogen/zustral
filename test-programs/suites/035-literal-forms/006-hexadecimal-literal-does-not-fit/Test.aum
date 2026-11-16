@@ -1,0 +1,7 @@
+module body Test is
+    function main(): ExitCode is
+        let a: Nat64 := #x10000000000000000;
+        printLn(a);
+        return ExitSuccess();
+    end;
+end module body.

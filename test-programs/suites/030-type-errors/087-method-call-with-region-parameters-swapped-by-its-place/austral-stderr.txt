@@ -1,0 +1,29 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "S" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "R" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/087-method-call-with-region-parameters-swapped-by-its-place/Test.aum",
+    "startp": { "line": 24, "column": 12 },
+    "end": { "line": 24, "column": 75 }
+  },
+  "context": [
+    [ 22, "        generic [R: Region, S: Region]" ],
+    [
+      23,
+      "        method relabel(self: Int32, r: &[Int32, R]): Two[&[Int32, R], &[Int32, S]] is"
+    ],
+    [
+      24,
+      "            let swapped: Two[&[Int32, S], &[Int32, R]] := relabel(true, r);"
+    ],
+    [ 25, "            case swapped of" ],
+    [ 26, "                when First(first: &[Int32, S]) do" ]
+  ]
+}

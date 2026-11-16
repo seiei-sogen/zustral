@@ -1,0 +1,1 @@
+Test that a function fails when it ends in an `if` without `else` whose body returns: when the condition is false, the function returns nothing (issue #89).

@@ -1,0 +1,1 @@
+Test that, in a generic function, a variable of the type parameter `T` cannot be assigned a value of the type parameter `U` (issue #151).

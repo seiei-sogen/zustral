@@ -1,0 +1,34 @@
+module body Test is
+    generic [T: Free]
+    function id(a: T): T is
+        return a;
+    end;
+
+    generic [T: Free]
+    function sink(a: T): Unit is
+        return nil;
+    end;
+
+    generic [U: Free]
+    function through(x: U): U is
+        sink(id(x));
+        return id(x);
+    end;
+
+    generic [T: Free, U: Free]
+    function wrap(x: T, y: U): Option[T] is
+        return Some(value => id(x));
+    end;
+
+    function main(): ExitCode is
+        printLn(through(5));
+        let o: Option[Bool] := wrap(true, 7);
+        case o of
+            when Some(value: Bool) do
+                printLn(value);
+            when None do
+                skip;
+        end case;
+        return ExitSuccess();
+    end;
+end module body.

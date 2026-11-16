@@ -1,0 +1,1 @@
+Test that the body of an instance method can name the type parameters of the method itself: in the type of a `let`, and in the reference type a `borrow` statement declares (issue #149).

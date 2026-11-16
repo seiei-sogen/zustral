@@ -1,0 +1,28 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "The " },
+    { "type": "text", "content": "variable " },
+    { "type": "code", "content": "a" },
+    { "type": "text", "content": " was " },
+    {
+      "type": "text",
+      "content": "consumed before the loop and assigned in the loop, without afterwards being consumed again."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/006-linearity/042-assign-in-for-loop-after-consume/Test.aum",
+    "startp": { "line": 16, "column": 8 },
+    "end": { "line": 18, "column": 16 }
+  },
+  "context": [
+    [ 14, "        var a: Foo := Foo(x => 1);" ],
+    [ 15, "        consume(a);" ],
+    [ 16, "        for i from 0 to 2 do" ],
+    [ 17, "            a := Foo(x => 2);" ],
+    [ 18, "        end for;" ],
+    [ 19, "        consume(a);" ],
+    [ 20, "        return ExitSuccess();" ]
+  ]
+}

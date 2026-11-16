@@ -1,0 +1,29 @@
+module body Test is
+    union Either[A: Free, B: Free]: Free is
+        case Left is
+            left: A;
+        case Right is
+            right: B;
+    end;
+
+    generic [A: Free, B: Free]
+    function leftOnly(a: A): Either[A, B] is
+        return Left(left => a);
+    end;
+
+    generic [T: Free, V: Free]
+    function leftOf(x: T, z: V): Either[T, V] is
+        return leftOnly(x);
+    end;
+
+    function main(): ExitCode is
+        let e: Either[Int32, Bool] := leftOf(7, true);
+        case e of
+            when Left(left: Int32) do
+                printLn(left);
+            when Right(right: Bool) do
+                printLn(right);
+        end case;
+        return ExitSuccess();
+    end;
+end module body.

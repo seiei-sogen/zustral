@@ -1,0 +1,1 @@
+Test that the initial value of a `let` cannot name the variable the `let` declares as the head of a path: a path borrows its head, which has no value yet (issue #154).

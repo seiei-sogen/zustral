@@ -94,7 +94,7 @@ _Avoid_: シグネチャの一覧、インターフェース
 _Avoid_: リンク、マージ
 
 **return の検査**（`check_ends_in_return`）:
-関数とメソッドの本体が、`return` 文か `Abort` の呼び出しで終わることを、文の形だけで確かめる段。ループの本体の最後でもよい。出力は `ReturnCheck.returning_module` である。この型の値を作れるのは、この検査だけである。
+関数とメソッドの本体が、どの道を通っても `return` 文か `Abort` の呼び出しで終わることを、文の形だけで確かめる段。`else` のない `if` とループは、中に `return` があっても、終わりとは認めない。出力は `ReturnCheck.returning_module` である。この型の値を作れるのは、この検査だけである。
 _Avoid_: 到達性の検査
 
 **脱糖**（`desugar`）:

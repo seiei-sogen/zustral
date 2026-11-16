@@ -1,0 +1,1 @@
+Test that the initial value of a `let` can name the variables declared before it, and that a variable can be assigned an expression that names the variable itself.

@@ -1,0 +1,1 @@
+Test that a function with a region parameter `R` cannot return, as a `&[Int32, R]`, a reference to one of its local variables: the region of the borrow is not `R` (issue #151).

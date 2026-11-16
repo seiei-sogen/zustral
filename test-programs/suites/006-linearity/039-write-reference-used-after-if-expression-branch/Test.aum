@@ -1,0 +1,24 @@
+module body Test is
+    record Counter: Linear is
+        n: Int32;
+    end;
+
+    generic [R: Region]
+    function bump(c: &![Counter, R]): Int32 is
+        c->n := c->n + 1;
+        return c->n;
+    end;
+
+    generic [R: Region]
+    function bumpTwice(c: &![Counter, R], enabled: Bool): Int32 is
+        let first: Int32 := if enabled then bump(c) else 0;
+        return first + bump(c);
+    end;
+
+    function main(): ExitCode is
+        var counter: Counter := Counter(n => 0);
+        printLn(bumpTwice(&!counter, true));
+        let { n: Int32 } := counter;
+        return ExitSuccess();
+    end;
+end module body.

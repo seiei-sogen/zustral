@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "T" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/077-function-pointer-argument-of-another-type/Test.aum",
+    "startp": { "line": 10, "column": 8 },
+    "end": { "line": 10, "column": 20 }
+  },
+  "context": [
+    [ 8, "    function callWithInteger(f: Fn[T, Unit], x: T): Unit is" ],
+    [ 9, "        let n: Int32 := 41;" ],
+    [ 10, "        return f(n);" ],
+    [ 11, "    end;" ],
+    [ 12, "" ]
+  ]
+}

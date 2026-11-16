@@ -1,0 +1,1 @@
+Test that a `case` statement with four branches fails when the first two branches do not consume a linear variable and the last two do (issue #129).

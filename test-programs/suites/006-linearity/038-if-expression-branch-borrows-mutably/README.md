@@ -1,0 +1,1 @@
+Test that one branch of an `if` expression can borrow a variable mutably, can reborrow a write reference and can pass a write span: none of them need be used, so nothing is lost when the other branch is taken.

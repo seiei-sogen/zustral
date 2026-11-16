@@ -1,0 +1,1 @@
+Test that what a program wrote to stdout before an arithmetic overflow stopped it is not lost (issue #52).

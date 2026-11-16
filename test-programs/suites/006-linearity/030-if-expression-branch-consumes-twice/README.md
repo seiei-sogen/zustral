@@ -1,0 +1,1 @@
+Test that an `if` expression fails when both of its branches consume a linear variable, and one of them consumes it twice.

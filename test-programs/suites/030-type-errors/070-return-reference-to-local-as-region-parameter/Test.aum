@@ -1,0 +1,13 @@
+module body Test is
+    generic [R: Region]
+    function dangle(x: &[Int32, R]): &[Int32, R] is
+        let n: Int32 := 5;
+        borrow r: &[Int32, S] := &n do
+            return r;
+        end borrow;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

@@ -36,20 +36,51 @@ let branching_words (statement: branching): string =
   | CaseBranching -> "a case"
   | IfBranching -> "an if"
 
+(** The expressions that evaluate only some of their operands. *)
+type partly_evaluated_expression =
+  | IfExpressionBranches
+  | ConjunctionRightOperand
+  | DisjunctionRightOperand
+
+let where_consumed_on_some_paths_only (expression: partly_evaluated_expression): string =
+  match expression with
+  | IfExpressionBranches -> "in one branch of an if expression but not in the other"
+  | ConjunctionRightOperand -> "in the right operand of a conjunction (and), which is evaluated only when the left operand is true"
+  | DisjunctionRightOperand -> "in the right operand of a disjunction (or), which is evaluated only when the left operand is false"
+
 type t =
   | DereferenceNonFree of ty
   | FreeContainsLinear of { name: identifier; universe: universe; parameter: bool }
   | ForgotToConsume of identifier
   | ConsumedInLoop of identifier list
+  | AssignedInLoop of identifier list
   | InconsistentBranches of { name: identifier; statement: branching; state_a: reported_state; state_b: reported_state }
   | ConsumedMoreThanOnce of identifier
+  | ConsumedOnSomePathsOnly of { name: identifier; expression: partly_evaluated_expression }
   | ConsumedWhileBorrowedRead of identifier
   | ConsumedWhileBorrowedWrite of identifier
   | AlreadyConsumed of identifier
   | AssignToUnconsumed of identifier
+  | AssignToBorrowed of { name: identifier; state: reported_state }
   | CannotBorrow of { mode: borrow_stmt_kind; name: identifier; state: reported_state }
   | NotConsumedAtReturn of identifier
   | AssignToNonFreePath of ty
+
+(* The start of a sentence about one variable or several. *)
+let the_variables_were (names: identifier list): err_text =
+  let c: int = List.length names in
+  [
+    Text "The ";
+    if (c = 1) then
+      Text "variable "
+    else
+      Text "variables ";
+    Code (String.concat ", " (List.map ident_string names));
+    if (c = 1) then
+      Text " was "
+    else
+      Text " were "
+  ]
 
 let render (error: t): err_text =
   match error with
@@ -76,20 +107,11 @@ let render (error: t): err_text =
        Text "."
      ]
   | ConsumedInLoop names ->
-     let c: int = List.length names in
-     [
-       Text "The ";
-       if (c = 1) then
-         Text " variable "
-       else
-         Text " variables ";
-       Code (String.concat ", " (List.map ident_string names));
-       if (c = 1) then
-         Text " was "
-       else
-         Text " were ";
-       Text "consumed in the loop, without afterwards being reassigned."
-     ]
+     the_variables_were names
+     @ [ Text "consumed in the loop, without afterwards being reassigned." ]
+  | AssignedInLoop names ->
+     the_variables_were names
+     @ [ Text "consumed before the loop and assigned in the loop, without afterwards being consumed again." ]
   | InconsistentBranches { name; statement; state_a; state_b } ->
      [
        Text "The variable ";
@@ -107,6 +129,14 @@ let render (error: t): err_text =
        Text "The variable ";
        Code (ident_string name);
        Text " is consumed multiple times within the same expression.";
+     ]
+  | ConsumedOnSomePathsOnly { name; expression } ->
+     [
+       Text "The variable ";
+       Code (ident_string name);
+       Text " is consumed ";
+       Text (where_consumed_on_some_paths_only expression);
+       Text "."
      ]
   | ConsumedWhileBorrowedRead name ->
      [
@@ -131,6 +161,14 @@ let render (error: t): err_text =
        Text "Cannot assign to the variable ";
        Code (ident_string name);
        Text " because it is not yet consumed."
+     ]
+  | AssignToBorrowed { name; state } ->
+     [
+       Text "Cannot assign to the variable ";
+       Code (ident_string name);
+       Text " because it is ";
+       Text (humanize_state state);
+       Text "."
      ]
   | CannotBorrow { mode; name; state } ->
      let mode_string = match mode with

@@ -1,0 +1,1 @@
+Test that the place of a call gives its type to a type parameter that none of the parameters of the called function mentions, when the type parameters that came in with the arguments already have the types the place expects.

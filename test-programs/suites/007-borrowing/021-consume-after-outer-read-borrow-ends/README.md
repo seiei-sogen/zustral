@@ -1,0 +1,1 @@
+Test that a linear variable can be consumed once after a read borrow of it that holds two nested read borrows, one after the other, has ended.

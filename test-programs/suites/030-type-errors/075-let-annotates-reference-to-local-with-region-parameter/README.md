@@ -1,0 +1,1 @@
+Test that a `let` cannot annotate a reference to a local variable with a region parameter of the function: the function could then return the reference (issue #151).

@@ -1,0 +1,15 @@
+module body Test is
+    record Inner: Free is
+        a: Int32;
+    end;
+    record P: Free is
+        inner: Inner;
+    end;
+    function main(): ExitCode is
+        var p: P := P(inner => Inner(a => 1));
+        let { a: Int32 } := p.inner;
+        p := P(inner => Inner(a => a + 1));
+        printLn(p.inner.a);
+        return ExitSuccess();
+    end;
+end module body.

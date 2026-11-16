@@ -203,7 +203,7 @@ let rec augment_call (ctx: expr_ctx) (name: qident) (args: typed_arglist) (from_
   (* First, check if the callable name is a variable. *)
   match get_var (ctx_lexenv ctx) (local_name name) with
   | Some (ty, _) ->
-     augment_fptr_call ctx (local_name name) ty from_context args
+     augment_fptr_call ctx (local_name name) ty args
   | None ->
      (* Otherwise, find a callable from the environment. *)
      (match get_callable (ctx_place ctx) (ctx_env ctx) (ctx_module_name ctx) (qident_to_sident name) with
@@ -212,7 +212,7 @@ let rec augment_call (ctx: expr_ctx) (name: qident) (args: typed_arglist) (from_
       | None ->
          generic_error (ctx_place ctx) (UnknownName { kind = CallableName; name = original_name name }))
 
-and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (from_context: context_bindings) (args: typed_arglist): texpr =
+and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (args: typed_arglist): texpr =
   (* Because function pointers don't preserve value parameter names, we can't
      accept named argument lists. *)
   let args: texpr list =
@@ -236,11 +236,20 @@ and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (from_c
   let params: value_parameter list = List.map (fun paramty -> ValueParameter (make_ident BuiltInNames.fake_parameter_name, paramty)) paramtys in
   (* Check synthetic parameter list against argument list. *)
   let bindings = check_argument_list ctx name params args in
-  (* Use the bindings to get the effective return type *)
-  let rt' = replace_variables bindings rt in
-  let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) name params rt' from_context bindings in
-  let arguments = cast_arguments bindings' params args in
-  TFptrCall (name, arguments, rt'')
+  (* A function pointer has no type parameters of its own. A type variable in
+     its type is a type parameter of the declaration being checked, and stands
+     for itself: an argument of another type does not bind it. *)
+  let _ =
+    match bindings_list bindings with
+    | [] ->
+       ()
+    | (parameter, argument_ty) :: _ ->
+       type_error (ctx_place ctx) (TypeMismatch { expected = TyVar (typaram_to_tyvar parameter); actual = argument_ty })
+  in
+  (* The call has the return type of the pointer's type, wherever the call is:
+     no type variable of that type is bound by the place either. *)
+  let arguments = cast_arguments bindings params args in
+  TFptrCall (name, arguments, rt)
 
 and augment_callable (ctx: expr_ctx) (name: qident) (callable: callable) (from_context: context_bindings) (args: typed_arglist) =
   match callable with
@@ -266,8 +275,7 @@ and augment_function_call (ctx: expr_ctx) (id: function_id) name typarams params
   (* Check the list of params against the list of arguments *)
   let bindings = check_argument_list ctx (original_name name) params arguments in
   (* Use the bindings to get the effective return type *)
-  let rt' = replace_variables bindings rt in
-  let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) (local_name name) params rt' from_context bindings in
+  let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) (local_name name) params rt from_context bindings in
   (* Check: the set of bindings equals the set of type parameters *)
   let bindings'' = merge_bindings (ctx_place ctx) bindings bindings' in
   check_bindings (ctx_place ctx) typarams bindings'';
@@ -302,8 +310,7 @@ and augment_record_constructor (ctx: expr_ctx) (id: record_id) (name: qident) (t
                         List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams),
                         universe)
     in
-    let rt' = replace_variables bindings rt in
-    let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) (local_name name) params rt' from_context bindings in
+    let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) (local_name name) params rt from_context bindings in
     (* Check: the set of bindings equals the set of type parameters *)
     check_bindings (ctx_place ctx) typarams (merge_bindings (ctx_place ctx) bindings bindings');
     (* The universe of rt'' is compatible with the declared one: it is that
@@ -335,16 +342,15 @@ and augment_union_constructor (ctx: expr_ctx) (union_id: union_id) (type_name: q
     (* Use the bindings to get the effective return type *)
     let tyargs = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams) in
     let rt = NamedType (type_name, UnionTypeId union_id, tyargs, universe) in
-    let rt' = replace_variables bindings rt in
-    let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) case_name params rt' from_context bindings in
+    let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) case_name params rt from_context bindings in
     (* Check: the set of bindings equals the set of type parameters *)
     let bindings'' = merge_bindings (ctx_place ctx) bindings bindings' in
     check_bindings (ctx_place ctx) typarams bindings'';
-    (* The arguments of rt'': rt' replaced the variables of rt with bindings,
-       and rt'' those of rt' with bindings that bindings'' holds. The universe
+    (* The arguments of rt'': the variables of rt replaced with bindings, and
+       then with the bindings the place of the call gave. The universe
        of rt'' is not the declared one when that is `Type`: each replacement
        computed it again from the arguments. *)
-    let tyargs = List.map (fun a -> replace_variables bindings'' (replace_variables bindings a)) tyargs in
+    let tyargs = List.map (fun a -> replace_variables bindings' (replace_variables bindings a)) tyargs in
     (* As for a record, this universe is compatible with the declared one. *)
     TUnionConstructor {
         union_id;
@@ -366,8 +372,7 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
   (* Check the list of params against the list of arguments *)
   let bindings = check_argument_list ctx (original_name callable_name) params arguments in
   (* Use the bindings to get the effective return type *)
-  let rt' = replace_variables bindings rt in
-  let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) (local_name callable_name) params rt' from_context bindings in
+  let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) (local_name callable_name) params rt from_context bindings in
   let bindings'' = merge_bindings (ctx_place ctx) bindings bindings' in
   let dispatch_ty: ty = bound_type (ctx_place ctx) bindings'' typaram in
      (* Is the dispatch type a type variable? *)
@@ -424,13 +429,40 @@ and cast_arguments (bindings: type_bindings) (params: value_parameter list) (arg
   in
   List.map2 f params arguments
 
-and handle_return_type_polymorphism (place: place) (name: identifier) (params: value_parameter list) (rt: ty) (from_context: context_bindings) (bindings: type_bindings): (type_bindings * ty) =
-  if is_return_type_polymorphic params rt then
+(* The type of a call, from the declared return type of what is called and the
+   bindings its arguments gave. A type parameter that no parameter mentions
+   has no binding yet: the place of the call gives it one (`from_context`). *)
+and handle_return_type_polymorphism (place: place) (name: identifier) (params: value_parameter list) (declared_rt: ty) (from_context: context_bindings) (bindings: type_bindings): (type_bindings * ty) =
+  (* The bindings replace the variables of the declared type once. The type of
+     an argument can name a variable that has a binding too: a function that
+     calls itself with its parameters in another order. *)
+  let rt: ty = replace_variables bindings declared_rt in
+  (* Asked of the declared type. `rt` can have type variables that came in
+     with the types of the arguments: type parameters of the declaration being
+     checked, which stand for themselves. *)
+  if is_return_type_polymorphic params declared_rt then
     let bindings' = from_context name rt in
-    let bindings'' = merge_bindings place bindings bindings' in
-    (bindings'', replace_variables bindings'' rt)
+    let _ = List.iter (check_bound_by_context place params declared_rt) (bindings_list bindings') in
+    (merge_bindings place bindings bindings', replace_variables bindings' rt)
   else
-    (empty_bindings, replace_variables bindings rt)
+    (empty_bindings, rt)
+
+(* The place of a call binds only a type parameter of what is called that no
+   parameter mentions: one of the declared return type, and of no parameter
+   type. A binding of another variable is of a type parameter of the
+   declaration being checked, which stands for itself. It came in with the
+   type of an argument, or it is a parameter of the declaration itself, when
+   the declaration calls itself: there the arguments gave it no binding,
+   because it already is what the parameter type says. *)
+and check_bound_by_context (place: place) (params: value_parameter list) (declared_rt: ty) ((parameter, expected): type_parameter * ty): unit =
+  let variable: type_var = typaram_to_tyvar parameter in
+  let in_a_parameter_type: bool =
+    List.exists (fun (ValueParameter (_, ty)) -> TypeVarSet.mem variable (type_variables ty)) params
+  in
+  if TypeVarSet.mem variable (type_variables declared_rt) && not in_a_parameter_type then
+    ()
+  else
+    type_error place (TypeMismatch { expected; actual = TyVar variable })
 
 (* Given a function's parameter list and return type, check if the return type
    of a function is polymorphic. *)
@@ -509,7 +541,7 @@ let rec infer (ctx: expr_ctx) (expr: aexpr): texpr =
 
 and check (ctx: expr_ctx) (expr: aexpr) (expected: ty): texpr =
   let value: texpr = infer_with_expected ctx expr expected in
-  let _ = match_type_with_value_ctx ctx expected value in
+  let _ = expect_value_of_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) expected value in
   value
 
 (* `expr` in a place that expects the type `expected`, before the two types are
@@ -574,10 +606,17 @@ and augment_comparison ctx op lhs rhs =
   and rhs' = infer ctx rhs in
   let _ =
     (* A lone literal on the left takes the type of the right operand. *)
-    if (LiteralTyping.is_numeric_literal lhs) && not (LiteralTyping.is_numeric_literal rhs) then
-      match_type_with_value_ctx ctx (get_type (ctx_place ctx) rhs') lhs'
-    else
-      match_type_with_value_ctx ctx (get_type (ctx_place ctx) lhs') rhs'
+    match (LiteralTyping.is_numeric_literal lhs, LiteralTyping.is_numeric_literal rhs) with
+    | (true, false) ->
+       let _ = match_type_with_value_ctx ctx (get_type (ctx_place ctx) rhs') lhs' in
+       ()
+    | (false, true) ->
+       let _ = match_type_with_value_ctx ctx (get_type (ctx_place ctx) lhs') rhs' in
+       ()
+    | (false, false) | (true, true) ->
+       (* Two types of the body being checked: a type variable stands for
+          itself (TypeMatch.expect_same_type). *)
+       expect_value_of_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) (get_type (ctx_place ctx) lhs') rhs'
   in
   TComparison (op, lhs', rhs')
 
@@ -773,18 +812,17 @@ and augment_array_index (ctx: expr_ctx) (expr: aexpr) (index_expr: aexpr): texpr
       TArrayIndex (expr, index_expr, elem_ty, reg, ReadBorrow)
     end
   | WriteRef (ty, reg) -> begin
-      let elem_ty: ty =
-        match ty with
-        | Span (ty, _) ->
-           ty
-        | SpanMut (ty, _) ->
-           ty
-        | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
-        | RegionTy _ | ReadRef _ | WriteRef _ | TyVar _ | Address _ | Pointer _
-        | FnPtr _ ->
-           type_error (ctx_place ctx) (CantIndexNotSpan ty)
-      in
-      TArrayIndex (expr, index_expr, elem_ty, reg, WriteBorrow)
+      match ty with
+      | Span (elem_ty, _) ->
+         (* The write reference is to the variable that holds the span. The
+            span is read-only, so its elements are. *)
+         TArrayIndex (expr, index_expr, elem_ty, reg, ReadBorrow)
+      | SpanMut (elem_ty, _) ->
+         TArrayIndex (expr, index_expr, elem_ty, reg, WriteBorrow)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
+      | RegionTy _ | ReadRef _ | WriteRef _ | TyVar _ | Address _ | Pointer _
+      | FnPtr _ ->
+         type_error (ctx_place ctx) (CantIndexNotSpan ty)
     end
   | Span (ty, reg) ->
      TSpanIndex (expr, index_expr, ty, reg, ReadBorrow)
@@ -838,8 +876,14 @@ and check_annotated (ctx: expr_ctx) (expr: aexpr) (target_type: ty): texpr =
      | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
      | FnPtr _ ->
         (match try_match_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) target_type (get_type (ctx_place ctx) expr') with
-         | Ok _ ->
-            expr'
+         | Ok bindings ->
+            (* The two types are of the body being checked: a type variable
+               stands for itself (TypeMatch.expect_same_type). *)
+            (match bindings_list bindings with
+             | [] ->
+                expr'
+             | _ :: _ ->
+                type_error (ctx_place ctx) (CastInvalid { target = target_type; source = get_type (ctx_place ctx) expr' }))
          | Error _ ->
             (* Every failure becomes this error, also a type error from
                checking a constraint of a type variable in the target type: a

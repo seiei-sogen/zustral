@@ -1,0 +1,1 @@
+Test that, when a generic function calls itself, the place of the call cannot give a type parameter that a parameter of the function mentions another type than the argument has: the call `wrap(x, false)` with `x` of the type `T` is not a `Two[U, T]` (issue #151).

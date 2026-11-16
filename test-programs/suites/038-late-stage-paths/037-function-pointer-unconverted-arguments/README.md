@@ -1,1 +1,1 @@
-Covers calls through a function pointer with a parameter of a type parameter type, where an integer literal and `sizeof` are passed without a conversion (lib/MtastUtil.ml, get_type).
+Covers calls through a function pointer where an integer literal and `sizeof` are passed without a conversion, and a call through a function pointer of the type `Fn[T, T]` with a value of the type parameter `T` (lib/MtastUtil.ml, get_type).

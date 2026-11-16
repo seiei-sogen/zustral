@@ -157,8 +157,8 @@ let rec augment_stmt (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (stmt: 
      augment_while ctx lexenv supply span c body
   | AFor { span; name; initial; final; body; } ->
      augment_for ctx lexenv supply span name initial final body
-  | ABorrow { span; original; rename; region; body; mode; } ->
-     augment_borrow ctx lexenv supply span original rename region body mode
+  | ABorrow { span; original; rename; declared_reference; region; body; mode; } ->
+     augment_borrow ctx lexenv supply span original rename declared_reference region body mode
   | ABlock (span, f, r) ->
      augment_block ctx lexenv supply span f r
   | ADiscarding (span, e) ->
@@ -171,7 +171,10 @@ and augment_let (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span)
   let (StmtCtx (_, env, rm, typarams, _, place)) = ctx in
   (let _ = check_var_doesnt_collide_with_decl ctx name in
       let ty = parse_typespec place env rm typarams ty in
-      let lexenv = push_var place lexenv name ty (VarLocal mut) in
+      (* The body starts with the statement that assigns the initial value
+         (LiftControlPass). The variable has no value before that statement
+         has run, so nothing in it can name the variable. *)
+      let lexenv = push_var_awaiting_initial_value place lexenv name ty (VarLocal mut) in
       let (body', lexenv, supply) = augment_stmt ctx lexenv supply body in
       (TLet (span, mut, name, ty, body'), remove_var lexenv name, supply))
 
@@ -195,7 +198,7 @@ and augment_assign_tmp (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (name
   let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
   let value = infer_expr place module_name env rm typarams lexenv value in
   let ty = get_temporary_type place lexenv name in
-  let _ = match_type (env, module_name, place) ty (get_type place value) in
+  let _ = expect_same_type (env, module_name, place) ty (get_type place value) in
   (TAssignTmp (name, value), lexenv, supply)
 
 and augment_destructure (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (mut: mutability) (bindings: qbinding list) (value: aexpr) (body: astmt): tstmt * lexenv * Supply.t =
@@ -236,7 +239,7 @@ and augment_destructure (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (spa
               in
               let newvars: (identifier * ty * var_source) list =
                 List.map (fun (_, ty, actual, rename) ->
-                    let _ = match_type (env, module_name, place) ty actual in
+                    let _ = expect_same_type (env, module_name, place) ty actual in
                     (rename, ty, VarLocal mut))
                   bindings''
               in
@@ -279,7 +282,7 @@ and augment_assign (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
       let lexenv = declare_assigned_temporary place lexenv rvalue pointed_ty in
       let rvalue: texpr = infer_expr place module_name env rm typarams lexenv rvalue in
       (* The pointed to type and the type of the rvalue must match. *)
-      let _ = match_type_with_value (env, module_name, place) pointed_ty rvalue in
+      let _ = expect_value_of_type (env, module_name, place) pointed_ty rvalue in
       (* The pointed-to type must be in the free universe. *)
       let _ =
         match type_universe pointed_ty with
@@ -324,7 +327,7 @@ and augment_assign_var (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span
       let lexenv = declare_assigned_temporary place lexenv rvalue lvalue_ty in
       let rvalue: texpr = infer_expr place module_name env rm typarams lexenv rvalue in
       (* Types must match. *)
-      let _ = match_type_with_value (env, module_name, place) lvalue_ty rvalue in
+      let _ = expect_value_of_type (env, module_name, place) lvalue_ty rvalue in
       (* Construct the assignment. *)
       (TAssignVar (span, name, rvalue), lexenv, supply))
 
@@ -332,8 +335,11 @@ and augment_initial_assign (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (
   let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
   (* The type of the `let` annotates its value. *)
   let ty = parse_typespec place env rm typarams ty in
+  (* The `let` declared its variable without a value, so the initial value
+     does not see the variable, and neither does an anonymous borrow around
+     this statement. The statements after this one see it. *)
   let rvalue: texpr = check_annotated_expr place module_name env rm typarams lexenv rvalue ty in
-  (TInitialAssign (name, rvalue), lexenv, supply)
+  (TInitialAssign (name, rvalue), mark_var_initialized lexenv (original_name name), supply)
 
 and augment_if (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (c: aexpr) (t: astmt) (f: astmt): tstmt * lexenv * Supply.t =
   let ctx = stmt_at ctx span in
@@ -378,9 +384,9 @@ and augment_for (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span)
       let (b', lexenv, supply) = augment_stmt ctx lexenv supply body in
       (TFor (span, name, i', f', b'), remove_var lexenv name, supply))
 
-and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (original: identifier) (rename: identifier) (region: identifier) (body: astmt) (mode: borrow_stmt_kind): tstmt * lexenv * Supply.t =
+and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (original: identifier) (rename: identifier) (declared_reference: (borrowing_mode * qtypespec) option) (region: identifier) (body: astmt) (mode: borrow_stmt_kind): tstmt * lexenv * Supply.t =
   let ctx = stmt_at ctx span in
-  let (StmtCtx (_, _, rm, _, _, place)) = ctx in
+  let (StmtCtx (_, env, rm, typarams, _, place)) = ctx in
   (let _ = check_var_doesnt_collide_with_decl ctx rename in
       (match get_var lexenv original with
        | (Some (orig_ty, src)) ->
@@ -430,6 +436,23 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
                   end
                 in
                 WriteRef (pointed_ty, RefRegion region_obj))
+          in
+          (* The reference has the type the statement declares for it. *)
+          let _ =
+            match declared_reference with
+            | Some (declared_mode, declared_referent) ->
+               let declared_referent: ty = parse_typespec place env rm typarams declared_referent in
+               let declared_refty: ty =
+                 match declared_mode with
+                 | ReadBorrow -> ReadRef (declared_referent, RefRegion region_obj)
+                 | WriteBorrow -> WriteRef (declared_referent, RefRegion region_obj)
+               in
+               if equal_ty declared_refty refty then
+                 ()
+               else
+                 type_error place (TypeMismatch { expected = declared_refty; actual = refty })
+            | None ->
+               ()
           in
           let lexenv = push_var place lexenv rename refty (VarLocal Immutable) in
           let rm' = add_region place rm region region_obj in
@@ -687,7 +710,12 @@ and lexenv_from_params (params: value_parameter list): lexenv =
 and augment_method_decl _ _ _ (LMethodDecl (decl_id, name, params, rt, _)) =
   TypedMethodDecl (decl_id, name, params, rt)
 
-and augment_method_def module_name menv rm typarams supply (LMethodDef (ins_meth_id, name, params, rt, _, body)) =
+and augment_method_def module_name menv rm instance_typarams supply (LMethodDef (ins_meth_id, name, params, rt, _, body)) =
+  (* The body can name the type parameters of the instance and those of the
+     method itself, as the signature can (ExtractionPass). The environment
+     keeps the method's own. *)
+  let (InsMethRec { typarams = method_typarams; _ }) = get_instance_method menv ins_meth_id in
+  let typarams = merge_typarams NoSpan instance_typarams method_typarams in
   let lexenv = lexenv_from_params params in
   let ctx = StmtCtx (module_name, menv, rm, typarams, rt, NoSpan) in
   let _ =

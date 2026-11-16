@@ -1,0 +1,1 @@
+Test that a `for` loop cannot assign a linear variable that was consumed before the loop and leave it not consumed: when the body runs more than once, the value of an earlier turn is lost (issue #150).

@@ -3,9 +3,8 @@ module body Test is
         return x + 1;
     end;
 
-    generic [T: Free]
-    function callWithLiteral(f: Fn[T, T]): T is
-        let r: T := f(41);
+    function callWithLiteral(f: Fn[Int32, Int32]): Int32 is
+        let r: Int32 := f(41);
         return r;
     end;
 
@@ -13,9 +12,14 @@ module body Test is
         return x;
     end;
 
+    function callWithSize(f: Fn[ByteSize, ByteSize]): ByteSize is
+        let r: ByteSize := f(sizeof(Int32));
+        return r;
+    end;
+
     generic [T: Free]
-    function callWithSize(f: Fn[T, T]): T is
-        let r: T := f(sizeof(Int32));
+    function callWithValue(f: Fn[T, T], x: T): T is
+        let r: T := f(x);
         return r;
     end;
 
@@ -24,6 +28,7 @@ module body Test is
         printLn(n);
         let s: ByteSize := callWithSize(sameSize);
         printLn(s);
+        printLn(callWithValue(next, 1));
         return ExitSuccess();
     end;
 end module body.

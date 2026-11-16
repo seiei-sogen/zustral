@@ -1,0 +1,28 @@
+module body Test is
+    record Foo: Linear is
+        x: Int32;
+    end;
+
+    typeclass Peekable(T: Type) is
+        generic [R: Region]
+        method look(ref: &[T, R]): Int32;
+    end;
+
+    instance Peekable(Foo) is
+        generic [R: Region]
+        method look(ref: &[Foo, R]): Int32 is
+            let again: &[Foo, R] := ref;
+            borrow nested: &[&[Foo, R], S] := &again do
+                skip;
+            end borrow;
+            return again->x;
+        end;
+    end;
+
+    function main(): ExitCode is
+        let foo: Foo := Foo(x => 1);
+        printLn(look(&foo));
+        let { x: Int32 } := foo;
+        return ExitSuccess();
+    end;
+end module body.

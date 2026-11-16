@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "The variable " },
+    { "type": "code", "content": "c" },
+    { "type": "text", "content": " has already been consumed." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/006-linearity/039-write-reference-used-after-if-expression-branch/Test.aum",
+    "startp": { "line": 15, "column": 8 },
+    "end": { "line": 15, "column": 31 }
+  },
+  "context": [
+    [
+      13,
+      "    function bumpTwice(c: &![Counter, R], enabled: Bool): Int32 is"
+    ],
+    [ 14, "        let first: Int32 := if enabled then bump(c) else 0;" ],
+    [ 15, "        return first + bump(c);" ],
+    [ 16, "    end;" ],
+    [ 17, "" ]
+  ]
+}

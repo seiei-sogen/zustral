@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "Can't assign: lvalue is not a mutable reference: &[Nat8, Region<2>]"
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/016-spans/010-assign-element-of-read-only-span-in-record/Test.aum",
+    "startp": { "line": 8, "column": 8 },
+    "end": { "line": 8, "column": 29 }
+  },
+  "context": [
+    [ 6, "    function main(): ExitCode is" ],
+    [ 7, "        var label: Label := Label(text => \"abc\");" ],
+    [ 8, "        label.text[0] := 'x';" ],
+    [ 9, "        return ExitSuccess();" ],
+    [ 10, "    end;" ]
+  ]
+}

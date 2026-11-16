@@ -1,0 +1,11 @@
+module body Test is
+    record Label: Free is
+        text: Span[Nat8, Static];
+    end;
+
+    function main(): ExitCode is
+        var label: Label := Label(text => "abc");
+        label.text[0] := 'x';
+        return ExitSuccess();
+    end;
+end module body.

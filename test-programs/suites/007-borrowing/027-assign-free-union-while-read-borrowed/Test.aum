@@ -1,0 +1,23 @@
+module body Test is
+    union Shape: Free is
+        case Circle is
+            radius: Int32;
+        case Name is
+            text: Span[Nat8, Static];
+    end;
+
+    function main(): ExitCode is
+        var s: Shape := Name(text => "abc");
+        borrow r: &[Shape, R] := &s do
+            case r of
+                when Circle(radius: &[Int32, R]) do
+                    skip;
+                when Name(text: &[Span[Nat8, Static], R]) do
+                    s := Circle(radius => 123456789);
+                    let t: Span[Nat8, Static] := !text;
+                    printLn(t[0]);
+            end case;
+        end borrow;
+        return ExitSuccess();
+    end;
+end module body.

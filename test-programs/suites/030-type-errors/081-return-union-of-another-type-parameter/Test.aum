@@ -1,0 +1,17 @@
+module body Test is
+    generic [T: Free, U: Free]
+    function wrap(x: T, y: U): Option[T] is
+        return Some(value => y);
+    end;
+
+    function main(): ExitCode is
+        let o: Option[Bool] := wrap(true, 7);
+        case o of
+            when Some(value: Bool) do
+                printLn(value);
+            when None do
+                skip;
+        end case;
+        return ExitSuccess();
+    end;
+end module body.

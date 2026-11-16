@@ -1,0 +1,34 @@
+module body Test is
+    union Two[A: Free, B: Free]: Free is
+        case First is
+            first: A;
+        case Second is
+            second: B;
+    end;
+
+    generic [T: Free, U: Free]
+    function wrap(x: T, again: Bool): Two[T, U] is
+        if again then
+            let swapped: Two[U, T] := wrap(x, false);
+            case swapped of
+                when First(first: U) do
+                    return Second(second => first);
+                when Second(second: T) do
+                    return First(first => second);
+            end case;
+        end if;
+        return First(first => x);
+    end;
+
+    function main(): ExitCode is
+        let two: Two[Bool, Int64] := wrap(true, true);
+        case two of
+            when First(first: Bool) do
+                printLn("first");
+            when Second(second: Int64) do
+                printLn("a Bool came out as an Int64:");
+                printLn(second);
+        end case;
+        return ExitSuccess();
+    end;
+end module body.
