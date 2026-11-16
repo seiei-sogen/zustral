@@ -1,0 +1,1 @@
+Test that a function with the `Foreign_Export` pragma, which has a body, fails when the body does not end in a return statement (issue #89).

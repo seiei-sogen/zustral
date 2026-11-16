@@ -1,0 +1,10 @@
+module body Test is
+    pragma Foreign_Export(External_Name => "exported");
+    function exported(x: Int32): Int32 is
+        let y: Int32 := x;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

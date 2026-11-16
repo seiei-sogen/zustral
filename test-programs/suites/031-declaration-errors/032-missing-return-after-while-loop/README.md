@@ -1,0 +1,1 @@
+Test that a function fails when it ends in a `while` loop whose body returns: when the body runs zero times, the function returns nothing (issue #89).
