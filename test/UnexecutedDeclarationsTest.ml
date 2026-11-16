@@ -274,7 +274,7 @@ let test_only_a_constant_is_a_variable _ =
   assert_equal (Some (Boolean, LexEnv.VarConstant)) (variable "c")
 
 let test_a_symbol_imported_twice _ =
-  let imports = Imports.add_symbol (Imports.empty_map example) (named "f") in
+  let imports = Imports.add_symbol (Imports.empty_map example Common.SafeModule) (named "f") in
   assert_equal (Some (Generic SymbolImportedTwice))
     (error_of (fun () -> Imports.add_symbol imports (named "f")))
 

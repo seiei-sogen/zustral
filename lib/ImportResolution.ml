@@ -95,6 +95,6 @@ let import_instances (env: env) (list: concrete_import_list list): instance_id l
   List.flatten instances
 
 let resolve (importing_module: module_name) (kind: module_kind) (env: env) (list: concrete_import_list list): import_map =
-  let im: import_map = resolve' env kind (empty_map importing_module) (flatten_imports list) in
+  let im: import_map = resolve' env kind (empty_map importing_module kind) (flatten_imports list) in
   let ins: instance_id list = import_instances env list in
   add_instances im ins

@@ -47,6 +47,7 @@ type known_pragma =
 
 type t =
   | ForeignInSafeModule
+  | EmbedInSafeModule
   | ForeignTypeParameters
   | FunInvalidPragmas
   | DeclarationKindMismatch of { name: identifier; expected: declaration_kind }
@@ -105,6 +106,15 @@ let render (error: t): err_text =
   | ForeignInSafeModule ->
      [
        Text "Can't declare a foreign function in a safe module."
+     ]
+  | EmbedInSafeModule ->
+     [
+       Text "Can't use ";
+       Code "@embed";
+       Text " in a safe module.";
+       Break;
+       Text "Consider adding ";
+       Code ("pragma " ^ BuiltInNames.unsafe_module_pragma_name ^ ";")
      ]
   | ForeignTypeParameters ->
      [
