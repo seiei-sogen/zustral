@@ -1,5 +1,0 @@
-exit: 2
-files: 
---- stdout
---- stderr
-Fatal error: exception Failure("int_of_string")

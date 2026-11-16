@@ -54,7 +54,7 @@ lib/MonoType.ml	37	0	0	0	0	0	0	0	0	0	0
 lib/MonoTypeBindings.ml	44	0	0	0	0	0	0	0	0	0	0
 lib/Monomorphize.ml	776	5	0	0	0	0	0	2	0	0	0
 lib/MtastUtil.ml	75	1	0	0	0	0	0	0	0	0	0
-lib/NumberLiteral.ml	89	0	0	0	0	0	2	0	0	0	0
+lib/NumberLiteral.ml	82	0	0	0	0	0	2	0	0	0	0
 lib/Outcome.ml	58	0	1	0	0	0	0	0	0	0	0
 lib/ParseErrors.ml	52	0	0	0	0	0	3	0	0	0	0
 lib/Parser.mly	570	0	0	0	0	0	0	0	0	0	0
