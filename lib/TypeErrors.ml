@@ -70,7 +70,6 @@ type t =
   | LogicalOperandsNotBoolean of logical_operands
   | NoSuchSlot of { type_name: identifier; slot_name: identifier }
   | NoSuitableInstance of { typeclass: identifier; ty: ty }
-  | InstanceMissingMethod of { typeclass: identifier; ty: ty; module_name: module_name; method_name: identifier }
   | PathNotPublic of { type_name: identifier; slot_name: identifier }
   | PathNotRecord of ty
   | SlotWrongType of { name: identifier; expected: ty; actual: ty }
@@ -316,18 +315,6 @@ let render (error: t): err_text =
        Code (ident_string typeclass);
        Text " has no instance which matches for ";
        Type ty
-     ]
-  | InstanceMissingMethod { typeclass; ty; module_name; method_name } ->
-     [
-       Text "The instance of the typeclass ";
-       Code (ident_string typeclass);
-       Text " for ";
-       Type ty;
-       Text ", declared in the module ";
-       Code (mod_name_string module_name);
-       Text ", does not define the method ";
-       Code (ident_string method_name);
-       Text ". An instance must define every method of its typeclass."
      ]
   | PathNotPublic { type_name; slot_name } ->
      [

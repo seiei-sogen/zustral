@@ -10,6 +10,7 @@ open Id
 open Identifier
 open IdentifierSet
 open Type
+open TypeParameter
 open TypeParameters
 open TypeParser
 open TypeSystem
@@ -227,4 +228,14 @@ let check_disjoint_typarams (place: place) (name: identifier) (typarams: typaram
      declaration_error place (InstanceShadowsTypeclassParam name)
   | None ->
      (* No collision *)
+     ()
+
+let check_method_type_parameters_are_regions (place: place) (method_name: identifier) (method_typarams: typarams): unit =
+  let is_not_region (typaram: type_parameter): bool =
+    not (equal_universe (typaram_universe typaram) RegionUniverse)
+  in
+  match List.find_opt is_not_region (typarams_as_list method_typarams) with
+  | Some typaram ->
+     declaration_error place (MethodTypeParameterNotRegion { method_name; typaram })
+  | None ->
      ()

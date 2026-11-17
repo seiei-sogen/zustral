@@ -208,9 +208,8 @@ let register (type id) (place: place) (env: env) (registration: id registration)
      let instance: instance_decl = { id; mod_id; vis; typeclass_id; docstring; typarams; argument } in
      (Env { mods; methods; decls; instances = instance :: instances; monos; exports; supply }, id)
   | NewInstanceMethod { instance_id; method_id; docstring; name; typarams; value_params; rt; body } ->
-     (* Not checked here. The caller checks that the typeclass has a method of
-        this name. Nothing checks that an instance defines every method of its
-        typeclass (#91), or that it defines a method once. *)
+     (* Not checked here. The caller checks the methods of the instance against
+        the methods of its typeclass (#91). *)
      let (id, supply) = fresh_ins_meth_id supply in
      let meth = InsMethRec { id; instance_id; method_id; docstring; name; typarams; value_params; rt; body } in
      (Env { mods; methods = meth :: methods; decls; instances; monos; exports; supply }, id)
@@ -289,19 +288,20 @@ let get_instance_method (env: env) (ins_meth_id: ins_meth_id): ins_meth_rec =
   registered NoSpan (fun () -> "instance method with ID `" ^ (show_ins_meth_id ins_meth_id) ^ "`")
     (List.find_opt (fun (InsMethRec { id; _ }) -> equal_ins_meth_id id ins_meth_id) methods)
 
-let get_method_from_typeclass_id_and_name (env: env) (typeclass_id: typeclass_id) (name: identifier): typeclass_method_decl option =
+let get_typeclass_methods (env: env) (typeclass_id: typeclass_id): typeclass_method_decl list =
   let (Env { decls; _ }) = env in
   let pick (decl: decl): typeclass_method_decl option =
     match decl with
     | TypeClassMethod meth ->
-       if (equal_typeclass_id meth.typeclass_id typeclass_id) && (equal_identifier meth.name name) then
+       if equal_typeclass_id meth.typeclass_id typeclass_id then
          Some meth
        else
          None
     | Constant _ | Record _ | Union _ | UnionCase _ | Function _ | TypeClass _ ->
        None
   in
-  List.find_map pick decls
+  (* The newest declaration is first. *)
+  List.rev (List.filter_map pick decls)
 
 let module_instances (env: env) (id: mod_id): instance_decl list =
   let (Env { instances; _ }) = env in
@@ -419,13 +419,15 @@ and replace_method_body (meth: ins_meth_rec) (new_body: tstmt): ins_meth_rec =
    | None ->
       InsMethRec { id; instance_id; method_id; docstring; name; typarams; value_params; rt; body=(Some new_body) })
 
-let get_instance_method_from_instance_id_and_method_name (env: env) (instance_id: instance_id) (name: identifier): ins_meth_rec option =
+let get_instance_method_from_instance_id_and_method_name (place: place) (env: env) (instance_id: instance_id) (name: identifier): ins_meth_rec =
   let (Env { methods; _ }) = env in
   let pred (InsMethRec { instance_id=target_instance_id; name=target_name; _ }): bool =
     (equal_instance_id instance_id target_instance_id)
     && (equal_identifier name target_name)
   in
-  List.find_opt pred methods
+  (* The declaration of an instance defines every method of its typeclass (#91). *)
+  registered place (fun () -> "method `" ^ (ident_string name) ^ "` of the instance with ID `" ^ (show_instance_id instance_id) ^ "`")
+    (List.find_opt pred methods)
 
 let add_record_monomorph (env: env) (type_id: record_id) (tyargs: mono_type_bindings): (env * record_mono_id) =
   let (Env { mods; methods; decls; instances; monos; exports; supply }) = env in

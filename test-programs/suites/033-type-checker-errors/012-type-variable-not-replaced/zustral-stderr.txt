@@ -1,9 +1,32 @@
 {
   "module": "Test",
-  "kind": "Generic Error",
+  "kind": "Declaration Error",
   "text": [
-    { "type": "text", "content": "strip_type': Variable not replaced: 'U'" }
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "U" },
+    { "type": "text", "content": " of the method " },
+    { "type": "code", "content": "foo" },
+    { "type": "text", "content": " is in the " },
+    { "type": "code", "content": "Free" },
+    {
+      "type": "text",
+      "content": " universe. The type parameters of a method must be in the "
+    },
+    { "type": "code", "content": "Region" },
+    { "type": "text", "content": " universe." }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/033-type-checker-errors/012-type-variable-not-replaced/Test.zum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    typeclass TC(T: Free) is" ],
+    [ 3, "        generic [U: Free]" ],
+    [ 4, "        method foo(x: T, y: U): Unit;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    instance TC(Int32) is" ]
+  ]
 }

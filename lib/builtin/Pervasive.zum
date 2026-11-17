@@ -876,6 +876,11 @@ module body Zustral.Pervasive is
             return @embed(Unit, "au_printf(\"nil\")");
             return value;
         end;
+
+        generic [R: Region]
+        method printSpan(array: Span[Unit, R]): Unit is
+            return nil;
+        end;
     end;
 
     instance Printable(Bool) is
@@ -889,7 +894,7 @@ module body Zustral.Pervasive is
         end;
 
         generic [R: Region]
-        method printSpan(array: Span[Unit, R]): Unit is
+        method printSpan(array: Span[Bool, R]): Unit is
             return nil;
         end;
     end;

@@ -131,9 +131,8 @@ val get_instance_decl : Error.place -> env -> instance_id -> instance_decl
     If a module with the given name doesn't exist, raises an error. *)
 val get_decl_by_name : Error.place -> env -> sident -> decl option
 
-(** Find a typeclass method from its typeclass ID and name, returning {!None} if
-    the typeclass has no method of that name. *)
-val get_method_from_typeclass_id_and_name : env -> typeclass_id -> identifier -> typeclass_method_decl option
+(** The methods of a typeclass, in the order of their declaration. *)
+val get_typeclass_methods : env -> typeclass_id -> typeclass_method_decl list
 
 (** Return all typeclass instances defined in a module. *)
 val module_instances: env -> mod_id -> instance_decl list
@@ -144,9 +143,8 @@ val module_public_instances: env -> mod_id -> instance_decl list
 (** Return the list of cases of a union. *)
 val get_union_cases : env -> union_id -> union_case_decl list
 
-(** Get method from the instance ID and name, returning {!None} if the instance
-    does not define a method of that name. *)
-val get_instance_method_from_instance_id_and_method_name : env -> instance_id -> identifier -> ins_meth_rec option
+(** Get method from the instance ID and the name of a method of its typeclass. *)
+val get_instance_method_from_instance_id_and_method_name : Error.place -> env -> instance_id -> identifier -> ins_meth_rec
 
 (** Get an instance method by ID. *)
 val get_instance_method : env -> ins_meth_id -> ins_meth_rec

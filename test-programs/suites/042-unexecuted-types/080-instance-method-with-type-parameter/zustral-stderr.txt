@@ -1,9 +1,33 @@
 {
   "module": "Test",
-  "kind": "Generic Error",
+  "kind": "Declaration Error",
   "text": [
-    { "type": "text", "content": "strip_type': Variable not replaced: 'U'" }
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "U" },
+    { "type": "text", "content": " of the method " },
+    { "type": "code", "content": "m" },
+    { "type": "text", "content": " is in the " },
+    { "type": "code", "content": "Type" },
+    {
+      "type": "text",
+      "content": " universe. The type parameters of a method must be in the "
+    },
+    { "type": "code", "content": "Region" },
+    { "type": "text", "content": " universe." }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/080-instance-method-with-type-parameter/Test.zum",
+    "startp": { "line": 14, "column": 4 },
+    "end": { "line": 17, "column": 8 }
+  },
+  "context": [
+    [ 12, "    end;" ],
+    [ 13, "" ],
+    [ 14, "    typeclass Gen(P: Free) is" ],
+    [ 15, "        generic [U: Type]" ],
+    [ 16, "        method m(x: P, u: Pointer[U]): Unit;" ],
+    [ 17, "    end;" ],
+    [ 18, "" ],
+    [ 19, "    instance Gen(Int32) is" ]
+  ]
 }

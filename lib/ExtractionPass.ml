@@ -23,6 +23,7 @@ open TypeSignature
 open TypeParameter
 open TypeParameters
 open TypeClasses
+open InstanceMethodsMatchTypeclass
 open RegionMap
 open BuiltIn
 open TypeVarSet
@@ -109,10 +110,10 @@ let parsers (env: env) (local_types: type_signature list)
    a function pointer are one C type whatever their types are. *)
 let rec region_held_by_value (place: place) (env: env) (seen: ty list) (ty: ty): identifier option =
   match ty with
-  | TyVar (TypeVariable (name, universe, _, _)) ->
-     (match universe with
-      | RegionUniverse -> Some name
-      | FreeUniverse | LinearUniverse | TypeUniverse -> None)
+  | TyVar (TypeVariable (name, _, _, _)) ->
+     (* The instance has no type parameters, and a method's own are regions
+        (TypeClasses.check_method_type_parameters_are_regions). *)
+     Some name
   | ReadRef (ty, _) | WriteRef (ty, _) | Address ty | Pointer ty ->
      region_held_by_value place env seen ty
   | NamedType (_, id, args, _) ->
@@ -450,6 +451,7 @@ and reserve_definition (env: env) (mod_id: mod_id) (mn: module_name) (def: combi
          let typarams = typarams_from_list place [typaram] in
          let method_map (Combined.CMethodDecl (name, method_typarams, params, rt, docstring)): type_class_method_input =
            let effective_typarams: typarams = merge_typarams place typarams method_typarams in
+           let _ = check_method_type_parameters_are_regions place name method_typarams in
            let value_params = List.map (parse_param place effective_typarams) params
            and rt = parse' place rm effective_typarams rt in
            {
@@ -477,12 +479,12 @@ and reserve_definition (env: env) (mod_id: mod_id) (mn: module_name) (def: combi
          (* First add the instance to the env, then the methods. *)
          let argument = parse' place rm typarams argument in
          (* Find typeclass info. *)
-         let (typeclass_id, typeclass_mod_id, typeclass_param_name, universe): typeclass_id * mod_id * identifier * universe =
+         let (typeclass_id, typeclass_mod_id, typeclass_param): typeclass_id * mod_id * type_parameter =
            match get_decl_by_name place env (qident_to_sident name) with
            | Some decl ->
               (match decl with
                | TypeClass { id; mod_id; param; _ } ->
-                  (id, mod_id, typaram_name param, typaram_universe param)
+                  (id, mod_id, param)
                | Constant _ | Record _ | Union _ | UnionCase _ | Function _
                | TypeClassMethod _ ->
                   declaration_error place (InstanceForNonTypeclass typeclass_name))
@@ -490,12 +492,12 @@ and reserve_definition (env: env) (mod_id: mod_id) (mn: module_name) (def: combi
               declaration_error place (UnknownTypeclass typeclass_name)
          in
          (* Check the argument has the right universe for the typeclass. *)
-         let _ = check_instance_argument_has_right_universe place universe argument in
+         let _ = check_instance_argument_has_right_universe place (typaram_universe typeclass_param) argument in
          (* Check the argument has the right shape. *)
          let _ = check_instance_argument_has_right_shape place typarams argument in
          (* Check that the non of the type parameters in the generic instance
             collide with the type parameter of the typeclass. *)
-         let _ = check_disjoint_typarams place typeclass_param_name typarams in
+         let _ = check_disjoint_typarams place (typaram_name typeclass_param) typarams in
          (* Local uniqueness: does this instance collide with other instances in this module? *)
          let _ =
            let other_instances: instance_decl list =
@@ -510,12 +512,14 @@ and reserve_definition (env: env) (mod_id: mod_id) (mn: module_name) (def: combi
          let input: instance_input = { mod_id; vis; typeclass_id; docstring; typarams; argument } in
          let (env, instance_id) = register place env (NewInstance input) in
          (* Convert the list of methods into a list of instance_method_input records *)
+         let typeclass_methods: typeclass_method_decl list = get_typeclass_methods env typeclass_id in
          let method_map (CMethodDef (name, method_typarams, params, rt, meth_docstring, body)): (instance_method_input * astmt) =
            let effective_typarams: typarams = merge_typarams place typarams method_typarams in
+           let _ = check_method_type_parameters_are_regions place name method_typarams in
            let value_params = List.map (parse_param place effective_typarams) params
            and rt = parse' place rm effective_typarams rt
            and method_id: typeclass_method_id =
-             (match get_method_from_typeclass_id_and_name env typeclass_id name with
+             (match List.find_opt (fun (m: typeclass_method_decl) -> equal_identifier m.name name) typeclass_methods with
               | Some { id; _ } ->
                  id
               | None ->
@@ -537,6 +541,7 @@ and reserve_definition (env: env) (mod_id: mod_id) (mn: module_name) (def: combi
             body)
          in
          let methods: (instance_method_input * astmt) list = List.map method_map methods in
+         let _ = check_instance_methods_match_typeclass place typeclass_name typeclass_param argument typeclass_methods (List.map fst methods) in
          (* Add the methods to the env *)
          let (env, linked_methods) = add_instance_methods place env methods in
          (* Construct the decl *)

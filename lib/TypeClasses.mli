@@ -63,3 +63,9 @@ val check_instance_orphan_rules : Error.place -> Error.place -> env -> mod_id ->
   But this might, I suspect, become part of the language because it reduces
   confusion. *)
 val check_disjoint_typarams : Error.place -> identifier -> typarams -> unit
+
+(** The type parameters of a method, of a typeclass or of an instance, are
+    regions. A method is monomorphized only with the type arguments of its
+    instance, and regions are erased, so a type parameter of another universe
+    would never be replaced (#157). *)
+val check_method_type_parameters_are_regions : Error.place -> identifier -> typarams -> unit

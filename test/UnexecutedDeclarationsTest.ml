@@ -195,6 +195,10 @@ let test_lookups_by_an_id_from_a_later_environment _ =
     (error_of (fun () -> Env.get_instance_decl NoSpan before instance_id));
   assert_equal (no ("instance method with ID `" ^ (Id.show_ins_meth_id ins_meth_id) ^ "`"))
     (error_of (fun () -> Env.get_instance_method before ins_meth_id));
+  (* A program cannot ask for a method its instance leaves out: the declaration
+     of the instance is checked against its typeclass (#91). *)
+  assert_equal (no ("method `m` of the instance with ID `" ^ (Id.show_instance_id instance_id) ^ "`"))
+    (error_of (fun () -> Env.get_instance_method_from_instance_id_and_method_name NoSpan before instance_id (make_ident "m")));
   assert_equal (no ("monomorph with ID `" ^ (Id.show_mono_id mono_id) ^ "`"))
     (error_of (fun () -> Env.get_monomorph before mono_id));
   assert_equal (no ("record or union monomorph with ID `" ^ (Id.show_mono_id mono_id) ^ "`"))
@@ -602,6 +606,16 @@ let test_a_struct_before_other_declarations _ =
   assert_equal ~printer:(String.concat " ") ["forward"; "struct"; "declaration"; "definition"]
     (struct_then (MFunction (function_id, make_ident "f", [], MonoUnit, MSkip)))
 
+(* TypeStripping: a method is compiled with the type arguments of its instance,
+   and its own type parameters are regions (#157), so the code generator never
+   strips a type variable of another universe. *)
+let test_a_type_variable_left_for_the_code_generator _ =
+  List.iter
+    (fun (universe: universe) ->
+      assert_equal (internal "strip_type': Variable not replaced: 'T'")
+        (error_of (fun () -> TypeStripping.strip_type (tyvar "T" universe))))
+    [FreeUniverse; LinearUniverse; TypeUniverse]
+
 let suite =
   "Unexecuted declarations" >::: [
       "lookups by an ID from a later environment" >:: test_lookups_by_an_id_from_a_later_environment;
@@ -625,7 +639,8 @@ let suite =
       "parameters of region types" >:: test_parameters_of_region_types;
       "borrows of values that are not addresses" >:: test_borrows_of_values_that_are_not_addresses;
       "an imported function of an exported signature" >:: test_an_imported_function_of_an_exported_signature;
-      "a struct before other declarations" >:: test_a_struct_before_other_declarations
+      "a struct before other declarations" >:: test_a_struct_before_other_declarations;
+      "a type variable left for the code generator" >:: test_a_type_variable_left_for_the_code_generator
     ]
 
 let _ = run_test_tt_main suite

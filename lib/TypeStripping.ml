@@ -72,7 +72,7 @@ let rec strip_type (ty: ty): stripped_ty =
             left over by stripping time, that's an error. Anyways, the
             search-and-replace step should *also* have signalled an error if a
             type variable has no replacement. *)
-         generic_error NoSpan (TypeVariableNotReplaced name))
+         internal_err NoSpan ("strip_type': Variable not replaced: '" ^ (ident_string name) ^ "'"))
   | Address ty ->
      SAddress (strip_type ty)
   | Pointer ty ->

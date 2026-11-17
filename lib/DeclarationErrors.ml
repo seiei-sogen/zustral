@@ -73,6 +73,10 @@ type t =
   | InstanceForNonTypeclass of identifier
   | InstanceBeforeType of identifier
   | TypeclassNoMethod of { typeclass: identifier; method_name: identifier }
+  | InstanceMissingMethod of { typeclass: identifier; ty: ty; method_name: identifier }
+  | InstanceMethodDefinedTwice of { typeclass: identifier; ty: ty; method_name: identifier }
+  | InstanceMethodMismatch of { typeclass: identifier; ty: ty; method_name: identifier; difference: function_difference }
+  | MethodTypeParameterNotRegion of { method_name: identifier; typaram: type_parameter }
   | TypeclassParamIsRegion of identifier
   | TypesAreNotRegions of { name: identifier; declaration: declaration_kind }
   | RegionUsedAsType of identifier
@@ -275,6 +279,53 @@ let render (error: t): err_text =
        Code (ident_string typeclass);
        Text " has no method named ";
        Code (ident_string method_name)
+     ]
+  | InstanceMissingMethod { typeclass; ty; method_name } ->
+     [
+       Text "The instance of the typeclass ";
+       Code (ident_string typeclass);
+       Text " for ";
+       Type ty;
+       Text " does not define the method ";
+       Code (ident_string method_name);
+       Text ". An instance must define every method of its typeclass."
+     ]
+  | InstanceMethodDefinedTwice { typeclass; ty; method_name } ->
+     [
+       Text "The instance of the typeclass ";
+       Code (ident_string typeclass);
+       Text " for ";
+       Type ty;
+       Text " defines the method ";
+       Code (ident_string method_name);
+       Text " more than once."
+     ]
+  | InstanceMethodMismatch { typeclass; ty; method_name; difference } ->
+     let what = match difference with
+       | DifferentTypeParameters -> "type parameters."
+       | DifferentValueParameters -> "parameters."
+       | DifferentReturnTypes -> "return types."
+     in
+     [
+       Text "The method ";
+       Code (ident_string method_name);
+       Text " of the instance of the typeclass ";
+       Code (ident_string typeclass);
+       Text " for ";
+       Type ty;
+       Text (" and the method of the typeclass have different " ^ what)
+     ]
+  | MethodTypeParameterNotRegion { method_name; typaram } ->
+     [
+       Text "The type parameter ";
+       Code (ident_string (typaram_name typaram));
+       Text " of the method ";
+       Code (ident_string method_name);
+       Text " is in the ";
+       Code (universe_string (typaram_universe typaram));
+       Text " universe. The type parameters of a method must be in the ";
+       Code "Region";
+       Text " universe."
      ]
   | TypeclassParamIsRegion name ->
      [

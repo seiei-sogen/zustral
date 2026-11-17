@@ -46,7 +46,6 @@ type t =
   | NoBindingForParameter of identifier
   | InstanceOverlapTypeNotAllowed
   | FreeTypeWithNonFreeArgument of qident
-  | TypeVariableNotReplaced of identifier
   | AssignToNonMutableReference of ty
   | ReborrowOfNonMutableReference of ty
   | LeftoverArguments
@@ -178,10 +177,6 @@ let render (error: t): err_text =
   | FreeTypeWithNonFreeArgument name ->
      [
        Text ("Free type called with non-free argument: " ^ (qident_debug_name name))
-     ]
-  | TypeVariableNotReplaced name ->
-     [
-       Text ("strip_type': Variable not replaced: '" ^ (ident_string name) ^ "'")
      ]
   | AssignToNonMutableReference ty ->
      [

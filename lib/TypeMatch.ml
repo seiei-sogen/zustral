@@ -326,21 +326,8 @@ let get_instance_from_every_module (place: place) (env: env) (source_module_name
   ok_or_raise place (try_get_instance_among place env source_module_name (all_instances env) dispatch_ty typeclass)
 
 let get_method_of_instance (place: place) (env: env) (instance: instance_decl) (method_name: identifier): ins_meth_id =
-  let { id; typeclass_id; argument; mod_id; _ }: instance_decl = instance in
-  match get_instance_method_from_instance_id_and_method_name env id method_name with
-  | Some (InsMethRec { id; _ }) ->
-     id
-  | None ->
-     (* An instance that leaves out a method of its typeclass is accepted where
-        it is declared (#91), so the call reports it. The instance has no span:
-        the error names its module. *)
-     let { name; _ }: typeclass_decl = get_typeclass place env typeclass_id in
-     type_error place (InstanceMissingMethod {
-         typeclass = name;
-         ty = argument;
-         module_name = module_name_from_id place env mod_id;
-         method_name;
-       })
+  let (InsMethRec { id; _ }) = get_instance_method_from_instance_id_and_method_name place env instance.id method_name in
+  id
 
 let match_typarams (ctx: ctx) (typarams: typarams) (args: ty list): type_bindings =
   let typarams' = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams) in

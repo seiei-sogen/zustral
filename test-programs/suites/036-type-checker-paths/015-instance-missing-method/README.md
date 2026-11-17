@@ -1,1 +1,1 @@
-A call to a typeclass method that the instance does not define is reported as a type error at the call (lib/TypeCheckExpr.ml, augment_method_call). The instance is accepted where it is declared (issue #91).
+An instance that does not define a method of its typeclass fails where it is declared, before the call to that method is checked (issue #91). Before, the instance was accepted, and the call reported the missing method as a type error (lib/TypeCheckExpr.ml, augment_method_call).
