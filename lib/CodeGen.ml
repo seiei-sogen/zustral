@@ -270,6 +270,19 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
      CDisjunction (g lhs, g rhs)
   | MNegation e ->
      CNegation (g e)
+  | MArithmeticNegation (e, negated) ->
+     (* The prelude's functions, which stop the program on the least value of a
+        signed integer type. *)
+     let prelude_function: string =
+       match negated with
+       | NegatableType.NegatableInt8 -> "au_negate_int8"
+       | NegatableType.NegatableInt16 -> "au_negate_int16"
+       | NegatableType.NegatableInt32 -> "au_negate_int32"
+       | NegatableType.NegatableInt64 -> "au_negate_int64"
+       | NegatableType.NegatableFloat32 -> "au_negate_float32"
+       | NegatableType.NegatableFloat64 -> "au_negate_float64"
+     in
+     CFuncall (CIdent.generated prelude_function, [g e])
   | MIfExpression (c, t, f) ->
      CIfExpression (g c, g t, g f)
   | MRecordConstructor (ty, values) ->

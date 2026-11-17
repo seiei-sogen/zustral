@@ -102,12 +102,12 @@ let rec lifted_assignment_span (stmt: astmt): span option =
   | AWhile _ | AFor _ | ABlock _ | ADiscarding _ | AReturn _ | LetTmp _ | AssignTmp _
   | AAssign (_, _, (NilConstant | BoolConstant _ | IntConstant _ | FloatConstant _
       | StringConstant _ | Variable _ | FunctionCall _ | ArithmeticExpression _
-      | Comparison _ | Conjunction _ | Disjunction _ | Negation _ | IfExpression _
-      | Embed _ | Deref _ | Typecast _ | SizeOf _ | SlotAccessor _
+      | ArithmeticNegation _ | Comparison _ | Conjunction _ | Disjunction _ | Negation _
+      | IfExpression _ | Embed _ | Deref _ | Typecast _ | SizeOf _ | SlotAccessor _
       | PointerSlotAccessor _ | ArrayIndex _)) | AAssignVar (_, _, (NilConstant
       | BoolConstant _ | IntConstant _ | FloatConstant _ | StringConstant _
-      | Variable _ | FunctionCall _ | ArithmeticExpression _ | Comparison _
-      | Conjunction _ | Disjunction _ | Negation _ | IfExpression _ | Embed _ | Deref _
+      | Variable _ | FunctionCall _ | ArithmeticExpression _ | ArithmeticNegation _
+      | Comparison _ | Conjunction _ | Disjunction _ | Negation _ | IfExpression _ | Embed _ | Deref _
       | Typecast _ | SizeOf _ | SlotAccessor _ | PointerSlotAccessor _
       | ArrayIndex _)) ->
      None
@@ -121,8 +121,8 @@ let declare_assigned_temporary (place: place) (lexenv: lexenv) (rvalue: aexpr) (
   | Temporary name ->
      push_var place lexenv name ty (VarLocal Mutable)
   | NilConstant | BoolConstant _ | IntConstant _ | FloatConstant _ | StringConstant _
-  | Variable _ | FunctionCall _ | ArithmeticExpression _ | Comparison _ | Conjunction _
-  | Disjunction _ | Negation _ | IfExpression _ | Embed _ | Deref _ | Typecast _
+  | Variable _ | FunctionCall _ | ArithmeticExpression _ | ArithmeticNegation _ | Comparison _
+  | Conjunction _ | Disjunction _ | Negation _ | IfExpression _ | Embed _ | Deref _ | Typecast _
   | SizeOf _ | SlotAccessor _ | PointerSlotAccessor _ | ArrayIndex _ ->
      lexenv
 

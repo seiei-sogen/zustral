@@ -70,6 +70,8 @@ and abs_expr place im expr =
   | CArith (span, op, lhs, rhs) ->
      let e: aexpr = ArithmeticExpression (op, abs_expr place im lhs, abs_expr place im rhs) in
      LiteralTyping.fold_integer_arithmetic (place_inside place span) e
+  | CArithmeticNegation (_, operand) ->
+     LiteralTyping.negation_of_operand (abs_expr place im operand)
   | CComparison (_, op, lhs, rhs) ->
      Comparison (op, abs_expr place im lhs, abs_expr place im rhs)
   | CConjunction (_, lhs, rhs) ->

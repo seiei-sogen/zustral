@@ -246,6 +246,8 @@ let rec count (name: identifier) (expr: texpr): appearances =
      merge (c lhs) (in_right_operand_evaluated_on_some_paths DisjunctionRightOperand (c rhs))
   | TNegation e ->
      c e
+  | TArithmeticNegation e ->
+     c e
   | TIfExpression (e, t, f) ->
      merge (c e) (merge_if_expression_branches (c t) (c f))
   | TRecordConstructor (_, args) ->

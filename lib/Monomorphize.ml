@@ -262,6 +262,18 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
   | TNegation expr ->
      let (expr, env) = monomorphize_expr env expr in
      (MNegation expr, env)
+  | TArithmeticNegation operand ->
+     let ty: ty = TastUtil.get_type NoSpan operand in
+     (* The type checker accepted a negatable type, or a type parameter with
+        the constraint `TrappingArithmetic`, which this instance replaced with
+        its type argument. Unsigned types implement that typeclass too. *)
+     let negated: NegatableType.t =
+       match NegatableType.of_type ty with
+       | Some negated -> negated
+       | None -> type_error NoSpan (ArithmeticNegationTypeArgumentNotSigned ty)
+     in
+     let (operand, env) = monomorphize_expr env operand in
+     (MArithmeticNegation (operand, negated), env)
   | TIfExpression (c, t, f) ->
      let (c, env) = monomorphize_expr env c in
      let (t, env) = monomorphize_expr env t in

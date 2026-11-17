@@ -43,6 +43,8 @@ type reference_difference =
 type t =
   | ArithmeticIncompatibleTypes of { lhs: ty; rhs: ty }
   | ArithmeticNotNumeric of ty
+  | ArithmeticNegationOperandNotSigned of ty
+  | ArithmeticNegationTypeArgumentNotSigned of ty
   | CannotBorrowImmutableVarMutably of identifier
   | CannotBorrowParamMutably of { name: identifier; ty: ty }
   | CallNonCallable of ty
@@ -112,6 +114,20 @@ let render (error: t): err_text =
        Text "Both operands of an arithmetic operator must be numeric types, but ";
        Type ty;
        Text " is not."
+     ]
+  | ArithmeticNegationOperandNotSigned ty ->
+     [
+       Text "Only a value of a signed integer type, of a float type, or of a type parameter with the constraint ";
+       Code BuiltInNames.trapping_arithmetic_name;
+       Text " can be negated, but this value has the type ";
+       Type ty;
+       Text "."
+     ]
+  | ArithmeticNegationTypeArgumentNotSigned ty ->
+     [
+       Text "A generic function negates a value of a type parameter, and the type given for that parameter is ";
+       Type ty;
+       Text ". Only a value of a signed integer type or of a float type can be negated."
      ]
   | CannotBorrowImmutableVarMutably name ->
      [

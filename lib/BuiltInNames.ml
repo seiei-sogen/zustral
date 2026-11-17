@@ -88,6 +88,7 @@ let root_capability_name: string = "RootCapability"
 let exit_code_name: string = "ExitCode"
 let exit_success_name: string = "ExitSuccess"
 let exit_failure_name: string = "ExitFailure"
+let trapping_arithmetic_name: string = "TrappingArithmetic"
 
 let arithmetic_method_name (op: arithmetic_operator): string =
   match op with
@@ -127,7 +128,7 @@ let pervasive_import_names: string list = [
     "maximum_bytesize";
     "minimum_index";
     "maximum_index";
-    "TrappingArithmetic";
+    trapping_arithmetic_name;
     arithmetic_method_name Add;
     arithmetic_method_name Subtract;
     arithmetic_method_name Multiply;

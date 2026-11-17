@@ -72,6 +72,9 @@ val exit_code_name : string
 val exit_success_name : string
 val exit_failure_name : string
 
+(** The typeclass of the methods the arithmetic operators are calls to. *)
+val trapping_arithmetic_name : string
+
 (** The method an arithmetic operator is a call to. *)
 val arithmetic_method_name : arithmetic_operator -> string
 

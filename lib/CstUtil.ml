@@ -105,8 +105,8 @@ let make_pragma name args =
          raise_err ()
     | ConcretePositionalArgs _ | ConcreteNamedArgs ([] | [(_, (CNilConstant _
         | CBoolConstant _ | CIntConstant _ | CFloatConstant _ | CVariable _ | CArith _
-        | CFuncall _ | CComparison _ | CConjunction _ | CDisjunction _ | CNegation _
-        | CIfExpression _ | CPath _ | CRefPath _ | CEmbed _ | CDeref _ | CTypecast _
+        | CArithmeticNegation _ | CFuncall _ | CComparison _ | CConjunction _ | CDisjunction _
+        | CNegation _ | CIfExpression _ | CPath _ | CRefPath _ | CEmbed _ | CDeref _ | CTypecast _
         | CSizeOf _ | CBorrowExpr _ | CReborrow _))] | _ :: _ :: _) ->
        raise_err ()
   else
@@ -122,8 +122,8 @@ let make_pragma name args =
            raise_err ()
       | ConcretePositionalArgs _ | ConcreteNamedArgs ([] | [(_, (CNilConstant _
           | CBoolConstant _ | CIntConstant _ | CFloatConstant _ | CVariable _
-          | CArith _ | CFuncall _ | CComparison _ | CConjunction _ | CDisjunction _
-          | CNegation _ | CIfExpression _ | CPath _ | CRefPath _ | CEmbed _ | CDeref _
+          | CArith _ | CArithmeticNegation _ | CFuncall _ | CComparison _ | CConjunction _
+          | CDisjunction _ | CNegation _ | CIfExpression _ | CPath _ | CRefPath _ | CEmbed _ | CDeref _
           | CTypecast _ | CSizeOf _ | CBorrowExpr _ | CReborrow _))] | _ :: _ :: _) ->
          raise_err ()
     else

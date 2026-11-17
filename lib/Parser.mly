@@ -402,10 +402,14 @@ atomic_expression:
   | BORROW_WRITE identifier { CBorrowExpr (from_loc $loc, WriteBorrow, $2) }
   | REBORROW identifier { CReborrow (from_loc $loc, $2) }
   | DEREF atomic_expression { CDeref (from_loc $loc, $2) }
+  | MINUS atomic_expression { CArithmeticNegation (from_loc $loc, $2) }
   ;
 
+/* A `+` is a sign only right before a decimal or a float literal, as it was
+   when the lexer read signs: `+x` and `+-1.5` do not parse (issue #47). */
 int_constant:
   | DEC_CONSTANT { CIntConstant (from_loc $loc, NumberLiteral.of_decimal $1) }
+  | PLUS DEC_CONSTANT { CIntConstant (from_loc $loc, NumberLiteral.of_decimal $2) }
   | HEX_CONSTANT { CIntConstant (from_loc $loc, NumberLiteral.of_hexadecimal $1) }
   | BIN_CONSTANT { CIntConstant (from_loc $loc, NumberLiteral.of_binary $1) }
   | OCT_CONSTANT { CIntConstant (from_loc $loc, NumberLiteral.of_octal $1) }
@@ -414,6 +418,7 @@ int_constant:
 
 float_constant:
   | FLOAT_CONSTANT { CFloatConstant (from_loc $loc, NumberLiteral.of_float $1) }
+  | PLUS FLOAT_CONSTANT { CFloatConstant (from_loc $loc, NumberLiteral.of_float $2) }
   ;
 
 string_constant:
@@ -507,7 +512,6 @@ arith_expr:
   | atomic_expression MINUS atomic_expression { CArith (from_loc $loc, Subtract, $1, $3) }
   | atomic_expression MUL atomic_expression   { CArith (from_loc $loc, Multiply, $1, $3) }
   | atomic_expression DIV atomic_expression   { CArith (from_loc $loc, Divide, $1, $3) }
-  | MINUS atomic_expression                   { CArith (from_loc $loc, Subtract, CIntConstant (from_loc $loc, NumberLiteral.of_value Z.zero), $2) }
   ;
 
 /* Common */

@@ -58,6 +58,9 @@ let rec lift_borrows (supply: Supply.t) (expr: AstDP.aexpr) (acc: acc): AstDB.ae
     let (left', acc, supply) = lift_borrows supply left acc in
     let (right', acc, supply) = lift_borrows supply right acc in
     (AstDB.ArithmeticExpression (op, left', right'), acc, supply)
+  | AstDP.ArithmeticNegation operand ->
+    let (operand', acc, supply) = lift_borrows supply operand acc in
+    (AstDB.ArithmeticNegation operand', acc, supply)
   | AstDP.Comparison (op, left, right) ->
     let (left', acc, supply) = lift_borrows supply left acc in
     let (right', acc, supply) = lift_borrows supply right acc in

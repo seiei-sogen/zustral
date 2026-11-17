@@ -154,7 +154,7 @@ let every_aexpr: A.aexpr list =
   let x = A.Variable (q "x") in
   [A.NilConstant; A.BoolConstant true; A.IntConstant one; A.FloatConstant half;
    A.StringConstant (Escape.escape_string NoSpan "s"); x; A.Temporary (i "t");
-   A.FunctionCall (q "f", A.Positional []); A.ArithmeticExpression (Add, x, x);
+   A.FunctionCall (q "f", A.Positional []); A.ArithmeticExpression (Add, x, x); A.ArithmeticNegation x;
    A.Comparison (Equal, x, x); A.Conjunction (x, x); A.Disjunction (x, x); A.Negation x;
    A.IfExpression (x, x, x); A.Embed (int32_spec, "1", []); A.Deref x; A.Typecast (x, int32_spec);
    A.SizeOf int32_spec; A.SlotAccessor (x, i "value"); A.PointerSlotAccessor (x, i "value");
@@ -179,7 +179,7 @@ let every_texpr (): texpr list =
                     method_name = q "describe"; args = []; dispatch_ty = w.tyvar; rt = int32;
                     bindings = TypeBindings.empty_bindings };
    TFptrCall (i "fp", [], [], int32); TCast (x, int32); TImplicitCast (x, int32);
-   TComparison (Equal, x, x); TConjunction (x, x); TDisjunction (x, x); TNegation x;
+   TComparison (Equal, x, x); TConjunction (x, x); TDisjunction (x, x); TNegation x; TArithmeticNegation x;
    TIfExpression (x, x, x); TRecordConstructor (box (), [(i "value", x)]);
    TUnionConstructor { union_id = w.shape_id; type_name = q "Shape"; tyargs = []; universe = FreeUniverse;
                        case_name = i "Dot"; args = [] };

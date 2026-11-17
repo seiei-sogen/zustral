@@ -23,6 +23,12 @@ open Stages.Tast
     divisor is zero raises the error that says so, at the place given. *)
 val fold_integer_arithmetic : Error.place -> Stages.Ast.aexpr -> Stages.Ast.aexpr
 
+(** The negation of the operand, which was folded already: the integer or the
+    float literal of the negated value when the operand is a literal, so that
+    `-128` is a literal that fits an [Int8]; the arithmetic negation of the
+    operand otherwise. *)
+val negation_of_operand : Stages.Ast.aexpr -> Stages.Ast.aexpr
+
 (** {1 Operands} *)
 
 (** Whether the expression is an integer literal or a float literal. An

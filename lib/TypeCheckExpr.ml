@@ -555,6 +555,8 @@ and infer_before_place_types_literal (ctx: expr_ctx) (expr: aexpr): texpr =
      augment_call ctx name arglist (no_expected_type (ctx_place ctx))
   | ArithmeticExpression (op, lhs, rhs) ->
      augment_arithmetic ctx op lhs rhs (no_expected_type (ctx_place ctx))
+  | ArithmeticNegation operand ->
+     augment_arithmetic_negation ctx operand
   | Comparison (op, lhs, rhs) ->
      augment_comparison ctx op lhs rhs
   | Conjunction (lhs, rhs) ->
@@ -605,8 +607,8 @@ and infer_with_expected (ctx: expr_ctx) (expr: aexpr) (expected: ty): texpr =
      augment_arithmetic ctx op lhs rhs (expected_type ctx expected)
   | NilConstant | BoolConstant _ | IntConstant _ | FloatConstant _ | StringConstant _
   | Temporary _ | Comparison _ | Conjunction _ | Disjunction _ | Negation _
-  | IfExpression _ | Embed _ | Deref _ | Typecast _ | SizeOf _ | SlotAccessor _
-  | PointerSlotAccessor _ | ArrayIndex _ ->
+  | ArithmeticNegation _ | IfExpression _ | Embed _ | Deref _ | Typecast _ | SizeOf _
+  | SlotAccessor _ | PointerSlotAccessor _ | ArrayIndex _ ->
      infer_before_place_types_literal ctx expr
 
 (* An operand of a comparison or of an arithmetic expression. A lone literal
@@ -702,6 +704,27 @@ and augment_negation ctx e =
     TNegation e'
   else
     type_error (ctx_place ctx) (LogicalOperandsNotBoolean (NegationOperand (get_type (ctx_place ctx) e')))
+
+(* `-x` negates in the type of `x`. A literal operand was negated before type
+   checking (LiteralTyping.negation_of_operand). *)
+and augment_arithmetic_negation (ctx: expr_ctx) (operand: aexpr): texpr =
+  let operand': texpr = infer ctx operand in
+  let ty: ty = get_type (ctx_place ctx) operand' in
+  let trapping_arithmetic: sident =
+    make_sident pervasive_module_name (make_ident BuiltInNames.trapping_arithmetic_name)
+  in
+  (* A type parameter of the declaration being checked, with the constraint
+     the arithmetic operators need. Each instance has to give it a negatable
+     type (Monomorphize). *)
+  let is_parameter_with_trapping_arithmetic (typaram: type_parameter): bool =
+    equal_ty ty (TyVar (typaram_to_tyvar typaram))
+    && List.exists (equal_sident trapping_arithmetic) (typaram_constraints typaram)
+  in
+  if Option.is_some (NegatableType.of_type ty)
+     || List.exists is_parameter_with_trapping_arithmetic (typarams_as_list (ctx_typarams ctx)) then
+    TArithmeticNegation operand'
+  else
+    type_error (ctx_place ctx) (ArithmeticNegationOperandNotSigned ty)
 
 and augment_if_expr ctx c t f =
   let c' = infer ctx c

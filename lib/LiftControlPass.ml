@@ -172,6 +172,8 @@ and transform (expr: Ast.aexpr): AstLC.aexpr =
     AstLC.FunctionCall (q, transform_arglist al)
   | Ast.ArithmeticExpression (ao, e1, e2) ->
     AstLC.ArithmeticExpression (ao, transform e1, transform e2)
+  | Ast.ArithmeticNegation e ->
+    AstLC.ArithmeticNegation (transform e)
   | Ast.Comparison (co, e1, e2) ->
     AstLC.Comparison (co, transform e1, transform e2)
   | Ast.Conjunction (e1, e2) ->

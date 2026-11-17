@@ -71,8 +71,8 @@ let rec ends_in_return (variables: variables_in_scope) (stmt: astmt): bool =
       | FunctionCall (name, _) ->
          calls_abort variables name
       | NilConstant | BoolConstant _ | IntConstant _ | FloatConstant _
-      | StringConstant _ | Variable _ | ArithmeticExpression _ | Comparison _
-      | Conjunction _ | Disjunction _ | Negation _ | IfExpression _ | Path _
+      | StringConstant _ | Variable _ | ArithmeticExpression _ | ArithmeticNegation _
+      | Comparison _ | Conjunction _ | Disjunction _ | Negation _ | IfExpression _ | Path _
       | RefPath _ | Embed _ | Deref _ | Typecast _ | SizeOf _ | BorrowExpr _
       | Reborrow _ ->
          false)

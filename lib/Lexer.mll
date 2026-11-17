@@ -41,11 +41,12 @@ let comment = "--" [^ '\r' '\n']* newline?
 let identifier = (alpha) ('_'|alphanum)*
 (* The digit separator `'` stands only between two digits. *)
 let dec_digits = digit+ ('\'' digit+)*
-let dec_constant = sign? dec_digits
+(* A sign before a number is an operator (issue #48): the parser reads it. *)
+let dec_constant = dec_digits
 let hex_constant = '#' 'x' hex_digit+ ('\'' hex_digit+)*
 let bin_constant = '#' 'b' bin_digit+ ('\'' bin_digit+)*
 let oct_constant = '#' 'o' oct_digit+ ('\'' oct_digit+)*
-let float_constant = sign? dec_digits period dec_digits? (exponent sign? dec_digits)?
+let float_constant = dec_digits period dec_digits? (exponent sign? dec_digits)?
 
 (* Rules *)
 

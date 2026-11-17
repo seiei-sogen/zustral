@@ -71,6 +71,7 @@ module Ast = struct
     | Variable of qident
     | FunctionCall of qident * abstract_arglist
     | ArithmeticExpression of arithmetic_operator * aexpr * aexpr
+    | ArithmeticNegation of aexpr
     | Comparison of comparison_operator * aexpr * aexpr
     | Conjunction of aexpr * aexpr
     | Disjunction of aexpr * aexpr
@@ -197,6 +198,7 @@ module AstLC = struct
     | Temporary of identifier
     | FunctionCall of qident * abstract_arglist
     | ArithmeticExpression of arithmetic_operator * aexpr * aexpr
+    | ArithmeticNegation of aexpr
     | Comparison of comparison_operator * aexpr * aexpr
     | Conjunction of aexpr * aexpr
     | Disjunction of aexpr * aexpr
@@ -281,6 +283,7 @@ module AstDP = struct
     | Temporary of identifier
     | FunctionCall of qident * abstract_arglist
     | ArithmeticExpression of arithmetic_operator * aexpr * aexpr
+    | ArithmeticNegation of aexpr
     | Comparison of comparison_operator * aexpr * aexpr
     | Conjunction of aexpr * aexpr
     | Disjunction of aexpr * aexpr
@@ -361,6 +364,7 @@ module AstDB = struct
     | Temporary of identifier
     | FunctionCall of qident * abstract_arglist
     | ArithmeticExpression of arithmetic_operator * aexpr * aexpr
+    | ArithmeticNegation of aexpr
     | Comparison of comparison_operator * aexpr * aexpr
     | Conjunction of aexpr * aexpr
     | Disjunction of aexpr * aexpr
@@ -556,6 +560,9 @@ module Tast = struct
     | TConjunction of texpr * texpr
     | TDisjunction of texpr * texpr
     | TNegation of texpr
+    | TArithmeticNegation of texpr
+    (** The type is the operand's: a signed integer type, a float type, or a
+        type parameter with the constraint `TrappingArithmetic`. *)
     | TIfExpression of texpr * texpr * texpr
     | TRecordConstructor of ty * (identifier * texpr) list
     | TUnionConstructor of {
@@ -692,6 +699,8 @@ module Mtast = struct
     | MConjunction of mexpr * mexpr
     | MDisjunction of mexpr * mexpr
     | MNegation of mexpr
+    | MArithmeticNegation of mexpr * NegatableType.t
+    (** The type of the operand, and of the value. *)
     | MIfExpression of mexpr * mexpr * mexpr
     | MRecordConstructor of mono_ty * (identifier * mexpr) list
     | MUnionConstructor of union_mono_id * identifier * (identifier * mexpr) list

@@ -19,15 +19,15 @@ type radix =
 
 type int_literal = private {
   written: string;
-  (** The text as the lexer saw it, with its prefix, sign and digit
-      separators. *)
+  (** The text as the lexer saw it, with its prefix and digit separators. *)
   radix: radix;
   value: Z.t;
 }
 
 type float_literal = private {
   written: string;
-  (** The text as the lexer saw it, with its sign and digit separators. *)
+  (** The text as the lexer saw it, with its digit separators, and a leading
+      `-` when the literal is a negated one ([negated_float]). *)
   fraction_digits: int;
   (** How many digits follow the period. *)
   has_exponent: bool;
@@ -51,9 +51,13 @@ val of_character : string -> int -> int_literal
 
 val of_float : string -> float_literal
 
-(** An integer literal that nobody wrote: the result of folding, or the zero
-    that a unary minus subtracts from. Its text is the value in decimal. *)
+(** An integer literal that nobody wrote: the value of a literal-only
+    expression. Its text is the value in decimal. *)
 val of_value : Z.t -> int_literal
+
+(** The float literal of the negation of the literal: `-2.5` of `2.5`, and
+    `2.5` of `-2.5`. *)
+val negated_float : float_literal -> float_literal
 
 (** {1 Printing} *)
 

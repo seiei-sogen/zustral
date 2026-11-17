@@ -79,6 +79,8 @@ let rec replace_tyvars_expr (bindings: type_bindings) (expr: texpr): texpr =
      let lhs = replace_tyvars_expr bindings lhs
      and rhs = replace_tyvars_expr bindings rhs in
      TDisjunction (lhs, rhs)
+  | TArithmeticNegation operand ->
+     TArithmeticNegation (replace_tyvars_expr bindings operand)
   | TNegation expr ->
      let expr = replace_tyvars_expr bindings expr in
      TNegation expr

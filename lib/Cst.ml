@@ -86,6 +86,7 @@ and cexpr =
   | CStringConstant of span * string
   | CVariable of span * identifier
   | CArith of span * arithmetic_operator * cexpr * cexpr
+  | CArithmeticNegation of span * cexpr
   | CFuncall of span * identifier * concrete_arglist
   | CComparison of span * comparison_operator * cexpr * cexpr
   | CConjunction of span * cexpr * cexpr

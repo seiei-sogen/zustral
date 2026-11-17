@@ -92,6 +92,8 @@ let rec get_type (place: place) = function
      Boolean
   | TNegation _ ->
      Boolean
+  | TArithmeticNegation operand ->
+     get_type place operand
   | TIfExpression (_, t, _) ->
      get_type place t
   | TRecordConstructor (ty, _) ->
@@ -149,6 +151,10 @@ let rec is_constant_expression (expr: texpr): bool =
      (is_constant_expression lhs) && (is_constant_expression rhs)
   | TNegation e ->
      is_constant_expression e
+  | TArithmeticNegation _ ->
+     (* Not constant, as the binary operators, which are method calls. The
+        negation of a literal is a literal (TIntConstant, TFloatConstant). *)
+     false
   | TIfExpression (c, t, f) ->
      (is_constant_expression c) && (is_constant_expression t) && (is_constant_expression f)
   | TRecordConstructor (_, values) ->

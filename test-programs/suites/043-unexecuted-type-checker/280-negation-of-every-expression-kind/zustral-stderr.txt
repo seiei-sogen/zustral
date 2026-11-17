@@ -1,0 +1,48 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The " },
+    { "type": "text", "content": "function" },
+    { "type": "text", "content": " " },
+    { "type": "code", "content": "f" },
+    { "type": "text", "content": " does not end in a return statement." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/280-negation-of-every-expression-kind/Test.zum",
+    "startp": { "line": 12, "column": 4 },
+    "end": { "line": 34, "column": 8 }
+  },
+  "context": [
+    [ 10, "    end;" ],
+    [ 11, "" ],
+    [ 12, "    generic [R: Region]" ],
+    [
+      13,
+      "    function f(x: Int32, b: Bool, n: Foo, r: &[Int32, R], w: &![Int32, R]): Int32 is"
+    ],
+    [ 14, "        -nil;" ],
+    [ 15, "        -true;" ],
+    [ 16, "        -\"text\";" ],
+    [ 17, "        -x;" ],
+    [ 18, "        -g();" ],
+    [ 19, "        -(x + 1);" ],
+    [ 20, "        - -x;" ],
+    [ 21, "        -(x < 1);" ],
+    [ 22, "        -(b and b);" ],
+    [ 23, "        -(b or b);" ],
+    [ 24, "        -(not b);" ],
+    [ 25, "        -(if b then 1 else 2);" ],
+    [ 26, "        -n.a;" ],
+    [ 27, "        -&(n.a);" ],
+    [ 28, "        -@embed(Int32, \"1\");" ],
+    [ 29, "        -!r;" ],
+    [ 30, "        -(x : Int32);" ],
+    [ 31, "        -sizeof(Int32);" ],
+    [ 32, "        -&x;" ],
+    [ 33, "        -&~w;" ],
+    [ 34, "    end;" ],
+    [ 35, "" ],
+    [ 36, "    function main(): ExitCode is" ]
+  ]
+}

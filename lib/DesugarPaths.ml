@@ -66,6 +66,8 @@ and transform_expr (expr: AstLC.aexpr): AstDP.aexpr =
      AstDP.FunctionCall (q, transform_arglist al)
   | AstLC.ArithmeticExpression (ao, e1, e2) ->
      AstDP.ArithmeticExpression (ao, transform_expr e1, transform_expr e2)
+  | AstLC.ArithmeticNegation e ->
+     AstDP.ArithmeticNegation (transform_expr e)
   | AstLC.Comparison (co, e1, e2) ->
      AstDP.Comparison (co, transform_expr e1, transform_expr e2)
   | AstLC.Conjunction (e1, e2) ->
