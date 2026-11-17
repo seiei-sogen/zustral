@@ -20,7 +20,7 @@ lib/Common.ml	65	0	0	0	0	0	3	0	0	0	0
 lib/Compiler.ml	152	0	0	0	0	0	0	0	0	0	0
 lib/Cst.ml	172	0	0	0	0	0	2	0	0	0	0
 lib/CstUtil.ml	173	4	0	0	0	0	0	0	0	0	0
-lib/DeclarationErrors.ml	396	0	0	0	0	0	1	0	0	0	0
+lib/DeclarationErrors.ml	403	0	0	0	0	0	1	0	0	0	0
 lib/DesugarBorrows.ml	261	1	0	0	0	0	0	0	0	0	0
 lib/DesugarPaths.ml	147	0	0	0	0	0	0	0	0	0	0
 lib/DesugaringPass.ml	44	0	0	0	0	0	0	0	0	0	0
@@ -71,7 +71,7 @@ lib/Supply.ml	74	0	0	0	0	0	0	0	0	0	0
 lib/TastUtil.ml	171	3	0	0	0	0	0	0	0	0	0
 lib/Type.ml	282	0	0	0	0	1	0	0	0	0	0
 lib/TypeBindings.ml	172	2	0	0	0	0	0	0	0	0	0
-lib/TypeCheckExpr.ml	986	43	0	0	0	1	0	0	0	0	0
+lib/TypeCheckExpr.ml	992	43	0	0	0	1	0	0	0	0	0
 lib/TypeClasses.ml	230	12	0	0	0	0	0	0	0	0	0
 lib/TypeErrors.ml	506	0	0	0	0	0	0	0	0	0	0
 lib/TypeMatch.ml	382	6	0	0	0	0	0	1	0	0	0
@@ -83,6 +83,6 @@ lib/TypeSignature.ml	23	0	0	0	0	0	0	0	0	0	0
 lib/TypeStripping.ml	82	1	0	0	0	0	0	0	0	0	0
 lib/TypeSystem.ml	97	0	0	0	0	0	0	0	0	0	0
 lib/TypeVarSet.ml	16	0	0	0	0	0	0	0	0	0	0
-lib/TypingPass.ml	741	30	0	0	0	0	0	0	0	0	0
+lib/TypingPass.ml	756	31	0	0	0	0	0	0	0	0	0
 lib/Util.ml	133	1	0	0	0	3	1	0	0	0	0
 lib/Version.ml	19	0	0	0	0	0	0	0	0	0	0

@@ -210,12 +210,16 @@ let rec augment_call (ctx: expr_ctx) (name: qident) (args: typed_arglist) (from_
   | Some (ty, _) ->
      augment_fptr_call ctx (local_name name) ty args
   | None ->
-     (* Otherwise, find a callable from the environment. *)
-     (match get_callable (ctx_place ctx) (ctx_env ctx) (ctx_module_name ctx) (qident_to_sident name) with
-      | Some callable ->
-         augment_callable ctx name callable from_context args
-      | None ->
-         generic_error (ctx_place ctx) (UnknownName { kind = CallableName; name = original_name name }))
+     augment_call_of_declaration ctx name args from_context
+
+(* A call of the callable that the environment has under the name, whatever
+   variable has that name. *)
+and augment_call_of_declaration (ctx: expr_ctx) (name: qident) (args: typed_arglist) (from_context: context_bindings): texpr =
+  match get_callable (ctx_place ctx) (ctx_env ctx) (ctx_module_name ctx) (qident_to_sident name) with
+  | Some callable ->
+     augment_callable ctx name callable from_context args
+  | None ->
+     generic_error (ctx_place ctx) (UnknownName { kind = CallableName; name = original_name name })
 
 and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (args: typed_arglist): texpr =
   (* Because function pointers don't preserve value parameter names, we can't
@@ -967,10 +971,12 @@ and augment_arithmetic (ctx: expr_ctx) (op: arithmetic_operator) (lhs: aexpr) (r
                                   TImplicitCast (rhs', operand_ty);
                                 ]
     in
-    augment_call ctx op_qname args from_context
+    (* The operator names the method of Pervasive, not a local variable of
+       the method's name (#138). *)
+    augment_call_of_declaration ctx op_qname args from_context
   in
   (* Are the types the same? *)
-  if lhs_ty = rhs_ty then
+  if equal_ty lhs_ty rhs_ty then
     (* If the types are the same type, check it is a numeric type. *)
     if (is_numeric lhs_ty) then
       augment_arithmetic_call ()

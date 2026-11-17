@@ -64,6 +64,7 @@ type t =
   | DeclarationNameIsImported of { name: identifier; module_name: module_name }
   (** [module_name] is the module the name is imported from. *)
   | DeclarationNameIsBuiltInType of identifier
+  | RegionNameIsTypeParameter of identifier
   | ModuleAlreadyExists of module_name
   | UnknownModule of module_name
   | ExportGeneric of identifier
@@ -214,6 +215,12 @@ let render (error: t): err_text =
        Text "The name ";
        Code (ident_string name);
        Text " is the name of a built-in type, so a declaration cannot have it."
+     ]
+  | RegionNameIsTypeParameter name ->
+     [
+       Text "The name ";
+       Code (ident_string name);
+       Text " is the name of a type parameter, so a borrow cannot name its region with it."
      ]
   | ModuleAlreadyExists name ->
      [

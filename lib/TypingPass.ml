@@ -75,6 +75,20 @@ let check_var_doesnt_collide_with_decl (ctx: stmt_ctx) (name: identifier) =
   | None ->
      ()
 
+(* In the body of a borrow, a built-in type of the region's name hides the
+   region, and the region hides a type parameter or a declared type of that
+   name (TypeParser.parse_type, #153). So the region cannot have a name that a
+   declaration cannot have, nor the name of a type parameter. The module being
+   checked is in the environment. *)
+let check_region_name_is_free (ctx: stmt_ctx) (region: identifier): unit =
+  let (StmtCtx (module_name, env, _, typarams, _, place)) = ctx in
+  match get_typaram typarams region with
+  | Some _ ->
+     declaration_error place (RegionNameIsTypeParameter region)
+  | None ->
+     Option.iter (fun (ModRec { id; _ }) -> name_must_be_free place env id region)
+       (get_module_by_name env module_name)
+
 (* The span of `stmt` if it assigns a temporary, which is what
    `LiftControlPass` turns every assignment into. `DesugarBorrows` wraps such a
    statement in the anonymous borrows of its lvalue. *)
@@ -389,6 +403,7 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
   let ctx = stmt_at ctx span in
   let (StmtCtx (_, env, rm, typarams, _, place)) = ctx in
   (let _ = check_var_doesnt_collide_with_decl ctx rename in
+   let _ = check_region_name_is_free ctx region in
       (match get_var lexenv original with
        | (Some (orig_ty, src)) ->
           (* Check we can borrow the variable. *)
