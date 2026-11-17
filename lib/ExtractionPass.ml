@@ -261,7 +261,7 @@ let rec extract (env: env) (cmodule: combined_module): (env * linked_module) Out
                  interface_imports = interface_imports;
                  body_docstring = body_docstring;
                  body_imports = body_imports;
-                 decls = linked_defs
+                 decls = List.combine (List.map definition_span decls) linked_defs
                }
   in
   Ok (env, lmod)

@@ -448,7 +448,9 @@ module Linked = struct
         interface_imports: import_map;
         body_docstring: docstring;
         body_imports: import_map;
-        decls: linked_definition list;
+        decls: (Span.span * linked_definition) list;
+        (** Each definition with its span, the place of the errors that the
+            type checker finds in it. *)
       }
 
   and linked_definition =

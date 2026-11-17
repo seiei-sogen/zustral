@@ -125,7 +125,7 @@ let world: world Lazy.t =
   lazy (
     let (env, linked) = get (front (Lazy.force pervasive) source) in
     let (Linked.LinkedModule { decls; mod_id; _ }) = linked in
-    let pick f = match List.find_map f decls with Some x -> x | None -> assert_failure "missing declaration" in
+    let pick f = match List.find_map (fun (_, decl) -> f decl) decls with Some x -> x | None -> assert_failure "missing declaration" in
     let f_id = pick (function Linked.LFunction (id, _, _, _, _, _, _, _, _) -> Some id | _ -> None)
     and box_id = pick (function Linked.LRecord (id, _, _, _, _, _, _) -> Some id | _ -> None)
     and shape_id = pick (function Linked.LUnion (id, _, _, _, _, _, _) -> Some id | _ -> None)
@@ -380,7 +380,7 @@ let typing ?(env: Env.env option) ?(pragmas: pragma list = []) (params: value_pa
   let w = Lazy.force world in
   let env = Option.value env ~default:w.env in
   let (Linked.LinkedModule m) = w.linked in
-  let linked = Linked.LinkedModule { m with decls = [Linked.LFunction (w.f_id, VisPublic, i "f", TypeParameters.empty_typarams, params, int32, body, Docstring "", pragmas)] } in
+  let linked = Linked.LinkedModule { m with decls = [(sp, Linked.LFunction (w.f_id, VisPublic, i "f", TypeParameters.empty_typarams, params, int32, body, Docstring "", pragmas))] } in
   let* (_, TypedModule (_, decls)) = Env.with_supply env (fun supply -> TypingPass.augment_module env supply linked) in
   match decls with
   | [d] -> Ok d
@@ -481,10 +481,10 @@ let test_invalid_pragmas _ =
 let typing_constant (ty: ty) (value: A.aexpr): typed_decl Outcome.t =
   let w = Lazy.force world in
   let (Linked.LinkedModule m) = w.linked in
-  let id = match List.find_map (function Linked.LConstant (id, _, _, _, _, _) -> Some id | _ -> None) m.decls with
+  let id = match List.find_map (function (_, Linked.LConstant (id, _, _, _, _, _)) -> Some id | _ -> None) m.decls with
     | Some id -> id
     | None -> assert_failure "no constant" in
-  let linked = Linked.LinkedModule { m with decls = [Linked.LConstant (id, VisPublic, i "c", ty, value, Docstring "")] } in
+  let linked = Linked.LinkedModule { m with decls = [(sp, Linked.LConstant (id, VisPublic, i "c", ty, value, Docstring ""))] } in
   let* (_, TypedModule (_, decls)) = Env.with_supply w.env (fun supply -> TypingPass.augment_module w.env supply linked) in
   match decls with
   | [d] -> Ok d

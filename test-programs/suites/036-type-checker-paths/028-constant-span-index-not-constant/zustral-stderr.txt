@@ -7,6 +7,16 @@
       "content": "The expression is not a valid constant expression."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/028-constant-span-index-not-constant/Test.zum",
+    "startp": { "line": 8, "column": 4 },
+    "end": { "line": 8, "column": 58 }
+  },
+  "context": [
+    [ 6, "    constant Letters: Span[Nat8, Static] := \"abc\";" ],
+    [ 7, "" ],
+    [ 8, "    constant Letter: &[Nat8, Static] := &(Letters[one()]);" ],
+    [ 9, "" ],
+    [ 10, "    function main(): ExitCode is" ]
+  ]
 }

@@ -68,7 +68,7 @@ lib/RegionMap.ml	25	1	0	0	0	0	0	0	0	0	0
 lib/ReturnCheck.ml	133	3	0	0	0	0	0	0	0	0	0
 lib/SourceContext.ml	54	0	0	0	0	0	1	0	0	0	0
 lib/Span.ml	63	0	0	0	0	0	1	0	0	0	0
-lib/Stages.ml	725	0	0	0	0	0	8	0	0	0	0
+lib/Stages.ml	727	0	0	0	0	0	8	0	0	0	0
 lib/StringSet.ml	9	0	0	0	0	0	0	0	0	0	0
 lib/Supply.ml	74	0	0	0	0	0	0	0	0	0	0
 lib/TastUtil.ml	177	3	0	0	0	0	0	0	0	0	0
@@ -87,6 +87,6 @@ lib/TypeStripping.ml	82	1	0	0	0	0	0	1	0	0	0
 lib/TypeSystem.ml	97	0	0	0	0	0	0	0	0	0	0
 lib/TypeVarSet.ml	16	0	0	0	0	0	0	0	0	0	0
 lib/TypeclassNamedByConstraint.ml	26	0	0	0	0	0	0	0	0	0	0
-lib/TypingPass.ml	774	31	0	0	0	1	0	0	0	0	0
+lib/TypingPass.ml	776	31	0	0	0	1	0	0	0	0	0
 lib/Util.ml	105	0	0	0	0	1	0	0	0	0	0
 lib/Version.ml	19	0	0	0	0	0	0	0	0	0	0

@@ -10,7 +10,7 @@ open Stages
 (** Desugar anonymous borrows. The names of the references and of their
     regions come from the supply. *)
 
-(** A borrow in the expression is an error. *)
-val transform_expr : Supply.t -> AstDP.aexpr -> AstDB.aexpr
+(** A borrow in the expression is an error, at the place given. *)
+val transform_expr : Error.place -> Supply.t -> AstDP.aexpr -> AstDB.aexpr
 
 val transform_stmt : Supply.t -> AstDP.astmt -> AstDB.astmt * Supply.t

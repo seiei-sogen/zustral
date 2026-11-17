@@ -54,14 +54,14 @@ type expr_ctx =
 let make_ctx (place: place) (module_name: module_name) (env: env) (rm: region_map) (typarams: typarams) (lexenv: lexenv): expr_ctx =
   ExpressionContext { module_name; env; rm; typarams; lexenv; place; constants_not_yet_defined = [] }
 
-let make_constant_value_ctx (module_name: module_name) (env: env) (constants_not_yet_defined: identifier list): expr_ctx =
+let make_constant_value_ctx (module_name: module_name) (env: env) (place: place) (constants_not_yet_defined: identifier list): expr_ctx =
   ExpressionContext {
       module_name;
       env;
       rm = empty_region_map;
       typarams = empty_typarams;
       lexenv = empty_lexenv;
-      place = NoSpan;
+      place;
       constants_not_yet_defined;
     }
 

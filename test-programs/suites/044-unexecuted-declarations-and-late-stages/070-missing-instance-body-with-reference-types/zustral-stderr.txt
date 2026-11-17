@@ -14,6 +14,17 @@
       "content": " has no corresponding body implementation."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/070-missing-instance-body-with-reference-types/Test.zui",
+    "startp": { "line": 6, "column": 4 },
+    "end": { "line": 7, "column": 62 }
+  },
+  "context": [
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    generic [R: Region]" ],
+    [ 7, "    instance C(Option[&[&![Span[Span![Int32, R], R], R], R]]);" ],
+    [ 8, "" ],
+    [ 9, "    function main(): ExitCode;" ]
+  ]
 }

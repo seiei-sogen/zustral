@@ -1,0 +1,17 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "Cannot borrow (immutably) the variable " },
+    { "type": "code", "content": "b" },
+    { "type": "text", "content": " because it is already " },
+    { "type": "text", "content": "consumed" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "",
+    "startp": { "line": 0, "column": 0 },
+    "end": { "line": 0, "column": 0 }
+  },
+  "context": null
+}

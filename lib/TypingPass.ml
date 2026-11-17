@@ -668,13 +668,14 @@ and augment_when (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (typebindin
   else
     type_error place (CaseWrongSlots { binding_names; slot_names })
 
-let validate_constant_expression (expr: texpr): unit =
+let validate_constant_expression (place: place) (expr: texpr): unit =
   if TastUtil.is_constant_expression expr then
     ()
   else
-    type_error NoSpan ExpressionNotConstant
+    type_error place ExpressionNotConstant
 
-let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (module_constants: identifier list) (supply: Supply.t) (decl: linked_definition): typed_decl * Supply.t =
+(* [place] is the span of the definition. *)
+let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (module_constants: identifier list) (supply: Supply.t) (place: place) (decl: linked_definition): typed_decl * Supply.t =
   let rm = empty_region_map in
   match decl with
   | LConstant (decl_id, vis, name, ty, expr, doc) ->
@@ -687,16 +688,16 @@ let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (
        | _ -> constants
      in
      let not_yet_defined: identifier list = this_constant_and_the_later_ones module_constants in
-     let expr' = TypeCheckExpr.check (TypeCheckExpr.make_constant_value_ctx module_name env not_yet_defined) expr ty in
-     let _ = validate_constant_expression expr' in
+     let expr' = TypeCheckExpr.check (TypeCheckExpr.make_constant_value_ctx module_name env place not_yet_defined) expr ty in
+     let _ = validate_constant_expression place expr' in
      (TConstant (decl_id, vis, name, ty, expr', doc), supply)
   | LRecord (decl_id, vis, name, typarams, universe, slots, doc) ->
      (TRecord (decl_id, vis, name, typarams, universe, slots, doc), supply)
   | LUnion (decl_id, vis, name, typarams, universe, cases, doc) ->
      (TUnion (decl_id, vis, name, typarams, universe, cases, doc), supply)
   | LFunction (decl_id, vis, name, typarams, params, rt, body, doc, pragmas) ->
-     let lexenv = lexenv_from_params params in
-     let ctx = StmtCtx (module_name, env, rm, typarams, rt, NoSpan) in
+     let lexenv = lexenv_from_params place params in
+     let ctx = StmtCtx (module_name, env, rm, typarams, rt, place) in
      let _ =
        List.map (fun (ValueParameter (name, _)) -> check_var_doesnt_collide_with_decl ctx name) params
      in
@@ -709,9 +710,9 @@ let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (
           | UnsafeModule ->
              (TForeignFunction (decl_id, vis, name, params, rt, s, signature, doc), supply)
           | SafeModule ->
-             declaration_error NoSpan ForeignInSafeModule)
+             declaration_error place ForeignInSafeModule)
       | ForeignGeneric ->
-         declaration_error NoSpan ForeignTypeParameters
+         declaration_error place ForeignTypeParameters
       | BodyNotAttached | Body _ ->
          (* One Foreign_Import pragma made the function foreign, so here
             [ForeignImportPragma _] stands alone only with type parameters,
@@ -724,33 +725,34 @@ let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (
              let (body', _, supply) = augment_stmt ctx lexenv supply body in
              (TFunction (decl_id, vis, name, typarams, params, rt, body', doc), supply)
           | [ForeignImportPragma _] | [UnsafeModulePragma] | _ :: _ :: _ ->
-             declaration_error NoSpan FunInvalidPragmas))
+             declaration_error place FunInvalidPragmas))
   | LTypeclass (decl_id, vis, name, typaram, methods, doc) ->
      (TTypeClass (decl_id, vis, name, typaram, List.map (augment_method_decl env rm typaram) methods, doc), supply)
   | LInstance (decl_id, vis, name, typarams, arg, methods, doc) ->
      (* TODO: the universe of the type parameter matches the universe of the type argument *)
      (* TODO: Check the methods in the instance match the methods in the class *)
-     let (methods, supply) = Supply.map (augment_method_def module_name env rm typarams) supply methods in
+     let (methods, supply) = Supply.map (augment_method_def module_name env rm place typarams) supply methods in
      (TInstance (decl_id, vis, name, typarams, arg, methods, doc), supply)
 
-and lexenv_from_params (params: value_parameter list): lexenv =
+and lexenv_from_params (place: place) (params: value_parameter list): lexenv =
   match params with
   | (ValueParameter (n, t))::rest ->
-     push_var NoSpan (lexenv_from_params rest) n t VarParam
+     push_var place (lexenv_from_params place rest) n t VarParam
   | [] ->
      empty_lexenv
 
 and augment_method_decl _ _ _ (LMethodDecl (decl_id, name, params, rt, _)) =
   TypedMethodDecl (decl_id, name, params, rt)
 
-and augment_method_def module_name menv rm instance_typarams supply (LMethodDef (ins_meth_id, name, params, rt, _, body)) =
+(* [place] is the span of the instance. *)
+and augment_method_def module_name menv rm place instance_typarams supply (LMethodDef (ins_meth_id, name, params, rt, _, body)) =
   (* The body can name the type parameters of the instance and those of the
      method itself, as the signature can (ExtractionPass). The environment
      keeps the method's own. *)
   let (InsMethRec { typarams = method_typarams; _ }) = get_instance_method menv ins_meth_id in
-  let typarams = merge_typarams NoSpan instance_typarams method_typarams in
-  let lexenv = lexenv_from_params params in
-  let ctx = StmtCtx (module_name, menv, rm, typarams, rt, NoSpan) in
+  let typarams = merge_typarams place instance_typarams method_typarams in
+  let lexenv = lexenv_from_params place params in
+  let ctx = StmtCtx (module_name, menv, rm, typarams, rt, place) in
   let _ =
     List.map (fun (ValueParameter (name, _)) -> check_var_doesnt_collide_with_decl ctx name) params
   in
@@ -761,7 +763,7 @@ let augment_module menv (supply: Supply.t) (LinkedModule { name; decls; kind; _ 
   (* In the order of the declarations: the public ones, then the private ones. *)
   let module_constants: identifier list =
     List.filter_map
-      (fun decl ->
+      (fun (_, decl) ->
         match decl with
         | LConstant (_, _, name, _, _, _) -> Some name
         | LRecord _ | LUnion _ | LFunction _ | LTypeclass _ | LInstance _ -> None)
@@ -769,6 +771,6 @@ let augment_module menv (supply: Supply.t) (LinkedModule { name; decls; kind; _ 
   in
   Outcome.map (fun (supply, decls') -> (TypedModule (name, decls'), supply))
     (Outcome.traverse_with_context
-       (fun (supply, decl) -> Outcome.catch (fun () -> let (decl, supply) = augment_decl name kind menv module_constants supply decl in (supply, decl)))
+       (fun (supply, (span, decl)) -> Outcome.catch (fun () -> let (decl, supply) = augment_decl name kind menv module_constants supply (AtSpan span) decl in (supply, decl)))
        supply
        decls)

@@ -256,9 +256,9 @@ and transform_whens (supply: Supply.t) (whens: AstDP.abstract_when list): AstDB.
    is no statement to wrap in a borrow, so a borrow is an error. The supply is
    not returned: a name is taken from it only for a borrow, and then this
    raises. *)
-let transform_expr (supply: Supply.t) (expr: AstDP.aexpr): AstDB.aexpr =
+let transform_expr (place: Error.place) (supply: Supply.t) (expr: AstDP.aexpr): AstDB.aexpr =
   let (expr, acc, _) = lift_borrows supply expr [] in
   if (List.length acc) > 0 then
-    Error.generic_error Error.NoSpan BorrowExpressionNotAllowed
+    Error.generic_error place BorrowExpressionNotAllowed
   else
     expr

@@ -1,0 +1,25 @@
+module body Test is
+    record Box: Linear is
+        value: Int32;
+    end;
+
+    function consume(b: Box): Unit is
+        let { value: Int32 } := b;
+        return nil;
+    end;
+
+    generic [R: Region]
+    function peek(b: &[Box, R]): Int32 is
+        return 1;
+    end;
+
+    function f(b: Box): Unit is
+        consume(b);
+        peek(&b);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

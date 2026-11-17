@@ -7,6 +7,19 @@
       "content": "The expression is not a valid constant expression."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/027-constant-dereference/Test.zum",
+    "startp": { "line": 6, "column": 4 },
+    "end": { "line": 6, "column": 34 }
+  },
+  "context": [
+    [
+      4,
+      "    constant Ref: &[Int32, Static] := @embed(&[Int32, Static], \"NULL\");"
+    ],
+    [ 5, "" ],
+    [ 6, "    constant Value: Int32 := !Ref;" ],
+    [ 7, "" ],
+    [ 8, "    function main(): ExitCode is" ]
+  ]
 }
