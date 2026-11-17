@@ -89,6 +89,7 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 - `Os.read_stream_to_string` が、ソースの先頭の空行を `String.trim` で落とす。先頭に空行が3つあると、6 行目のエラーが 3 行目として報告される。
 - `run_command` が、子プロセスの stdout を読み切ってから stderr を読む。C コンパイラが stderr に多く書くと、止まるおそれがある（コードを読んだだけで、再現していない）。
 - 内部エラーとコマンドラインのエラーは、`--error-format=json` を付けても、平文で出る。
+- 本体の関数の定義の位置が、前のトークンの末尾から始まる。構文規則が、空になりうる `generic_segment` で始まるからである。
 
 ## 3. 単位
 
@@ -180,13 +181,13 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 - [x] **Y2** #50 名前を変えて取り込んだ型と case。
   - 原因: `lib/TypeMatch.ml:98` が、`NamedType` の名前を、ローカルの名前も含めて比べる。`lib/AbstractionPass.ml:104-105` が、`when` の名前を取り込みの対応表に通さない。
   - 直し方: 宣言の ID で比べる。`when` の名前を修飾する。`lib/Type.ml:199-202` の、実装と食い違うコメントを直す。中。
-- [ ] **Y3** #153、#138 `borrow` の領域の名前。算術の演算子が、同じ名前のローカル変数を呼ぶ。
+- [x] **Y3** #153、#138 `borrow` の領域の名前。算術の演算子が、同じ名前のローカル変数を呼ぶ。
   - 原因: `lib/TypingPass.ml:459` の `add_region` が、借用の領域の表しか見ない。`lib/TypeCheckExpr.ml:956-963` が、`augment_call` を通る。
   - 直し方: 領域の名前が、組み込みの型、型引数、型の宣言と重なったらエラーにする。演算子は、`get_callable` を直接呼ぶ。それぞれ小。
-- [ ] **Y4** #126 インタフェースで宣言したレコード、union、型クラスを、本体が定義し直せる。
+- [x] **Y4** #126 インタフェースで宣言したレコード、union、型クラスを、本体が定義し直せる。
   - 原因: `lib/CombiningPass.ml:316-324` の `parse_def` が、同じ名前の本体の定義を黙って捨てる。
   - 直し方: 本体の定義の位置で、宣言のエラーにする。小。
-- [ ] **Y5** #144、#133、#87、#163 取り込みの検査と位置。
+- [x] **Y5** #144、#133、#87、#163 取り込みの検査と位置。
   - 原因: `lib/ImportResolution.ml:98-101` が、名前を1つも取り込まないモジュールを調べない。`:48-66` が `NoSpan` で報告する。取り込みの並びが、CST に位置を持たない。
   - 直し方: 見つからないモジュールをエラーにする。`Cst` と `Parser.mly` で、取り込みに位置を持たせる。中。
 - [ ] **Y6** #90、#144、#163、#133、#93 宣言の検査の抜け。
@@ -202,7 +203,7 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
   - 原因: 制約は、呼び出しの照合（`lib/TypeMatch.ml:236-257`）でしか解決されない。
   - 直し方: `lib/ExtractionPass.ml` で、関数、レコード、union、インスタンス、メソッドの型引数の制約を解決し、型クラスであることを確かめる。中。
   - 危険: 呼び出しの位置のエラーを固定しているテスト（`042/052` から `056`、`042/132`、`037/014`）が変わる。
-- [ ] **Y8** #142 自分自身や後ろの定数を参照する定数。
+- [x] **Y8** #142 自分自身や後ろの定数を参照する定数。
   - 原因: `lib/TypingPass.ml:657-660`。
   - 直し方: 定数の初期値は、前に宣言された定数だけを参照できる、という規則で断る。小。
 - [ ] **Y9** #87 位置の出ないエラー。
@@ -284,6 +285,12 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
   - 確かめ方: `f() + g()` が `f`、`g` の順に出力することを、gcc と clang の両方で見る。
   - 危険: 生成する C が、すべて変わる。
 
+### 3.6 OCaml の版
+
+コードは、OCaml 4.13 でコンパイルできるように書く。macOS の CI は 4.13.0 でビルドし、nix の環境は 4.14.1 である。
+`In_channel`、`Out_channel`、`Seq.drop_while` など、4.14 以降の標準ライブラリは使わない。
+取りまとめ役は、取り込むたびに OCaml 4.13.1 でビルドして確かめる。
+
 ## 4. 単位に共通の規則
 
 単位は、次の順で進める。`docs/plan.md` の2節と同じ規則である。
@@ -331,3 +338,7 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 | Z2 | `d73851c` | 引数の個数の違う関数ポインタの型で `Invalid_argument("List.map2")`。`Pointer[U]` と `Int32` のインスタンスが `Instance overlaps.` | ``Cannot cast to `Fn[Int32, Int32]` from `Fn[Int32, Int32, Int32]` ``。インスタンスは両方とも通る | 14 個とも ok |
 | Z3 | `1f1a429` | 名前付き引数の名前が違うと `Assertion failed`（`TastUtil.ml` 24 行目） | ``There is no parameter named `c`. The parameters are `a`, `b`.`` と ``The argument `a` is given more than once.`` | 14 個とも ok |
 | Z4 | `37a660f` | 利用者のモジュールの `instance Printable(Int32)` が通り、呼び出しで初めてエラー。呼び出し側のモジュールのインスタンスが `Typeclass resolution failed. Dispatch type: Point` | 宣言の位置で `Orphan rule broken`。呼び出し側のインスタンスが見つかり、`point` を出力する | 14 個とも ok |
+| Y3 | `a1a3969` | 領域の名前 `Static`、型引数 `R`、レコード `Foo` の `borrow` が通る。`let trappingAdd := addByte; x + 1` が 40 を出力する | 3つとも、どの名前と重なったかを言うエラーになる。41 を出力する | 14 個とも ok |
+| Y4 | `ba72dff` | インタフェースのレコード、union、型クラスを本体が定義し直しても、終了コード 0 | 本体の定義の位置で ``A declaration with the name `R` already exists in the module `N`.`` | 14 個とも ok |
+| Y5 | `0b08f3e` | `import Nope ();` が通る。取り込みのエラーが `[no span available]` | ``Unknown module `Nope`.`` が 1 行目の 0 から 15 桁に出る。取り込みのエラーは、取り込みの文の位置を持つ | 14 個とも ok |
+| Y8 | `ef33ffc` | 自分自身を参照する定数が型検査を通り、gcc が ``Test____k undeclared`` で失敗する | ``The value of a constant can only name the constants declared before it, and `c` is not one of them.`` | 14 個とも ok |
