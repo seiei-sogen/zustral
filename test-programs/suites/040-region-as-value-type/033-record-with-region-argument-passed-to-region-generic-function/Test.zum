@@ -1,0 +1,19 @@
+module body Test is
+    record Tag[R: Region]: Free is
+        n: Int32;
+    end;
+
+    generic [R: Region]
+    function f(x: &[Int32, R], t: Tag[R]): Int32 is
+        return t.n;
+    end;
+
+    function main(): ExitCode is
+        let n: Int32 := 1;
+        borrow ref: &[Int32, Rho] := &n do
+            let t: Tag[Rho] := Tag(n => 2);
+            printLn(f(ref, t));
+        end borrow;
+        return ExitSuccess();
+    end;
+end module body.

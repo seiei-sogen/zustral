@@ -1,0 +1,1 @@
+Covers a variable of type `Option[&[Int32, Rho]]`, with `Rho` the region of a `borrow` block, assigned the result of a function that returns `Option[&[Int32, R]]` over its region type parameter: accepted, and the program reads the value back. Before, the C compiler stopped with `incompatible types when assigning` (issue #157).

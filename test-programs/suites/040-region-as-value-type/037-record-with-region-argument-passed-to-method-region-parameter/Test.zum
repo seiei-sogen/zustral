@@ -1,0 +1,23 @@
+module body Test is
+    record Tag[R: Region]: Free is
+        n: Int32;
+    end;
+    typeclass Describe(T: Free) is
+        generic [R: Region]
+        method describe(x: T, t: Tag[R]): Int32;
+    end;
+    instance Describe(Int32) is
+        generic [R: Region]
+        method describe(x: Int32, t: Tag[R]): Int32 is
+            return x + t.n;
+        end;
+    end;
+    function main(): ExitCode is
+        let n: Int32 := 1;
+        borrow ref: &[Int32, Rho] := &n do
+            let t: Tag[Rho] := Tag(n => 2);
+            printLn(describe(40, t));
+        end borrow;
+        return ExitSuccess();
+    end;
+end module body.

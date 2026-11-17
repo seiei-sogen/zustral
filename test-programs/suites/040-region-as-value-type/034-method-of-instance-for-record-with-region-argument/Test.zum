@@ -1,0 +1,23 @@
+module body Test is
+    typeclass Describe(T: Free) is
+        method describe(x: T): Int32;
+    end;
+    record Holder[R: Region]: Free is
+        r: &[Int32, R];
+    end;
+    generic [R: Region]
+    instance Describe(Holder[R]) is
+        method describe(h: Holder[R]): Int32 is
+            return !(h.r);
+        end;
+    end;
+    function main(): ExitCode is
+        let x: Int32 := 41;
+        borrow xr: &[Int32, rho] := &x do
+            let h: Holder[rho] := Holder(r => xr);
+            let w: Int32 := describe(h);
+            printLn(w);
+        end borrow;
+        return ExitSuccess();
+    end;
+end module body.
