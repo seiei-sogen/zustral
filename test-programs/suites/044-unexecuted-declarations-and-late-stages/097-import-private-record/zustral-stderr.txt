@@ -5,6 +5,14 @@
     { "type": "code", "content": "Hidden" },
     { "type": "text", "content": " is private and cannot be imported." }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/097-import-private-record/Test.zum",
+    "startp": { "line": 1, "column": 0 },
+    "end": { "line": 1, "column": 20 }
+  },
+  "context": [
+    [ 1, "import Lib (Hidden);" ],
+    [ 2, "" ],
+    [ 3, "module body Test is" ]
+  ]
 }
