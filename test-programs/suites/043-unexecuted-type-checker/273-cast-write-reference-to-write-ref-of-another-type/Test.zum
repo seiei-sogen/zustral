@@ -1,7 +1,7 @@
 module body Test is
     generic [R: Region]
     function probe(x: &![Int32, R]): Unit is
-        let y: &![Int32, R] := (x : &![Int32, R]);
+        let y: &![Int64, R] := (x : &![Int64, R]);
         return nil;
     end;
 

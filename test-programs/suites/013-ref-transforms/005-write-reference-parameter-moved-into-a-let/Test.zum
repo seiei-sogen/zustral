@@ -1,0 +1,21 @@
+module body Test is
+    record Pt: Free is
+        x: Int32;
+    end;
+
+    generic [R: Region]
+    function set(p: &![Pt, R]): Unit is
+        var q: &![Pt, R] := p;
+        q->x := 5;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        var pt: Pt := Pt(x => 1);
+        borrow p: &![Pt, Rho] := &!pt do
+            set(p);
+        end borrow;
+        printLn(pt.x);
+        return ExitSuccess();
+    end;
+end module body.

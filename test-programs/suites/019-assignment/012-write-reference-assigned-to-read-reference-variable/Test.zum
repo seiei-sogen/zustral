@@ -1,0 +1,13 @@
+module body Test is
+    generic [R: Region]
+    function readThrough(first: &[Int64, R], w: &![Int64, R]): Int64 is
+        var r: &[Int64, R] := first;
+        r := w;
+        return !r;
+    end;
+
+    function main(): ExitCode is
+        printLn("ok");
+        return ExitSuccess();
+    end;
+end module body.

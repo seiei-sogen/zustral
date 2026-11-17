@@ -1,0 +1,1 @@
+Covers the `WriteRef` alternative of `check_annotated` (lib/TypeCheckExpr.ml): a cast of a mutable reference to a mutable reference with another underlying type, `&![Int64, R]`, is an error. A cast to the same mutable reference is accepted (013-ref-transforms/004).
