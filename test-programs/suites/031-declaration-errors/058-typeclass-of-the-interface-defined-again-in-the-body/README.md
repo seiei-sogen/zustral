@@ -1,0 +1,1 @@
+Test that the body of a module cannot define again a typeclass that its interface declares (issue #126). Before, the body's typeclass, with another universe and other methods, was dropped without a word.

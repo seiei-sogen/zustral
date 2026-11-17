@@ -1,0 +1,1 @@
+Test that the body of a module cannot define again a record that its interface declares in full (issue #126). Before, the body's record, with another universe and other slots, was dropped without a word.

@@ -1,0 +1,7 @@
+module Test is
+    record R: Free is
+        x: Int32;
+    end;
+
+    function main(): ExitCode;
+end module.
