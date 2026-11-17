@@ -44,6 +44,14 @@ let def_name (def: concrete_named_def): identifier =
   | ConcreteFunctionDef (_, n, _, _, _, _, _, _) -> n
   | ConcreteTypeClassDef (ConcreteTypeClass (_, n, _, _, _)) -> n
 
+let def_span (def: concrete_named_def): Span.span =
+  match def with
+  | ConcreteConstantDef (span, _, _, _, _) -> span
+  | ConcreteRecordDef (ConcreteRecord (span, _, _, _, _, _)) -> span
+  | ConcreteUnionDef (ConcreteUnion (span, _, _, _, _, _)) -> span
+  | ConcreteFunctionDef (span, _, _, _, _, _, _, _) -> span
+  | ConcreteTypeClassDef (ConcreteTypeClass (span, _, _, _, _)) -> span
+
 let get_concrete_decl (ConcreteModuleInterface (_, _, _, decls)) name =
   let pred decl =
     match concrete_decl_name decl with

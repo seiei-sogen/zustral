@@ -18,6 +18,9 @@ val get_concrete_decl : concrete_module_interface -> identifier -> concrete_decl
 (** The name of a definition. *)
 val def_name : concrete_named_def -> identifier
 
+(** The span of a definition. *)
+val def_span : concrete_named_def -> Span.span
+
 val get_concrete_def : concrete_module_body -> identifier -> concrete_named_def option
 
 val has_instance_decl : concrete_module_interface -> identifier -> concrete_type_param list -> typespec -> bool

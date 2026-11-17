@@ -10,7 +10,7 @@
   ],
   "span": {
     "filename": "test-programs/suites/031-declaration-errors/059-record-of-the-interface-defined-again-as-a-function/Test.zum",
-    "startp": { "line": 2, "column": 4 },
+    "startp": { "line": 1, "column": 19 },
     "end": { "line": 4, "column": 8 }
   },
   "context": [
