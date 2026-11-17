@@ -62,3 +62,8 @@ CI（`.github/workflows/build-and-test.yml`）は、これ以外にも `tools/re
 - Decimal まわりの用語は `CONTEXT.md` に従う。`_Avoid_` に挙がった言い換えは使わない。
 - ドキュメント、コミットメッセージ、PR の説明は日本語で書く。
 - 設計上の決定の経緯は GitHub Issues に残す（Decimal の地図は issue #9）。
+
+## 作業の進め方
+
+- 作業は、`/pstack:poteto-mode` で進める。
+- テストは、`/superpowers:test-driven-development` に従って書く。
