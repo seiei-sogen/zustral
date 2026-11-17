@@ -1,1 +1,1 @@
-A constraint that names a typeclass method (TypeMatch.try_constraint).
+lib/TypeclassNamedByConstraint.ml, typeclass_named_by_constraint, the `TypeClassMethod _` alternative: the constraint of a type parameter names a declaration that is not a typeclass. The name is looked up where the function is declared (#128), so the declaration is reported, not the call. Before, the call reported it (lib/TypeMatch.ml, try_constraint).

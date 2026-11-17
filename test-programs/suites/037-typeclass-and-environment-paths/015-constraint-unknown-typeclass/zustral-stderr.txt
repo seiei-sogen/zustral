@@ -15,14 +15,16 @@
   ],
   "span": {
     "filename": "test-programs/suites/037-typeclass-and-environment-paths/015-constraint-unknown-typeclass/Test.zum",
-    "startp": { "line": 8, "column": 8 },
-    "end": { "line": 8, "column": 19 }
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 5, "column": 8 }
   },
   "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    generic [T: Free(Missing)]" ],
+    [ 3, "    function accept(value: T): Unit is" ],
+    [ 4, "        return nil;" ],
+    [ 5, "    end;" ],
     [ 6, "" ],
-    [ 7, "    function main(): ExitCode is" ],
-    [ 8, "        accept(10);" ],
-    [ 9, "        return ExitSuccess();" ],
-    [ 10, "    end;" ]
+    [ 7, "    function main(): ExitCode is" ]
   ]
 }

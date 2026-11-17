@@ -2,21 +2,31 @@
   "module": "Test",
   "kind": "Type Error",
   "text": [
-    { "type": "text", "content": "Cannot cast to " },
-    { "type": "type", "content": "T" },
-    { "type": "text", "content": " from " },
-    { "type": "type", "content": "Int32" }
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": " of " },
+    { "type": "code", "content": "f" },
+    { "type": "text", "content": " is constrained by " },
+    { "type": "code", "content": "Missing" },
+    {
+      "type": "text",
+      "content": ", but no typeclass with that name is declared or imported."
+    }
   ],
   "span": {
     "filename": "test-programs/suites/036-type-checker-paths/032-cast-constraint-unknown-typeclass/Test.zum",
-    "startp": { "line": 5, "column": 8 },
-    "end": { "line": 5, "column": 30 }
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 7, "column": 8 }
   },
   "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    generic [T: Free(Missing)]" ],
     [ 3, "    function f(value: T): Unit is" ],
     [ 4, "        let n: Int32 := 10;" ],
     [ 5, "        let m: Int32 := n : T;" ],
     [ 6, "        return nil;" ],
-    [ 7, "    end;" ]
+    [ 7, "    end;" ],
+    [ 8, "" ],
+    [ 9, "    function main(): ExitCode is" ]
   ]
 }

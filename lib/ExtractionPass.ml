@@ -30,6 +30,7 @@ open TypeVarSet
 open Util
 open Error
 open ForeignType
+open TypeclassNamedByConstraint
 
 let check_slots_are_free (place: place) (name: identifier) (slots: typed_slot list): unit =
   let check_slot_is_free (slot: typed_slot): unit =
@@ -183,6 +184,34 @@ let check_instance_methods_hold_no_region (env: env) (def: combined_definition) 
   | LConstant _ | LRecord _ | LUnion _ | LFunction _ | LTypeclass _ ->
      ()
 
+(* Every constraint of a type parameter names a typeclass (#90, #128). Runs
+   after every definition of the module is registered, because a constraint
+   may name a typeclass declared later in the module. *)
+let check_constraints_name_typeclasses (env: env) (def: combined_definition): unit =
+  let place: place = AtSpan (definition_span def) in
+  let check_typaram (tp: type_parameter): unit =
+    List.iter
+      (fun (typeclass: sident) ->
+        let _: typeclass_id = ok_or_raise place (typeclass_named_by_constraint place env (typaram_to_tyvar tp) typeclass) in
+        ())
+      (typaram_constraints tp)
+  in
+  let check_typarams (typarams: typarams): unit =
+    List.iter check_typaram (typarams_as_list typarams)
+  in
+  match def with
+  | CConstant _ ->
+     ()
+  | CRecord (_, _, _, typarams, _, _, _) | CUnion (_, _, _, typarams, _, _, _)
+  | CFunction (_, _, _, typarams, _, _, _, _, _) ->
+     check_typarams typarams
+  | CTypeclass (_, _, _, typaram, methods, _) ->
+     check_typaram typaram;
+     List.iter (fun (Combined.CMethodDecl (_, typarams, _, _, _)) -> check_typarams typarams) methods
+  | CInstance (_, _, _, _, typarams, _, methods, _) ->
+     check_typarams typarams;
+     List.iter (fun (CMethodDef (_, typarams, _, _, _, _)) -> check_typarams typarams) methods
+
 open Outcome.Syntax
 
 let rec extract (env: env) (cmodule: combined_module): (env * linked_module) Outcome.t =
@@ -222,6 +251,7 @@ let rec extract (env: env) (cmodule: combined_module): (env * linked_module) Out
   (* Extract all declarations from the module into the environment. *)
   let* (env, linked_defs) = extract_definitions env sigs (List.map snd reserved) in
   let* () = Outcome.catch (fun () -> List.iter2 (check_instance_methods_hold_no_region env) decls linked_defs) in
+  let* () = Outcome.catch (fun () -> List.iter (check_constraints_name_typeclasses env) decls) in
   (* Construct the linked module *)
   let lmod = LinkedModule {
                  mod_id = mod_id;

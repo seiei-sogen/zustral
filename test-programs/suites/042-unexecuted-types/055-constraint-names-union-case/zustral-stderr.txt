@@ -15,14 +15,17 @@
   ],
   "span": {
     "filename": "test-programs/suites/042-unexecuted-types/055-constraint-names-union-case/Test.zum",
-    "startp": { "line": 24, "column": 8 },
-    "end": { "line": 24, "column": 13 }
+    "startp": { "line": 18, "column": 4 },
+    "end": { "line": 21, "column": 8 }
   },
   "context": [
+    [ 16, "    end;" ],
+    [ 17, "" ],
+    [ 18, "    generic [T: Free(First)]" ],
+    [ 19, "    function f(x: T): Unit is" ],
+    [ 20, "        return nil;" ],
+    [ 21, "    end;" ],
     [ 22, "" ],
-    [ 23, "    function main(): ExitCode is" ],
-    [ 24, "        f(1);" ],
-    [ 25, "        return ExitSuccess();" ],
-    [ 26, "    end;" ]
+    [ 23, "    function main(): ExitCode is" ]
   ]
 }

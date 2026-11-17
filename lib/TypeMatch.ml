@@ -238,24 +238,14 @@ and try_constraint (ctx: ctx) (tv: type_var) (ty: ty) (typeclass_name: sident): 
   | None ->
      Error (Declaration (DeclarationErrors.UnknownModule (sident_module_name typeclass_name)))
   | Some _ ->
-  (* Find the typeclass. *)
-  match get_decl_by_name (ctx_place ctx) (ctx_env ctx) typeclass_name with
-  | Some (TypeClass { id; _ }) ->
-     (* Try to find an instance for the given typeclass name that implements this type. *)
-     let* instance = try_get_instance (ctx_place ctx) (ctx_env ctx) (ctx_mn ctx) ty id in
-     (match instance with
-      | Some _ ->
-         Ok ()
-      | None ->
-         Error (Type (UnsatisfiedConstraint { tyvar = tv; ty; typeclass = typeclass_name })))
-  (* The next two arms report the constraint where the function is called: the
-     name in a type parameter constraint is not looked up where the constraint
-     is declared (#128). *)
-  | Some (Constant _ | Record _ | Union _ | UnionCase _ | Function _
-      | TypeClassMethod _) ->
-     Error (Type (ConstraintNotTypeclass { tyvar = tv; typeclass = typeclass_name }))
-  | None ->
-     Error (Type (ConstraintUnknownTypeclass { tyvar = tv; typeclass = typeclass_name }))
+  let* id = TypeclassNamedByConstraint.typeclass_named_by_constraint (ctx_place ctx) (ctx_env ctx) tv typeclass_name in
+  (* Try to find an instance for the given typeclass name that implements this type. *)
+  let* instance = try_get_instance (ctx_place ctx) (ctx_env ctx) (ctx_mn ctx) ty id in
+  (match instance with
+   | Some _ ->
+      Ok ()
+   | None ->
+      Error (Type (UnsatisfiedConstraint { tyvar = tv; ty; typeclass = typeclass_name })))
 
 and try_get_instance (place: place) (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: typeclass_id): ((instance_decl * type_bindings) option, error) result =
   match get_module_by_name env source_module_name with

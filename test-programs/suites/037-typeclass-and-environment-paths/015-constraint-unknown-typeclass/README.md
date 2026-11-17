@@ -1,1 +1,1 @@
-A type parameter constraint that names no declaration is reported as a type error where the generic function is called (lib/TypeMatch.ml, try_constraint). The constraint is not checked where it is declared (issue #128).
+A type parameter constraint that names no declaration is reported as a type error where the generic function is declared (lib/ExtractionPass.ml, check_constraints_name_typeclasses; issue #128). Before, it was reported where the function is called.
