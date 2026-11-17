@@ -1,0 +1,1 @@
+Pins that a string literal can end in an escaped backslash: `"a\\"` is `a\`, and so is the triple-quoted `"""b\\"""` for `b\`. The second backslash used to pair with the closing quote, so the literal never ended and the compiler reported the end of the file (issue #133).

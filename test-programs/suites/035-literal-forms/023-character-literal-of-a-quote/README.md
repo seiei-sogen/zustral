@@ -1,0 +1,1 @@
+Pins that the character literal `'''` is the quote character, code 39. The compiler used to remove every quote from the literal and report the empty rest as "more than one character", with no position (issue #124).
