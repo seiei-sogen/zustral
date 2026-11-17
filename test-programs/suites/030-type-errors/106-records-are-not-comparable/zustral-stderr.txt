@@ -1,0 +1,31 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Values of the type " },
+    { "type": "type", "content": "R" },
+    { "type": "text", "content": " cannot be compared." },
+    { "type": "break" },
+    { "type": "text", "content": "Only values of " },
+    { "type": "code", "content": "Unit" },
+    { "type": "text", "content": ", " },
+    { "type": "code", "content": "Bool" },
+    { "type": "text", "content": ", an integer type, a float type, " },
+    { "type": "code", "content": "Address" },
+    { "type": "text", "content": ", " },
+    { "type": "code", "content": "Pointer" },
+    { "type": "text", "content": ", or a function pointer type can be compared." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/106-records-are-not-comparable/Test.zum",
+    "startp": { "line": 9, "column": 8 },
+    "end": { "line": 9, "column": 32 }
+  },
+  "context": [
+    [ 7, "        let a: R := R(x => 1);" ],
+    [ 8, "        let b: R := R(x => 1);" ],
+    [ 9, "        let same: Bool := a = b;" ],
+    [ 10, "        return ExitSuccess();" ],
+    [ 11, "    end;" ]
+  ]
+}

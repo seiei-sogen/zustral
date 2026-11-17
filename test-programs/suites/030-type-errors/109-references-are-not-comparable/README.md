@@ -1,0 +1,1 @@
+Test that two references cannot be compared (issue #125). A comparison compares values, and the values that references refer to are compared through `!`. Before, `r = r` passed and compared the addresses.

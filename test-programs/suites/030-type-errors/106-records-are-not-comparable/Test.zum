@@ -1,0 +1,12 @@
+module body Test is
+    record R: Free is
+        x: Int32;
+    end;
+
+    function main(): ExitCode is
+        let a: R := R(x => 1);
+        let b: R := R(x => 1);
+        let same: Bool := a = b;
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,31 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Values of the type " },
+    { "type": "type", "content": "Span[Nat8, Static]" },
+    { "type": "text", "content": " cannot be compared." },
+    { "type": "break" },
+    { "type": "text", "content": "Only values of " },
+    { "type": "code", "content": "Unit" },
+    { "type": "text", "content": ", " },
+    { "type": "code", "content": "Bool" },
+    { "type": "text", "content": ", an integer type, a float type, " },
+    { "type": "code", "content": "Address" },
+    { "type": "text", "content": ", " },
+    { "type": "code", "content": "Pointer" },
+    { "type": "text", "content": ", or a function pointer type can be compared." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/108-spans-are-not-comparable/Test.zum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 36 }
+  },
+  "context": [
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        let s: Span[Nat8, Static] := \"abc\";" ],
+    [ 4, "        let same: Bool := \"abc\" = s;" ],
+    [ 5, "        return ExitSuccess();" ],
+    [ 6, "    end;" ]
+  ]
+}
