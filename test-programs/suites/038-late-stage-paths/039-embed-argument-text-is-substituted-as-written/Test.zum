@@ -8,6 +8,8 @@ module body Test is
         printLn(backslash);
         let size: Index := @embed(Index, "$1", @embed(Index, "sizeof(\"$2\")"), @embed(Nat8, "7"));
         printLn(size);
+        let kept: Index := @embed(Index, "sizeof(\"$2\")", @embed(Nat8, "7"));
+        printLn(kept);
         return ExitSuccess();
     end;
 end module body.

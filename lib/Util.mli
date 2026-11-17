@@ -22,11 +22,6 @@ val string_implode : char list -> string
     argument is the string to replace the character with. *)
 val replace_char : string -> char -> string -> string
 
-type replacement = { text: string; search: string; replacement: string }
-
-(** Replace a string with another in a text. *)
-val search_replace : replacement -> string
-
 (** Take the contents of a triple-quoted string, and trim the leading and ending
    empty lines as well as indentation. *)
 val process_triple_string : string -> string

@@ -8,7 +8,6 @@
 open Common
 open Escape
 open CRepr
-open Util
 
 type indentation = Indentation of int
 
@@ -258,27 +257,16 @@ and render_expr = function
   | CAddressOf exp ->
      "&(" ^ (e exp) ^ ")"
   | CEmbed (ty, CSource expr, args) ->
-     let strs = List.map render_expr args in
-     (* the `expr` has a format like "derp $1 $2", so iterate over the list of
-        arg swith an index, and replace the corresponding dollar sign marker if
-        any *)
-     let replace_index (text: string) (idx: int) (replacement: string): string =
-       let marker = "$" ^ (string_of_int idx) in
-       search_replace {
-           text = text;
-           search = marker;
-           replacement = replacement
-         }
+     let argument_texts: string array = Array.of_list (List.map render_expr args) in
+     (* The marker `$N` in `expr` is the text of argument N, inserted as it is.
+        One pass, so the text of an argument is not searched for markers. A
+        marker with no argument stays as written. *)
+     let argument_text_of_marker (template: string): string =
+       match int_of_string_opt (Str.matched_group 1 template) with
+       | Some n when 1 <= n && n <= Array.length argument_texts -> argument_texts.(n - 1)
+       | _ -> Str.matched_string template
      in
-     let rec replace_all (text: string) (strs: string list) (idx: int): string =
-       match strs with
-       | first::rest ->
-          let text' = replace_index text idx first in
-          replace_all text' rest (idx + 1)
-       | [] ->
-          text
-     in
-     let expr' = replace_all expr strs 1 in
+     let expr' = Str.global_substitute (Str.regexp "\\$\\([0-9]+\\)") argument_text_of_marker expr in
      "((" ^ (render_type ty) ^ ")(" ^ expr' ^ "))"
   | CDeref expr ->
      "*" ^ (e expr)

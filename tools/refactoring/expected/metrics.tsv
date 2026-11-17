@@ -11,7 +11,7 @@ lib/BuiltIn.ml	39	0	0	0	0	0	0	0	0	0	0
 lib/BuiltInNames.ml	185	0	0	0	0	0	0	0	0	0	0
 lib/CCompilerErrors.ml	41	0	0	0	0	0	1	0	0	0	0
 lib/CIdent.ml	42	0	0	0	0	0	1	0	0	0	0
-lib/CRenderer.ml	306	0	0	0	0	0	1	0	0	0	0
+lib/CRenderer.ml	294	0	0	0	0	1	1	0	0	0	0
 lib/CRepr.ml	108	0	0	0	0	0	5	0	0	0	0
 lib/CliErrors.ml	146	0	1	0	0	0	12	0	0	0	0
 lib/CodeGen.ml	687	0	0	0	0	1	0	0	0	0	0
@@ -85,5 +85,5 @@ lib/TypeStripping.ml	82	1	0	0	0	0	0	1	0	0	0
 lib/TypeSystem.ml	97	0	0	0	0	0	0	0	0	0	0
 lib/TypeVarSet.ml	16	0	0	0	0	0	0	0	0	0	0
 lib/TypingPass.ml	774	31	0	0	0	1	0	0	0	0	0
-lib/Util.ml	112	0	0	0	0	1	1	0	0	0	0
+lib/Util.ml	105	0	0	0	0	1	0	0	0	0	0
 lib/Version.ml	19	0	0	0	0	0	0	0	0	0	0
