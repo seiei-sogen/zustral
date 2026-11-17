@@ -1,1 +1,1 @@
-Test that a `when` cannot match a union case by its original name when the case is imported under a nickname (issue #50). The module has no name `Up`, so the `case` statement does not name the case and is non-exhaustive. Before, `when Up do` was accepted.
+Test that a `when` cannot match a union case by its original name when the case is imported under a nickname (issue #50). The module has no name `Up` for the case, and the error says so. Before, `when Up do` was accepted.

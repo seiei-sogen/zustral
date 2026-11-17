@@ -1,0 +1,1 @@
+Test that a `when` cannot match a union case the module did not import (issue #50), and that the error names the case. The `case` statement lists every case of `Mode`, so "non-exhaustive" would mislead: what is missing is the import of `Up`.

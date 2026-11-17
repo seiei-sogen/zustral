@@ -1,0 +1,18 @@
+import Lib (Mode, Down, pick);
+
+module body Test is
+    function show(m: Mode): Unit is
+        case m of
+            when Up do
+                printLn(1);
+            when Down do
+                printLn(2);
+        end case;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        show(Down());
+        return ExitSuccess();
+    end;
+end module body.
