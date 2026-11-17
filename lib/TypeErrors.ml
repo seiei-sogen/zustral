@@ -56,6 +56,7 @@ type t =
   | CaseNonExhaustive
   | CaseNonPublic
   | CaseNonUnion of ty
+  | CaseNotImportedUnderThatName of { union_type: ty; case_name: identifier }
   | CaseWrongSlots of { binding_names: identifier list; slot_names: identifier list }
   | CastDifferentReferences of reference_difference
   | CastInvalid of { target: ty; source: ty }
@@ -219,6 +220,16 @@ let render (error: t): err_text =
        Text "The case expression has type ";
        Type ty;
        Text " which is not a union type."
+     ]
+  | CaseNotImportedUnderThatName { union_type; case_name } ->
+     [
+       Text "The union ";
+       Type union_type;
+       Text " has a case named ";
+       Code (ident_string case_name);
+       Text ", but the module does not import that case under that name. A ";
+       Code "when";
+       Text " names a case by the name the module imports it under."
      ]
   | CaseWrongSlots { binding_names; slot_names } ->
      [

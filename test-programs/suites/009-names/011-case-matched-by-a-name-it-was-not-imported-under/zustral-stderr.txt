@@ -3,12 +3,18 @@
   "kind": "Type Error",
   "text": [
     { "type": "text", "content": "The union " },
-    { "type": "code", "content": "Mode" },
+    { "type": "type", "content": "Mode" },
     { "type": "text", "content": " has a case named " },
     { "type": "code", "content": "Up" },
-    { "type": "text", "content": ", but the module does not import that case under that name. A " },
+    {
+      "type": "text",
+      "content": ", but the module does not import that case under that name. A "
+    },
     { "type": "code", "content": "when" },
-    { "type": "text", "content": " names a case by the name the module imports it under." }
+    {
+      "type": "text",
+      "content": " names a case by the name the module imports it under."
+    }
   ],
   "span": {
     "filename": "test-programs/suites/009-names/011-case-matched-by-a-name-it-was-not-imported-under/Test.zum",

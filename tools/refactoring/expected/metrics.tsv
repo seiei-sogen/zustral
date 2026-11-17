@@ -1,6 +1,6 @@
 file	lines	raise	catch	state	io	wildcard	strings	internal	adhoc	names	planstate
 cli/Cli.ml	24	0	1	0	1	0	0	0	0	0	0
-cli/CliEngine.ml	187	0	0	0	40	0	0	0	0	0	0
+cli/CliEngine.ml	189	0	0	0	40	0	0	0	0	0	0
 cli/CliParser.ml	180	15	0	0	0	4	4	0	0	0	0
 cli/CliUtil.ml	119	4	0	0	0	1	3	0	0	0	0
 cli/Os.ml	83	2	2	1	14	0	1	0	0	0	0
@@ -83,7 +83,7 @@ lib/Type.ml	288	0	0	0	0	1	0	0	0	0	0
 lib/TypeBindings.ml	182	3	0	0	0	0	0	1	0	0	0
 lib/TypeCheckExpr.ml	1044	44	0	0	0	1	0	0	0	0	0
 lib/TypeClasses.ml	241	13	0	0	0	0	0	0	0	0	0
-lib/TypeErrors.ml	579	0	0	0	0	0	0	0	0	0	0
+lib/TypeErrors.ml	590	0	0	0	0	0	0	0	0	0	0
 lib/TypeMatch.ml	387	5	0	0	0	0	0	1	0	0	0
 lib/TypeParameter.ml	36	0	0	0	0	0	0	0	0	0	0
 lib/TypeParameters.ml	61	2	0	0	0	0	0	0	0	0	0
@@ -94,6 +94,6 @@ lib/TypeStripping.ml	82	1	0	0	0	0	0	1	0	0	0
 lib/TypeSystem.ml	104	0	0	0	0	0	0	0	0	0	0
 lib/TypeVarSet.ml	16	0	0	0	0	0	0	0	0	0	0
 lib/TypeclassNamedByConstraint.ml	26	0	0	0	0	0	0	0	0	0	0
-lib/TypingPass.ml	807	35	0	0	0	1	0	0	0	0	0
+lib/TypingPass.ml	816	36	0	0	0	1	0	0	0	0	0
 lib/Util.ml	105	0	0	0	0	1	0	0	0	0	0
 lib/Version.ml	19	0	0	0	0	0	0	0	0	0	0

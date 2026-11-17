@@ -580,6 +580,15 @@ and augment_case (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span
         List.exists (equal_qident n) case_qnames
       in
       let when_names = List.map (fun (AbstractWhen (n, _, _)) -> original_name n) whens in
+      (* A `when` that writes the name of a case the module does not have under
+         that name is not a missing case: the error names the case. *)
+      let _ =
+        List.iter (fun (AbstractWhen (n, _, _) as abstract_when) ->
+            let case_name: identifier = original_name n in
+            if List.exists (equal_identifier case_name) case_names && not (names_a_case_of_the_union abstract_when) then
+              type_error place (CaseNotImportedUnderThatName { union_type = ty; case_name }))
+          whens
+      in
       if List.for_all names_a_case_of_the_union whens && ident_set_eq case_names when_names then
         (* Group the cases and whens *)
         let whens' = group_cases_whens cases whens in
