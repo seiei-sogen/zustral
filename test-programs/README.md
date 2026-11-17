@@ -17,7 +17,7 @@ test-programs/
 
 The `suites` directory has numbered subdirectories, each representing a test suite: a collection of tests covering specific compiler features.
 
-Each test directory contains some Austral source files (in the simplest cases, `Test.zui` and `Test.zum`) and some control files:
+Each test directory contains some Zustral source files (in the simplest cases, `Test.zui` and `Test.zum`) and some control files:
 
 1. `austral-stderr.txt` is the compiler's error message if the test is expected to fail.
 

@@ -96,7 +96,7 @@ I reused `grammar-literal.patch` as it is: a `typespec_arg` rule, `Cst.ConcreteN
 - `TypeCheckExpr.ml`, 437 inserted lines. Changed functions: `augment_expr` (the literal cases and the call case), `augment_comparison`, `augment_arithmetic`, `augment_function_call`, `augment_record_constructor`, `augment_union_constructor`. New functions: `decimal_literal_as`, `decimal_literal_minimal`, `coerce_decimal_literal_args`, `augment_decimal_arithmetic`, `augment_decimal_builtin`, and small helpers.
 - `DecimalLit.ml`, new, 74 lines. It parses a literal's text and computes the coefficient and the smallest type with Zarith. It uses no floats.
 - `Env.get_union_cases`, one line.
-- `BuiltIn.pervasive_imports` and `builtin/Pervasive.zui` for `RoundingMode`.
+- `BuiltIn.pervasive_imports` and `builtin/Pervasive.aui` for `RoundingMode`.
 - `prelude.h` and `prelude.c` for the runtime.
 
 ### Not touched

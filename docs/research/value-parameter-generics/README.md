@@ -111,7 +111,7 @@ ppx の `deriving` が生成するコードは新しい構成子を自動で扱�
 
 演算子 `+ - * /` の型検査は、両辺の型が OCaml の `=` で等しく、かつ `is_numeric` が真であることを求める 〔src: TypeCheckExpr.ml:938-944〕。
 `is_numeric` は `NamedType` に偽を返す 〔src: TypeSystem.ml:30-36〕。
-演算子は型クラス `TrappingArithmetic(T)` のメソッドに変換され、その型は `(lhs: T, rhs: T): T` である 〔src: builtin/Pervasive.zui:65-69〕。
+演算子は型クラス `TrappingArithmetic(T)` のメソッドに変換され、その型は `(lhs: T, rhs: T): T` である 〔src: builtin/Pervasive.aui:65-69〕。
 
 だから `Decimal[7,2] * Decimal[5,1]` は、今の規則では3つの理由で通らない。
 
