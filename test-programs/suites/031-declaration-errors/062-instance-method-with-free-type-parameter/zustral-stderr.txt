@@ -1,0 +1,37 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "V" },
+    { "type": "text", "content": " of the method " },
+    { "type": "code", "content": "hold" },
+    { "type": "text", "content": " is in the " },
+    { "type": "code", "content": "Free" },
+    {
+      "type": "text",
+      "content": " universe. The type parameters of a method must be in the "
+    },
+    { "type": "code", "content": "Region" },
+    { "type": "text", "content": " universe." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/062-instance-method-with-free-type-parameter/Test.zum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 11, "column": 8 }
+  },
+  "context": [
+    [ 2, "    typeclass Holder(T: Free) is" ],
+    [ 3, "        method hold(self: T): T;" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    instance Holder(Int32) is" ],
+    [ 7, "        generic [V: Free]" ],
+    [ 8, "        method hold(self: Int32): Int32 is" ],
+    [ 9, "            return self;" ],
+    [ 10, "        end;" ],
+    [ 11, "    end;" ],
+    [ 12, "" ],
+    [ 13, "    function main(): ExitCode is" ]
+  ]
+}

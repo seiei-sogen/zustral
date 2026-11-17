@@ -1,0 +1,16 @@
+module body Test is
+    typeclass Holder(T: Free) is
+        method hold(self: T): T;
+    end;
+
+    instance Holder(Int32) is
+        generic [V: Free]
+        method hold(self: Int32): Int32 is
+            return self;
+        end;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

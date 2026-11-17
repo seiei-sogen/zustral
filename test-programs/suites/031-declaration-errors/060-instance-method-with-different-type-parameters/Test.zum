@@ -1,0 +1,16 @@
+module body Test is
+    typeclass Show(T: Free) is
+        generic [R: Region]
+        method show(value: &[T, R]): Unit;
+    end;
+
+    instance Show(Int32) is
+        method show(value: &[Int32, Static]): Unit is
+            return nil;
+        end;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

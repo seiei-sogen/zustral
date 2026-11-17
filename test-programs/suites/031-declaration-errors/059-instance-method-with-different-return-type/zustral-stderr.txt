@@ -1,0 +1,34 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The method " },
+    { "type": "code", "content": "one" },
+    { "type": "text", "content": " of the instance of the typeclass " },
+    { "type": "code", "content": "One" },
+    { "type": "text", "content": " for " },
+    { "type": "type", "content": "Int32" },
+    {
+      "type": "text",
+      "content": " and the method of the typeclass have different return types."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/059-instance-method-with-different-return-type/Test.zum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 10, "column": 8 }
+  },
+  "context": [
+    [ 2, "    typeclass One(T: Free) is" ],
+    [ 3, "        method one(x: T): Int64;" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    instance One(Int32) is" ],
+    [ 7, "        method one(x: Int32): Bool is" ],
+    [ 8, "            return true;" ],
+    [ 9, "        end;" ],
+    [ 10, "    end;" ],
+    [ 11, "" ],
+    [ 12, "    function main(): ExitCode is" ]
+  ]
+}

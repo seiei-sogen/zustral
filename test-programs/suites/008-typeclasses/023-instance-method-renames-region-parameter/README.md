@@ -1,0 +1,1 @@
+Test that an instance method may give its region type parameter another name than the typeclass's method does: the check of the instance against the typeclass compares the parameters by position (issue #91).

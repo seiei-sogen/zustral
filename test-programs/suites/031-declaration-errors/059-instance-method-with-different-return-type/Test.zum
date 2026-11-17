@@ -1,0 +1,17 @@
+module body Test is
+    typeclass One(T: Free) is
+        method one(x: T): Int64;
+    end;
+
+    instance One(Int32) is
+        method one(x: Int32): Bool is
+            return true;
+        end;
+    end;
+
+    function main(): ExitCode is
+        let n: Int32 := 0;
+        printLn(one(n));
+        return ExitSuccess();
+    end;
+end module body.

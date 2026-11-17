@@ -1,0 +1,1 @@
+Test that a typeclass method with a type parameter outside the `Region` universe fails where the typeclass is declared. Before, the instance's method was compiled with the type parameter left in it, and the compiler stopped with the internal `strip_type': Variable not replaced` and no position (issues #128, #144, #157).
