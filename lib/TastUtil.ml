@@ -9,7 +9,6 @@
 open Type
 open Stages.Tast
 open Identifier
-open StringSet
 open Error
 
 let arglist_size = function
@@ -21,20 +20,27 @@ let rec arglist_to_positional (place: place) (args, names): texpr list =
   and actual = arglist_size args
   in
   if expected = actual then
-    let _ = assert (names_match args names) in
     match args with
     | (TPositionalArglist l) -> l
-    | (TNamedArglist l) -> reorder_arglist l names
+    | (TNamedArglist l) ->
+       check_argument_names place (List.map fst l) names;
+       reorder_arglist l names
   else
     generic_error place (WrongNumberOfArguments { expected; actual })
 
-and names_match arglist names =
-  match arglist with
-  | (TPositionalArglist _) -> true
-  | (TNamedArglist l) -> names_match_inner (List.map (fun (n, _) -> ident_string n) l) (List.map ident_string names)
-
-and names_match_inner a b =
-  StringSet.equal (StringSet.of_list a) (StringSet.of_list b)
+(* As many names as parameters, each the name of a parameter and none given
+   twice: the arguments are the parameters in some order. *)
+and check_argument_names (place: place) (given: identifier list) (parameters: identifier list): unit =
+  let check (earlier: identifier list) (name: identifier): identifier list =
+    if not (List.mem name parameters) then
+      type_error place (CallArgumentNameUnknown { name; parameters })
+    else if List.mem name earlier then
+      type_error place (CallArgumentNameRepeated name)
+    else
+      name :: earlier
+  in
+  let _ = List.fold_left check [] given in
+  ()
 
 and reorder_arglist l names =
   List.map (fun n -> find_arg_with_name l n) names

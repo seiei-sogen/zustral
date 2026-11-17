@@ -47,6 +47,8 @@ type t =
   | CannotBorrowParamMutably of { name: identifier; ty: ty }
   | CallNonCallable of ty
   | CallWrongArity of { name: identifier; expected: int; actual: int }
+  | CallArgumentNameUnknown of { name: identifier; parameters: identifier list }
+  | CallArgumentNameRepeated of identifier
   | CaseNonExhaustive
   | CaseNonPublic
   | CaseNonUnion of ty
@@ -144,6 +146,22 @@ let render (error: t): err_text =
        Text (string_of_int actual);
        Text (if actual = 1 then " was " else " were ");
        Text "given."
+     ]
+  | CallArgumentNameUnknown { name; parameters } ->
+     [
+       Text "There is no parameter named ";
+       Code (ident_string name);
+       Text ". The parameters are ";
+     ]
+     @ code_list (List.map ident_string parameters)
+     @ [
+       Text "."
+     ]
+  | CallArgumentNameRepeated name ->
+     [
+       Text "The argument ";
+       Code (ident_string name);
+       Text " is given more than once."
      ]
   | CaseNonExhaustive ->
      [
