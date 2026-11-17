@@ -1,5 +1,5 @@
 exit: 255
-files: error.html
+files: 
 --- stdout
 --- stderr
 Error:
