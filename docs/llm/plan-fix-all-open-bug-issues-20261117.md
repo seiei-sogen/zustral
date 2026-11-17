@@ -259,14 +259,14 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
   - 直し方: 呼ばれる側のシグネチャを取るときに、型引数を新しい名前に付け替える。`lib/TypeCheckExpr.ml:260-360` の5か所と、関数を値として使う箇所で行う。大。
   - 危険: 型検査の中心である。#151 の修正（領域の引数を通して、ローカルの参照を返す）が、この曖昧さの上に乗っている。`031` と `036` の #151 のテストが通ることを見る。
   - 進め方: 設計を先に決める。直し方の候補を2つ試し、テストの通る数と差分の大きさで選ぶ。
-- [ ] **Z9** #142、#157 領域の引数を持つ型の単相化。
+- [x] **Z9** #142、#157 領域の引数を持つ型の単相化。
   - 原因: 関数とメソッドの単相化は、領域の引数を `Static` にする（`lib/TypeCheckExpr.ml:172-176`、`lib/Monomorphize.ml:30-34`）。レコードの単相化は、領域を残す（`lib/Monomorphize.ml:58`）。
   - 直し方: 型の単相化でも、領域を `Static` にする。小。
   - 危険: 生成する C の、単相化の番号と個数が変わる。`measure.sh --record` が要る。
 - [x] **Z10** #92、#161 C の名前。
   - 原因: `lib/CodeGen.ml:93-94` と `:559` が、エスケープしない名前を使う。`:561` と `:572` が、外部の名前を、宣言と呼び出しで別の作り方で作る。`lib/CIdent.ml:33` の正規表現が、末尾で止まらない。`lib/CstUtil.ml:86-110` が、`External_Name` を調べない。
   - 直し方: 欄、case、外部関数の引数の名前を、エスケープする作り方に通す。外部の名前は1つの作り方にする。`External_Name` が C の識別子であり、C の予約語でないことを、プラグマを読むところで調べる。小。
-- [ ] **Z11** #161、#54 外部関数の検査。
+- [x] **Z11** #161、#54 外部関数の検査。
   - 原因: `lib/TypingPass.ml:672-680` が、`Foreign_Export` でモジュールの種別を見ない。`lib/ForeignType.ml:36` の文面が「Not allowed」だけである。`lib/ForeignType.ml:58` が、戻り値の `Unit` を断る。
   - 直し方: 安全なモジュールの `Foreign_Export` をエラーにする。文面に、関数、引数、型を入れる。戻り値の `Unit` を C の `void` にする。小から中。
   - 危険: 安全なモジュールで `Foreign_Export` を使うテストが 41 個ある。`pragma Unsafe_Module;` を足すと、期待値の行番号がずれる。
@@ -276,7 +276,7 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 - [x] **Z13** #127 `Fn[A, B, R]` の引数が逆順に読まれる。
   - 原因: `lib/TypeParser.ml:47` の `List.rev`。
   - 直し方: `List.rev` を消す。逆順で書いてあるテスト（`010/005`、`030/023`、`036/036`、`036/057` から `059`、`038/011` など）を書き直す。小。
-- [ ] **Z14** #30、#133、#157 代入と `let` での参照の変換。
+- [x] **Z14** #30、#133、#157 代入と `let` での参照の変換。
   - 原因: `lib/TypingPass.ml:328-330` が、代入の右辺を `infer_expr` と `expect_value_of_type` で調べる。`lib/TypeCheckExpr.ml:882-897` の `check_annotated` が、`&!` から `&!` を断る。
   - 直し方: 代入も `check_annotated_expr` に通す。`&!` から、同じ型と領域の `&!` を受ける。小。
 - [x] **Z15** #125、#144 レコード、union、スパンどうしの `=`。
@@ -327,6 +327,18 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 - 作業の記録を書くのも、取りまとめ役だけである。
 - X 列か Y 列が先に終わったら、その列の作業者が、Z 列の後ろの単位（Z10 から Z16）を引き取る。
 
+### 5.0 単位を進める中で変わった振る舞い
+
+issue が求めた修正のほかに、次の振る舞いが変わった。
+
+- 代入の型の不一致の文面が、`let` と同じ「Cannot cast to T from U」になった（Z14）。代入の右辺を、`let` と同じ検査に通すようにしたからである。
+- 代入の右辺のリテラルに、C でキャストが付く（Z14）。たとえば `((au_int32_t) 20)` になる。
+- `Index`、`ByteSize`、`Nat` の型の `-x` が、コンパイル時のエラーになった（X9）。これまでは通って、実行時に止まっていた。
+- 予約語で始まるだけの名前（`character`、`doubled`）に、C で `au_ckw_` が付かなくなった（Z10）。
+- `for` の境界の整数リテラルに、C で `size_t` へのキャストが付かなくなった（Y10）。
+- 取り込んでいない case の名前を `when` に書くと、エラーになる（Y2）。
+- 参照どうしの `=` が、型エラーになった（Z15）。
+
 ### 5.1 最後にまとめて行うこと
 
 - テストの番号の重なりを直す。列を並行して進めたので、`031-declaration-errors/056` から `061` などで、2つのテストが同じ番号を持っている。
@@ -375,3 +387,6 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 | Z15 | `4ed9a47` | レコード、union、スパンどうしの `=` で gcc が `invalid operands to binary ==` | ``Values of the type `R` cannot be compared.``。参照どうしの比較も断る。型変数は、いまのまま受ける | 14 個とも ok |
 | Y10 | `a47266b` | `printLn(&nope)` のエラーが関数全体か「0 行目、空のファイル名」を指す。`r.x := 5` のエラーが前の `let` の行を指す。`if` と `while` の条件のエラーが前の `let` を指す。`for i from true to 10` が、位置のないキャストのエラー | どれも、その文の位置を指す。`for` は ``The initial bound of a `for` loop has the type `Bool`, but it must have the type `Index`.`` | 14 個とも ok |
 | Y11 | `23b02c8` | 領域が `Region<0>`、`Region<2>` と出る。```x`cannot`` に空白がない。union の分解が「パスを取れない」。定数の借用が「変数が見つからない」 | `Static` と、利用者が書いた領域の名前が出る。文面を直した。``Cannot borrow the constant `c`: only a variable can be borrowed.``。期待値 96 個は、領域の表示だけが変わった | 14 個とも ok |
+| Z9 | `70d5401` | 領域の引数を持つレコードを、領域を取る関数に渡すと gcc が `incompatible type for argument 2 of mono_15` | 2、41、41、5 を出力する。同じ原因の5つ目（具体的なインスタンスの、領域の型引数を持つメソッド）も直った。2880 個のプログラムの終了コードと出力は同じで、C が変わったのは既にある 7 個（単相化の番号と個数） | 14 個とも ok |
+| Z14 | `8438e35` | `let r2: &![Int32, R] := r` が `Write references can only be casted to a read reference.`。代入で `&!` を `&` に変えられない | 1 を出力する。代入でも変えられる。`&!` は線形なので、移した元の変数をもう一度使うと `has already been consumed` になる。issue の例は `w` を2回使っているので、このエラーになる | 14 個とも ok |
+| Z11 | `c72ca39` | 安全なモジュールの `Foreign_Export` が通る。取り込む関数の型のエラーが `Not allowed`。戻り値に `Unit` を書けない | ``Can't use `Foreign_Export` in a safe module.``。``The type `Pair` of the parameter `p` is not allowed in the signature of the imported function `ext`.``。`Unit` は C の `void` になる | 14 個とも ok |
