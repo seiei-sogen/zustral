@@ -4,7 +4,7 @@ module body Test is
     end;
 
     function main(): ExitCode is
-        let trappingAdd: Fn[Nat8, Int64, Int64] := addByte;
+        let trappingAdd: Fn[Int64, Nat8, Int64] := addByte;
         let x: Int64 := 40;
         let y: Int64 := x + 1;
         printLn(y);

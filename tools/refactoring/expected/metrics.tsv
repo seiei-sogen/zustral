@@ -82,7 +82,7 @@ lib/TypeErrors.ml	525	0	0	0	0	0	0	0	0	0	0
 lib/TypeMatch.ml	359	5	0	0	0	0	0	1	0	0	0
 lib/TypeParameter.ml	36	0	0	0	0	0	0	0	0	0	0
 lib/TypeParameters.ml	61	2	0	0	0	0	0	0	0	0	0
-lib/TypeParser.ml	330	10	0	0	0	2	0	0	0	0	0
+lib/TypeParser.ml	329	10	0	0	0	2	0	0	0	0	0
 lib/TypeReplace.ml	212	0	0	0	0	0	0	0	0	0	0
 lib/TypeSignature.ml	23	0	0	0	0	0	0	0	0	0	0
 lib/TypeStripping.ml	82	1	0	0	0	0	0	1	0	0	0

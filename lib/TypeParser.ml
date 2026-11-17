@@ -44,8 +44,7 @@ let parse_function_pointer (place: place) (args: ty list): ty =
      parse_error place FunctionPointerNoArgs
   | first::rest ->
      let (args, rt): ty list * ty = Util.split_last first rest in
-     (* The parameters are read in reverse (#127). *)
-     FnPtr (List.rev args, rt)
+     FnPtr (args, rt)
 
 let parse_built_in_type (place: place) (name: qident) (args: ty list): ty option =
   if is_address_type name then
