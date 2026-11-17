@@ -1,0 +1,13 @@
+module body Test is
+    typeclass A(T: Free) is
+        method go(x: T): Int64;
+    end;
+
+    typeclass B(T: Free) is
+        method go(x: T): Int64;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

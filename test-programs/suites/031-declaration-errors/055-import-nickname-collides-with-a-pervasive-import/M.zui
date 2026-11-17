@@ -1,0 +1,3 @@
+module M is
+    function quiet(): Unit;
+end module.

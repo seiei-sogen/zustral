@@ -1,0 +1,11 @@
+module body Test is
+    record Int32: Free is
+        v: Int64;
+    end;
+
+    function main(): ExitCode is
+        let d: Int32 := Int32(v => 1);
+        printLn(d.v);
+        return ExitSuccess();
+    end;
+end module body.

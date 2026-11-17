@@ -1,0 +1,16 @@
+module body Test is
+    union U: Free is
+        case Foo;
+        case Bar;
+    end;
+
+    union V: Free is
+        case Foo;
+        case Baz;
+    end;
+
+    function main(): ExitCode is
+        let u: U := Foo();
+        return ExitSuccess();
+    end;
+end module body.

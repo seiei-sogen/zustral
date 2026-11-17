@@ -1,0 +1,1 @@
+Test that a module cannot declare a record with the name of a built-in type (issue #51). Before, the declaration was accepted, the type `Int32` stayed the built-in type, and the error said `Cannot cast to Int32 from Int32`.

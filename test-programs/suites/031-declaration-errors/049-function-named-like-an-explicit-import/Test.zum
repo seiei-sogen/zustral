@@ -1,0 +1,13 @@
+pragma Unsafe_Module;
+import Zustral.Memory (nullCheck);
+
+module body Test is
+    function nullCheck(x: Int32): Int32 is
+        return x;
+    end;
+
+    function main(): ExitCode is
+        printLn(nullCheck(3));
+        return ExitSuccess();
+    end;
+end module body.

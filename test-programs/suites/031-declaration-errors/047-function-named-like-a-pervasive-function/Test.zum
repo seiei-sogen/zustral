@@ -1,0 +1,12 @@
+module body Test is
+    function printLn(x: Int64): Unit is
+        print("mine ");
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        let v: Int64 := 7;
+        printLn(v);
+        return ExitSuccess();
+    end;
+end module body.

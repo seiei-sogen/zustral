@@ -1,0 +1,1 @@
+Test that a module cannot declare a function with a name that `Zustral.Pervasive` imports into every module (issues #28 and #163). Before, the declaration was accepted and a call to `printLn` called the imported function.

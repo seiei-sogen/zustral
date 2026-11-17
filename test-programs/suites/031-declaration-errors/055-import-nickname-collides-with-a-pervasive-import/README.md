@@ -1,0 +1,1 @@
+Test that the error for an import under a nickname that is already imported names the nickname, which is the name that collides (issue #163). Before, it named `quiet`, the name the declaration has in `M`. The error has no span yet: an import has no span in the syntax tree.

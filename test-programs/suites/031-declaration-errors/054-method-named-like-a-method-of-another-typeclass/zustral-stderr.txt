@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "A declaration with the name " },
+    { "type": "code", "content": "go" },
+    { "type": "text", "content": " already exists in the module " },
+    { "type": "code", "content": "Test" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/054-method-named-like-a-method-of-another-typeclass/Test.zum",
+    "startp": { "line": 6, "column": 4 },
+    "end": { "line": 8, "column": 8 }
+  },
+  "context": [
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    typeclass B(T: Free) is" ],
+    [ 7, "        method go(x: T): Int64;" ],
+    [ 8, "    end;" ],
+    [ 9, "" ],
+    [ 10, "    function main(): ExitCode is" ]
+  ]
+}

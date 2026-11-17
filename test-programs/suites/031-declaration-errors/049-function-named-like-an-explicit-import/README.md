@@ -1,0 +1,1 @@
+Test that a module cannot declare a function with a name it imports explicitly (issue #28). Before, a call to `nullCheck` called the imported function, and the error said that its argument was not an `Address`.
