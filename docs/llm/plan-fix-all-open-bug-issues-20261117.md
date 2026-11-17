@@ -116,18 +116,18 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 
 ### 3.2 S 列（足場）
 
-- [ ] **S1** #41 入れ子の作業ツリーで `make` が外側のツリーをビルドする。
+- [x] **S1** #41 入れ子の作業ツリーで `make` が外側のツリーをビルドする。
   - 原因: `Makefile:12` と `:17` の dune の呼び出しに `--root .` がない。`tools/refactoring/check.sh:112` も同じ。
   - 直し方: `--root .` を付ける。小。
   - 確かめ方: リポジトリの中に作った作業ツリーで `make` を実行し、その作業ツリーの `zustral` ができることを見る。
-- [ ] **S2** #42 クラウド環境で `nix-shell` が nixpkgs を取得できない。
+- [x] **S2** #42 クラウド環境で `nix-shell` が nixpkgs を取得できない。
   - 原因: `shell.nix:4` の `fetchTarball` が GitHub の API を使う。クラウドのセッションは、これを通さない。git での読み取りは通る。
   - 直し方: `shell.nix` が、環境変数 `ZUSTRAL_NIXPKGS_CHECKOUT` にディレクトリがあれば、そこを nixpkgs として使う。`tools/coding-agent-setup/` に、タグ `23.05` を git で取得するスクリプトを足す。小。
   - 確かめ方: 取得のスクリプトを実行し、`nix-shell --command 'make'` が通ることを見る。
-- [ ] **S3** #40 `runner.py --replace-stderr` が、関係のない期待値のファイルを書き換える。コンパイラのパスが固定である。
+- [x] **S3** #40 `runner.py --replace-stderr` が、関係のない期待値のファイルを書き換える。コンパイラのパスが固定である。
   - 原因: `test-programs/runner.py:561-564` が、末尾の改行を落として必ず書く。`:401` が `./zustral` を固定している。
   - 直し方: 内容が同じなら書かない。環境変数 `ZUSTRAL` でパスを受ける。小。
-- [ ] **S4** #34 `docs/paths.md:141-142` の `!ref := e` を消す。小。
+- [x] **S4** #34 `docs/paths.md:141-142` の `!ref := e` を消す。小。
 
 ### 3.3 X 列（入口、字句、構文、リテラル）
 
@@ -314,3 +314,7 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 
 | 単位 | 修正のコミット | 直す前 | 直した後 | 検査 |
 |---|---|---|---|---|
+| S1 | `886cb21` | 入れ子の作業ツリーで `make` が `Error: No rule found for alias .claude/worktrees/s1-check/default` で失敗 | 同じ作業ツリーに `zustral` ができる | 14 個とも ok |
+| S2 | `d9126e9` | `nix-shell --command 'true'` が `HTTP error 403` | 取得のスクリプトの後、`nix-shell --command 'make'` が通る | 14 個とも ok |
+| S3 | `f9b49c7` | `runner.py --replace-stderr` の後、`git status` に 7 個のファイル | 0 個。`ZUSTRAL=./zustral.moved` でスイートが通る | 14 個とも ok |
+| S4 | `851b793` | `docs/paths.md` が、構文解析の受け付けない `!(ref) := x;` を左辺値として挙げている | 文書が、変数と欄の並びの左辺値だけを挙げる | 14 個とも ok |
