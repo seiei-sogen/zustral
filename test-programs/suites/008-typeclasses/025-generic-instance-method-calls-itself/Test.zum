@@ -1,0 +1,21 @@
+module body Test is
+    typeclass Countable(T: Free) is
+        method countDown(x: T, remaining: Int32): Int32;
+    end;
+
+    generic [A: Free]
+    instance Countable(Option[A]) is
+        method countDown(x: Option[A], remaining: Int32): Int32 is
+            if remaining = 0 then
+                return 0;
+            end if;
+            return countDown(x, remaining - 1) + 1;
+        end;
+    end;
+
+    function main(): ExitCode is
+        let o: Option[Bool] := None();
+        printLn(countDown(o, 3));
+        return ExitSuccess();
+    end;
+end module body.

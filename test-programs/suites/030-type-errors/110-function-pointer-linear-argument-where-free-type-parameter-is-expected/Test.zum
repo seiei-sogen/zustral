@@ -1,0 +1,14 @@
+module body Test is
+    record Lin: Linear is
+        v: Int32;
+    end;
+
+    generic [T: Free]
+    function callWithLinear(f: Fn[T, Unit], l: Lin): Unit is
+        return f(l);
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

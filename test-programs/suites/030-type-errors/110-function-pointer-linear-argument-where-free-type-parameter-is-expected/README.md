@@ -1,0 +1,1 @@
+Test that passing a linear record to a function pointer of the type `Fn[T, Unit]`, where `T` is a `Free` type parameter of the enclosing function, is a type mismatch. Before, the error said that `T` must be `Free` but `Lin` is `Linear`, as if `T` could be bound to a record of the right universe (issue #156). The same for a `return` is 099.

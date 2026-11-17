@@ -1,0 +1,15 @@
+module body Test is
+    generic [T: Free]
+    function countdown(x: T, n: Int32): T is
+        if n = 0 then
+            return x;
+        end if;
+        return countdown(x, n - 1);
+    end;
+
+    function main(): ExitCode is
+        printLn(countdown(true, 3));
+        printLn(countdown(7, 2));
+        return ExitSuccess();
+    end;
+end module body.

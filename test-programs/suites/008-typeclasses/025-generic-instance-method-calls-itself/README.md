@@ -1,0 +1,1 @@
+Test that a method of a generic instance can call itself on a value of the instance's own type, `Option[A]`: the instance that the call finds gets the caller's `A` as its type argument. Before, the instance was found with no type argument, and the compiler stopped with `Parameter list and argument list don't have the same length` (issue #128).

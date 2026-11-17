@@ -1,0 +1,1 @@
+Test that a method of a generic instance that has a region type parameter of its own can call itself with its own reference: the call binds the method's `R` to the caller's `R`, and the instance's `U` to the caller's `U`. Before, the compiler stopped with `Parameter list and argument list don't have the same length` (issue #142).

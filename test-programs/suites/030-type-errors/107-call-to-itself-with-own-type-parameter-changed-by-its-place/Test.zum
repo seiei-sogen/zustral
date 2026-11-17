@@ -1,0 +1,28 @@
+module body Test is
+    union Two[A: Free, B: Free]: Free is
+        case First is
+            first: A;
+        case Second is
+            second: B;
+    end;
+
+    generic [T: Free, U: Free]
+    function wrap(x: U, again: Bool): Two[T, U] is
+        let inner: Two[T, U] := Second(second => x);
+        if again then
+            case inner of
+                when First(first: T) do
+                    let changed: Two[Int32, Int32] := wrap(first, false);
+                    printLn("first");
+                when Second(second: U) do
+                    printLn("second");
+            end case;
+        end if;
+        return inner;
+    end;
+
+    function main(): ExitCode is
+        let two: Two[Int64, Bool] := wrap(true, true);
+        return ExitSuccess();
+    end;
+end module body.

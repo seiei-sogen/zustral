@@ -1,0 +1,30 @@
+module body Test is
+    typeclass Weighable(T: Free) is
+        method weight(x: T): Int32;
+    end;
+
+    record Box[A: Free]: Free is
+        content: A;
+    end;
+
+    generic [A: Free]
+    instance Weighable(Option[A]) is
+        method weight(x: Option[A]): Int32 is
+            return 1;
+        end;
+    end;
+
+    generic [A: Free]
+    instance Weighable(Box[A]) is
+        method weight(x: Box[A]): Int32 is
+            let o: Option[A] := Some(value => x.content);
+            return weight(o) + 10;
+        end;
+    end;
+
+    function main(): ExitCode is
+        let b: Box[Int32] := Box(content => 5);
+        printLn(weight(b));
+        return ExitSuccess();
+    end;
+end module body.
