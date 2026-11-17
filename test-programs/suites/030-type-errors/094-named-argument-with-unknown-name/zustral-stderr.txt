@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "There is no parameter named " },
+    { "type": "code", "content": "c" },
+    { "type": "text", "content": ". The parameters are " },
+    { "type": "code", "content": "a" },
+    { "type": "text", "content": ", " },
+    { "type": "code", "content": "b" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/094-named-argument-with-unknown-name/Test.zum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 7, "column": 42 }
+  },
+  "context": [
+    [ 5, "" ],
+    [ 6, "    function main(): ExitCode is" ],
+    [ 7, "        let x: Int64 := f(a => 1, c => 2);" ],
+    [ 8, "        printLn(x);" ],
+    [ 9, "        return ExitSuccess();" ]
+  ]
+}
