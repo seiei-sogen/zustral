@@ -153,7 +153,7 @@ import_stmt:
   | IMPORT name=module_name LPAREN
     symbols=separated_list(COMMA, imported_symbol)
     RPAREN SEMI
-    { ConcreteImportList (name, symbols) }
+    { ConcreteImportList (from_loc $loc, name, symbols) }
   ;
 
 imported_symbol:

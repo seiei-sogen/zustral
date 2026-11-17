@@ -19,7 +19,8 @@ and concrete_module_body =
   ConcreteModuleBody of module_name * module_kind * docstring * concrete_import_list list * concrete_def list
 
 and concrete_import_list =
-  ConcreteImportList of module_name * concrete_import list
+  ConcreteImportList of span * module_name * concrete_import list
+(** The span is that of the import statement. *)
 
 and concrete_import =
   ConcreteImport of identifier * identifier option
