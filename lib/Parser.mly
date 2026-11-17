@@ -144,7 +144,7 @@ module_body:
   | doc=docstringopt pragmas=pragma* imports=import_stmt* MODULE BODY
     name=module_name IS decls=body_decl*
     END MODULE BODY PERIOD EOF
-    { make_module_body name imports pragmas decls doc }
+    { make_module_body (from_loc $loc(pragmas)) name imports pragmas decls doc }
   ;
 
 /* Imports */

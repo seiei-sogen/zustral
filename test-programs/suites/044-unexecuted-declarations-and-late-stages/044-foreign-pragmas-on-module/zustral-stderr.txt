@@ -1,5 +1,5 @@
 {
-  "module": "Test",
+  "module": null,
   "kind": "Declaration Error",
   "text": [
     { "type": "text", "content": "The pragma " },

@@ -20,8 +20,8 @@ lib/CombiningPass.ml	380	13	0	0	0	0	0	0	0	0	0
 lib/Common.ml	65	0	0	0	0	0	3	0	0	0	0
 lib/Compiler.ml	152	0	0	0	0	0	0	0	0	0	0
 lib/Cst.ml	174	0	0	0	0	0	2	0	0	0	0
-lib/CstUtil.ml	181	4	0	0	0	0	0	0	0	0	0
-lib/DeclarationErrors.ml	468	0	0	0	0	0	1	0	0	0	0
+lib/CstUtil.ml	199	7	0	0	0	0	0	0	0	0	0
+lib/DeclarationErrors.ml	499	0	0	0	0	0	1	0	0	0	0
 lib/DesugarBorrows.ml	264	1	0	0	0	0	0	0	0	0	0
 lib/DesugarPaths.ml	149	0	0	0	0	0	0	0	0	0	0
 lib/DesugaringPass.ml	44	0	0	0	0	0	0	0	0	0	0
@@ -65,7 +65,7 @@ lib/Pipeline.mli	92	0	0	0	0	0	6	0	0	0	0
 lib/Qualifier.ml	31	0	0	0	0	0	0	0	0	0	0
 lib/Region.ml	17	0	0	0	0	0	0	0	0	0	0
 lib/RegionMap.ml	25	1	0	0	0	0	0	0	0	0	0
-lib/ReturnCheck.ml	129	2	0	0	0	0	0	0	0	0	0
+lib/ReturnCheck.ml	133	3	0	0	0	0	0	0	0	0	0
 lib/SourceContext.ml	54	0	0	0	0	0	1	0	0	0	0
 lib/Span.ml	63	0	0	0	0	0	1	0	0	0	0
 lib/Stages.ml	725	0	0	0	0	0	8	0	0	0	0

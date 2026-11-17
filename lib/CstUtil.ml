@@ -11,20 +11,24 @@ open Common
 open Cst
 open Error
 
-let make_module_body (name: module_name) (imports: concrete_import_list list) (pragmas: pragma list) (defs: concrete_def list) (docstring: docstring) =
-  let is_unsafe_module p =
-    match p with
-    | UnsafeModulePragma -> true
-    | ForeignImportPragma _ | ForeignExportPragma _ -> false
-  in
-  let kind_from_pragmas pragmas =
-    if (List.exists is_unsafe_module pragmas) then
-      UnsafeModule
-    else
-      SafeModule
-  in
-  let kind = kind_from_pragmas pragmas
-  in
+(* A function definition takes the pragmas Foreign_Import and Foreign_Export,
+   and a module body takes Unsafe_Module. A pragma anywhere else would do
+   nothing, so it is an error (#93, #144). *)
+let pragmas_must_be_absent (span: Span.span) (pragmas: pragma list): unit =
+  match pragmas with
+  | [] ->
+     ()
+  | ForeignImportPragma _ :: _ ->
+     declaration_error (AtSpan span) (MisplacedPragma ForeignImport)
+  | ForeignExportPragma _ :: _ ->
+     declaration_error (AtSpan span) (MisplacedPragma ForeignExport)
+  | UnsafeModulePragma :: _ ->
+     declaration_error (AtSpan span) (MisplacedPragma UnsafeModule)
+
+(* [pragmas_span] covers the pragmas written before `module body`. *)
+let make_module_body (pragmas_span: Span.span) (name: module_name) (imports: concrete_import_list list) (pragmas: pragma list) (defs: concrete_def list) (docstring: docstring) =
+  pragmas_must_be_absent pragmas_span (List.filter (fun p -> p <> UnsafeModulePragma) pragmas);
+  let kind = if List.mem UnsafeModulePragma pragmas then UnsafeModule else SafeModule in
   ConcreteModuleBody (name, kind, docstring, imports, defs)
 
 let concrete_decl_name = function
@@ -147,35 +151,49 @@ let mod_body_name (body: concrete_module_body): module_name =
   let (ConcreteModuleBody (name, _, _, _, _)) = body in
   name
 
+(* An interface declaration takes no pragma: a function's pragmas are written
+   before its definition in the body. *)
 let decl_replace_docstring_and_pragmas (decl: concrete_decl) (docstring: docstring) (pragmas: pragma list): concrete_decl =
-  let _ = pragmas in
   match decl with
   | ConcreteConstantDecl (span, name, ty, _) ->
+     pragmas_must_be_absent span pragmas;
      ConcreteConstantDecl (span, name, ty, docstring)
   | ConcreteOpaqueTypeDecl (span, name, typarams, universe, _) ->
+     pragmas_must_be_absent span pragmas;
      ConcreteOpaqueTypeDecl (span, name, typarams, universe, docstring)
   | ConcreteRecordDecl (ConcreteRecord (span, name, typarams, universe, slots, _)) ->
+     pragmas_must_be_absent span pragmas;
      ConcreteRecordDecl (ConcreteRecord (span, name, typarams, universe, slots, docstring))
   | ConcreteUnionDecl (ConcreteUnion (span, name, typarams, universe, cases, _)) ->
+     pragmas_must_be_absent span pragmas;
      ConcreteUnionDecl (ConcreteUnion (span, name, typarams, universe, cases, docstring))
   | ConcreteFunctionDecl (span, name, typarams, params, rt, _) ->
+     pragmas_must_be_absent span pragmas;
      ConcreteFunctionDecl (span, name, typarams, params, rt, docstring)
   | ConcreteTypeClassDecl (ConcreteTypeClass (span, name, typarams, methods, _)) ->
+     pragmas_must_be_absent span pragmas;
      ConcreteTypeClassDecl (ConcreteTypeClass (span, name, typarams, methods, docstring))
   | ConcreteInstanceDecl (span, name, methods, ty, _) ->
+     pragmas_must_be_absent span pragmas;
      ConcreteInstanceDecl (span, name, methods, ty, docstring)
 
+(* Of the definitions of a body, only a function takes pragmas. *)
 let def_replace_docstring_and_pragmas (decl: concrete_def) (docstring: docstring) (pragmas: pragma list): concrete_def =
   match decl with
   | ConcreteNamedDef (ConcreteConstantDef (span, name, ty, expr, _)) ->
+     pragmas_must_be_absent span pragmas;
      ConcreteNamedDef (ConcreteConstantDef (span, name, ty, expr, docstring))
   | ConcreteNamedDef (ConcreteRecordDef (ConcreteRecord (span, name, typarams, universe, slots, _))) ->
+     pragmas_must_be_absent span pragmas;
      ConcreteNamedDef (ConcreteRecordDef (ConcreteRecord (span, name, typarams, universe, slots, docstring)))
   | ConcreteNamedDef (ConcreteUnionDef (ConcreteUnion (span, name, typarams, universe, cases, _))) ->
+     pragmas_must_be_absent span pragmas;
      ConcreteNamedDef (ConcreteUnionDef (ConcreteUnion (span, name, typarams, universe, cases, docstring)))
   | ConcreteNamedDef (ConcreteFunctionDef (span, name, typarams, params, ty, body, _, _)) ->
      ConcreteNamedDef (ConcreteFunctionDef (span, name, typarams, params, ty, body, docstring, pragmas))
   | ConcreteNamedDef (ConcreteTypeClassDef (ConcreteTypeClass (span, name, typarams, methods, _))) ->
+     pragmas_must_be_absent span pragmas;
      ConcreteNamedDef (ConcreteTypeClassDef (ConcreteTypeClass (span, name, typarams, methods, docstring)))
   | ConcreteInstanceDef (ConcreteInstance (span, name, typarams, ty, methods, _)) ->
+     pragmas_must_be_absent span pragmas;
      ConcreteInstanceDef (ConcreteInstance (span, name, typarams, ty, methods, docstring))

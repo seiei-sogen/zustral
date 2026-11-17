@@ -59,6 +59,8 @@ type t =
   | DeclarationTypeMismatch of identifier
   | DeclarationUniverseMismatch of identifier
   | PragmaArgumentError of known_pragma
+  | MisplacedPragma of known_pragma
+  | ForeignFunctionWithBody of identifier
   | UnknownPragma of identifier
   | DeclarationAlreadyExists of { name: identifier; module_name: module_name }
   | DeclarationNameIsImported of { name: identifier; module_name: module_name }
@@ -195,6 +197,35 @@ let render (error: t): err_text =
      Text ("Invalid " ^ pragma_name ^ " pragma.") :: (match argument with
       | Some argument -> [Break; Text "This pragma takes exactly one argument, "; Code argument]
       | None -> [Break; Text "This pragma takes no arguments."])
+  | MisplacedPragma pragma ->
+     let before_a_function_definition (pragma_name: string): err_text =
+       [
+         Text "The pragma ";
+         Code pragma_name;
+         Text " can only be written before a function definition in a module body."
+       ]
+     in
+     (match pragma with
+      | ForeignImport ->
+         before_a_function_definition BuiltInNames.foreign_import_pragma_name
+      | ForeignExport ->
+         before_a_function_definition BuiltInNames.foreign_export_pragma_name
+      | UnsafeModule ->
+         [
+           Text "The pragma ";
+           Code BuiltInNames.unsafe_module_pragma_name;
+           Text " can only be written before ";
+           Code "module body";
+           Text "."
+         ])
+  | ForeignFunctionWithBody name ->
+     [
+       Text "The function ";
+       Code (ident_string name);
+       Text " is imported with the pragma ";
+       Code BuiltInNames.foreign_import_pragma_name;
+       Text ", so it cannot have a body."
+     ]
   | UnknownPragma name ->
      [
        Text "Unknown pragma ";
