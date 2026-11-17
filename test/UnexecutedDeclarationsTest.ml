@@ -354,13 +354,8 @@ let test_overlap_of_every_pair_of_kinds _ =
             match a with
             | RegionTy _ | TyVar _ ->
                Some (Generic InstanceOverlapTypeNotAllowed)
-            | Pointer _ ->
-               (* This fixes what the code does today, which issue #122 reports
-                  as a bug: a pointer overlaps an instance for any type. When
-                  #122 is fixed, a pointer belongs to the last arm. *)
-               Some (Generic OverlappingInstances)
             | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
-            | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | FnPtr _ ->
+            | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ ->
                if i = j then Some (Generic OverlappingInstances) else None
           in
           assert_equal ~msg expected

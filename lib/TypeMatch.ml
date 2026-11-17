@@ -29,20 +29,21 @@ let ctx_place (_, _, place) = place
 
 open Outcome.Syntax
 
-(* List.map2 for a function that returns its failure. It stops at the first
-   failure. Lists of different lengths end in Invalid_argument as they do with
-   List.map2, after the pairs they have in common. Two function pointer types
-   with different numbers of parameters get here (issue #85). *)
-let rec map2_result (f: 'a -> 'b -> ('c, 'e) result) (l1: 'a list) (l2: 'b list): ('c list, 'e) result =
-  match (l1, l2) with
-  | ([], []) ->
-     Ok []
-  | (a1 :: l1, a2 :: l2) ->
-     let* r = f a1 a2 in
-     let* rs = map2_result f l1 l2 in
-     Ok (r :: rs)
-  | ([], _ :: _) | (_ :: _, []) ->
-     invalid_arg "List.map2"
+(* List.map2 for a function that returns its failure. It does not call the
+   function after the first failure. Every caller passes two lists of one
+   length: the type arguments of one declaration, or the types of two function
+   pointer types whose numbers of parameters the matcher compared first (issue
+   #85). List.fold_left2 raises Invalid_argument otherwise. *)
+let map2_result (f: 'a -> 'b -> ('c, 'e) result) (l1: 'a list) (l2: 'b list): ('c list, 'e) result =
+  let* reversed =
+    List.fold_left2
+      (fun (so_far: ('c list, 'e) result) (a1: 'a) (a2: 'b) ->
+        let* rs = so_far in
+        let* r = f a1 a2 in
+        Ok (r :: rs))
+      (Ok []) l1 l2
+  in
+  Ok (List.rev reversed)
 
 (* A function named try_ returns a failed match as a value, the error that
    reports it. Two callers go on after a failure. The instance lookup tries
@@ -175,11 +176,11 @@ let rec try_match_type (ctx: ctx) (a: ty) (b: ty): (type_bindings, error) result
          Error (Type (TypeMismatch { expected = a; actual = b })))
   | FnPtr (args, rt) ->
      (match b with
-      | FnPtr (args', rt') ->
+      | FnPtr (args', rt') when List.length args = List.length args' ->
          try_match_type_list ctx (rt :: args) (rt' :: args')
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
-      | Pointer _ ->
+      | Pointer _ | FnPtr _ ->
          Error (Type (TypeMismatch { expected = a; actual = b })))
 
 and try_match_type_var (ctx: ctx) (tv: type_var) (ty: ty): (type_bindings, error) result =

@@ -171,15 +171,14 @@ let overlapping_instances (place: place) (a: ty) (b: ty): bool =
   | Pointer _ ->
      (match b with
       | Pointer _ -> true
-      (* Issue #122: a Pointer instance overlaps an instance for any other
-         type. These should be false; they stay true until the issue is fixed
-         (pinned by 037-typeclass-and-environment-paths/013). *)
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
-      | FnPtr _ -> true)
-  | FnPtr _ ->
+      | FnPtr _ -> false)
+  | FnPtr (args, _) ->
+     (* The argument of an instance has distinct type variables for arguments,
+        so two function pointer types overlap when they have as many. *)
      (match b with
-      | FnPtr _ -> true
+      | FnPtr (args', _) -> List.length args = List.length args'
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
       | Pointer _ -> false)
