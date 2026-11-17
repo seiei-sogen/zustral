@@ -1,10 +1,11 @@
 (*
    Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Modified in the Zustral project, a fork of Austral.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
-open Austral_core
+open Zustral_core
 open CliUtil
 open CliParser
 open CliEngine
@@ -14,7 +15,7 @@ let rec main (args: string list): unit =
   try
     main' args;
     exit 0
-  with Austral_error error ->
+  with Zustral_error error ->
     report_and_exit ErrorReportPlain error
 
 and main' (args: string list): unit =

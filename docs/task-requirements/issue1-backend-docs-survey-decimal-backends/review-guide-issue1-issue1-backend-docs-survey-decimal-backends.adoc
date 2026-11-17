@@ -33,7 +33,7 @@
 
 入力:: 引数なし（照合）か `--record`（記録の作り直し）。環境変数 `ZUSTRAL_BUILD_TIMEOUT`（既定 600 秒）。
 外部 I/O:: `nix build` で固定した nixpkgs（rev `674a2028661e`）の gcc、clang、mpdecimal を取る。`curl` で libdfp（GitHub の tarball）と Intel DFP（netlib の tarball）を毎回取得し、sha256 を照合して一時ディレクトリでビルドする。`nix develop <リポジトリ直下> --command make` で Zustral コンパイラをビルドする。
-一時ファイル:: すべて `mktemp -d` の `$T` に置き、`trap` で終了時に消す。例外は Zustral の `make` が作る `austral`、`_build/`、`lib/BuiltInModules.ml` で、どれも `.gitignore` 済み。
+一時ファイル:: すべて `mktemp -d` の `$T` に置き、`trap` で終了時に消す。例外は Zustral の `make` が作る `zustral`、`_build/`、`lib/BuiltInModules.ml` で、どれも `.gitignore` 済み。
 出力:: プローブごとに1行の結果と、不一致なら差分。最後に `一致 N / 不一致 M / 未実行 K`。
 終了状態:: 不一致が1件以上なら 1、それ以外は 0。未実行だけでは 0 のまま。
 早期終了:: ない。1つのプローブが失敗しても次へ進む。再試行もしない。
@@ -83,7 +83,7 @@ image::review-guide-issue1-issue1-backend-docs-survey-decimal-backends-ffi-probe
 |`run.sh` の `build`
 |系統ごとのコンパイルとリンク。すべて `-fwrapv` 付き（Zustral の生成コードと同じ条件）
 |id、作業ディレクトリ → `$d/bin`
-|コンパイラの起動。`ffi` は一時ディレクトリで `austral compile`
+|コンパイラの起動。`ffi` は一時ディレクトリで `zustral compile`
 |`run.sh` の `execute`
 |プローブを実行し、出力の末尾に `exit=N` を足す
 |id → `out1` / `out2`

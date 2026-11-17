@@ -1,83 +1,83 @@
-{0 Austral Boostrapping Compiler}
+{0 Zustral Boostrapping Compiler}
 
 {1 Common}
 
 Code used throughout the compiler.
 
-- {!Austral_core.Identifier}
-- {!Austral_core.IdentifierMap}
-- {!Austral_core.Common}
-- {!Austral_core.Span}
-- {!Austral_core.SourceContext}
-- {!Austral_core.ErrorText}
-- {!Austral_core.Error}
-- {!Austral_core.Util}
-- {!Austral_core.StringSet}
+- {!Zustral_core.Identifier}
+- {!Zustral_core.IdentifierMap}
+- {!Zustral_core.Common}
+- {!Zustral_core.Span}
+- {!Zustral_core.SourceContext}
+- {!Zustral_core.ErrorText}
+- {!Zustral_core.Error}
+- {!Zustral_core.Util}
+- {!Zustral_core.StringSet}
 
 {1 Frontend}
 
 The compiler frontend.
 
-- {!Austral_core.Cst}
-- {!Austral_core.CstUtil}
-- {!Austral_core.Ast}
-- {!Austral_core.Combined}
-- {!Austral_core.Linked}
-- {!Austral_core.Lexer}
-- {!Austral_core.Parser}
-- {!Austral_core.ParserInterface}
-- {!Austral_core.AbstractionPass}
-- {!Austral_core.CombiningPass}
-- {!Austral_core.Escape}
-- {!Austral_core.ExtractionPass}
-- {!Austral_core.Imports}
-- {!Austral_core.ImportResolution}
-- {!Austral_core.Qualifier}
+- {!Zustral_core.Cst}
+- {!Zustral_core.CstUtil}
+- {!Zustral_core.Ast}
+- {!Zustral_core.Combined}
+- {!Zustral_core.Linked}
+- {!Zustral_core.Lexer}
+- {!Zustral_core.Parser}
+- {!Zustral_core.ParserInterface}
+- {!Zustral_core.AbstractionPass}
+- {!Zustral_core.CombiningPass}
+- {!Zustral_core.Escape}
+- {!Zustral_core.ExtractionPass}
+- {!Zustral_core.Imports}
+- {!Zustral_core.ImportResolution}
+- {!Zustral_core.Qualifier}
 
 {1 Middle}
 
 The compiler's middle end.
 
-- {!Austral_core.Id}
-- {!Austral_core.EnvTypes}
-- {!Austral_core.Env}
-- {!Austral_core.Region}
-- {!Austral_core.Tast}
-- {!Austral_core.TastUtil}
-- {!Austral_core.TypeBindings}
-- {!Austral_core.TypeMatch}
-- {!Austral_core.Type}
-- {!Austral_core.TypeParser}
-- {!Austral_core.TypeSystem}
-- {!Austral_core.TypeVarSet}
-- {!Austral_core.TypeParameter}
-- {!Austral_core.TypeParameters}
-- {!Austral_core.TypeSignature}
-- {!Austral_core.TypeReplace}
-- {!Austral_core.LexEnv}
-- {!Austral_core.TypingPass}
-- {!Austral_core.BuiltIn}
-- {!Austral_core.BuiltInModules}
-- {!Austral_core.LinearityCheck}
-- {!Austral_core.TypeStripping}
-- {!Austral_core.MonoType}
-- {!Austral_core.MonoTypeBindings}
-- {!Austral_core.Mtast}
-- {!Austral_core.Monomorphize}
-- {!Austral_core.ReturnCheck}
+- {!Zustral_core.Id}
+- {!Zustral_core.EnvTypes}
+- {!Zustral_core.Env}
+- {!Zustral_core.Region}
+- {!Zustral_core.Tast}
+- {!Zustral_core.TastUtil}
+- {!Zustral_core.TypeBindings}
+- {!Zustral_core.TypeMatch}
+- {!Zustral_core.Type}
+- {!Zustral_core.TypeParser}
+- {!Zustral_core.TypeSystem}
+- {!Zustral_core.TypeVarSet}
+- {!Zustral_core.TypeParameter}
+- {!Zustral_core.TypeParameters}
+- {!Zustral_core.TypeSignature}
+- {!Zustral_core.TypeReplace}
+- {!Zustral_core.LexEnv}
+- {!Zustral_core.TypingPass}
+- {!Zustral_core.BuiltIn}
+- {!Zustral_core.BuiltInModules}
+- {!Zustral_core.LinearityCheck}
+- {!Zustral_core.TypeStripping}
+- {!Zustral_core.MonoType}
+- {!Zustral_core.MonoTypeBindings}
+- {!Zustral_core.Mtast}
+- {!Zustral_core.Monomorphize}
+- {!Zustral_core.ReturnCheck}
 
 {1 Backend}
 
 The compiler backend.
 
-- {!Austral_core.CodeGen}
-- {!Austral_core.CRepr}
-- {!Austral_core.CRenderer}
-- {!Austral_core.ExportInstantiation}
+- {!Zustral_core.CodeGen}
+- {!Zustral_core.CRepr}
+- {!Zustral_core.CRenderer}
+- {!Zustral_core.ExportInstantiation}
 
 {1 Integration}
 
 The compiler's large-scale control structures.
 
-- {!Austral_core.Entrypoint}
-- {!Austral_core.Compiler}
+- {!Zustral_core.Entrypoint}
+- {!Zustral_core.Compiler}

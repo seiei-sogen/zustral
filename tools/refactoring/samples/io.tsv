@@ -21,7 +21,7 @@ count	  flush stdout
 count	  let lexbuf = Lexing.from_channel ch in
 count	  let args = Array.to_list Sys.argv in
 count	  let pid = Unix.getpid () in
-count	  let path = Filename.temp_file "austral" ".c" in
+count	  let path = Filename.temp_file "zustral" ".c" in
 count	  In_channel.with_open_bin path In_channel.input_all
 count	  let text = read_file_to_string path in
 count	  write_string_to_file path text

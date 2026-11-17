@@ -32,7 +32,7 @@ A path expression is:
  1. **Rule P2:** as a corollary of the above exception , the type of a path must
     be in the `Free` universe.
     1. Rationale: if paths could end in linear values, then we could duplicate them, like so:
-    ```austral
+    ```zustral
     let x1: Bar := foo.bar; -- foo not consumed
     let x2: Bar := foo.bar; -- bar loaded twice
     ```
@@ -122,7 +122,7 @@ An L-value is either:
    side of the assignment.
 1. **Rule L2:** the type of an L-value must be in the `Free` universe:
    1. Rationale: consider:
-      ```austral
+      ```zustral
       -- `Foo` is a linear type
       let l: Foo := f();
       -- The original value of `l` is overwritten.

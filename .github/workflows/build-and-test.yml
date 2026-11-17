@@ -100,12 +100,12 @@ jobs:
       - name: upload compiler binary
         uses: actions/upload-artifact@v4
         with:
-          name: austral-linux-bin
-          path: austral
+          name: zustral-linux-bin
+          path: zustral
           retention-days: 1
 
       - name: clean
         run: make clean
 
       - name: assert executable does not exist
-        run: test ! -f austral
+        run: test ! -f zustral

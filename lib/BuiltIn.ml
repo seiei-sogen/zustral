@@ -1,5 +1,6 @@
 (*
    Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Modified in the Zustral project, a fork of Austral.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -7,7 +8,7 @@
 open Identifier
 open Cst
 
-(* Austral.Pervasive *)
+(* Zustral.Pervasive *)
 
 let pervasive_module_name = make_mod_name BuiltInNames.pervasive_module
 
@@ -17,7 +18,7 @@ let pervasive_imports =
       List.map (fun name -> ConcreteImport (make_ident name, None)) BuiltInNames.pervasive_import_names
     )
 
-(* Austral.Memory *)
+(* Zustral.Memory *)
 
 let memory_module_name = make_mod_name BuiltInNames.memory_module
 

@@ -1,13 +1,13 @@
 # One line of OCaml per row, after the verdict the column names must give it.
 # count: a string literal on the line names something built in. skip: none does.
 count	  let name = make_ident "Option" in
-count	  make_mod_name "Austral.Memory"
+count	  make_mod_name "Zustral.Memory"
 count	  | "Unit" -> Some Unit
 count	  | "Int8" | "Int16" ->
 count	  | "abort" -> true
 count	  | "Buffer" -> true
 count	  if name = "Foreign_Import" then
-count	  if s <> "Austral.Pervasive" then
+count	  if s <> "Zustral.Pervasive" then
 count	  if String.equal s "Unit" then
 count	  if String.equal (ident_string name) "printLn" then
 count	  if String.equal s "Buffer" then

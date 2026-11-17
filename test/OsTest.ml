@@ -1,11 +1,12 @@
 (*
    Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Modified in the Zustral project, a fork of Austral.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 open OUnit2
-open Austral_cli.Os
+open Zustral_cli.Os
 open TestUtil
 
 let test_run_command _ =
@@ -18,9 +19,9 @@ let test_run_command _ =
 (* `run_command` never sees a stopped process: it waits for the command to
    finish. *)
 let test_exit_code _ =
-  eq 3 (Austral_cli.ProcessStatus.exit_code (Unix.WEXITED 3));
-  eq Sys.sigkill (Austral_cli.ProcessStatus.exit_code (Unix.WSIGNALED Sys.sigkill));
-  eq Sys.sigstop (Austral_cli.ProcessStatus.exit_code (Unix.WSTOPPED Sys.sigstop))
+  eq 3 (Zustral_cli.ProcessStatus.exit_code (Unix.WEXITED 3));
+  eq Sys.sigkill (Zustral_cli.ProcessStatus.exit_code (Unix.WSIGNALED Sys.sigkill));
+  eq Sys.sigstop (Zustral_cli.ProcessStatus.exit_code (Unix.WSTOPPED Sys.sigstop))
 
 let suite =
   "Operating system" >::: [

@@ -1251,7 +1251,7 @@ glibc の <code>printf</code> には <code>_Decimal128</code> の書式がない
 <p>手順1: <code>git diff --stat master&#8230;&#8203;HEAD</code> に <code>lib/</code>、<code>standard/</code>、<code>docs/wayfinder/</code> が現れないことを確かめる（NFR-002）。</p>
 </li>
 <li>
-<p>手順2: <code>git worktree add $TMPDIR/clean-run &lt;commit&gt;</code> で作った新しい作業ツリーで <code>docs/research/decimal-backend-survey/run.sh</code> を1回実行する（NFR-003 の「クリーンな作業ツリー」。commit し忘れたファイルと、ビルド済みの <code>austral</code> への依存を見つける）。確かめたら <code>git worktree remove</code> で消す。</p>
+<p>手順2: <code>git worktree add $TMPDIR/clean-run &lt;commit&gt;</code> で作った新しい作業ツリーで <code>docs/research/decimal-backend-survey/run.sh</code> を1回実行する（NFR-003 の「クリーンな作業ツリー」。commit し忘れたファイルと、ビルド済みの <code>zustral</code> への依存を見つける）。確かめたら <code>git worktree remove</code> で消す。</p>
 </li>
 <li>
 <p>手順3: <code>gh issue comment 1</code> で答えの要点とレポート・PR へのリンクを投稿し、<code>gh issue close 1</code> で閉じる。issue #9 は、<code>gh issue view 9 --json body -q .body</code> で本文を <code>$TMPDIR</code> のファイルへ取り出し、「ここまでの決定」の「（まだない）」の1行だけを規定の1行に置き換えたファイルを作り、<code>gh issue edit 9 --body-file</code> で戻す。<code>gh</code> には <code>GH_TOKEN=$(gh auth token -u seiei-sogen)</code> を付ける。</p>
@@ -1568,7 +1568,7 @@ glibc の <code>printf</code> には <code>_Decimal128</code> の書式がない
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">T8</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">手順1: commit <code>a3546781</code> で <code>git diff --stat master&#8230;&#8203;HEAD&#8201;&#8212;&#8201;lib standard docs/wayfinder</code> の出力が空。手順2: <code>git worktree add</code> で <code>$TMPDIR/clean-run</code> に commit <code>a3546781</code> を取り出し（無視されたファイルが0件、<code>austral</code> も <code>_build/</code> もない状態）、<code>/tmp</code> から <code>run.sh</code> を絶対パスで実行した。22件の結果行と <code>一致 18 / 不一致 0 / 未実行 4</code>、終了状態 0。未実行は <code>d128@clang-<strong></code> と <code>libdfp@clang-</strong></code> の4件だけ。確かめた後に <code>git worktree remove</code> で消した。手順3: issue #1 に解消コメント（0004・0005・0008 の要点、commit 固定のレポートへのリンク、PR #11 へのリンク）を投稿し、クローズした（<code>state</code> は <code>CLOSED</code>、<code>stateReason</code> は <code>COMPLETED</code>）。issue #9 の本文は、編集前と編集後の <code>diff</code> が「（まだない）」の1行の置き換え（<code>29c29</code>）だけである</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">手順1: commit <code>a3546781</code> で <code>git diff --stat master&#8230;&#8203;HEAD&#8201;&#8212;&#8201;lib standard docs/wayfinder</code> の出力が空。手順2: <code>git worktree add</code> で <code>$TMPDIR/clean-run</code> に commit <code>a3546781</code> を取り出し（無視されたファイルが0件、<code>zustral</code> も <code>_build/</code> もない状態）、<code>/tmp</code> から <code>run.sh</code> を絶対パスで実行した。22件の結果行と <code>一致 18 / 不一致 0 / 未実行 4</code>、終了状態 0。未実行は <code>d128@clang-<strong></code> と <code>libdfp@clang-</strong></code> の4件だけ。確かめた後に <code>git worktree remove</code> で消した。手順3: issue #1 に解消コメント（0004・0005・0008 の要点、commit 固定のレポートへのリンク、PR #11 へのリンク）を投稿し、クローズした（<code>state</code> は <code>CLOSED</code>、<code>stateReason</code> は <code>COMPLETED</code>）。issue #9 の本文は、編集前と編集後の <code>diff</code> が「（まだない）」の1行の置き換え（<code>29c29</code>）だけである</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">pass</p></td>
 </tr>
 </tbody>

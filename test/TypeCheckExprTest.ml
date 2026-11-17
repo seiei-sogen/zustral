@@ -1,18 +1,19 @@
 (*
    Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Modified in the Zustral project, a fork of Austral.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 open OUnit2
-open Austral_core
-open Austral_core.Identifier
-open Austral_core.Common
-open Austral_core.Type
-open Austral_core.Error
-open Austral_core.Stages.AstDB
-open Austral_core.Stages.Tast
-module TypeCheckExpr = Austral_core.TypeCheckExpr
+open Zustral_core
+open Zustral_core.Identifier
+open Zustral_core.Common
+open Zustral_core.Type
+open Zustral_core.Error
+open Zustral_core.Stages.AstDB
+open Zustral_core.Stages.Tast
+module TypeCheckExpr = Zustral_core.TypeCheckExpr
 
 let example: module_name = make_mod_name "Example"
 
@@ -67,7 +68,7 @@ let call_make: aexpr = FunctionCall (named "make", Positional [])
 let error_of (f: unit -> texpr): error option =
   match f () with
   | _ -> None
-  | exception Austral_error (AustralError { error; _ }) -> Some error
+  | exception Zustral_error (ZustralError { error; _ }) -> Some error
 
 let test_literal _ =
   let literal: aexpr = IntConstant three_hundred in

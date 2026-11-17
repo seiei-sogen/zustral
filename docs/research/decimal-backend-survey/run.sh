@@ -85,7 +85,7 @@ fetch() {
     zustral)
       timeout "$ZUSTRAL_BUILD_TIMEOUT" nix develop "$ROOT" --command make -C "$ROOT" >"$T/zustral.log" 2>&1
       case $? in
-        0) DEP[$1]=$ROOT/austral ;;
+        0) DEP[$1]=$ROOT/zustral ;;
         124) DEP_ERR[$1]="上限 $ZUSTRAL_BUILD_TIMEOUT 秒を超えた" ;;
         *) DEP_ERR[$1]=$(fail_tail "$T/zustral.log") ;;
       esac ;;

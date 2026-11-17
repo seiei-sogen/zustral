@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+# Modified in the Zustral project, a fork of Austral.
 # See LICENSE file for details.
 #
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -53,7 +54,7 @@ def run_directory() -> str:
     """
     global _run_directory
     if _run_directory is None:
-        _run_directory = tempfile.mkdtemp(prefix="austral_e2e_")
+        _run_directory = tempfile.mkdtemp(prefix="zustral_e2e_")
     return _run_directory
 
 
@@ -166,7 +167,7 @@ class TestFail(TestResult):
     Represents a test that failed.
     """
 
-    austral_cmd: list[str] | None
+    zustral_cmd: list[str] | None
     cc_cmd: list[str] | None
     reason: str
     outputs: list[tuple[str, str]]
@@ -174,13 +175,13 @@ class TestFail(TestResult):
     def __init__(
         self,
         test: Test,
-        austral_cmd: list[str] | None,
+        zustral_cmd: list[str] | None,
         cc_cmd: list[str] | None,
         reason: str,
         outputs: list[tuple[str, str]],
     ):
         super().__init__(test)
-        self.austral_cmd = austral_cmd
+        self.zustral_cmd = zustral_cmd
         self.cc_cmd = cc_cmd
         self.reason = reason
         self.outputs = outputs
@@ -228,7 +229,7 @@ def report_fail_details(result: TestFail, stream):
     print("Test:", result.test.name, file=stream)
     print("C File:", result.test.c_path, file=stream)
     print("Bin File:", result.test.bin_path, file=stream)
-    print("Austral command:", try_join(result.austral_cmd), file=stream)
+    print("Zustral command:", try_join(result.zustral_cmd), file=stream)
     print("GCC command:", try_join(result.cc_cmd), file=stream)
     print("Reason:", result.reason, file=stream)
     for key, value in result.outputs:
@@ -272,7 +273,7 @@ def collect_tests() -> list[Test]:
         for test_name in test_names:
             test_dir: str = os.path.join(suite_dir, test_name)
             expected_error: str | None = _get_file_contents(
-                test_dir, "austral-stderr.txt"
+                test_dir, "zustral-stderr.txt"
             )
             expected_output: str | None = _get_file_contents(
                 test_dir, "program-stdout.txt"
@@ -283,7 +284,7 @@ def collect_tests() -> list[Test]:
             cli: str | None = _get_file_contents(test_dir, "cli.txt")
             if (expected_error is not None) and (expected_output is not None):
                 raise ValueError(
-                    "Can't have both `austral-stderr.txt` and `program-stdout.txt` in the same test."
+                    "Can't have both `zustral-stderr.txt` and `program-stdout.txt` in the same test."
                 )
             elif (expected_error is not None) and (expected_output is None):
                 # The test should fail to compile, and the compiler output must
@@ -322,7 +323,7 @@ def collect_tests() -> list[Test]:
                         expected_output=expected_output,
                     )
                 )
-            # There is neither an `austral-stderr.txt` nor an `program-stdout.txt `file.
+            # There is neither an `zustral-stderr.txt` nor an `program-stdout.txt `file.
             else:
                 if program_stderr is None:
                     # The program should compile and run successfully and produce no
@@ -397,7 +398,7 @@ def _test_cmd(test: Test) -> list[str]:
     else:
         body_path: str = os.path.join(test.directory, "Test.zum")
         return [
-            "./austral",
+            "./zustral",
             "compile",
             f"{body_path}",
             "--entrypoint=Test:main",
@@ -423,12 +424,12 @@ def _run_success_test(test: TestSuccess) -> TestResult:
         # Compilation failed.
         return TestFail(
             test=test,
-            austral_cmd=compile_cmd,
+            zustral_cmd=compile_cmd,
             cc_cmd=None,
-            reason="Austral compilation failed, but was expected to succeed.",
+            reason="Zustral compilation failed, but was expected to succeed.",
             outputs=[
-                ("AUSTRAL STDOUT", result.stdout.decode("utf-8")),
-                ("AUSTRAL STDERR", result.stderr.decode("utf-8")),
+                ("ZUSTRAL STDOUT", result.stdout.decode("utf-8")),
+                ("ZUSTRAL STDERR", result.stderr.decode("utf-8")),
             ],
         )
     # The compiler executed successfully. Compile the program with GCC.
@@ -450,7 +451,7 @@ def _run_success_test(test: TestSuccess) -> TestResult:
         # GCC compilation failed.
         return TestFail(
             test=test,
-            austral_cmd=compile_cmd,
+            zustral_cmd=compile_cmd,
             cc_cmd=gcc_cmd,
             reason="GCC compilation failed, but was expected to succeed.",
             outputs=[
@@ -469,7 +470,7 @@ def _run_success_test(test: TestSuccess) -> TestResult:
         # Program did not terminate successfully.
         return TestFail(
             test=test,
-            austral_cmd=compile_cmd,
+            zustral_cmd=compile_cmd,
             cc_cmd=gcc_cmd,
             reason="Program terminated abnormally.",
             outputs=[
@@ -482,7 +483,7 @@ def _run_success_test(test: TestSuccess) -> TestResult:
     # A program that prints its own path prints the run's directory. The
     # expected output names the path the runner used before runs had a
     # directory each.
-    stdout = stdout.replace(os.path.dirname(test.bin_path) + os.sep, "/tmp/austral_e2e_")
+    stdout = stdout.replace(os.path.dirname(test.bin_path) + os.sep, "/tmp/zustral_e2e_")
     if stdout and expected_output:
         # Have output, expected output. Check they match.
         if stdout == expected_output:
@@ -492,7 +493,7 @@ def _run_success_test(test: TestSuccess) -> TestResult:
             # Output mismatch. Error.
             return TestFail(
                 test=test,
-                austral_cmd=compile_cmd,
+                zustral_cmd=compile_cmd,
                 cc_cmd=gcc_cmd,
                 reason="Program produced the wrong stdout.",
                 outputs=[
@@ -504,7 +505,7 @@ def _run_success_test(test: TestSuccess) -> TestResult:
         # Have output, did not expect it. Error.
         return TestFail(
             test=test,
-            austral_cmd=compile_cmd,
+            zustral_cmd=compile_cmd,
             cc_cmd=gcc_cmd,
             reason="Program produced stdout, which we did not expect.",
             outputs=[
@@ -515,7 +516,7 @@ def _run_success_test(test: TestSuccess) -> TestResult:
         # Don't have output, expected it. Error.
         return TestFail(
             test=test,
-            austral_cmd=compile_cmd,
+            zustral_cmd=compile_cmd,
             cc_cmd=gcc_cmd,
             reason="Program did not produce stdout, but we expected it.",
             outputs=[
@@ -549,9 +550,9 @@ def _run_failure_test(test: TestFailure, replace_stderr: bool) -> TestResult:
         # Compilation succeeded.
         return TestFail(
             test=test,
-            austral_cmd=compile_cmd,
+            zustral_cmd=compile_cmd,
             cc_cmd=None,
-            reason="Austral compiler succeeded, but was expected to fail.",
+            reason="Zustral compiler succeeded, but was expected to fail.",
             outputs=[
                 ("EXPECTED STDERR", test.expected_compiler_error),
             ],
@@ -560,16 +561,16 @@ def _run_failure_test(test: TestFailure, replace_stderr: bool) -> TestResult:
     if replace_stderr:
         # If replace_stderr is true, just take the actual stderr and overwrite the expected stderr.
         stderr: str = trim_lines(result.stderr.decode("utf-8"))
-        with open(test.directory + "/austral-stderr.txt", "w") as stream:
+        with open(test.directory + "/zustral-stderr.txt", "w") as stream:
             stream.write(stderr)
     else:
         stderr: str = trim_lines(result.stderr.decode("utf-8"))
         if stderr != trim_lines(test.expected_compiler_error):
             return TestFail(
                 test=test,
-                austral_cmd=compile_cmd,
+                zustral_cmd=compile_cmd,
                 cc_cmd=None,
-                reason="Austral compiler failed, but compiler output does not match what we expected.",
+                reason="Zustral compiler failed, but compiler output does not match what we expected.",
                 outputs=[
                     ("EXPECTED STDERR", test.expected_compiler_error),
                     ("ACTUAL STDERR", stderr),
@@ -595,12 +596,12 @@ def _run_program_failure_test(test: TestProgramFailure) -> TestResult:
         # Compilation failed: print the output.
         return TestFail(
             test=test,
-            austral_cmd=compile_cmd,
+            zustral_cmd=compile_cmd,
             cc_cmd=None,
-            reason="Austral compilation failed, but was expected to succeed.",
+            reason="Zustral compilation failed, but was expected to succeed.",
             outputs=[
-                ("AUSTRAL STDOUT", result.stdout.decode("utf-8")),
-                ("AUSTRAL STDERR", result.stderr.decode("utf-8")),
+                ("ZUSTRAL STDOUT", result.stdout.decode("utf-8")),
+                ("ZUSTRAL STDERR", result.stderr.decode("utf-8")),
             ],
         )
     # The compiler executed successfully. Compile the program with GCC.
@@ -622,7 +623,7 @@ def _run_program_failure_test(test: TestProgramFailure) -> TestResult:
         # GCC compilation failed.
         return TestFail(
             test=test,
-            austral_cmd=compile_cmd,
+            zustral_cmd=compile_cmd,
             cc_cmd=gcc_cmd,
             reason="GCC compilation failed, but was expected to succeed.",
             outputs=[
@@ -641,7 +642,7 @@ def _run_program_failure_test(test: TestProgramFailure) -> TestResult:
         # Program did terminated successfully, but we didn't want that.
         return TestFail(
             test=test,
-            austral_cmd=compile_cmd,
+            zustral_cmd=compile_cmd,
             cc_cmd=gcc_cmd,
             reason="Program terminated successfully, but we expected a failure.",
             outputs=[
@@ -655,7 +656,7 @@ def _run_program_failure_test(test: TestProgramFailure) -> TestResult:
         if stdout != test.expected_program_stdout.strip():
             return TestFail(
                 test=test,
-                austral_cmd=compile_cmd,
+                zustral_cmd=compile_cmd,
                 cc_cmd=gcc_cmd,
                 reason="Program failed as expected, but its stdout was not what we expected",
                 outputs=[
@@ -674,7 +675,7 @@ def _run_program_failure_test(test: TestProgramFailure) -> TestResult:
             # Output mismatch. Error.
             return TestFail(
                 test=test,
-                austral_cmd=compile_cmd,
+                zustral_cmd=compile_cmd,
                 cc_cmd=gcc_cmd,
                 reason="Program produced stderr, but it was not what we expected",
                 outputs=[
@@ -686,7 +687,7 @@ def _run_program_failure_test(test: TestProgramFailure) -> TestResult:
         # Don't have output, expected it. Error.
         return TestFail(
             test=test,
-            austral_cmd=compile_cmd,
+            zustral_cmd=compile_cmd,
             cc_cmd=gcc_cmd,
             reason="Program did not produce stderr, but we expected stderr",
             outputs=[

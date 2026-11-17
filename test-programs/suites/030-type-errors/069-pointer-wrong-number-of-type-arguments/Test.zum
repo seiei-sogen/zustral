@@ -1,6 +1,6 @@
 pragma Unsafe_Module;
 
-import Austral.Memory (Pointer);
+import Zustral.Memory (Pointer);
 
 module body Test is
     function f(a: Pointer[Int32, Int32]): Unit is

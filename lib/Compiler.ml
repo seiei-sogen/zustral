@@ -1,5 +1,6 @@
 (*
    Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Modified in the Zustral project, a fork of Austral.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -132,8 +133,8 @@ let finish: Pipeline.finish = fun (env: env) (units: c_unit list) (entrypoint: e
   Ok (CProgram { prelude = CSource prelude_c; units = units @ [wrapper_unit; wrappers]; entrypoint })
 
 let empty_compiler (): compiler Outcome.t =
-  (* We have to compile the Austral.Pervasive module, followed by
-     Austral.Memory, since the latter uses declarations from the former. *)
+  (* We have to compile the Zustral.Pervasive module, followed by
+     Zustral.Memory, since the latter uses declarations from the former. *)
   let c = Compiler (empty_env, []) in
   let* (c: compiler) = compile_mod c (fake_mod_source pervasive_interface_source pervasive_body_source) in
   compile_mod c (fake_mod_source memory_interface_source memory_body_source)

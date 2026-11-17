@@ -1,10 +1,11 @@
 (*
    Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Modified in the Zustral project, a fork of Austral.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
-open Austral_core
+open Zustral_core
 open CliParser
 open Version
 open CRenderer
@@ -71,7 +72,7 @@ let parse_source_files (mods: mod_source list): (Pipeline.module_source list * s
 
 (** Write the error to stderr and to error.html, then exit with a failure
     status. *)
-let report_and_exit (mode: error_reporting_mode) (error: austral_error): 'a =
+let report_and_exit (mode: error_reporting_mode) (error: zustral_error): 'a =
   let text: string =
     match mode with
     | ErrorReportPlain ->
@@ -97,10 +98,10 @@ let rec exec (cmd: cmd): unit =
      exec_compile modules target error_reporting_mode
 
 and print_usage _: unit =
-  print_endline ("austral " ^ version_string);
+  print_endline ("zustral " ^ version_string);
   print_endline "";
   print_endline "Usage:";
-  print_endline "    austral [options] <command>";
+  print_endline "    zustral [options] <command>";
   print_endline "";
   print_endline "Options:";
   print_endline "    --help     Print this text.";
@@ -113,10 +114,10 @@ and print_version _: unit =
   print_endline version_string
 
 and print_compile_usage _: unit =
-  print_endline "austral compile";
+  print_endline "zustral compile";
   print_endline "";
   print_endline "Usage:";
-  print_endline "    austral compile [options] <module...>";
+  print_endline "    zustral compile [options] <module...>";
   print_endline "";
   print_endline "Options:";
   print_endline "    --help          Print this text.";
@@ -145,8 +146,8 @@ and exec_compile (modules: mod_source list) (target: target) (error_reporting_mo
         after it. *)
      report_and_exit error_reporting_mode (try_adding_source_ctx first source_map)
 
-and try_adding_source_ctx (error: austral_error) (source_map: source_map): austral_error =
-  let (AustralError { location; _ }) = error in
+and try_adding_source_ctx (error: zustral_error) (source_map: source_map): zustral_error =
+  let (ZustralError { location; _ }) = error in
   match location_span location with
   | Some span ->
      let (Span { filename; _ }) = span in
@@ -170,7 +171,7 @@ and exec_target (mods: Pipeline.module_source list) (target: target): unit Outco
      let* (code: string) = compile_to_c mods (Some entrypoint) in
      Outcome.catch (fun () ->
          (* Write the output to a temporary file. *)
-         let cfile: string = Filename.temp_file "austral_" ".c" in
+         let cfile: string = Filename.temp_file "zustral_" ".c" in
          write_string_to_file cfile code;
          (* Invoke `cc`. *)
          let _ = compile_c_code cfile bin_path in

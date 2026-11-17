@@ -15,4 +15,4 @@
   UnexecutedWordingTest
   UnexecutedDeclarationsTest
   UnexecutedCheckerTest)
- (libraries austral_core austral_cli ounit2))
+ (libraries zustral_core zustral_cli ounit2))

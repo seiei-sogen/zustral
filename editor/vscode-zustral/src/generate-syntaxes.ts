@@ -1,11 +1,11 @@
-import grammar from "./austral.tmLanguage";
+import grammar from "./zustral.tmLanguage";
 import { writeFile } from "fs";
 import * as path from "path";
 const syntaxPath = path.join(
   __dirname,
   "..",
   "syntaxes",
-  "austral.tmLanguage.json"
+  "zustral.tmLanguage.json"
 );
 
 writeFile(syntaxPath, JSON.stringify(grammar, undefined, 4), (err) => {

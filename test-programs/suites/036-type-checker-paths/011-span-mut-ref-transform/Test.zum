@@ -1,6 +1,6 @@
 pragma Unsafe_Module;
 
-import Austral.Memory (
+import Zustral.Memory (
     Pointer,
     Address,
     allocateBuffer,

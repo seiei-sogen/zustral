@@ -1,10 +1,10 @@
 exit: 0
 files: 
 --- stdout
-austral 0.2.0
+zustral 0.2.0
 
 Usage:
-    austral [options] <command>
+    zustral [options] <command>
 
 Options:
     --help     Print this text.

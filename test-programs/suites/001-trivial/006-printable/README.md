@@ -1,1 +1,1 @@
-Test of the `Printable` typeclass in `Austral.Pervasive`.
+Test of the `Printable` typeclass in `Zustral.Pervasive`.

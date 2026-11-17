@@ -1,5 +1,6 @@
 (*
    Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Modified in the Zustral project, a fork of Austral.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -28,7 +29,7 @@ let binding_names (bindings: qbinding list): identifier list =
 let with_variables (variables: variables_in_scope) (names: identifier list): variables_in_scope =
   List.fold_left (fun variables name -> IdentifierSet.add name variables) variables names
 
-(* Whether the call is one to `abort` of `Austral.Pervasive`. The combining
+(* Whether the call is one to `abort` of `Zustral.Pervasive`. The combining
    pass qualified the name of what is called with the imports of the module,
    whatever variables were in scope. The type checker calls a variable of that
    name before any declaration (TypeCheckExpr.augment_call): where one is in

@@ -673,11 +673,11 @@ body {
 <pre class="highlight"><code class="language-sh" data-lang="sh">git archive HEAD | tar -x -C $S/exp
 nix develop path:$S/exp --command bash -c 'ocaml -version; dune --version'
 nix develop path:$S/exp --command bash -c \
-  'make clean &gt;/dev/null; export DUNE_CACHE=disabled; time make &gt;/dev/null 2&gt;&amp;1; ./austral --version'</code></pre>
+  'make clean &gt;/dev/null; export DUNE_CACHE=disabled; time make &gt;/dev/null 2&gt;&amp;1; ./zustral --version'</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>結果: OCaml 4.14.1、dune 3.8.1。クリーンビルドは <code>real 0m2.360s</code>（user 7.349s）で、<code>austral 0.2.0</code> ができた。
+<p>結果: OCaml 4.14.1、dune 3.8.1。クリーンビルドは <code>real 0m2.360s</code>（user 7.349s）で、<code>zustral 0.2.0</code> ができた。
 dev shell の初回取得はこの測定より前に済んでおり、その時間は測っていない。
 作業ツリーの flake でも <code>nix develop &lt;worktree&gt; --command bash -c 'ocaml -version'</code> が 0.32 秒で通り、<code>git status</code> は変わらなかった。</p>
 </div>
@@ -686,8 +686,8 @@ dev shell の初回取得はこの測定より前に済んでおり、その時�
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-austral" data-lang="austral">pragma Unsafe_Module;
-import Austral.Memory (Address);
+<pre class="highlight"><code class="language-zustral" data-lang="zustral">pragma Unsafe_Module;
+import Zustral.Memory (Address);
 module body Test is
     pragma Foreign_Import(External_Name =&gt; "mpd_version");
     function Mpd_Version(): Address[Nat8] is
@@ -704,7 +704,7 @@ end module body.</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">austral compile Test.zum --entrypoint=Test:main --target-type=c --output=gen.c
+<pre class="highlight"><code class="language-sh" data-lang="sh">zustral compile Test.zum --entrypoint=Test:main --target-type=c --output=gen.c
 nix shell $NIXPKGS#gcc --command bash -c \
   "gcc -fwrapv -Wno-builtin-declaration-mismatch gen.c -L$OUT/lib -Wl,-rpath,$OUT/lib -lmpdec -lm -o t &amp;&amp; ./t"</code></pre>
 </div>
@@ -712,7 +712,7 @@ nix shell $NIXPKGS#gcc --command bash -c \
 <div class="paragraph">
 <p>結果: <code>4.0.1</code> を出力し、終了状態 0。
 リンクしたのは固定した nixpkgs の gcc 16.2.0 で、設計がプローブに使うものと同じである。
-<code>austral compile</code> は dev shell の外で実行しており、ビルドした <code>austral</code> は dev shell なしで動く。
+<code>zustral compile</code> は dev shell の外で実行しており、ビルドした <code>zustral</code> は dev shell なしで動く。
 生成 C は、外部関数をラッパー関数の中の局所的な <code>extern au_nat8_t* mpd_version();</code> として宣言していた。</p>
 </div>
 </div>
@@ -933,7 +933,7 @@ REQ-003 の例の「34桁」は、事前調査で gcc 13.3.0 の <code><em>DEC12
 </table>
 <div class="paragraph">
 <p>ビルドの中間物、ダウンロードしたソース、実行時の出力は <code>mktemp -d</code> で作る一時ディレクトリに置き、終了時に消す。
-例外は Zustral コンパイラで、リポジトリの <code>make</code> がリポジトリ直下に <code>austral</code>、<code>_build/</code>、<code>lib/BuiltInModules.ml</code> を作る。
+例外は Zustral コンパイラで、リポジトリの <code>make</code> がリポジトリ直下に <code>zustral</code>、<code>_build/</code>、<code>lib/BuiltInModules.ml</code> を作る。
 3つとも <code>.gitignore</code> 済みで、作業ツリーの <code>git status</code> は変わらない。</p>
 </div>
 </div>
@@ -1095,7 +1095,7 @@ REQ-003 の例の「34桁」は、事前調査で gcc 13.3.0 の <code><em>DEC12
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>ffi-unit-return</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Zustral FFI の制約</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>zustral</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>austral compile probes/ffi/UnitReturn.zum &#8230;&#8203;</code> の出力そのもの</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>zustral compile probes/ffi/UnitReturn.zum &#8230;&#8203;</code> の出力そのもの</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>expected/ffi-unit-return.txt</code></p></td>
 </tr>
 </tbody>
@@ -1126,7 +1126,7 @@ Zustral の生成コードが常に <code>-fwrapv</code> 付きでビルドさ�
 レポートは <code>〔probe: mpd / div_1_3〕</code> の形で、記録ファイルと行のキーを根拠として引く（REQ-003、REQ-005）。
 ランナーは、プローブを <code>2&gt;&amp;1</code> で標準出力と標準エラーを1つの流れにして実行し、その後ろに <code>exit=&lt;終了コード&gt;</code> の1行を足したものを「実際の出力」とする。
 異常終了も、コンパイラが拒むことを示すプローブ（<code>ffi-unit-return</code>）も、同じ照合で扱える。
-<code>ffi-unit-return</code> にはビルドの段がなく、<code>austral compile</code> そのものを「実行」として2回行う。</p>
+<code>ffi-unit-return</code> にはビルドの段がなく、<code>zustral compile</code> そのものを「実行」として2回行う。</p>
 </div>
 <div class="paragraph">
 <p>1プローブの結果は次の3つのどれかである。</p>
@@ -1399,7 +1399,7 @@ mpdecimal と Intel DFP のライブラリ本体は、それぞれ nixpkgs と�
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><code>Probe.zum</code> を一時ディレクトリ <code>$T</code> へ複写し、そこで <code>austral compile Probe.zum --entrypoint=Probe:main --target-type=c --output=ffi.c</code> を実行して C を出す。</p>
+<p><code>Probe.zum</code> を一時ディレクトリ <code>$T</code> へ複写し、そこで <code>zustral compile Probe.zum --entrypoint=Probe:main --target-type=c --output=ffi.c</code> を実行して C を出す。</p>
 </li>
 <li>
 <p><code>gcc -fwrapv -Wno-builtin-declaration-mismatch $T/ffi.c probes/ffi/shim.c -I&lt;mpdecimal.dev&gt;/include -L&lt;mpdecimal.out&gt;/lib -Wl,-rpath,&lt;mpdecimal.out&gt;/lib -lmpdec -lm</code> でリンクする。<code>-fwrapv -Wno-builtin-declaration-mismatch</code> と <code>-lm</code> は <code>test-programs/runner.py:400-408</code> の前例に合わせ、mpdecimal の <code>-I</code>、<code>-L</code>、<code>-rpath</code> を足す。</p>
@@ -1559,7 +1559,7 @@ Intel DFP は <code>BID_UINT128</code> を値で渡すか、<code>CALL_BY_REF=1<
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">コンパイラをビルドできなければ理由を残して C だけで確かめる</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ZUSTRAL_BUILD_TIMEOUT=0.01</code> で実行すると <code>ffi</code> が未実行と理由付きで表示される。<code>timeout</code> は <code>nix develop</code> の起動ごと包み、その起動だけで約0.3秒かかる（実験1）ので、<code>austral</code> がビルド済みでも上限を超える。<code>0</code> は GNU timeout では無制限を意味するので使わない。レポートには、その場合に C だけの根拠に切り替える旨と、このマシンではビルドできた事実を書く。</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ZUSTRAL_BUILD_TIMEOUT=0.01</code> で実行すると <code>ffi</code> が未実行と理由付きで表示される。<code>timeout</code> は <code>nix develop</code> の起動ごと包み、その起動だけで約0.3秒かかる（実験1）ので、<code>zustral</code> がビルド済みでも上限を超える。<code>0</code> は GNU timeout では無制限を意味するので使わない。レポートには、その場合に C だけの根拠に切り替える旨と、このマシンではビルドできた事実を書く。</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">結果が一致しない組み合わせは隠さず示される</p></td>

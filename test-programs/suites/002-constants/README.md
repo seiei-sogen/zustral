@@ -1,1 +1,1 @@
-Tests of Austral's constant functionality.
+Tests of Zustral's constant functionality.

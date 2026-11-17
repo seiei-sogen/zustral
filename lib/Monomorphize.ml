@@ -1,5 +1,6 @@
 (*
    Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Modified in the Zustral project, a fork of Austral.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -676,7 +677,7 @@ and get_function_definition (env: env) (id: function_id): (typarams * value_para
      (typarams, value_params, rt, body)
   | BodyNotAttached | Foreign _ | ForeignGeneric ->
      (* Depends on the stage: the body extraction pass stores the body of every
-        function written in Austral. A foreign function cannot have type
+        function written in Zustral. A foreign function cannot have type
         parameters (030/055) or be exported, so no monomorph of one is made. *)
      internal_err NoSpan ("function `" ^ (ident_string name) ^ "` has no body")
 

@@ -1,5 +1,6 @@
 (*
    Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Modified in the Zustral project, a fork of Austral.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -10,25 +11,25 @@
    monomorph whose declaration has no body, a node the earlier stages never
    build. Each test builds the value by hand. *)
 open OUnit2
-open Austral_core
-open Austral_core.Identifier
-open Austral_core.Common
-open Austral_core.Type
-open Austral_core.EnvTypes
-open Austral_core.Error
-open Austral_core.MonoType
-open Austral_core.Stages.Mtast
-module InstanceIdSet = Austral_core.InstanceIdSet.InstanceIdSet
+open Zustral_core
+open Zustral_core.Identifier
+open Zustral_core.Common
+open Zustral_core.Type
+open Zustral_core.EnvTypes
+open Zustral_core.Error
+open Zustral_core.MonoType
+open Zustral_core.Stages.Mtast
+module InstanceIdSet = Zustral_core.InstanceIdSet.InstanceIdSet
 
 let error_of (f: unit -> 'a): error option =
   match f () with
   | _ -> None
-  | exception Austral_error (AustralError { error; _ }) -> Some error
+  | exception Zustral_error (ZustralError { error; _ }) -> Some error
 
 let outcome_error (outcome: 'a Outcome.t): error option =
   match outcome with
   | Ok _ -> None
-  | Error (AustralError { error; _ }, _) -> Some error
+  | Error (ZustralError { error; _ }, _) -> Some error
 
 let internal (message: string): error option =
   Some (Internal message)

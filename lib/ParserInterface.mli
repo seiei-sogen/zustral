@@ -1,5 +1,6 @@
 (*
    Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Modified in the Zustral project, a fork of Austral.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -14,5 +15,5 @@ val parse_module_int : concrete_module_interface Pipeline.parse
 (** Parse the text of a module body. *)
 val parse_module_body : concrete_module_body Pipeline.parse
 
-(** Parse an expression. Raises [Austral_error] if it does not parse. *)
+(** Parse an expression. Raises [Zustral_error] if it does not parse. *)
 val parse_expr : string -> cexpr

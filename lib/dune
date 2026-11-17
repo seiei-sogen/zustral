@@ -3,9 +3,9 @@
  (modules Parser))
 
 (library
- (name austral_core)
- (public_name austral.austral_core)
- (synopsis "The bootstrapping compiler for Austral.")
+ (name zustral_core)
+ (public_name zustral.zustral_core)
+ (synopsis "The bootstrapping compiler for Zustral.")
  (libraries str zarith yojson)
  ; Pipeline only names the types of the stages.
  (modules_without_implementation Pipeline)

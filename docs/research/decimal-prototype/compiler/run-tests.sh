@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# usage: run-tests.sh <path-to-austral-binary>
+# usage: run-tests.sh <path-to-zustral-binary>
 #
 # Each tests/NAME.zum has exactly one sibling that says what must happen:
 #   NAME.expected  compiles, exits 0, and stdout equals the file
@@ -9,11 +9,11 @@
 set -u
 
 if [ $# -ne 1 ] || [ ! -x "$1" ]; then
-  echo "usage: $0 <path-to-austral-binary>" >&2
+  echo "usage: $0 <path-to-zustral-binary>" >&2
   exit 2
 fi
 
-austral=$(realpath "$1")
+zustral=$(realpath "$1")
 tests=$(dirname "$(realpath "$0")")/tests
 pass=0
 fail=0
@@ -32,14 +32,14 @@ for src in "$tests"/*.zum; do
   name=$(basename "$src" .zum)
   module=$(sed -n 's/^module body \([A-Za-z0-9_.]*\) is.*/\1/p' "$src" | head -1)
   # The compiler writes error.html and calltree.html into the current directory,
-  # and leaves its intermediate austral_XXXXXX.c in $TMPDIR.
+  # and leaves its intermediate zustral_XXXXXX.c in $TMPDIR.
   work=$(mktemp -d)
   with=()
   if [ -f "$tests/$name.with" ]; then
     cp -r "$tests/modules" "$work/modules"
     read -r -a with < "$tests/$name.with"
   fi
-  compile_output=$(cd "$work" && TMPDIR="$work" "$austral" compile ${with[@]+"${with[@]}"} "$src" --entrypoint="$module:main" --output="$work/prog" 2>&1)
+  compile_output=$(cd "$work" && TMPDIR="$work" "$zustral" compile ${with[@]+"${with[@]}"} "$src" --entrypoint="$module:main" --output="$work/prog" 2>&1)
   compile_status=$?
 
   if [ -f "$tests/$name.error" ]; then

@@ -25,7 +25,7 @@ digraph G {
 
         parse_int[label="parse_module_int"]
         parse_body[label="parse_module_body"]
-        pervasive[label="append the Austral.Pervasive import (Compiler.ml)"]
+        pervasive[label="append the Zustral.Pervasive import (Compiler.ml)"]
         combine[label="combine / body_as_combined"]
         check_returns[label="check_ends_in_return"]
         desugar[label="desugar"]

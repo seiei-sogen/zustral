@@ -1,15 +1,16 @@
 (*
    Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Modified in the Zustral project, a fork of Austral.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 open OUnit2
-open Austral_core
-open Austral_core.Error
+open Zustral_core
+open Zustral_core.Error
 
 (* An error to fail with. Which one it is does not matter to these tests. *)
-let error (message: string): austral_error =
+let error (message: string): zustral_error =
   make_error NoSpan (Internal message)
 
 let test_catch _ =

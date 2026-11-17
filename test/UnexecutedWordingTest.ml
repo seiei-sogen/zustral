@@ -1,5 +1,6 @@
 (*
    Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Modified in the Zustral project, a fork of Austral.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -7,10 +8,10 @@
 (* The wording of errors that no program makes the compiler raise, and the
    parts of the error printer and the command line that no program reaches. *)
 open OUnit2
-open Austral_core
-open Austral_core.Identifier
-open Austral_core.Error
-open Austral_core.SourceContext
+open Zustral_core
+open Zustral_core.Identifier
+open Zustral_core.Error
+open Zustral_core.SourceContext
 open TestUtil
 
 let wording (error: error): string =
@@ -20,7 +21,7 @@ let raised_wording (f: unit -> 'a): string =
   try
     ignore (f ());
     assert_failure "No error was raised."
-  with Austral_error (AustralError { error; _ }) ->
+  with Zustral_error (ZustralError { error; _ }) ->
     error_title error ^ ": " ^ wording error
 
 let test_generic_wording _ =
@@ -39,10 +40,10 @@ let test_parse_wording _ =
 
 let test_empty_argument_list _ =
   eq "Command Line Arguments Error: Argument list must have at least one element in it, the path to the binary. Was the compiler invoked through a system call?"
-    (raised_wording (fun () -> Austral_cli.CliUtil.parse_args []))
+    (raised_wording (fun () -> Zustral_cli.CliUtil.parse_args []))
 
 let test_popping_flag_of_other_kind _ =
-  let open Austral_cli.CliUtil in
+  let open Zustral_cli.CliUtil in
   let arglist = parse_args ["bin"; "pos"; "--a=1"; "--b"] in
   eq "Command Line Arguments Error: Expected `a` to be a boolean flag, but it was given as a value flag."
     (raised_wording (fun () -> pop_bool_flag arglist "a"));
@@ -55,18 +56,18 @@ let test_write_error_wording _ =
 
 let test_write_to_full_device _ =
   eq "Command Line Arguments Error: Failed to write to file `/dev/full`: \n\nNo space left on device"
-    (raised_wording (fun () -> Austral_cli.Os.write_string_to_file "/dev/full" "x"))
+    (raised_wording (fun () -> Zustral_cli.Os.write_string_to_file "/dev/full" "x"))
 
 (* This fixes what the code does today, not what it should do: the code of a
    command that a signal killed is OCaml's number of the signal (-7 for
    SIGKILL), neither the number of the system (9) nor what a shell reports
    (137). Issue #144 has it. *)
 let test_command_killed_by_signal _ =
-  let (Austral_cli.Os.CommandOutput { code; _ }) = Austral_cli.Os.run_command "kill -9 $$" in
+  let (Zustral_cli.Os.CommandOutput { code; _ }) = Zustral_cli.Os.run_command "kill -9 $$" in
   eq Sys.sigkill code
 
-let module_of (error: austral_error): string option =
-  let (AustralError { location; _ }) = error in
+let module_of (error: zustral_error): string option =
+  let (ZustralError { location; _ }) = error in
   Option.map mod_name_string (location_module_name location)
 
 let test_module_name_is_added_once _ =
@@ -76,8 +77,8 @@ let test_module_name_is_added_once _ =
   let with_span = add_module_name (make_error (AtSpan (simplespan "x")) (Internal "x")) first in
   eq (Some "First") (module_of (add_module_name with_span second))
 
-let source_ctx_of (error: austral_error): source_ctx option =
-  let (AustralError { source_ctx; _ }) = error in
+let source_ctx_of (error: zustral_error): source_ctx option =
+  let (ZustralError { source_ctx; _ }) = error in
   source_ctx
 
 let test_source_context_is_added_once _ =

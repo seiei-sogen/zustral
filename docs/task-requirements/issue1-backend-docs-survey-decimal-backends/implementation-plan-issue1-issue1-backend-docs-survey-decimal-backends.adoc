@@ -241,7 +241,7 @@ T7 までは commit しない。T8 は、PR を仕上げる工程で対象の変
 * Depends on: T7、commit、PR 本文の更新
 * 変更前後: 前は issue #1 が開いていて、issue #9 の「ここまでの決定」が「（まだない）」。後は issue #1 が解消コメント付きで閉じ、issue #9 に1行が入る。
 * 手順1: `git diff --stat master...HEAD` に `lib/`、`standard/`、`docs/wayfinder/` が現れないことを確かめる（NFR-002）。
-* 手順2: `git worktree add $TMPDIR/clean-run <commit>` で作った新しい作業ツリーで `docs/research/decimal-backend-survey/run.sh` を1回実行する（NFR-003 の「クリーンな作業ツリー」。commit し忘れたファイルと、ビルド済みの `austral` への依存を見つける）。確かめたら `git worktree remove` で消す。
+* 手順2: `git worktree add $TMPDIR/clean-run <commit>` で作った新しい作業ツリーで `docs/research/decimal-backend-survey/run.sh` を1回実行する（NFR-003 の「クリーンな作業ツリー」。commit し忘れたファイルと、ビルド済みの `zustral` への依存を見つける）。確かめたら `git worktree remove` で消す。
 * 手順3: `gh issue comment 1` で答えの要点とレポート・PR へのリンクを投稿し、`gh issue close 1` で閉じる。issue #9 は、`gh issue view 9 --json body -q .body` で本文を `$TMPDIR` のファイルへ取り出し、「ここまでの決定」の「（まだない）」の1行だけを規定の1行に置き換えたファイルを作り、`gh issue edit 9 --body-file` で戻す。`gh` には `GH_TOKEN=$(gh auth token -u seiei-sogen)` を付ける。
 * Done when: 手順1で対象外のパスがない。手順2の `run.sh` が `不一致 0` で終了状態 0 になる。`gh issue view 1 --json state,comments` が `CLOSED` を示し、解消コメントが答えの要点、レポートへのリンク、PR へのリンクの3つを含む。`gh issue view 9 --json body` の「ここまでの決定」で、「（まだない）」が規定の1行に置き換わっている。編集前の本文と編集後の本文の `diff` が、その1行の置き換えだけである。
 
@@ -375,7 +375,7 @@ T2 の見込み（GCC 単体には丸めモードを切り替える公開 API �
 |`docs/research/decimal-backend-survey/run.sh` が22件すべての結果行を出し、最後の行は `一致 18 / 不一致 0 / 未実行 4`、終了状態 0。未実行は `d128@clang-O0`、`d128@clang-O2`、`libdfp@clang-O0`、`libdfp@clang-O2` の4件だけ。実行の前後で `git status --short --untracked-files=all` の出力と、`docs/research/decimal-backend-survey` の sha256 の一覧が同じだった。文書を更新し終えた後の `git status --porcelain --untracked-files=all` の列挙は、`docs/research/decimal-backend-survey/` の未追跡の18ファイルと、`docs/task-requirements/issue1-backend-docs-survey-decimal-backends/` の変更した3文書（要件定義書、設計文書、実装計画）だけで、`git diff --name-only master...HEAD` は `docs/task-requirements/issue1-backend-docs-survey-decimal-backends/` の4ファイルだけである。`lib/`、`standard/`、`docs/wayfinder/` はない
 |pass
 |T8
-|手順1: commit `a3546781` で `git diff --stat master...HEAD -- lib standard docs/wayfinder` の出力が空。手順2: `git worktree add` で `$TMPDIR/clean-run` に commit `a3546781` を取り出し（無視されたファイルが0件、`austral` も `_build/` もない状態）、`/tmp` から `run.sh` を絶対パスで実行した。22件の結果行と `一致 18 / 不一致 0 / 未実行 4`、終了状態 0。未実行は `d128@clang-*` と `libdfp@clang-*` の4件だけ。確かめた後に `git worktree remove` で消した。手順3: issue #1 に解消コメント（0004・0005・0008 の要点、commit 固定のレポートへのリンク、PR #11 へのリンク）を投稿し、クローズした（`state` は `CLOSED`、`stateReason` は `COMPLETED`）。issue #9 の本文は、編集前と編集後の `diff` が「（まだない）」の1行の置き換え（`29c29`）だけである
+|手順1: commit `a3546781` で `git diff --stat master...HEAD -- lib standard docs/wayfinder` の出力が空。手順2: `git worktree add` で `$TMPDIR/clean-run` に commit `a3546781` を取り出し（無視されたファイルが0件、`zustral` も `_build/` もない状態）、`/tmp` から `run.sh` を絶対パスで実行した。22件の結果行と `一致 18 / 不一致 0 / 未実行 4`、終了状態 0。未実行は `d128@clang-*` と `libdfp@clang-*` の4件だけ。確かめた後に `git worktree remove` で消した。手順3: issue #1 に解消コメント（0004・0005・0008 の要点、commit 固定のレポートへのリンク、PR #11 へのリンク）を投稿し、クローズした（`state` は `CLOSED`、`stateReason` は `COMPLETED`）。issue #9 の本文は、編集前と編集後の `diff` が「（まだない）」の1行の置き換え（`29c29`）だけである
 |pass
 |===
 

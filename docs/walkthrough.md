@@ -21,8 +21,8 @@ type check = module_source list -> unit Outcome.t
 
 - `module_source` は、1つのモジュールのソースである。インターフェースと本体の2つか、本体だけである。それぞれ、ソースの文字列とファイル名を持つ。ファイルを読むのは、呼ぶ側（`cli/CliEngine.ml`）である。
 - `entrypoint` は、モジュールの名前と、その中の関数の名前の組である。
-- `Outcome.t` は、`('a, Outcome.errors) result` である。失敗は値で返る。`Outcome.errors` は、1 個以上のエラーの並び（`austral_error * austral_error list`）である。失敗したのにエラーがない、という値は作れない。
-- `compile` は、組み込みモジュール（`Austral.Pervasive`、`Austral.Memory` の順）をコンパイルし、渡されたモジュールを順にコンパイルし、最後に1回だけ仕上げ（`finish`）を行う。
+- `Outcome.t` は、`('a, Outcome.errors) result` である。失敗は値で返る。`Outcome.errors` は、1 個以上のエラーの並び（`zustral_error * zustral_error list`）である。失敗したのにエラーがない、という値は作れない。
+- `compile` は、組み込みモジュール（`Zustral.Pervasive`、`Zustral.Memory` の順）をコンパイルし、渡されたモジュールを順にコンパイルし、最後に1回だけ仕上げ（`finish`）を行う。
 - `check` は、コマンドラインの型検査だけのモードが使う。仕上げを行わない。
 
 1つのモジュールは、`compile_mod` が段を順につなぐ。つなぎ方は `Outcome.Syntax` の `let*` である。最初の失敗で止まる。モジュールの名前が分かった後の段が返したエラーには、`lib/Compiler.ml` がその名前を付ける（`in_module`）。
@@ -44,7 +44,7 @@ type 'tree parse = string -> string -> 'tree Outcome.t
 
 モジュールは、インターフェースのファイル（`.zui`）と本体のファイル（`.zum`）に分かれる。本体だけのモジュールもある。`lib/ParserInterface.ml` の `parse_module_int` と `parse_module_body` が、それぞれを構文木（`Cst`）にする。引数は、ソースの文字列とファイル名である。
 
-構文解析の後、`lib/Compiler.ml` は、インターフェースと本体に、`Austral.Pervasive` の取り込みを足す。`Austral.Pervasive` そのものには足さない。
+構文解析の後、`lib/Compiler.ml` は、インターフェースと本体に、`Zustral.Pervasive` の取り込みを足す。`Zustral.Pervasive` そのものには足さない。
 
 ## 結合
 
@@ -57,7 +57,7 @@ type combine_body = env -> concrete_module_body -> Combined.combined_module Outc
 
 結合は、取り込みを解決し（`lib/ImportResolution.ml`）、名前を修飾する。文と式は、抽象構文木（`Ast`）になる（`lib/AbstractionPass.ml`）。
 
-安全なモジュール（`pragma Unsafe_Module;` のないモジュール）に書けないもののうち、`Austral.Memory` からの取り込みと `@embed` の式は、この段で拒む。外部の関数の宣言（`Foreign_Import`）は、型検査が拒む。`@embed` は、任意の C の式を任意の型の値にするので、安全なモジュールで使えると、型検査と線形性の検査の保証が成り立たない。取り込みの表（`Imports.import_map`）が、取り込む側のモジュールの種類を持つ。`@embed` の式を抽象構文木にする所が、それを見る。組み込みモジュールも、`@embed` を使うので、安全でないモジュールである。
+安全なモジュール（`pragma Unsafe_Module;` のないモジュール）に書けないもののうち、`Zustral.Memory` からの取り込みと `@embed` の式は、この段で拒む。外部の関数の宣言（`Foreign_Import`）は、型検査が拒む。`@embed` は、任意の C の式を任意の型の値にするので、安全なモジュールで使えると、型検査と線形性の検査の保証が成り立たない。取り込みの表（`Imports.import_map`）が、取り込む側のモジュールの種類を持つ。`@embed` の式を抽象構文木にする所が、それを見る。組み込みモジュールも、`@embed` を使うので、安全でないモジュールである。
 
 ## return の検査
 

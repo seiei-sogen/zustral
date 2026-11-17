@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+# Modified in the Zustral project, a fork of Austral.
 # See LICENSE file for details.
 #
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -9,7 +10,7 @@ set -euxo pipefail
 dune build
 
 function compile() {
-    ./austral compile \
+    ./zustral compile \
         ./standard/src/Buffer.zui,./standard/src/Buffer.zum \
         ./standard/src/String.zui,./standard/src/String.zum \
         ./standard/src/StringBuilder.zui,./standard/src/StringBuilder.zum \

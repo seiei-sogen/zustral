@@ -1,12 +1,13 @@
 (*
    Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Modified in the Zustral project, a fork of Austral.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 open OUnit2
-open Austral_core
-open Austral_core.Identifier
+open Zustral_core
+open Zustral_core.Identifier
 
 (* The compiler numbers what it makes: declarations, instance methods,
    monomorphs, temporaries, the variables of the generated C, anonymous borrows
@@ -168,13 +169,13 @@ end module body.
 |}
 
 let test_same_error_twice _ =
-  let errors (outcome: CRepr.c_program Outcome.t): Error.austral_error list =
+  let errors (outcome: CRepr.c_program Outcome.t): Error.zustral_error list =
     match outcome with
     | Ok _ -> assert_failure "the program compiles"
     | Error (first, rest) -> first :: rest
   in
-  let first: Error.austral_error list = errors (compile numbered_region) in
-  let second: Error.austral_error list = errors (compile numbered_region) in
+  let first: Error.zustral_error list = errors (compile numbered_region) in
+  let second: Error.zustral_error list = errors (compile numbered_region) in
   assert_equal first second
 
 let suite =

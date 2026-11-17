@@ -8,7 +8,7 @@
                                this first, and stops if a sample disagrees)
 
 A stage reports its errors as a value (lib/Outcome.ml). Inside a stage an
-error travels as the exception `Austral_error`, and the functions the driver
+error travels as the exception `Zustral_error`, and the functions the driver
 (lib/Compiler.ml) calls are where `Outcome.catch` turns it into a value. No
 type says that such a function catches everything, so this check looks. It
 reads the sources as text: it does not parse them, and it knows no types.
@@ -23,7 +23,7 @@ What it sees:
 - A function can raise if its text has `raise`, `raise_notrace` or
   `raise_with_backtrace`, or names a function that can raise, outside the
   parentheses of an `Outcome.catch (fun ...)`. Every `raise` in the compiler
-  raises `Austral_error`; the functions that build an error (`type_error`,
+  raises `Zustral_error`; the functions that build an error (`type_error`,
   `internal_err`, ...) are found through it.
 - Names are matched as words, whatever module path is written before them. A
   name stands for the functions of that name in the same file and in every
@@ -32,7 +32,7 @@ What it sees:
   of those two modules (`Lexer.token`) counts as raising if anything in their
   sources does.
 Apart from the limits below, the answer is an upper estimate: a function it
-clears does not raise `Austral_error`, and one it reports may be harmless.
+clears does not raise `Zustral_error`, and one it reports may be harmless.
 
 What it does not see (samples/escape/NotSeen.ml has one of each, and nothing
 checks that the compiler has none):

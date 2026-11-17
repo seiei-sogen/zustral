@@ -1,6 +1,6 @@
 pragma Unsafe_Module;
 
-import Austral.Memory (Pointer, Address, allocateBuffer, nullCheck, deallocate, spanWrite, store);
+import Zustral.Memory (Pointer, Address, allocateBuffer, nullCheck, deallocate, spanWrite, store);
 
 module body Test is
     function allocateOrDie(): Pointer[Int32] is

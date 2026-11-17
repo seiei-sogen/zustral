@@ -1,5 +1,6 @@
 (*
    Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Modified in the Zustral project, a fork of Austral.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -67,20 +68,20 @@ let span_mut_name: string = "Span!"
 
 (* Modules *)
 
-let pervasive_module: string = "Austral.Pervasive"
-let memory_module: string = "Austral.Memory"
+let pervasive_module: string = "Zustral.Pervasive"
+let memory_module: string = "Zustral.Memory"
 
 (* The module the monomorphs of exported functions are generated in, and the
    C unit that holds the wrappers of those functions. *)
-let wrappers_module: string = "Austral.Wrappers"
+let wrappers_module: string = "Zustral.Wrappers"
 let wrappers_unit_name: string = "Wrappers"
 
-(* Austral.Memory *)
+(* Zustral.Memory *)
 
 let address_name: string = "Address"
 let pointer_name: string = "Pointer"
 
-(* Austral.Pervasive *)
+(* Zustral.Pervasive *)
 
 let abort_name: string = "abort"
 let root_capability_name: string = "RootCapability"

@@ -690,7 +690,7 @@ body {
 </dd>
 <dt class="hdlist1">一時ファイル</dt>
 <dd>
-<p>すべて <code>mktemp -d</code> の <code>$T</code> に置き、<code>trap</code> で終了時に消す。例外は Zustral の <code>make</code> が作る <code>austral</code>、<code>_build/</code>、<code>lib/BuiltInModules.ml</code> で、どれも <code>.gitignore</code> 済み。</p>
+<p>すべて <code>mktemp -d</code> の <code>$T</code> に置き、<code>trap</code> で終了時に消す。例外は Zustral の <code>make</code> が作る <code>zustral</code>、<code>_build/</code>、<code>lib/BuiltInModules.ml</code> で、どれも <code>.gitignore</code> 済み。</p>
 </dd>
 <dt class="hdlist1">出力</dt>
 <dd>
@@ -826,7 +826,7 @@ body {
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>run.sh</code> の <code>build</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">系統ごとのコンパイルとリンク。すべて <code>-fwrapv</code> 付き（Zustral の生成コードと同じ条件）</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">id、作業ディレクトリ → <code>$d/bin</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">コンパイラの起動。<code>ffi</code> は一時ディレクトリで <code>austral compile</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">コンパイラの起動。<code>ffi</code> は一時ディレクトリで <code>zustral compile</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>run.sh</code> の <code>execute</code></p></td>

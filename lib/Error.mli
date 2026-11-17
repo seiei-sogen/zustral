@@ -1,5 +1,6 @@
 (*
    Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Modified in the Zustral project, a fork of Austral.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -50,12 +51,12 @@ type location =
   (** An error of the command line, or one with no span raised before the
       module has a name. *)
 
-(** An Austral compiler error. The code that raises it gives the place, the
+(** A Zustral compiler error. The code that raises it gives the place, the
     driver adds the module name ({!add_module_name}), and the command line
     adds the source context. The type is private: outside this module an error
     is read by its fields, and made only by {!make_error} or the raising
     functions, which all take a place. *)
-type austral_error = private AustralError of {
+type zustral_error = private ZustralError of {
       location: location;
       (** Where the error occurred. *)
       error: error;
@@ -64,8 +65,8 @@ type austral_error = private AustralError of {
       (** The source code where the error happened, if available. *)
     }
 
-(** The exception that carries Austral errors. *)
-exception Austral_error of austral_error
+(** The exception that carries Zustral errors. *)
+exception Zustral_error of zustral_error
 
 (** The wording of an error. *)
 val error_text : error -> err_text
@@ -77,7 +78,7 @@ val location_module_name : location -> module_name option
 val location_span : location -> span option
 
 (** The error that raising [error] at [place] raises, as a value. *)
-val make_error : place -> error -> austral_error
+val make_error : place -> error -> zustral_error
 
 (** Raise a parse error. The lexer and the parser know the place where they
     stop. *)
@@ -116,16 +117,16 @@ val ok_or_raise : place -> ('a, error) result -> 'a
 val place_inside : place -> span -> place
 
 (** Add a source context to an error if it doesn't have one. *)
-val add_source_ctx : austral_error -> source_ctx -> austral_error
+val add_source_ctx : zustral_error -> source_ctx -> zustral_error
 
 (** Put the module name in an error if it doesn't have one. *)
-val add_module_name : austral_error -> module_name -> austral_error
+val add_module_name : zustral_error -> module_name -> zustral_error
 
 (** The title of an error: the name of its category. *)
 val error_title : error -> string
 
 (** Render an error to plain text, for display to the terminal. *)
-val render_error_to_plain : austral_error -> string
+val render_error_to_plain : zustral_error -> string
 
 (** Render an error to JSON, for tools or the end to end tests. *)
-val render_error_to_json : austral_error -> Yojson.Basic.t
+val render_error_to_json : zustral_error -> Yojson.Basic.t

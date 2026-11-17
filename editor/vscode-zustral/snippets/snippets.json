@@ -1,6 +1,6 @@
 {
   "Module interface": {
-    "scope": "austral",
+    "scope": "zustral",
     "prefix": "module",
     "body": [
       "module $1 is",
@@ -10,7 +10,7 @@
     "description": "Empty module interface declaration"
   },
   "Module body": {
-    "scope": "austral",
+    "scope": "zustral",
     "prefix": "module body",
     "body": [
       "module body $1 is",
@@ -20,7 +20,7 @@
     "description": "Empty module body declaration"
   },
   "Main module body": {
-    "scope": "austral",
+    "scope": "zustral",
     "prefix": "module body",
     "body": [
       "module body $1 is",
@@ -33,7 +33,7 @@
     "description": "Module body declaration with main function"
   },
   "Generic function body": {
-    "scope": "austral",
+    "scope": "zustral",
     "prefix": "generic",
     "body": [
       "generic [R: Region]",
@@ -44,7 +44,7 @@
     "description": "Empty generic function declaration."
   },
   "Function body": {
-    "scope": "austral",
+    "scope": "zustral",
     "prefix": "function",
     "body": [
       "function $1($2): $3 is",
@@ -54,7 +54,7 @@
     "description": "Empty function declaration."
   },
   "C FFI function pattern": {
-    "scope": "austral",
+    "scope": "zustral",
     "prefix": "function C_",
     "body": [
       "function C_$1($2): $3 is",
@@ -64,7 +64,7 @@
     "description": "A C FFI function declaration"
   },
   "Case statement": {
-    "scope": "austral",
+    "scope": "zustral",
     "prefix": "case",
     "body": [
       "case $1 of",

@@ -26,7 +26,7 @@ TEST_BIN := test_bin
 all: $(TEST_BIN)
 
 $(TEST_BIN): src/*.zui src/*.zum src/*/*.zui src/*/*.zum test/*.zui test/*.zum test/*/*.zui test/*/*.zum
-	../austral compile $(MODULES) --entrypoint=Standard.Test:Main --output=$(TEST_BIN)
+	../zustral compile $(MODULES) --entrypoint=Standard.Test:Main --output=$(TEST_BIN)
 
 .PHONY: clean
 clean:
