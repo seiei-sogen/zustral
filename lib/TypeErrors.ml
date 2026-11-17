@@ -43,6 +43,7 @@ type reference_difference =
 type t =
   | ArithmeticIncompatibleTypes of { lhs: ty; rhs: ty }
   | ArithmeticNotNumeric of ty
+  | ComparisonOperandNotComparable of ty
   | ArithmeticNegationOperandNotSigned of ty
   | ArithmeticNegationTypeArgumentNotSigned of ty
   | CannotBorrowImmutableVarMutably of identifier
@@ -115,6 +116,22 @@ let render (error: t): err_text =
        Text "Both operands of an arithmetic operator must be numeric types, but ";
        Type ty;
        Text " is not."
+     ]
+  | ComparisonOperandNotComparable ty ->
+     [
+       Text "Values of the type ";
+       Type ty;
+       Text " cannot be compared.";
+       Break;
+       Text "Only values of ";
+       Code "Unit";
+       Text ", ";
+       Code "Bool";
+       Text ", an integer type, a float type, ";
+       Code "Address";
+       Text ", ";
+       Code "Pointer";
+       Text ", or a function pointer type can be compared."
      ]
   | ArithmeticNegationOperandNotSigned ty ->
      [

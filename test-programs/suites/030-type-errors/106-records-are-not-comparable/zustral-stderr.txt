@@ -14,7 +14,10 @@
     { "type": "code", "content": "Address" },
     { "type": "text", "content": ", " },
     { "type": "code", "content": "Pointer" },
-    { "type": "text", "content": ", or a function pointer type can be compared." }
+    {
+      "type": "text",
+      "content": ", or a function pointer type can be compared."
+    }
   ],
   "span": {
     "filename": "test-programs/suites/030-type-errors/106-records-are-not-comparable/Test.zum",

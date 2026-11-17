@@ -668,17 +668,24 @@ and augment_temporary (ctx: expr_ctx) (name: identifier): texpr =
 and augment_comparison ctx op lhs rhs =
   let lhs' = infer_operand ctx lhs rhs
   and rhs' = infer_operand ctx rhs lhs in
-  let _ =
+  let operand_type: ty =
     (* Two types of the body being checked: a type variable stands for itself
        (TypeMatch.expect_same_type), and no literal has its type. *)
     match (LiteralTyping.is_numeric_literal lhs, LiteralTyping.is_numeric_literal rhs) with
     | (true, false) ->
        (* A lone literal on the left takes the type of the right operand. *)
-       expect_value_of_type_ctx ctx (get_type (ctx_place ctx) rhs') lhs'
+       let ty: ty = get_type (ctx_place ctx) rhs' in
+       expect_value_of_type_ctx ctx ty lhs';
+       ty
     | (false, true) | (false, false) | (true, true) ->
-       expect_value_of_type_ctx ctx (get_type (ctx_place ctx) lhs') rhs'
+       let ty: ty = get_type (ctx_place ctx) lhs' in
+       expect_value_of_type_ctx ctx ty rhs';
+       ty
   in
-  TComparison (op, lhs', rhs')
+  if is_comparable operand_type then
+    TComparison (op, lhs', rhs')
+  else
+    type_error (ctx_place ctx) (ComparisonOperandNotComparable operand_type)
 
 and augment_conjunction ctx lhs rhs =
   let lhs': texpr = infer ctx lhs

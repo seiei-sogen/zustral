@@ -1,0 +1,1 @@
+Test that values of `Float32`, `Address`, `Pointer`, a function pointer type and a type parameter can be compared (issue #125). The comparison takes these types, besides `Unit`, `Bool`, the integer types and `Float64`, which other tests compare. A type parameter stays comparable until issue #125 decides on it.

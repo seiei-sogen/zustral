@@ -3,7 +3,7 @@
   "kind": "Type Error",
   "text": [
     { "type": "text", "content": "Values of the type " },
-    { "type": "type", "content": "&[Int32, R]" },
+    { "type": "type", "content": "&[Int32, Region<2>]" },
     { "type": "text", "content": " cannot be compared." },
     { "type": "break" },
     { "type": "text", "content": "Only values of " },
@@ -14,7 +14,10 @@
     { "type": "code", "content": "Address" },
     { "type": "text", "content": ", " },
     { "type": "code", "content": "Pointer" },
-    { "type": "text", "content": ", or a function pointer type can be compared." }
+    {
+      "type": "text",
+      "content": ", or a function pointer type can be compared."
+    }
   ],
   "span": {
     "filename": "test-programs/suites/030-type-errors/109-references-are-not-comparable/Test.zum",

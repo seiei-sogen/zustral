@@ -15,6 +15,9 @@ val type_universe : ty -> universe
 (* Whether the type is a built-in integer or floating point type. *)
 val is_numeric : ty -> bool
 
+(* Whether a comparison operator takes values of the type. *)
+val is_comparable : ty -> bool
+
 (* Return the set of type variables in a type expression, *)
 val type_variables : ty -> TypeVarSet.t
 
