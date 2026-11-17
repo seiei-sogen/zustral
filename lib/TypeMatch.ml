@@ -94,8 +94,10 @@ let rec try_match_type (ctx: ctx) (a: ty) (b: ty): (type_bindings, error) result
   | NamedType (n, _, args, _) ->
      (match b with
       | NamedType (n', _, args', _) ->
-         (* We ignore the universe, since the type system is nominal. *)
-         if n = n' then
+         (* We ignore the universe, since the type system is nominal. The
+            name the program wrote is not compared: an import can rename a
+            type (#50). *)
+         if equal_qident n n' then
            try_match_type_list ctx args args'
          else
            Error (Type (TypeMismatch { expected = a; actual = b }))

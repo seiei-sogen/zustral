@@ -537,8 +537,16 @@ and augment_case (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span
       let (union_id, tyargs, union_ty, cases) = get_union_type_definition place module_name env ty in
       let typebindings = match_type (env, module_name, place) union_ty ty in
       let case_names = List.map (fun (TypedCase (n, _)) -> n) (List.map union_case_to_typed_case cases) in
-      let when_names = List.map (fun (AbstractWhen (n, _, _)) -> n) whens in
-      if ident_set_eq case_names when_names then
+      (* A `when` names a case by a name the module has for it: its own name in
+         the module of the union, or the nickname it is imported under (#50). *)
+      let case_qnames: qident list =
+        List.map (fun (case: union_case_decl) -> make_qident (module_name_from_id place env case.mod_id, case.name, case.name)) cases
+      in
+      let names_a_case_of_the_union (AbstractWhen (n, _, _)): bool =
+        List.exists (equal_qident n) case_qnames
+      in
+      let when_names = List.map (fun (AbstractWhen (n, _, _)) -> original_name n) whens in
+      if List.for_all names_a_case_of_the_union whens && ident_set_eq case_names when_names then
         (* Group the cases and whens *)
         let whens' = group_cases_whens cases whens in
         let (whens'', lexenv, supply) = augment_whens ctx lexenv supply typebindings whens' mode in
@@ -576,7 +584,7 @@ and get_union_type_definition (place: place) (importing_module: module_name) (en
      type_error place (CaseNonUnion ty)
 
 and group_cases_whens (cases: union_case_decl list) (whens: abstract_when list): (typed_case * abstract_when) list =
-  List.map (fun (TypedCase (n, s)) -> (TypedCase (n, s), List.find (fun (AbstractWhen (n', _, _)) -> n = n') whens))
+  List.map (fun (TypedCase (n, s)) -> (TypedCase (n, s), List.find (fun (AbstractWhen (n', _, _)) -> equal_identifier n (original_name n')) whens))
     (List.map union_case_to_typed_case cases)
 
 and group_bindings_slots (bindings: qbinding list) (slots: typed_slot list): (identifier * qtypespec * ty * identifier) list =
@@ -641,7 +649,7 @@ and augment_when (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (typebindin
                     bindings'' in
     let lexenv = push_vars place lexenv newvars in
     let (body', lexenv, supply) = augment_stmt ctx lexenv supply body in
-    (TypedWhen (name, List.map (fun (name, _, ty, rename) -> TypedBinding { name; ty; rename}) bindings'', body'), remove_vars lexenv (List.map (fun (n, _, _) -> n) newvars), supply)
+    (TypedWhen (original_name name, List.map (fun (name, _, ty, rename) -> TypedBinding { name; ty; rename}) bindings'', body'), remove_vars lexenv (List.map (fun (n, _, _) -> n) newvars), supply)
   else
     type_error place (CaseWrongSlots { binding_names; slot_names })
 

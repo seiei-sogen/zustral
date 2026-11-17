@@ -198,9 +198,9 @@ let rec equal_ty a b =
   | NamedType (n, _, args, u) ->
      (match b with
       | NamedType (n', _, args', u') ->
-         (* By the name, as before the type held an ID: a name stands for one
-            declaration, but the same declaration under two names (#50) stays
-            two types. *)
+         (* By the module and the original name, which stand for one
+            declaration. The name the program wrote is not compared: an
+            import can rename a type (#50). *)
          (equal_qident n n')
          && (List.for_all (fun (a', b') -> equal_ty a' b') (List.map2 (fun a' b' -> (a',b')) args args'))
          && (equal_universe u u')

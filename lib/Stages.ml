@@ -86,7 +86,7 @@ module Ast = struct
     | Reborrow of qident
 
   and abstract_when =
-    | AbstractWhen of identifier * qbinding list * astmt
+    | AbstractWhen of qident * qbinding list * astmt
 
   and abstract_arglist =
     | Positional of aexpr list
@@ -212,7 +212,7 @@ module AstLC = struct
     | Reborrow of qident
 
   and abstract_when =
-    | AbstractWhen of identifier * qbinding list * astmt
+    | AbstractWhen of qident * qbinding list * astmt
 
   and abstract_arglist =
     | Positional of aexpr list
@@ -298,7 +298,7 @@ module AstDP = struct
     | ArrayIndex of aexpr * aexpr
 
   and abstract_when =
-    | AbstractWhen of identifier * qbinding list * astmt
+    | AbstractWhen of qident * qbinding list * astmt
 
   and abstract_arglist =
     | Positional of aexpr list
@@ -376,7 +376,7 @@ module AstDB = struct
     | ArrayIndex of aexpr * aexpr
 
   and abstract_when =
-    | AbstractWhen of identifier * qbinding list * astmt
+    | AbstractWhen of qident * qbinding list * astmt
 
   and abstract_arglist =
     | Positional of aexpr list

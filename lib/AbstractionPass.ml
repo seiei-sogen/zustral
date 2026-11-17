@@ -102,7 +102,7 @@ and abs_expr place im expr =
      Reborrow (qualify_identifier im name)
 
 and abs_when place im (ConcreteWhen (name, bindings, body)) =
-  AbstractWhen (name,
+  AbstractWhen (qualify_identifier im name,
                 List.map (fun (ConcreteBinding { name; ty; rename; }) -> QBinding { name; ty = qualify_typespec im ty; rename }) bindings,
                 abs_stmt place im body)
 
