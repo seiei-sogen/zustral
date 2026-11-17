@@ -71,7 +71,6 @@ type t =
   | NoSuchSlot of { type_name: identifier; slot_name: identifier }
   | NoSuitableInstance of { typeclass: identifier; ty: ty }
   | InstanceMissingMethod of { typeclass: identifier; ty: ty; module_name: module_name; method_name: identifier }
-  | OverlappingInstancesMatch of { typeclass: identifier; ty: ty; modules: module_name list }
   | PathNotPublic of { type_name: identifier; slot_name: identifier }
   | PathNotRecord of ty
   | SlotWrongType of { name: identifier; expected: ty; actual: ty }
@@ -317,18 +316,6 @@ let render (error: t): err_text =
        Code (ident_string typeclass);
        Text " has no instance which matches for ";
        Type ty
-     ]
-  | OverlappingInstancesMatch { typeclass; ty; modules } ->
-     [
-       Text "More than one instance of the typeclass ";
-       Code (ident_string typeclass);
-       Text " matches the type ";
-       Type ty;
-       Text ". The instances are declared in the modules ";
-     ]
-     @ code_list (List.map mod_name_string modules)
-     @ [
-       Text ". Instances of a typeclass must not overlap: remove all but one of them."
      ]
   | InstanceMissingMethod { typeclass; ty; module_name; method_name } ->
      [

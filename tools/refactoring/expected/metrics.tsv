@@ -26,7 +26,7 @@ lib/DesugarPaths.ml	147	0	0	0	0	0	0	0	0	0	0
 lib/DesugaringPass.ml	44	0	0	0	0	0	0	0	0	0	0
 lib/Entrypoint.ml	146	8	0	0	0	0	0	0	0	0	0
 lib/EntrypointErrors.ml	64	0	0	0	0	0	0	0	0	0	0
-lib/Env.ml	663	9	0	0	0	0	1	4	0	0	0
+lib/Env.ml	666	9	0	0	0	0	1	4	0	0	0
 lib/EnvExtras.ml	16	0	0	0	0	0	0	0	0	0	0
 lib/EnvTypes.ml	322	0	0	0	0	0	1	0	0	0	0
 lib/EnvUtils.ml	53	0	0	0	0	0	0	0	0	0	0
@@ -52,7 +52,7 @@ lib/LinearityErrors.ml	198	0	0	0	0	0	0	0	0	0	0
 lib/LiteralTyping.ml	167	1	0	0	0	0	0	0	0	0	0
 lib/MonoType.ml	38	0	0	0	0	0	0	0	0	0	0
 lib/MonoTypeBindings.ml	45	0	0	0	0	0	0	0	0	0	0
-lib/Monomorphize.ml	779	5	0	0	0	0	0	2	0	0	0
+lib/Monomorphize.ml	781	5	0	0	0	0	0	2	0	0	0
 lib/NumberLiteral.ml	83	0	0	0	0	0	2	0	0	0	0
 lib/Outcome.ml	59	0	1	0	0	0	0	0	0	0	0
 lib/ParseErrors.ml	53	0	0	0	0	0	3	0	0	0	0
@@ -72,9 +72,9 @@ lib/TastUtil.ml	171	3	0	0	0	0	0	0	0	0	0
 lib/Type.ml	282	0	0	0	0	1	0	0	0	0	0
 lib/TypeBindings.ml	172	2	0	0	0	0	0	0	0	0	0
 lib/TypeCheckExpr.ml	986	43	0	0	0	1	0	0	0	0	0
-lib/TypeClasses.ml	253	12	0	0	0	0	0	0	0	0	0
-lib/TypeErrors.ml	519	0	0	0	0	0	0	0	0	0	0
-lib/TypeMatch.ml	379	5	0	0	0	0	0	0	0	0	0
+lib/TypeClasses.ml	230	12	0	0	0	0	0	0	0	0	0
+lib/TypeErrors.ml	506	0	0	0	0	0	0	0	0	0	0
+lib/TypeMatch.ml	382	6	0	0	0	0	0	1	0	0	0
 lib/TypeParameter.ml	36	0	0	0	0	0	0	0	0	0	0
 lib/TypeParameters.ml	61	2	0	0	0	0	0	0	0	0	0
 lib/TypeParser.ml	317	9	0	0	0	2	0	0	0	0	0

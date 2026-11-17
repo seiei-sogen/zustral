@@ -218,9 +218,11 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
         (* The instance is concrete. *)
         (MConcreteMethodCall (ins_meth_id, name, args, rt), env))
   | TVarMethodCall { dispatch_ty; typeclass_id; source_module_name; params; args; method_name; rt; _ } ->
-     (* Continue the instance resolution process we halted in the typing pass. *)
+     (* Continue the instance resolution process we halted in the typing pass.
+        The generic function's module need not see the instance: the module
+        that instantiates it can declare it. *)
      let (instance, instance_bindings): instance_decl * type_bindings =
-       (match get_instance NoSpan env source_module_name dispatch_ty typeclass_id with
+       (match get_instance_from_every_module NoSpan env source_module_name dispatch_ty typeclass_id with
         | Some (i, b) -> (i, b)
         | None ->
            generic_error NoSpan (TypeclassResolutionFailed dispatch_ty))

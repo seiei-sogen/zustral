@@ -203,16 +203,6 @@ let rec check_instance_orphan_rules (place: place) (decl_place: place) (env: env
 
 and is_type_local (place: place) (decl_place: place) (env: env) (mod_id: mod_id) (ty: ty): bool =
   match ty with
-  | Unit ->
-     true
-  | Boolean ->
-     true
-  | Integer _ ->
-     true
-  | SingleFloat ->
-     true
-  | DoubleFloat ->
-     true
   | NamedType (name, _, _, _) ->
      (match get_decl_by_name place env (qident_to_sident name) with
       | Some decl ->
@@ -223,26 +213,13 @@ and is_type_local (place: place) (decl_place: place) (env: env) (mod_id: mod_id)
             after the instance's. The interface's declarations come first, in
             its order, so the error is where the instance is declared. *)
          declaration_error decl_place (InstanceBeforeType (original_name name)))
-  | RegionTy _ ->
-     (* Not applicable. *)
+  | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
+  | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
+     (* A built-in type belongs to no module, so its instances are in the
+        modules of their typeclasses, and two modules cannot both have one
+        (issue #72). A region or a type variable is never the argument of an
+        instance. *)
      false
-  | ReadRef _ ->
-     true
-  | WriteRef _ ->
-     true
-  | Span _ ->
-     true
-  | SpanMut _ ->
-     true
-  | TyVar _ ->
-     (* Not applicable. *)
-     false
-  | Address _ ->
-     true
-  | Pointer _ ->
-     true
-  | FnPtr _ ->
-     true
 
 let check_disjoint_typarams (place: place) (name: identifier) (typarams: typarams): unit =
   match get_typaram typarams name with

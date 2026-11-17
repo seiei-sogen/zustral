@@ -202,9 +202,8 @@ let register (type id) (place: place) (env: env) (registration: id registration)
      add_decl fresh_typeclass_method_id (fun id -> TypeClassMethod { id; mod_id; vis; typeclass_id; name; docstring; typarams; value_params; rt })
   | NewInstance { mod_id; vis; typeclass_id; docstring; typarams; argument } ->
      (* Not checked here: an instance has no name. The caller checks that it
-        overlaps no instance of its own module, and the orphan rule. The orphan
-        rule takes a built-in type to be local to every module, so instances
-        from two modules can overlap (#72). *)
+        overlaps no instance of its own module, and the orphan rule, which
+        keeps instances of two modules from overlapping. *)
      let (id, supply) = fresh_instance_id supply in
      let instance: instance_decl = { id; mod_id; vis; typeclass_id; docstring; typarams; argument } in
      (Env { mods; methods; decls; instances = instance :: instances; monos; exports; supply }, id)
@@ -375,6 +374,10 @@ let visible_instances (place: place) (env: env) (id: mod_id): instance_decl list
     List.map (get_instance_decl place env) (List.of_seq (InstanceIdSet.to_seq imported_instances))
   in
   (module_instances env id) @ instances_imported_by_module
+
+let all_instances (env: env): instance_decl list =
+  let (Env { instances; _ }) = env in
+  instances
 
 let store_function_body (env: env) (fn_id: function_id) (body: tstmt): env =
   let (Env { mods; methods; decls; instances; monos; exports; supply }) = env in

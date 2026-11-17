@@ -215,3 +215,6 @@ val get_variable : Error.place -> env -> lexenv -> qident -> (ty * variable_sour
     instances that are defined in the module itself, but the instances imported
     by the module. *)
 val visible_instances : Error.place -> env -> mod_id -> instance_decl list
+
+(** Return the typeclass instances of every module. *)
+val all_instances : env -> instance_decl list

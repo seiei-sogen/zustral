@@ -372,13 +372,15 @@ let test_a_region_or_type_variable_is_local_to_no_module _ =
         (error_of (fun () -> TypeClasses.check_instance_orphan_rules NoSpan NoSpan env mod_id other_id ty)))
     [region; tyvar "T" FreeUniverse]
 
+(* No program has two instances that match one type: the overlap check of a
+   module and the orphan rule reject the second where it is declared. *)
 let test_two_matching_instances_of_one_module _ =
   let (env, mod_id) = add_example Env.empty_env in
   let (env, typeclass_id) = register_typeclass env mod_id in
   let (env, _) = register_instance env mod_id typeclass_id TypeParameters.empty_typarams Unit in
   let (env, _) = register_instance env mod_id typeclass_id TypeParameters.empty_typarams Unit in
   assert_equal
-    (Some (Type (OverlappingInstancesMatch { typeclass = make_ident "C"; ty = Unit; modules = [example] })))
+    (Some (Internal "More than one instance matches the type Unit"))
     (error_of (fun () -> TypeMatch.get_instance NoSpan env example Unit typeclass_id))
 
 (* Entrypoint: signatures whose types the type parser never makes. *)

@@ -266,6 +266,12 @@ and try_get_instance (place: place) (env: env) (source_module_name: module_name)
   (* visible_instances looks the module up again, by this ID. It was found
      here, so that lookup does not miss. *)
   | Some (ModRec { id = mod_id; _ }) ->
+     try_get_instance_among place env source_module_name (visible_instances place env mod_id) dispatch_ty typeclass
+
+(* The one of these instances that matches the dispatch type. The match runs in
+   the source module: a constraint of the instance's type parameters is looked
+   up among the instances visible from there. *)
+and try_get_instance_among (place: place) (env: env) (source_module_name: module_name) (instances: instance_decl list) (dispatch_ty: ty) (typeclass: typeclass_id): ((instance_decl * type_bindings) option, error) result =
   let pred (decl: instance_decl): (instance_decl * type_bindings) option =
     match decl with
     | { typeclass_id; argument; _ } ->
@@ -277,30 +283,24 @@ and try_get_instance (place: place) (env: env) (source_module_name: module_name)
              (* Does not match, just skip to the next instance. Every failure
                 skips it, also a type error from checking a constraint of the
                 instance's type parameters: a constraint that names no
-                typeclass, or several overlapping instances that match. *)
+                typeclass. *)
              None)
        else
          None
   in
   let filtered: (instance_decl * type_bindings) list =
-    (List.filter_map pred (visible_instances place env mod_id))
+    (List.filter_map pred instances)
   in
   match filtered with
   | [a] ->
      Ok (Some a)
   | _::_ ->
-     (* The declarations of overlapping instances are not all rejected where
-        they are declared (#72, #122), so the call reports them. *)
-     let { name; _ }: typeclass_decl = get_typeclass place env typeclass in
-     let modules: module_name list =
-       List.fold_left
-         (fun (names: module_name list) (({ mod_id; _ }: instance_decl), _) ->
-           let mn: module_name = module_name_from_id place env mod_id in
-           if List.mem mn names then names else names @ [mn])
-         []
-         filtered
-     in
-     Error (Type (OverlappingInstancesMatch { typeclass = name; ty = dispatch_ty; modules }))
+     (* Where instances are declared, the overlap check of a module keeps two
+        of its instances from matching one type, and the orphan rule (#72)
+        keeps two modules from both declaring one: the instance is in the
+        module of the typeclass or of the type, and a module imports only
+        modules before it. *)
+     Error (Internal ("More than one instance matches the type " ^ type_string dispatch_ty))
   | [] ->
      Ok None
 
@@ -321,6 +321,9 @@ let match_type (ctx: ctx) (a: ty) (b: ty): type_bindings =
 
 let get_instance (place: place) (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: typeclass_id): (instance_decl * type_bindings) option =
   ok_or_raise place (try_get_instance place env source_module_name dispatch_ty typeclass)
+
+let get_instance_from_every_module (place: place) (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: typeclass_id): (instance_decl * type_bindings) option =
+  ok_or_raise place (try_get_instance_among place env source_module_name (all_instances env) dispatch_ty typeclass)
 
 let get_method_of_instance (place: place) (env: env) (instance: instance_decl) (method_name: identifier): ins_meth_id =
   let { id; typeclass_id; argument; mod_id; _ }: instance_decl = instance in
