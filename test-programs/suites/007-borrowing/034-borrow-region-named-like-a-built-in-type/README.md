@@ -1,0 +1,1 @@
+Test that a `borrow` statement cannot name its region `Static`, the name of a built-in type (issue #153). Before, the statement was accepted, and in its body `Static` named the static region, not the region of the borrow.

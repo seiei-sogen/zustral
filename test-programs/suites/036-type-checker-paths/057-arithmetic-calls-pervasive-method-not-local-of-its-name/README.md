@@ -1,0 +1,1 @@
+Test that an arithmetic expression calls the method of `Pervasive`, also where a local variable has the name of that method (issue #138). Before, `x + 1` called the local function pointer `trappingAdd`, and the program printed 40. The parameters of the `Fn` type are written in reverse because the compiler reads them so (issue #127).

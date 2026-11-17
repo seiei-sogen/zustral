@@ -1,0 +1,7 @@
+module Lib is
+    record Money: Free is
+        cents: Int64;
+    end;
+
+    function zero(): Money;
+end module.

@@ -1,0 +1,5 @@
+module body Lib is
+    function zero(): Money is
+        return Money(cents => 0);
+    end;
+end module body.

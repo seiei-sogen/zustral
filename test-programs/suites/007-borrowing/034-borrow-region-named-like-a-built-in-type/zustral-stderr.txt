@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The name " },
+    { "type": "code", "content": "Static" },
+    {
+      "type": "text",
+      "content": " is the name of a built-in type, so a declaration cannot have it."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/007-borrowing/034-borrow-region-named-like-a-built-in-type/Test.zum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 6, "column": 19 }
+  },
+  "context": [
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        let n: Int32 := 1;" ],
+    [ 4, "        borrow r: &[Int32, Static] := &n do" ],
+    [ 5, "            printLn(!r);" ],
+    [ 6, "        end borrow;" ],
+    [ 7, "        return ExitSuccess();" ],
+    [ 8, "    end;" ]
+  ]
+}
