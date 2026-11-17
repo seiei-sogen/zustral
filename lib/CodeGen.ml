@@ -649,34 +649,40 @@ let decl_order = function
 (* the following code is used to sort declarations in dependency order, so that
    the C compiler doesn't complain about types being incomplete *)
 
-let rec slot_depth decls (slot: c_slot) =
+module StructSlotsByName = Map.Make (String)
+
+(* The slots of each struct definition, by its name as C spells it, so that the
+   depth of a name is not a scan of every declaration (#143). A name finds the
+   first definition. *)
+let struct_slots_by_name (decls: c_decl list): c_slot list StructSlotsByName.t =
+  List.fold_right
+    (fun decl structs ->
+      match decl with
+      | CNamedStructDefinition (_, name, slots) ->
+         StructSlotsByName.add (CIdent.render name) slots structs
+      | CMacro _ | CStructForwardDeclaration _ | CEnumDefinition _ | CFunctionDeclaration _
+      | CFunctionDefinition _ -> structs)
+    decls
+    StructSlotsByName.empty
+
+let rec slot_depth structs (slot: c_slot) =
   match slot with
-  | CSlot (_, CNamedType name) -> name_depth name decls
+  | CSlot (_, CNamedType name) -> name_depth name structs
   (* The depth of a named type that has no definition among the declarations. *)
   | CSlot (_, CBuiltinType _) -> 1
-  | CSlot (_, CStructType slots) -> slots_depth slots decls
-  | CSlot (_, CUnionType slots) -> slots_depth slots decls
+  | CSlot (_, CStructType slots) -> slots_depth slots structs
+  | CSlot (_, CUnionType slots) -> slots_depth slots structs
   | CSlot (_, CPointer _) -> 0
 
-and get_slots name decl =
-  match decl with
-  | CNamedStructDefinition (_, decl_name, slots) ->
-     if CIdent.equal name decl_name then
-       Some slots
-     else
-       None
-  | CMacro _ | CStructForwardDeclaration _ | CEnumDefinition _ | CFunctionDeclaration _
-  | CFunctionDefinition _ -> None
-
-and name_depth name decls =
+and name_depth name structs =
   let slots =
-    match (List.filter_map (get_slots name) decls) with
-    | hd :: _ -> hd
-    | _ -> [] in
-  slots_depth slots decls
+    match StructSlotsByName.find_opt (CIdent.render name) structs with
+    | Some slots -> slots
+    | None -> [] in
+  slots_depth slots structs
 
-and slots_depth slots decls =
-  let deps = List.map (slot_depth decls) slots in
+and slots_depth slots structs =
+  let deps = List.map (slot_depth structs) slots in
   let dep_depth = List.fold_left max 0 deps in
   let depth = 1 + dep_depth in
   depth
@@ -687,10 +693,10 @@ let struct_slots (decl: c_decl): c_slot list option =
   | CMacro _ | CStructForwardDeclaration _ | CEnumDefinition _ | CFunctionDeclaration _
   | CFunctionDefinition _ -> None
 
-let detail_compare decls a b =
+let detail_compare structs a b =
   match (struct_slots a, struct_slots b) with
   | (Some s1, Some s2) ->
-     (slots_depth s1 decls) - (slots_depth s2 decls)
+     (slots_depth s1 structs) - (slots_depth s2 structs)
   | (None, (Some _ | None)) | (Some _, None) ->
      compare (decl_order a) (decl_order b)
 
@@ -701,5 +707,5 @@ let gen_module (env: env) (supply: Supply.t) (MonoModule (name, decls)): (c_unit
       let fun_decls = List.concat (gen_fun_decls name decls)
       and (decls, supply) = Supply.map (gen_decl env name) supply decls in
       let decls = List.concat [fun_decls; List.concat decls] in
-      let sorted_decls = List.sort (detail_compare decls) decls in
+      let sorted_decls = List.sort (detail_compare (struct_slots_by_name decls)) decls in
       (CUnit (mod_name_string name, sorted_decls), supply))

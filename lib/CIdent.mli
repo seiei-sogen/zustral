@@ -27,9 +27,6 @@ val external_name : string -> t
 (** Whether a name is a C reserved word. *)
 val is_c_reserved_word : string -> bool
 
-(** Whether two names are spelled the same in C. *)
-val equal : t -> t -> bool
-
 (** The spelling in C. The reserved-word escape puts [au_ckw_] before a name
     that is a C reserved word: before [double], and not before [doubled]. *)
 val render : t -> string
