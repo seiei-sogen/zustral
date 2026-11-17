@@ -1,0 +1,9 @@
+module body Test is
+    constant S: Span[Nat8, Static] := "abc";
+    constant P: &[Nat8, Static] := &(S[1]);
+
+    function main(): ExitCode is
+        printLn(!P);
+        return ExitSuccess();
+    end;
+end module body.

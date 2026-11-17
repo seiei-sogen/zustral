@@ -1,0 +1,1 @@
+Test that a constant can hold a reference to an element of a constant span (issue #133). `S[1]` is the `b` of `"abc"`, 98. A constant is a C macro whose value has no address, so the element is found from the span's value. Before, the C took the address of the span, and the C compile failed with `lvalue required as unary '&' operand`.

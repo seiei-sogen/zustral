@@ -1,0 +1,1 @@
+Test that the bodies of two `borrow` statements in a row can declare a variable of the same name (issue #133). A variable declared in the body of a borrow ends there. Before, both variables were declared in the same C scope, and the C compile failed with `redeclaration of 'y'`.
