@@ -1,17 +1,20 @@
 exit: 255
-files: 
+files:
 --- stdout
 --- stderr
 Error:
-  Title: Internal Error
+  Title: Type Error
   Module:
-    [unknown]
+    Zero
   Location:
-    [no span available]
+    Filename: 'Zero.zum'
+    From: line 3, column 24
+    To: line 3, column 29
   Description:
-    Internal compiler error: Division_by_zero
-    
-    This is a bug in the compiler, please open an issue here: `https://github.com/seiei-sogen/zustral/issues`
+    The divisor of this division is zero.
   Code:
-    [no span available]
-
+    1 | module body Zero is
+    2 |     function main(): ExitCode is
+    3 |         let y: Int64 := 7 / 0;
+    4 |         return ExitSuccess();
+    5 |     end;

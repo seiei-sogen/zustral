@@ -1,0 +1,7 @@
+module body Test is
+    function main(): ExitCode is
+        let y: Int32 := 7 / (3 - 3);
+        printLn(y);
+        return ExitSuccess();
+    end;
+end module body.
