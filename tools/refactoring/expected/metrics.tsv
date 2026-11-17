@@ -11,6 +11,7 @@ lib/BuiltIn.ml	39	0	0	0	0	0	0	0	0	0	0
 lib/BuiltInNames.ml	185	0	0	0	0	0	0	0	0	0	0
 lib/CCompilerErrors.ml	41	0	0	0	0	0	1	0	0	0	0
 lib/CIdent.ml	42	0	0	0	0	0	1	0	0	0	0
+lib/CIntegerConstant.ml	16	0	0	0	0	0	0	0	0	0	0
 lib/CRenderer.ml	294	0	0	0	0	1	1	0	0	0	0
 lib/CRepr.ml	108	0	0	0	0	0	5	0	0	0	0
 lib/CliErrors.ml	146	0	1	0	0	0	12	0	0	0	0
@@ -50,11 +51,11 @@ lib/Lexer.mll	179	4	0	0	0	0	0	0	0	0	0
 lib/LiftControlPass.ml	226	0	0	0	0	0	0	0	0	0	0
 lib/LinearityCheck.ml	652	16	0	0	0	0	0	2	0	0	0
 lib/LinearityErrors.ml	198	0	0	0	0	0	0	0	0	0	0
-lib/LiteralTyping.ml	165	2	0	0	0	0	0	0	0	0	0
+lib/LiteralTyping.ml	164	2	0	0	0	0	0	0	0	0	0
 lib/MonoType.ml	38	0	0	0	0	0	0	0	0	0	0
 lib/MonoTypeBindings.ml	45	0	0	0	0	0	0	0	0	0	0
 lib/Monomorphize.ml	783	5	0	0	0	0	0	3	0	0	0
-lib/NumberLiteral.ml	83	0	0	0	0	0	2	0	0	0	0
+lib/NumberLiteral.ml	81	0	0	0	0	0	2	0	0	0	0
 lib/Outcome.ml	59	0	1	0	0	0	0	0	0	0	0
 lib/ParseErrors.ml	46	0	0	0	0	0	2	0	0	0	0
 lib/Parser.mly	571	0	0	0	0	0	0	0	0	0	0

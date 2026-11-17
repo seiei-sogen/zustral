@@ -57,8 +57,9 @@ val of_value : Z.t -> int_literal
 
 (** {1 Printing} *)
 
-(** The text the compiler prints for an integer literal: into the generated C,
-    and into the message that says the literal does not fit a type. *)
+(** The text the compiler prints for an integer literal in the message that
+    says the literal does not fit a type. The generated C has its own text
+    ([CIntegerConstant.text_of_value]). *)
 val int_text : int_literal -> string
 
 (** The text the compiler prints for a float literal into the generated C. *)

@@ -73,9 +73,7 @@ let of_float (written: string): float_literal =
 let of_value (value: Z.t): int_literal =
   { written = Z.to_string value; radix = Decimal; value }
 
-(* The value in decimal, whatever the literal looked like. C reads a literal
-   that starts with a zero as octal, so the text as written cannot go into the
-   C. *)
+(* The value in decimal, whatever the literal looked like. *)
 let int_text (literal: int_literal): string =
   Z.to_string literal.value
 

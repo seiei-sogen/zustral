@@ -227,7 +227,7 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
   | MBoolConstant b ->
      CBool b
   | MIntConstant i ->
-     CInt (NumberLiteral.int_text i)
+     CInt (CIntegerConstant.text_of_value i.value)
   | MFloatConstant f ->
      CFloat (NumberLiteral.float_text f)
   | MStringConstant s ->

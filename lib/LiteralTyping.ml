@@ -75,14 +75,13 @@ let fits (signed : signedness) (width : integer_width) (n : Z.t) : bool =
     | Unsigned, Width16       -> (Z.zero, Z.of_string "65535")
     | Unsigned, Width32       -> (Z.zero, Z.of_string "4294967295")
     | Unsigned, Width64       -> (Z.zero, Z.of_string "18446744073709551615")
-    | Unsigned, WidthByteSize -> (Z.zero, Z.of_string "255")
-    | Unsigned, WidthIndex    -> (Z.zero, Z.of_string "18446744073709551615") (* TODO: Assuming 64-bit size_t *)
+    (* A byte size and an index are both a size_t. TODO: Assuming 64-bit size_t *)
+    | Unsigned, (WidthByteSize | WidthIndex) -> (Z.zero, Z.of_string "18446744073709551615")
     | Signed, Width8          -> (Z.of_string "-128", Z.of_string "127")
     | Signed, Width16         -> (Z.of_string "-32768", Z.of_string "32767")
     | Signed, Width32         -> (Z.of_string "-2147483648", Z.of_string "2147483647")
     | Signed, Width64         -> (Z.of_string "-9223372036854775808", Z.of_string "9223372036854775807")
-    | Signed, WidthByteSize   -> (Z.of_string "-128", Z.of_string "127")
-    | Signed, WidthIndex      -> (Z.of_string "-9223372036854775808", Z.of_string "9223372036854775807") (* TODO: Assuming 64-bit ssize_t *)
+    | Signed, (WidthByteSize | WidthIndex) -> (Z.of_string "-9223372036854775808", Z.of_string "9223372036854775807") (* TODO: Assuming 64-bit ssize_t *)
   in
   Z.compare min_bound n <= 0 && Z.compare n max_bound <= 0
 
@@ -97,7 +96,7 @@ let literal_matches (place: place) (ty: ty) (expr: texpr): bool =
   match ty with
   | Integer (signedness, width) ->
      (match expr with
-      | TIntConstant value | TCast (TIntConstant value, _) | TImplicitCast (TIntConstant value, _) ->
+      | TIntConstant value | TImplicitCast (TIntConstant value, _) ->
          check_int_literal_fits place signedness width value;
          true
       | TNilConstant | TBoolConstant _ | TFloatConstant _ | TStringConstant _
@@ -110,7 +109,7 @@ let literal_matches (place: place) (ty: ty) (expr: texpr): bool =
          false)
   | SingleFloat | DoubleFloat ->
      (match expr with
-      | TFloatConstant _ | TCast (TFloatConstant _, _) | TImplicitCast (TFloatConstant _, _) ->
+      | TFloatConstant _ | TImplicitCast (TFloatConstant _, _) ->
          true
       | TNilConstant | TBoolConstant _ | TIntConstant _ | TStringConstant _
       | TConstVar _ | TParamVar _ | TLocalVar _ | TFunVar _ | TTemporary _ | TFuncall _
