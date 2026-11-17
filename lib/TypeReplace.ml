@@ -172,7 +172,7 @@ let rec replace_tyvars_stmt (bindings: type_bindings) (stmt: tstmt): tstmt =
      and final = replace_tyvars_expr bindings final
      and body = replace_tyvars_stmt bindings body in
      TFor (span, name, initial, final, body)
-  | TBorrow { span; original; rename; region; orig_type; ref_type; body; mode } ->
+  | TBorrow { span; original; rename; region; orig_type; ref_type; body; mode; origin } ->
      let orig_type = replace_variables bindings orig_type
      and ref_type = replace_variables bindings ref_type
      and body = replace_tyvars_stmt bindings body in
@@ -184,7 +184,8 @@ let rec replace_tyvars_stmt (bindings: type_bindings) (stmt: tstmt): tstmt =
          orig_type = orig_type;
          ref_type = ref_type;
          body = body;
-         mode = mode
+         mode = mode;
+         origin = origin
        }
   | TBlock (span, a, b) ->
      let a = replace_tyvars_stmt bindings a

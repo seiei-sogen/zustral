@@ -279,7 +279,7 @@ let assign_t: tstmt = TAssignTmp (t, TNilConstant)
 
 let borrow_t (mode: borrow_stmt_kind) (body: tstmt): tstmt =
   TBorrow { span = sp; original = t; rename = i "r"; region = i "R"; orig_type = linear;
-            ref_type = ReadRef (linear, static); body; mode }
+            ref_type = ReadRef (linear, static); body; mode; origin = AnonymousBorrow }
 
 let rec block (stmts: tstmt list): tstmt =
   match stmts with

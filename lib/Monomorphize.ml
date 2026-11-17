@@ -384,12 +384,12 @@ let rec monomorphize_stmt (env: env) (stmt: tstmt): (mstmt * env) =
      let (final, env) = monomorphize_expr env final in
      let (body, env) = monomorphize_stmt env body in
      (MFor (name, start, final, body), env)
-  | TBorrow { span; original; rename; region; orig_type; ref_type; body; mode } ->
+  | TBorrow { span; original; rename; region; orig_type; ref_type; body; mode; origin } ->
      let _ = span in
      let (orig_type, env) = strip_and_mono env orig_type in
      let (ref_type, env) = strip_and_mono env ref_type in
      let (body, env) = monomorphize_stmt env body in
-     (MBorrow { original = original; rename = rename; region = region; orig_type = orig_type; ref_type = ref_type; body = body; mode = mode }, env)
+     (MBorrow { original = original; rename = rename; region = region; orig_type = orig_type; ref_type = ref_type; body = body; mode = mode; origin = origin }, env)
   | TBlock (_, a, b) ->
      let (a, env) = monomorphize_stmt env a in
      let (b, env) = monomorphize_stmt env b in

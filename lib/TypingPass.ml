@@ -454,8 +454,9 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
                 in
                 WriteRef (pointed_ty, RefRegion region_obj))
           in
-          (* The reference has the type the statement declares for it. *)
-          let _ =
+          (* The reference has the type the statement declares for it. Only a
+             borrow the user wrote declares one. *)
+          let origin: borrow_origin =
             match declared_reference with
             | Some (declared_mode, declared_referent) ->
                let declared_referent: ty = parse_typespec place env rm typarams declared_referent in
@@ -465,11 +466,11 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
                  | WriteBorrow -> WriteRef (declared_referent, RefRegion region_obj)
                in
                if equal_ty declared_refty refty then
-                 ()
+                 WrittenBorrow
                else
                  type_error place (TypeMismatch { expected = declared_refty; actual = refty })
             | None ->
-               ()
+               AnonymousBorrow
           in
           let lexenv = push_var place lexenv rename refty (VarLocal Immutable) in
           let rm' = add_region place rm region region_obj in
@@ -483,7 +484,8 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
               orig_type=orig_ty;
               ref_type=refty;
               body=body;
-              mode=mode
+              mode=mode;
+              origin=origin
             }, remove_var lexenv rename, supply)
        | None ->
           generic_error place (UnknownName { kind = VariableName; name = original })))

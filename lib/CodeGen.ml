@@ -370,7 +370,7 @@ let rec gen_stmt (mn: module_name) (supply: Supply.t) (stmt: mstmt): c_stmt * Su
          CLet (gen_ident v, CBuiltinType CSizeType, Some (ge i));
          CFor (gen_ident v, ge f, b)
        ], supply)
-  | MBorrow { original; rename; orig_type; body; mode; _ } ->
+  | MBorrow { original; rename; orig_type; body; mode; origin; _ } ->
      let is_pointer =
        (match orig_type with
         | MonoAddress _ ->
@@ -380,34 +380,39 @@ let rec gen_stmt (mn: module_name) (supply: Supply.t) (stmt: mstmt): c_stmt * Su
         | MonoSpan _ | MonoSpanMut _ | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
            false)
      in
-     if is_pointer then
-       let l = CLet (gen_ident rename, gen_type orig_type, Some (CVar (gen_ident original))) in
-       let (body, supply) = gs supply body in
-       (CBlock [l; body], supply)
-     else
-       let e = begin
-           match mode with
-           | Read ->
-              CAddressOf (CVar (gen_ident original))
-           | Write ->
-              CAddressOf (CVar (gen_ident original))
-           | Reborrow ->
-              CVar (gen_ident original)
-         end
-       in
-       let ty = begin
-           match mode with
-           | Read ->
-              CPointer (gen_type orig_type)
-           | Write ->
-              CPointer (gen_type orig_type)
-           | Reborrow ->
-              gen_type orig_type
-         end
-       in
-       let l = CLet (gen_ident rename, ty, Some e) in
-       let (body, supply) = gs supply body in
-       (CBlock [l; body], supply)
+     let l =
+       if is_pointer then
+         CLet (gen_ident rename, gen_type orig_type, Some (CVar (gen_ident original)))
+       else
+         let e = begin
+             match mode with
+             | Read ->
+                CAddressOf (CVar (gen_ident original))
+             | Write ->
+                CAddressOf (CVar (gen_ident original))
+             | Reborrow ->
+                CVar (gen_ident original)
+           end
+         in
+         let ty = begin
+             match mode with
+             | Read ->
+                CPointer (gen_type orig_type)
+             | Write ->
+                CPointer (gen_type orig_type)
+             | Reborrow ->
+                gen_type orig_type
+           end
+         in
+         CLet (gen_ident rename, ty, Some e)
+     in
+     let (body, supply) = gs supply body in
+     (match origin with
+      | WrittenBorrow ->
+         (* A scope in C too, so that two borrows can declare the same names (issue #137). *)
+         (CExplicitBlock [l; body], supply)
+      | AnonymousBorrow ->
+         (CBlock [l; body], supply))
   | MBlock (a, b) ->
      let (b, supply) = gs supply b in
      let (a, supply) = gs supply a in

@@ -574,7 +574,8 @@ let test_borrows_of_values_that_are_not_addresses _ =
                        orig_type;
                        ref_type = MonoReadRef (orig_type, MonoRegionTy Region.static_region);
                        body = MSkip;
-                       mode = Read
+                       mode = Read;
+                       origin = AnonymousBorrow
                      }
       in
       match function_definitions (generate env [MFunction (id, make_ident "f", [], MonoUnit, borrow)]) with

@@ -492,6 +492,14 @@ module Tast = struct
     | CasePlain
     | CaseRef
 
+  (** Who wrote a borrow statement. *)
+  type borrow_origin =
+    | WrittenBorrow
+    (** A [borrow] statement in the source. What its body declares ends with it. *)
+    | AnonymousBorrow
+    (** A borrow made around the statement that holds an anonymous borrow
+        ([&x]). The temporaries in its body are read after it. *)
+
   type tstmt =
     | TSkip of span
     | TLet of span * mutability * identifier * ty * tstmt
@@ -513,7 +521,8 @@ module Tast = struct
         orig_type: ty;
         ref_type: ty;
         body: tstmt;
-        mode: borrow_stmt_kind
+        mode: borrow_stmt_kind;
+        origin: borrow_origin
       }
     | TBlock of span * tstmt * tstmt
     | TDiscarding of span * texpr
@@ -665,7 +674,8 @@ module Mtast = struct
         orig_type: mono_ty;
         ref_type: mono_ty;
         body: mstmt;
-        mode: borrow_stmt_kind
+        mode: borrow_stmt_kind;
+        origin: Tast.borrow_origin
       }
     | MBlock of mstmt * mstmt
     | MDiscarding of mexpr

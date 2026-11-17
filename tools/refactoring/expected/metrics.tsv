@@ -15,7 +15,7 @@ lib/CIntegerConstant.ml	16	0	0	0	0	0	0	0	0	0	0
 lib/CRenderer.ml	294	0	0	0	0	1	1	0	0	0	0
 lib/CRepr.ml	108	0	0	0	0	0	5	0	0	0	0
 lib/CliErrors.ml	146	0	1	0	0	0	12	0	0	0	0
-lib/CodeGen.ml	692	0	0	0	0	1	0	0	0	0	0
+lib/CodeGen.ml	697	0	0	0	0	1	0	0	0	0	0
 lib/CombiningPass.ml	380	13	0	0	0	0	0	0	0	0	0
 lib/Common.ml	65	0	0	0	0	0	3	0	0	0	0
 lib/Compiler.ml	152	0	0	0	0	0	0	0	0	0	0
@@ -70,7 +70,7 @@ lib/ReturnCheck.ml	133	3	0	0	0	0	0	0	0	0	0
 lib/SignatureTypeAtUse.ml	41	0	0	0	0	0	0	0	0	0	0
 lib/SourceContext.ml	54	0	0	0	0	0	1	0	0	0	0
 lib/Span.ml	63	0	0	0	0	0	1	0	0	0	0
-lib/Stages.ml	727	0	0	0	0	0	8	0	0	0	0
+lib/Stages.ml	737	0	0	0	0	0	8	0	0	0	0
 lib/StringSet.ml	9	0	0	0	0	0	0	0	0	0	0
 lib/Supply.ml	74	0	0	0	0	0	0	0	0	0	0
 lib/TastUtil.ml	177	3	0	0	0	0	0	0	0	0	0
@@ -83,12 +83,12 @@ lib/TypeMatch.ml	359	5	0	0	0	0	0	1	0	0	0
 lib/TypeParameter.ml	36	0	0	0	0	0	0	0	0	0	0
 lib/TypeParameters.ml	61	2	0	0	0	0	0	0	0	0	0
 lib/TypeParser.ml	330	10	0	0	0	2	0	0	0	0	0
-lib/TypeReplace.ml	211	0	0	0	0	0	0	0	0	0	0
+lib/TypeReplace.ml	212	0	0	0	0	0	0	0	0	0	0
 lib/TypeSignature.ml	23	0	0	0	0	0	0	0	0	0	0
 lib/TypeStripping.ml	82	1	0	0	0	0	0	1	0	0	0
 lib/TypeSystem.ml	97	0	0	0	0	0	0	0	0	0	0
 lib/TypeVarSet.ml	16	0	0	0	0	0	0	0	0	0	0
 lib/TypeclassNamedByConstraint.ml	26	0	0	0	0	0	0	0	0	0	0
-lib/TypingPass.ml	777	31	0	0	0	1	0	0	0	0	0
+lib/TypingPass.ml	779	31	0	0	0	1	0	0	0	0	0
 lib/Util.ml	105	0	0	0	0	1	0	0	0	0	0
 lib/Version.ml	19	0	0	0	0	0	0	0	0	0	0
