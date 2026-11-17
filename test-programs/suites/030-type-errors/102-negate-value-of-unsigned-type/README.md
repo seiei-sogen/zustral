@@ -1,0 +1,1 @@
+Pins that negating a value of an unsigned integer type is a type error, and that the error is about the negation the program wrote (issue #26). The compiler used to read `-n` as `0 - n`, which compiled and stopped the program for any value but zero.

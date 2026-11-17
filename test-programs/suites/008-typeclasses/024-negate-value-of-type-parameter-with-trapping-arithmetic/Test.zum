@@ -1,0 +1,14 @@
+module body Test is
+    generic [T: Type(TrappingArithmetic)]
+    function neg(x: T): T is
+        return -x;
+    end;
+
+    function main(): ExitCode is
+        let n: Int32 := 5;
+        printLn(neg(n));
+        let f: Float64 := 2.5;
+        printLn(neg(f));
+        return ExitSuccess();
+    end;
+end module body.

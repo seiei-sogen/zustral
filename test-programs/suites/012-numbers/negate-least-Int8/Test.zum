@@ -1,0 +1,7 @@
+module body Test is
+    function main(): ExitCode is
+        let a: Int8 := -128;
+        printLn(-a);
+        return ExitSuccess();
+    end;
+end module body.

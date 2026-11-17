@@ -1,0 +1,1 @@
+Pins that unary minus negates a `Float64` (issues #26, #162): `-a` of a variable, `- 2.5` of a literal with a space after the sign, `- -2.5` of a negated literal, and `-z` of zero, which is negative zero. The compiler used to read `-x` as `0 - x`, and the integer literal `0` is not a `Float64`.

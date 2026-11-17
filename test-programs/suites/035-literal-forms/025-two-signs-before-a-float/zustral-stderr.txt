@@ -4,8 +4,8 @@
   "text": [ { "type": "text", "content": "Error during parse." } ],
   "span": {
     "filename": "test-programs/suites/035-literal-forms/025-two-signs-before-a-float/Test.zum",
-    "startp": { "line": 3, "column": 26 },
-    "end": { "line": 3, "column": 27 }
+    "startp": { "line": 3, "column": 27 },
+    "end": { "line": 3, "column": 28 }
   },
   "context": [
     [ 1, "module body Test is" ],

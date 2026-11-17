@@ -1,0 +1,29 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "Only a value of a signed integer type, of a float type, or of a type parameter with the constraint "
+    },
+    { "type": "code", "content": "TrappingArithmetic" },
+    {
+      "type": "text",
+      "content": " can be negated, but this value has the type "
+    },
+    { "type": "type", "content": "Nat8" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/102-negate-value-of-unsigned-type/Test.zum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 20 }
+  },
+  "context": [
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        let n: Nat8 := 5;" ],
+    [ 4, "        printLn(-n);" ],
+    [ 5, "        return ExitSuccess();" ],
+    [ 6, "    end;" ]
+  ]
+}

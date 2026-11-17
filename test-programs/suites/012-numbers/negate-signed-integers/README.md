@@ -1,0 +1,1 @@
+Pins that unary minus negates a value of each signed integer type, the greatest of `Int64` included, and that it applies to a parenthesized expression and to the right operand of an arithmetic expression (issue #26).

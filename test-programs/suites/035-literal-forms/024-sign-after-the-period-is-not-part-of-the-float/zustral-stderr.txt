@@ -1,11 +1,20 @@
 {
-  "module": null,
-  "kind": "Parse Error",
-  "text": [ { "type": "text", "content": "Error during parse." } ],
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "Both operands to an arithmetic expression must be compatible types. The LHS has type "
+    },
+    { "type": "type", "content": "Float64" },
+    { "type": "text", "content": " but the RHS has type " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": "." }
+  ],
   "span": {
     "filename": "test-programs/suites/035-literal-forms/024-sign-after-the-period-is-not-part-of-the-float/Test.zum",
-    "startp": { "line": 3, "column": 28 },
-    "end": { "line": 3, "column": 30 }
+    "startp": { "line": 3, "column": 8 },
+    "end": { "line": 3, "column": 31 }
   },
   "context": [
     [ 1, "module body Test is" ],

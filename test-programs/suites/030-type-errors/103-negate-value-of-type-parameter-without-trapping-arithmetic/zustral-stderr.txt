@@ -1,0 +1,29 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "Only a value of a signed integer type, of a float type, or of a type parameter with the constraint "
+    },
+    { "type": "code", "content": "TrappingArithmetic" },
+    {
+      "type": "text",
+      "content": " can be negated, but this value has the type "
+    },
+    { "type": "type", "content": "T" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/103-negate-value-of-type-parameter-without-trapping-arithmetic/Test.zum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 18 }
+  },
+  "context": [
+    [ 2, "    generic [T: Free]" ],
+    [ 3, "    function neg(x: T): T is" ],
+    [ 4, "        return -x;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ]
+  ]
+}
