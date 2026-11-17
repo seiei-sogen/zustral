@@ -16,12 +16,14 @@ let test_run_command _ =
   eq "derp" stdout;
   eq "" stderr
 
-(* `run_command` never sees a stopped process: it waits for the command to
+(* A signal gives 128 and the system's number of the signal, as a shell
+   reports it (issue #144). SIGKILL is 9 and SIGTERM 15 on every system.
+   `run_command` never sees a stopped process: it waits for the command to
    finish. *)
 let test_exit_code _ =
   eq 3 (Zustral_cli.ProcessStatus.exit_code (Unix.WEXITED 3));
-  eq Sys.sigkill (Zustral_cli.ProcessStatus.exit_code (Unix.WSIGNALED Sys.sigkill));
-  eq Sys.sigstop (Zustral_cli.ProcessStatus.exit_code (Unix.WSTOPPED Sys.sigstop))
+  eq 137 (Zustral_cli.ProcessStatus.exit_code (Unix.WSIGNALED Sys.sigkill));
+  eq 143 (Zustral_cli.ProcessStatus.exit_code (Unix.WSTOPPED Sys.sigterm))
 
 (* Issue #93: a file of a million lines is read without running out of
    stack. A command-line test would need a fixture of megabytes. *)

@@ -58,13 +58,23 @@ let test_write_to_full_device _ =
   eq "Command Line Arguments Error: Failed to write to file `/dev/full`: \n\nNo space left on device"
     (raised_wording (fun () -> Zustral_cli.Os.write_string_to_file "/dev/full" "x"))
 
-(* This fixes what the code does today, not what it should do: the code of a
-   command that a signal killed is OCaml's number of the signal (-7 for
-   SIGKILL), neither the number of the system (9) nor what a shell reports
-   (137). Issue #144 has it. *)
+(* The code of a command that a signal killed is what a shell reports: 128
+   and the system's number of the signal (issue #144). *)
 let test_command_killed_by_signal _ =
   let (Zustral_cli.Os.CommandOutput { code; _ }) = Zustral_cli.Os.run_command "kill -9 $$" in
-  eq Sys.sigkill code
+  eq 137 code
+
+(* No program makes the compiler raise an exception other than its errors once
+   its bugs are fixed, so this calls the conversion that Cli.main uses. *)
+let test_unexpected_exception_is_an_internal_error _ =
+  let title_and_wording (error: zustral_error): string =
+    let (ZustralError { error; _ }) = error in
+    error_title error ^ ": " ^ wording error
+  in
+  eq "Internal Error: Internal compiler error: Failure(\"boom\")\n\nThis is a bug in the compiler, please open an issue here: `https://github.com/austral/austral/issues`"
+    (title_and_wording (error_of_exception (Failure "boom")));
+  let reported = make_error NoSpan (Generic GenericErrors.LeftoverArguments) in
+  eq reported (error_of_exception (Zustral_error reported))
 
 let module_of (error: zustral_error): string option =
   let (ZustralError { location; _ }) = error in
@@ -99,6 +109,7 @@ let suite =
       "Write error" >:: test_write_error_wording;
       "Write to a full device" >:: test_write_to_full_device;
       "Command killed by a signal" >:: test_command_killed_by_signal;
+      "Unexpected exception is an internal error" >:: test_unexpected_exception_is_an_internal_error;
       "Module name is added once" >:: test_module_name_is_added_once;
       "Source context is added once" >:: test_source_context_is_added_once;
       "Line numbers are right aligned" >:: test_line_numbers_are_right_aligned

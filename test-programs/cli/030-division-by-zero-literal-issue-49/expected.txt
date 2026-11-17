@@ -1,5 +1,17 @@
-exit: 2
+exit: 255
 files: 
 --- stdout
 --- stderr
-Fatal error: exception Division_by_zero
+Error:
+  Title: Internal Error
+  Module:
+    [unknown]
+  Location:
+    [no span available]
+  Description:
+    Internal compiler error: Division_by_zero
+    
+    This is a bug in the compiler, please open an issue here: `https://github.com/austral/austral/issues`
+  Code:
+    [no span available]
+

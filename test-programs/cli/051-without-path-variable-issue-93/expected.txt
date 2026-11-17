@@ -3,7 +3,7 @@ files:
 --- stdout
 --- stderr
 Error:
-  Title: Command Line Arguments Error
+  Title: C Compiler Error
   Module:
     [unknown]
   Location:
