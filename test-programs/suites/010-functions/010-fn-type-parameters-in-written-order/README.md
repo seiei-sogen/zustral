@@ -1,0 +1,1 @@
+Test that the parameters of a function pointer type are read in the order they are written (issue #127). `Fn[Int32, Bool, Int32]` takes an `Int32`, then a `Bool`, and returns an `Int32`: the type of `keepIf`. Before, the parameters were read in reverse, and the `let` was rejected with ``Cannot cast to `Fn[Bool, Int32, Int32]` from `Fn[Int32, Bool, Int32]` ``.
