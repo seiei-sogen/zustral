@@ -1,0 +1,14 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "The value of a constant can only name the constants declared before it, and "
+    },
+    { "type": "code", "content": "b" },
+    { "type": "text", "content": " is not one of them." }
+  ],
+  "span": null,
+  "context": null
+}

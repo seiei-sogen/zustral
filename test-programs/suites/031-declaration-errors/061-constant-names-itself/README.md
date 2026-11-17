@@ -1,0 +1,1 @@
+Test that the value of a constant cannot name the constant itself (issue #142). Before, the program passed type checking, and the C compiler failed: the constant is a macro, and a macro that names itself is not expanded. The error has no span yet: a constant has none after the combining pass (issue #87).
