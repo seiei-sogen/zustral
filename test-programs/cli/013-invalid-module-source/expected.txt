@@ -11,7 +11,7 @@ Error:
   Description:
     Invalid module source format `a,b,c`
     
-    Sources must be supplied as either`interface.zui,body.zum` or `body.zum`
+    Sources must be supplied as either `interface.zui,body.zum` or `body.zum`
   Code:
     [no span available]
 

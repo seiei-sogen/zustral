@@ -39,7 +39,7 @@ let render (error: t): err_text =
        Text "Invalid module source format ";
        Code source;
        Break;
-       Text "Sources must be supplied as either";
+       Text "Sources must be supplied as either ";
        Code "interface.zui,body.zum";
        Text " or ";
        Code "body.zum"
