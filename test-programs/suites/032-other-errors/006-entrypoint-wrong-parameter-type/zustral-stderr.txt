@@ -1,5 +1,5 @@
 {
-  "module": null,
+  "module": "Test",
   "kind": "Entrypoint Definition Error",
   "text": [
     {
@@ -10,6 +10,16 @@
     { "type": "text", "content": " but it is " },
     { "type": "type", "content": "Int32" }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/032-other-errors/006-entrypoint-wrong-parameter-type/Test.zum",
+    "startp": { "line": 1, "column": 19 },
+    "end": { "line": 4, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function main(n: Int32): ExitCode is" ],
+    [ 3, "        return ExitSuccess();" ],
+    [ 4, "    end;" ],
+    [ 5, "end module body." ]
+  ]
 }

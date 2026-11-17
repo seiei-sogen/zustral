@@ -9,6 +9,15 @@
     { "type": "code", "content": "k" },
     { "type": "text", "content": " is not one of them." }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/061-constant-names-itself/Test.zum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 2, "column": 27 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    constant k: Int32 := k;" ],
+    [ 3, "" ],
+    [ 4, "    function main(): ExitCode is" ]
+  ]
 }

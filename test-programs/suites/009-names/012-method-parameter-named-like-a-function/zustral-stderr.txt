@@ -1,0 +1,30 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "The variable " },
+    { "type": "code", "content": "x" },
+    {
+      "type": "text",
+      "content": " collides with the name of a declaration."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/009-names/012-method-parameter-named-like-a-function/Test.zum",
+    "startp": { "line": 8, "column": 8 },
+    "end": { "line": 14, "column": 8 }
+  },
+  "context": [
+    [ 6, "    function x(): Int32 is" ],
+    [ 7, "        return 1;" ],
+    [ 8, "    end;" ],
+    [ 9, "" ],
+    [ 10, "    instance C(Int32) is" ],
+    [ 11, "        method m(x: Int32): Int32 is" ],
+    [ 12, "            return 1;" ],
+    [ 13, "        end;" ],
+    [ 14, "    end;" ],
+    [ 15, "" ],
+    [ 16, "    function main(): ExitCode is" ]
+  ]
+}

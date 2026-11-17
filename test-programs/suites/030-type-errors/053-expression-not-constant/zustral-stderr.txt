@@ -7,6 +7,15 @@
       "content": "The expression is not a valid constant expression."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/053-expression-not-constant/Test.zum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 2, "column": 41 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    constant c: Index := argumentCount();" ],
+    [ 3, "" ],
+    [ 4, "    function main(): ExitCode is" ]
+  ]
 }

@@ -2,6 +2,17 @@
   "module": "Test",
   "kind": "Generic Error",
   "text": [ { "type": "text", "content": "Bad whitespace escape sequence" } ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/009-bad-whitespace-escape/Test.zum",
+    "startp": { "line": 1, "column": 19 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        let s: Span[Nat8, Static] := \"a\\ b\";" ],
+    [ 4, "        return ExitSuccess();" ],
+    [ 5, "    end;" ],
+    [ 6, "end module body." ]
+  ]
 }

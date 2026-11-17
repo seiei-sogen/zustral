@@ -1,0 +1,16 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [ { "type": "text", "content": "Bad whitespace escape sequence" } ],
+  "span": {
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/036-bad-whitespace-escape-in-a-constant/Test.zum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 2, "column": 45 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    constant s: Span[Nat8, Static] := \"a\\ b\";" ],
+    [ 3, "" ],
+    [ 4, "    function main(): ExitCode is" ]
+  ]
+}

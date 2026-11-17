@@ -9,6 +9,15 @@
     { "type": "code", "content": "b" },
     { "type": "text", "content": " is not one of them." }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/062-constant-names-a-later-constant/Test.zum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 2, "column": 27 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    constant a: Int32 := b;" ],
+    [ 3, "    constant b: Int32 := a;" ],
+    [ 4, "" ]
+  ]
 }
