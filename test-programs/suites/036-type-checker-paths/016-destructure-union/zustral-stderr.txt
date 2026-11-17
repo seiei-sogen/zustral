@@ -2,9 +2,12 @@
   "module": "Test",
   "kind": "Type Error",
   "text": [
-    { "type": "text", "content": "Cannot take a path of the type " },
+    { "type": "text", "content": "The type " },
     { "type": "type", "content": "Wrapper" },
-    { "type": "text", "content": " because it is not a record." }
+    {
+      "type": "text",
+      "content": " cannot be destructured because it is not a record."
+    }
   ],
   "span": {
     "filename": "test-programs/suites/036-type-checker-paths/016-destructure-union/Test.zum",

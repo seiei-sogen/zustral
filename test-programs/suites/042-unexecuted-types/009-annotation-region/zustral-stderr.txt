@@ -3,7 +3,7 @@
   "kind": "Type Error",
   "text": [
     { "type": "text", "content": "Cannot cast to " },
-    { "type": "type", "content": "Region<0>" },
+    { "type": "type", "content": "Static" },
     { "type": "text", "content": " from " },
     { "type": "type", "content": "Int32" }
   ],

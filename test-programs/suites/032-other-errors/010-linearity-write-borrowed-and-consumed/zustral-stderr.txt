@@ -6,7 +6,7 @@
     { "type": "code", "content": "foo" },
     {
       "type": "text",
-      "content": "cannot be consumed while it is borrowed (mutably)."
+      "content": " cannot be consumed while it is borrowed (mutably)."
     }
   ],
   "span": {

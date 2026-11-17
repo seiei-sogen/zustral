@@ -1,1 +1,1 @@
-Pins the order in which the type checker numbers the regions of the borrows in an `if` statement: the `else` branch first. The two borrows of the `else` branch take the regions 2 and 3, so the borrow in the `then` branch has the region 4, which is in the message.
+An error about the borrow in the `then` branch of an `if` statement, whose `else` branch borrows too. The message names the region the program wrote for the borrow, `rho` (issues #30, #144), not the number the type checker gave it. The type checker numbers the regions of the `else` branch first, so the number was 4.
