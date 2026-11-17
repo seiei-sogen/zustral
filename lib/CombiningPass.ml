@@ -241,12 +241,12 @@ open Outcome.Syntax
 
 let rec combine (env: env) (cmi: concrete_module_interface) (cmb: concrete_module_body): combined_module Outcome.t =
   let (ConcreteModuleInterface (mn, interface_docstring, interface_imports, decls)) = cmi
-  and (ConcreteModuleBody (mn', kind, body_docstring, body_imports, defs)) = cmb
+  and (ConcreteModuleBody (mn', name_span, kind, body_docstring, body_imports, defs)) = cmb
   in
   let* (im, bm) =
     Outcome.catch (fun () ->
         if mn <> mn' then
-          declaration_error NoSpan (ModuleNameMismatch { interface = mn; body = mn' })
+          declaration_error (AtSpan name_span) (ModuleNameMismatch { interface = mn; body = mn' })
         else
           let im = resolve mn kind env interface_imports
           and bm = resolve mn kind env body_imports
@@ -362,7 +362,7 @@ let as_public (def: combined_definition): combined_definition =
      CInstance (span, decl_span, VisPublic, name, typarams, argument, methods, docstring)
 
 let body_as_combined (env: env) (body: concrete_module_body): combined_module Outcome.t =
-  let (ConcreteModuleBody (mn, kind, body_docstring, body_imports, defs)) = body in
+  let (ConcreteModuleBody (mn, _, kind, body_docstring, body_imports, defs)) = body in
   (* We fake an empty module interface. *)
   let cmi: concrete_module_interface = ConcreteModuleInterface (mn, Docstring "", [], []) in
   let* imports = Outcome.catch (fun () -> resolve mn kind env body_imports) in

@@ -44,8 +44,8 @@ let raised (f: unit -> 'a): error =
 (* The stages before the type checker, on a module body. *)
 let front (env: Env.env) (code: string): (Env.env * Linked.linked_module) Outcome.t =
   let* cb = ParserInterface.parse_module_body code "Test.zum" in
-  let (Cst.ConcreteModuleBody (mn, kind, doc, imports, decls)) = cb in
-  let cb = Cst.ConcreteModuleBody (mn, kind, doc, BuiltIn.pervasive_imports :: imports, decls) in
+  let (Cst.ConcreteModuleBody (mn, name_span, kind, doc, imports, decls)) = cb in
+  let cb = Cst.ConcreteModuleBody (mn, name_span, kind, doc, BuiltIn.pervasive_imports :: imports, decls) in
   let* combined = CombiningPass.body_as_combined env cb in
   let* returning = ReturnCheck.check_ends_in_return combined in
   let* (env, small) = Env.with_supply env (fun supply -> DesugaringPass.desugar supply returning) in

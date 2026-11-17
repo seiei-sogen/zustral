@@ -16,7 +16,8 @@ type concrete_module_interface =
   ConcreteModuleInterface of module_name * docstring * concrete_import_list list * concrete_decl list
 
 and concrete_module_body =
-  ConcreteModuleBody of module_name * module_kind * docstring * concrete_import_list list * concrete_def list
+  ConcreteModuleBody of module_name * span * module_kind * docstring * concrete_import_list list * concrete_def list
+  (* The span is where the body writes the name of the module. *)
 
 and concrete_import_list =
   ConcreteImportList of span * module_name * concrete_import list

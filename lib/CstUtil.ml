@@ -25,11 +25,12 @@ let pragmas_must_be_absent (span: Span.span) (pragmas: pragma list): unit =
   | UnsafeModulePragma :: _ ->
      declaration_error (AtSpan span) (MisplacedPragma UnsafeModule)
 
-(* [pragmas_span] covers the pragmas written before `module body`. *)
-let make_module_body (pragmas_span: Span.span) (name: module_name) (imports: concrete_import_list list) (pragmas: pragma list) (defs: concrete_def list) (docstring: docstring) =
+(* [pragmas_span] covers the pragmas written before `module body`, and
+   [name_span] the name of the module. *)
+let make_module_body (pragmas_span: Span.span) (name: module_name) (name_span: Span.span) (imports: concrete_import_list list) (pragmas: pragma list) (defs: concrete_def list) (docstring: docstring) =
   pragmas_must_be_absent pragmas_span (List.filter (fun p -> p <> UnsafeModulePragma) pragmas);
   let kind = if List.mem UnsafeModulePragma pragmas then UnsafeModule else SafeModule in
-  ConcreteModuleBody (name, kind, docstring, imports, defs)
+  ConcreteModuleBody (name, name_span, kind, docstring, imports, defs)
 
 let concrete_decl_name = function
   | ConcreteConstantDecl (_, n, _, _) -> Some n
@@ -66,7 +67,7 @@ let get_concrete_decl (ConcreteModuleInterface (_, _, _, decls)) name =
   in
   List.find_opt pred decls
 
-let get_concrete_def (ConcreteModuleBody (_, _, _, _, defs)) name =
+let get_concrete_def (ConcreteModuleBody (_, _, _, _, _, defs)) name =
   let pick (def: concrete_def): concrete_named_def option =
     match def with
     | ConcreteNamedDef named ->
@@ -86,7 +87,7 @@ let has_instance_decl (ConcreteModuleInterface (_, _, _, decls)) (name: identifi
   in
   List.exists pred decls
 
-let get_instance_def (ConcreteModuleBody (_, _, _, _, defs)) (name: identifier) (typarams: concrete_type_param list) (ty: typespec): concrete_instance option =
+let get_instance_def (ConcreteModuleBody (_, _, _, _, _, defs)) (name: identifier) (typarams: concrete_type_param list) (ty: typespec): concrete_instance option =
   let filter = function
     | ConcreteInstanceDef ci -> Some ci
     | ConcreteNamedDef _ -> None
@@ -148,7 +149,7 @@ let mod_int_name (inter: concrete_module_interface): module_name =
   name
 
 let mod_body_name (body: concrete_module_body): module_name =
-  let (ConcreteModuleBody (name, _, _, _, _)) = body in
+  let (ConcreteModuleBody (name, _, _, _, _, _)) = body in
   name
 
 (* An interface declaration takes no pragma: a function's pragmas are written

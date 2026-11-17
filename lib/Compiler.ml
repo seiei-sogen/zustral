@@ -38,11 +38,11 @@ let append_import_to_interface (ci: concrete_module_interface) (import: concrete
     ConcreteModuleInterface (mn, docstring, import :: imports, decls)
 
 let append_import_to_body (cb: concrete_module_body) (import: concrete_import_list): concrete_module_body =
-  let (ConcreteModuleBody (mn, kind, docstring, imports, decls)) = cb in
+  let (ConcreteModuleBody (mn, name_span, kind, docstring, imports, decls)) = cb in
   if equal_module_name mn pervasive_module_name then
     cb
   else
-    ConcreteModuleBody (mn, kind, docstring, import :: imports, decls)
+    ConcreteModuleBody (mn, name_span, kind, docstring, import :: imports, decls)
 
 (** The environment, and the C generated so far, one unit per module in the
     order the modules were compiled. *)

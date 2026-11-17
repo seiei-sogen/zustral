@@ -11,8 +11,9 @@ open Cst
 open Common
 
 (** Used by the parser to easily create a module body from its components and
-    a list of pragmas, given with the span that covers them. *)
-val make_module_body : Span.span -> module_name -> concrete_import_list list -> pragma list -> concrete_def list -> docstring -> concrete_module_body
+    a list of pragmas: the span of the pragmas, the name of the module and its
+    span, the imports, the pragmas, the definitions and the docstring. *)
+val make_module_body : Span.span -> module_name -> Span.span -> concrete_import_list list -> pragma list -> concrete_def list -> docstring -> concrete_module_body
 
 val get_concrete_decl : concrete_module_interface -> identifier -> concrete_decl option
 
