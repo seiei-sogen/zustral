@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "&[Int32, Region<0>]" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "&[Int32, R]" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/111-call-to-itself-with-own-region-parameter-changed-by-its-place/Test.zum",
+    "startp": { "line": 15, "column": 20 },
+    "end": { "line": 15, "column": 98 }
+  },
+  "context": [
+    [ 13, "            case inner of" ],
+    [ 14, "                when First(first: &[Int32, R]) do" ],
+    [
+      15,
+      "                    let changed: Two[&[Int32, Static], &[Int32, Static]] := launder(first, false);"
+    ],
+    [ 16, "                    printLn(\"first\");" ],
+    [ 17, "                when Second(second: U) do" ]
+  ]
+}
