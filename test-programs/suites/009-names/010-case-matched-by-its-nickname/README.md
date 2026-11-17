@@ -1,0 +1,1 @@
+Test that a `when` matches a union case by the nickname the case is imported under (issue #50). Before, `when Rise do` was not taken to name the case `Up`, and the `case` statement was said to be non-exhaustive.

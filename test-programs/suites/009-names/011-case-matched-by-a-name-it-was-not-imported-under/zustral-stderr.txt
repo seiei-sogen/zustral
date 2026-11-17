@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [ { "type": "text", "content": "Non-exhaustive case statement." } ],
+  "span": {
+    "filename": "test-programs/suites/009-names/011-case-matched-by-a-name-it-was-not-imported-under/Test.zum",
+    "startp": { "line": 6, "column": 8 },
+    "end": { "line": 11, "column": 17 }
+  },
+  "context": [
+    [ 4, "    function main(): ExitCode is" ],
+    [ 5, "        let m: Mode := Rise();" ],
+    [ 6, "        case m of" ],
+    [ 7, "            when Up do" ],
+    [ 8, "                printLn(1);" ],
+    [ 9, "            when Down do" ],
+    [ 10, "                printLn(2);" ],
+    [ 11, "        end case;" ],
+    [ 12, "        return ExitSuccess();" ],
+    [ 13, "    end;" ]
+  ]
+}

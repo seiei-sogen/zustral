@@ -1,0 +1,14 @@
+import Lib (Mode, Up as Rise, Down, pick);
+
+module body Test is
+    function main(): ExitCode is
+        let m: Mode := Rise();
+        case m of
+            when Rise do
+                printLn(1);
+            when Down do
+                printLn(2);
+        end case;
+        return ExitSuccess();
+    end;
+end module body.

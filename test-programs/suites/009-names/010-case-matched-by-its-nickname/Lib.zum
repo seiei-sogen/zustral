@@ -1,0 +1,10 @@
+module body Lib is
+    function pick(m: Mode): Int64 is
+        case m of
+            when Up do
+                return 1;
+            when Down do
+                return 2;
+        end case;
+    end;
+end module body.
