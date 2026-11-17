@@ -260,27 +260,28 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
   - 原因: 関数とメソッドの単相化は、領域の引数を `Static` にする（`lib/TypeCheckExpr.ml:172-176`、`lib/Monomorphize.ml:30-34`）。レコードの単相化は、領域を残す（`lib/Monomorphize.ml:58`）。
   - 直し方: 型の単相化でも、領域を `Static` にする。小。
   - 危険: 生成する C の、単相化の番号と個数が変わる。`measure.sh --record` が要る。
-- [ ] **Z10** #92、#161 C の名前。
+- [x] **Z10** #92、#161 C の名前。
   - 原因: `lib/CodeGen.ml:93-94` と `:559` が、エスケープしない名前を使う。`:561` と `:572` が、外部の名前を、宣言と呼び出しで別の作り方で作る。`lib/CIdent.ml:33` の正規表現が、末尾で止まらない。`lib/CstUtil.ml:86-110` が、`External_Name` を調べない。
   - 直し方: 欄、case、外部関数の引数の名前を、エスケープする作り方に通す。外部の名前は1つの作り方にする。`External_Name` が C の識別子であり、C の予約語でないことを、プラグマを読むところで調べる。小。
 - [ ] **Z11** #161、#54 外部関数の検査。
   - 原因: `lib/TypingPass.ml:672-680` が、`Foreign_Export` でモジュールの種別を見ない。`lib/ForeignType.ml:36` の文面が「Not allowed」だけである。`lib/ForeignType.ml:58` が、戻り値の `Unit` を断る。
   - 直し方: 安全なモジュールの `Foreign_Export` をエラーにする。文面に、関数、引数、型を入れる。戻り値の `Unit` を C の `void` にする。小から中。
   - 危険: 安全なモジュールで `Foreign_Export` を使うテストが 41 個ある。`pragma Unsafe_Module;` を足すと、期待値の行番号がずれる。
-- [ ] **Z12** #137、#133 借用の C のスコープ。定数のスパンの添字。
+- [x] **Z12** #137、#133 借用の C のスコープ。定数のスパンの添字。
   - 原因: `lib/CodeGen.ml:380` と `:404` が、`MBorrow` を波括弧のない並びにする。`lib/CodeGen.ml:310` が、マクロである定数のアドレスを取る。
   - 直し方: 利用者が書いた借用だけを、波括弧で包む。`TBorrow` と `MBorrow` に、その区別を持たせる。無名の借用は、後ろで読む一時変数を包むので、波括弧に入れられない。スパンの添字は、値で受ける関数を prelude に足す。小から中。
-- [ ] **Z13** #127 `Fn[A, B, R]` の引数が逆順に読まれる。
+- [x] **Z13** #127 `Fn[A, B, R]` の引数が逆順に読まれる。
   - 原因: `lib/TypeParser.ml:47` の `List.rev`。
   - 直し方: `List.rev` を消す。逆順で書いてあるテスト（`010/005`、`030/023`、`036/036`、`036/057` から `059`、`038/011` など）を書き直す。小。
 - [ ] **Z14** #30、#133、#157 代入と `let` での参照の変換。
   - 原因: `lib/TypingPass.ml:328-330` が、代入の右辺を `infer_expr` と `expect_value_of_type` で調べる。`lib/TypeCheckExpr.ml:882-897` の `check_annotated` が、`&!` から `&!` を断る。
   - 直し方: 代入も `check_annotated_expr` に通す。`&!` から、同じ型と領域の `&!` を受ける。小。
-- [ ] **Z15** #125、#144 レコード、union、スパンどうしの `=`。
+- [x] **Z15** #125、#144 レコード、union、スパンどうしの `=`。
   - 原因: `lib/TypeCheckExpr.ml:634-647` の `augment_comparison` が、型が同じことしか調べない。
   - 直し方: 比べられる型（`Unit`、`Bool`、整数型、浮動小数点数型、`Address`、`Pointer`、関数ポインタ）だけを受ける。型変数は、いまのまま受ける（2.2節）。小。
 - [ ] **Z16** #143 型の数が多いプログラムのコンパイル時間。
   - 測った値: 型が 100、200、400、800 個で、0.50、1.61、5.85、24.8 秒。
+  - Z10 が、正規表現を、完全に一致する名前の一覧に置き換えた。1つ目の原因は、もうない。
   - 原因: `lib/CIdent.ml` の `starts_with_c_keyword` が、呼ぶたびに正規表現を作る。`lib/MonoTypeBindings.ml:14-27` が、比較のたびに `Format` で文字列を作る。`Env.get_record_monomorph` が、線形に探す。
   - 直し方: 正規表現を1回だけ作る。比較を構造で行う。単相化の表を、順序を保ったまま、キーで引けるようにする。中。
   - 確かめ方: 同じ4つの大きさで測り直す。生成する C が、直す前と1バイトも違わないことを見る。
@@ -365,3 +366,7 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 | Y7 | `e3a9856` | 型クラスでない名前の制約が、関数を呼ばなければ通る。呼ぶと、呼び出しの位置でエラー | 宣言の位置で ``The type parameter `T` of `f` is constrained by `R`, which is not a typeclass.`` | 14 個とも ok |
 | Y9 | `9f0c8ab`、`1a3c824`、`ff3858e` | 定数の初期値、本体だけの関数、引数の名前の衝突、エントリポイントなどのエラーが `[no span available]` | どれも、宣言の位置を持つ。エントリポイントが関数でない場合と、ない場合は、モジュールの名前だけが出る | 14 個とも ok |
 | Z8 | `d1df8e5` | 自分を呼ぶ汎用の関数が `No binding for this parameter: T`。型引数の値とリテラルを同じ型引数に渡すと通り、4294967596 と 300 が等しいと出力する。汎用のインスタンスのメソッドの自己呼び出しが `Parameter list and argument list don't have the same length`。自分を関数ポインタとして使うと gcc が `decl_282 undeclared` | 10 項目とも直った。誤った値の件は、自己呼び出しの位置で型エラーになる。型変数に「照合で束縛するか」の区別を持たせ、呼び出しごとの検査を 4 つ消した。#151 のテスト（`030/070` から `087`、`036/030`）は変わらず通る。2870 個のプログラムの出力を比べ、違ったのはこの単位のテスト 13 個だけ | 14 個とも ok |
+| Z10 | `c9f63b9` | 欄 `double`、case `long`、外部関数の引数 `double` で gcc が失敗する。`External_Name => "fork"` でリンクに失敗する。`"not a c name!"` が zustral を通る | 3 などを出力する。``The external name `not a c name!` is not a C identifier.`` | 14 個とも ok |
+| Z12 | `ccb0010`、`a27d0dc` | 同じ名前の借用を2回書くと gcc が `redefinition of rr`。定数のスパンの要素の借用で `lvalue required as unary & operand` | 1、1 と 98 を出力する | 14 個とも ok |
+| Z13 | `d63a0c1` | `let f: Fn[Int32, Bool, Unit] := foo` が ``Cannot cast to `Fn[Bool, Int32, Unit]` from `Fn[Int32, Bool, Unit]` `` | 通って動く | 14 個とも ok |
+| Z15 | `4ed9a47` | レコード、union、スパンどうしの `=` で gcc が `invalid operands to binary ==` | ``Values of the type `R` cannot be compared.``。参照どうしの比較も断る。型変数は、いまのまま受ける | 14 個とも ok |
