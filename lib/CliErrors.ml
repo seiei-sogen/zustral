@@ -9,6 +9,8 @@
 open ErrorText
 
 type t =
+  | UnknownCommand of string
+  | UnknownOption of string
   | InvalidEntrypoint of string
   | InvalidModuleSource of string
   | MissingEntrypoint
@@ -27,6 +29,22 @@ type t =
 
 let render (error: t): err_text =
   match error with
+  | UnknownCommand command ->
+     [
+       Text "Unknown command ";
+       Code command;
+       Text ". Run ";
+       Code "zustral --help";
+       Text " to see the commands."
+     ]
+  | UnknownOption option ->
+     [
+       Text "Unknown option ";
+       Code option;
+       Text ". Run ";
+       Code "zustral --help";
+       Text " to see the options."
+     ]
   | InvalidEntrypoint entry ->
      [
        Text "Invalid entrypoint format ";

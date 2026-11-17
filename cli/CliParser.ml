@@ -71,7 +71,7 @@ let parse_executable_target (arglist: arglist): (arglist * target) =
       | None ->
          cli_error NoSpan MissingOutput)
   | None ->
-     (match pop_bool_flag arglist "--no-entrypoint" with
+     (match pop_bool_flag arglist "no-entrypoint" with
       | Some _ ->
          cli_error NoSpan NoEntrypointWrongTarget
       | None ->
@@ -161,7 +161,7 @@ let parse_compile_command (arglist: arglist): (arglist * cmd) =
 let parse (arglist: arglist): cmd =
   let args: arg list = arglist_to_list arglist in
   match args with
-  | [BoolFlag "help"] ->
+  | [] | [BoolFlag "help"] ->
      HelpCommand
   | [BoolFlag "version"] ->
      VersionCommand
@@ -170,5 +170,11 @@ let parse (arglist: arglist): cmd =
      let (arglist, cmd) = parse_compile_command (arglist_from_list rest) in
      let _ = check_leftovers arglist in
      cmd
-  | [] | (BoolFlag _ | ValueFlag _ | PositionalArg _) :: _ ->
-     HelpCommand
+  | (PositionalArg command) :: _ ->
+     cli_error NoSpan (UnknownCommand command)
+  | (BoolFlag ("help" | "version")) :: _ ->
+     generic_error NoSpan LeftoverArguments
+  | (BoolFlag name) :: _ ->
+     cli_error NoSpan (UnknownOption ("--" ^ name))
+  | (ValueFlag (name, value)) :: _ ->
+     cli_error NoSpan (UnknownOption ("--" ^ name ^ "=" ^ value))
