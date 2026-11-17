@@ -1,0 +1,1 @@
+compile Hello.zum --entrypoint=Hello:main --output=hello

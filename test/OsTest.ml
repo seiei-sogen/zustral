@@ -23,10 +23,24 @@ let test_exit_code _ =
   eq Sys.sigkill (Zustral_cli.ProcessStatus.exit_code (Unix.WSIGNALED Sys.sigkill));
   eq Sys.sigstop (Zustral_cli.ProcessStatus.exit_code (Unix.WSTOPPED Sys.sigstop))
 
+(* Issue #93: a file of a million lines is read without running out of
+   stack. A command-line test would need a fixture of megabytes. *)
+let test_read_file_of_a_million_lines _ =
+  let line_count = 1_000_000 in
+  let path = Filename.temp_file "zustral_test_" ".zum" in
+  let contents =
+    Fun.protect ~finally:(fun () -> Sys.remove path) (fun () ->
+        Out_channel.with_open_text path (fun channel ->
+            for _ = 1 to line_count do output_string channel "a\n" done);
+        read_file_to_string path)
+  in
+  eq (2 * line_count - 1) (String.length contents)
+
 let suite =
   "Operating system" >::: [
       "run_command" >:: test_run_command;
-      "exit_code" >:: test_exit_code
+      "exit_code" >:: test_exit_code;
+      "read a file of a million lines" >:: test_read_file_of_a_million_lines
     ]
 
 let _ = run_test_tt_main suite

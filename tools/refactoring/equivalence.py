@@ -45,7 +45,8 @@ SUITES = ROOT / "test-programs" / "suites"
 STANDARD = ROOT / "standard"
 EXAMPLES = ROOT / "examples"
 CLI_TESTS = ROOT / "test-programs" / "cli"
-CLI_NOT_INPUTS = {"args.txt", "expected.txt", "README.md"}
+CLI_UNSET_VARIABLES = "unset-environment-variables.txt"
+CLI_NOT_INPUTS = {"args.txt", "expected.txt", "README.md", CLI_UNSET_VARIABLES}
 FILES = ("exit", "out.c", "stdout", "stderr", "error.html", "files")
 # Generated names: a fixed prefix or a suffix, then the number.
 GENERATED = re.compile(r"\b(?:(decl_|mono_|meth_|_t|tmp)|([A-Za-z_][A-Za-z0-9_]*?_tmp_ref))(\d+)\b")
@@ -136,7 +137,11 @@ def run_one(compiler: str, outdir: pathlib.Path, name: str, words: list[str], in
                     copied.add(f.name)
         c_path = os.path.join(cwd, "out.c")
         command = [compiler, *(w.replace("$C_PATH", c_path) for w in words)]
-        done = subprocess.run(command, cwd=cwd, capture_output=True, timeout=600)
+        # A command-line test can name environment variables the compiler runs without.
+        unset = inputs / CLI_UNSET_VARIABLES if inputs is not None else None
+        names = unset.read_text().split() if unset is not None and unset.exists() else []
+        environment = {name: value for name, value in os.environ.items() if name not in names}
+        done = subprocess.run(command, cwd=cwd, env=environment, capture_output=True, timeout=600)
         generated = pathlib.Path(c_path).read_bytes() if os.path.exists(c_path) else b""
         # The compiler names its temporary C file at random.
         scrub = lambda data: re.sub(rb"[^\s'\"`]*/zustral_[0-9a-f]+\.c", b"$TMP.c", data.replace(cwd.encode(), b"$CWD").replace(str(ROOT).encode(), b"$ROOT"))
