@@ -103,9 +103,10 @@ let make_pragma name args =
       declaration_error NoSpan (PragmaArgumentError ForeignImport)
     in
     match args with
-    | ConcreteNamedArgs [(a, CStringConstant (_, f))] ->
+    | ConcreteNamedArgs [(a, CStringConstant (span, f))] ->
        if equal_identifier a (make_ident BuiltInNames.external_name_argument) then
-         ForeignImportPragma f
+         (ExternalNameCheck.external_name_must_be_a_c_identifier span f;
+          ForeignImportPragma f)
        else
          raise_err ()
     | ConcretePositionalArgs _ | ConcreteNamedArgs ([] | [(_, (CNilConstant _
@@ -120,9 +121,10 @@ let make_pragma name args =
         declaration_error NoSpan (PragmaArgumentError ForeignExport)
       in
       match args with
-      | ConcreteNamedArgs [(a, CStringConstant (_, f))] ->
+      | ConcreteNamedArgs [(a, CStringConstant (span, f))] ->
          if equal_identifier a (make_ident BuiltInNames.external_name_argument) then
-           ForeignExportPragma f
+           (ExternalNameCheck.external_name_must_be_a_c_identifier span f;
+            ForeignExportPragma f)
          else
            raise_err ()
       | ConcretePositionalArgs _ | ConcreteNamedArgs ([] | [(_, (CNilConstant _

@@ -11,7 +11,7 @@ Error:
   Description:
     Failed to run C compiler.
     
-    Command: `cc $TMP.c -fwrapv -lm -o slot`
+    Command: `cc $TMP.c -fwrapv -lm -o broken`
     
     Exit code: 1
     

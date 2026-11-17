@@ -61,6 +61,8 @@ type t =
   | PragmaArgumentError of known_pragma
   | MisplacedPragma of known_pragma
   | ForeignFunctionWithBody of identifier
+  | ExternalNameIsNotACIdentifier of string
+  | ExternalNameIsACReservedWord of string
   | UnknownPragma of identifier
   | DeclarationAlreadyExists of { name: identifier; module_name: module_name }
   | DeclarationNameIsImported of { name: identifier; module_name: module_name }
@@ -225,6 +227,20 @@ let render (error: t): err_text =
        Text " is imported with the pragma ";
        Code BuiltInNames.foreign_import_pragma_name;
        Text ", so it cannot have a body."
+     ]
+  | ExternalNameIsNotACIdentifier name ->
+     [
+       Text "The external name ";
+       Code name;
+       Text " is not a C identifier.";
+       Break;
+       Text "A C identifier starts with a letter or an underscore, and has only letters, digits, and underscores."
+     ]
+  | ExternalNameIsACReservedWord name ->
+     [
+       Text "The external name ";
+       Code name;
+       Text " is a C reserved word."
      ]
   | UnknownPragma name ->
      [

@@ -21,19 +21,24 @@ let zustral (name: string): t =
 let external_name (name: string): t =
   { name; escape = false }
 
-let zustral_unescaped (name: string): t =
-  { name; escape = false }
+(* https://en.cppreference.com/w/c/keyword, and asm and fortran, which C
+   compilers reserve. *)
+let c_reserved_words: string list = [
+    "alignas"; "alignof"; "auto"; "bool"; "break"; "case"; "char"; "const"; "constexpr";
+    "continue"; "default"; "do"; "double"; "else"; "enum"; "extern"; "false"; "float";
+    "for"; "goto"; "if"; "inline"; "int"; "long"; "nullptr"; "register"; "restrict";
+    "return"; "short"; "signed"; "sizeof"; "static"; "static_assert"; "struct"; "switch";
+    "thread_local"; "true"; "typedef"; "typeof"; "typeof_unqual"; "union"; "unsigned";
+    "void"; "volatile"; "while"; "_Alignas"; "_Alignof"; "_Atomic"; "_BitInt"; "_Bool";
+    "_Complex"; "_Decimal128"; "_Decimal32"; "_Decimal64"; "_Generic"; "_Imaginary";
+    "_Noreturn"; "_Static_assert"; "_Thread_local"; "_Pragma"; "asm"; "fortran"
+  ]
 
-let external_escaped (name: string): t =
-  { name; escape = true }
-
-(* https://en.cppreference.com/w/c/keyword
-   The match is not anchored at the end of the name. *)
-let starts_with_c_keyword (name: string): bool =
-  Str.string_match (Str.regexp "alignas\\|alignof\\|auto\\|bool\\|break\\|case\\|char\\|const\\|constexpr\\|continue\\|default\\|do\\|double\\|else\\|enum\\|extern\\|false\\|float\\|for\\|goto\\|if\\|inline\\|int\\|long\\|nullptr\\|register\\|restrict\\|return\\|short\\|signed\\|sizeof\\|static\\|static_assert\\|struct\\|switch\\|thread_local\\|true\\|typedef\\|typeof\\|typeof_unqual\\|union\\|unsigned\\|void\\|volatile\\|while\\|_Alignas\\|_Alignof\\|_Atomic\\|_BitInt\\|_Bool\\|_Complex\\|_Decimal128\\|_Decimal32\\|_Decimal64\\|_Generic\\|_Imaginary\\|_Noreturn\\|_Static_assert\\|_Thread_local\\|_Pragma\\|asm\\|fortran") name 0
+let is_c_reserved_word (name: string): bool =
+  List.mem name c_reserved_words
 
 let render (ident: t): string =
-  if ident.escape && starts_with_c_keyword ident.name then
+  if ident.escape && is_c_reserved_word ident.name then
     "au_ckw_" ^ ident.name
   else
     ident.name

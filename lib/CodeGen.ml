@@ -84,13 +84,9 @@ let zustral_prefix: string = ""
 let ident_text (i: identifier): string =
   zustral_prefix ^ (ident_string i)
 
-(* A variable or a parameter. *)
+(* A name the user wrote: a variable, a parameter, a record slot, a union case. *)
 let gen_ident (i: identifier): CIdent.t =
   CIdent.zustral (ident_text i)
-
-(* A record slot or a union case. *)
-let gen_member (i: identifier): CIdent.t =
-  CIdent.zustral_unescaped (ident_text i)
 
 let gen_module_name (n: module_name): string =
   zustral_prefix ^ replace_char (mod_name_string n) '.' "__"
@@ -99,10 +95,9 @@ let gen_module_name (n: module_name): string =
 let gen_qident (i: qident): CIdent.t =
   CIdent.zustral ((gen_module_name (source_module_name i)) ^ "____" ^ (ident_text (original_name i)))
 
-(* A constant where it is defined. The two spellings differ when the name of
-   the module starts with a C reserved word (issue #92). *)
+(* A constant where it is defined. *)
 let gen_sident (mn: module_name) (i: identifier): CIdent.t =
-  CIdent.zustral_unescaped ((gen_module_name mn) ^ "____" ^ (ident_text i))
+  CIdent.zustral ((gen_module_name mn) ^ "____" ^ (ident_text i))
 
 let gen_function_id (id: function_id): CIdent.t =
   CIdent.generated (zustral_prefix ^ "decl_" ^ (string_of_int (function_id_number id)))
@@ -286,12 +281,12 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
   | MIfExpression (c, t, f) ->
      CIfExpression (g c, g t, g f)
   | MRecordConstructor (ty, values) ->
-     CCast (CStructInitializer (List.map (fun (n, v) -> (gen_member n, g v)) values), gen_type ty)
+     CCast (CStructInitializer (List.map (fun (n, v) -> (gen_ident n, g v)) values), gen_type ty)
   | MUnionConstructor (id, case_name, values) ->
-     let args = CStructInitializer (List.map (fun (n, v) -> (gen_member n, g v)) values) in
+     let args = CStructInitializer (List.map (fun (n, v) -> (gen_ident n, g v)) values) in
      CCast (CStructInitializer [
                 (tag_slot, union_tag_value id case_name);
-                (data_slot, CStructInitializer [(gen_member case_name, args)])
+                (data_slot, CStructInitializer [(gen_ident case_name, args)])
               ], gen_type (MonoNamedType (mono_id_of_union id)))
   | MEmbed (ty, expr, args) ->
      CEmbed (gen_type ty, CSource expr, List.map g args)
@@ -301,10 +296,10 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
      CSizeOf (gen_type ty)
   | MSlotAccessor (expr, slot, _) ->
      let expr = g expr in
-     CAddressOf (CStructAccessor (CDeref expr, gen_member slot))
+     CAddressOf (CStructAccessor (CDeref expr, gen_ident slot))
   | MPointerSlotAccessor (expr, slot, _) ->
      let expr = g expr in
-     CAddressOf (CPointerStructAccessor (CDeref expr, gen_member slot))
+     CAddressOf (CPointerStructAccessor (CDeref expr, gen_ident slot))
   | MArrayIndex (expr, idx, elem_ty, _, _) ->
      let expr = g expr
      and idx = g idx in
@@ -345,7 +340,7 @@ let rec gen_stmt (mn: module_name) (supply: Supply.t) (stmt: mstmt): c_stmt * Su
   | MDestructure (bs, e, ty, b) ->
      let (tmp, supply) = new_variable supply in
      let vardecl = CLet (tmp, gen_type ty, Some (ge e))
-     and bs' = List.map (fun (MonoBinding { name; ty; rename; }) -> CLet (gen_ident rename, gen_type ty, Some (CStructAccessor (CVar tmp, gen_member name)))) bs
+     and bs' = List.map (fun (MonoBinding { name; ty; rename; }) -> CLet (gen_ident rename, gen_type ty, Some (CStructAccessor (CVar tmp, gen_ident name)))) bs
      and (b', supply) = gs supply b
      in
      (CBlock (List.concat [[vardecl]; bs'; [b']]), supply)
@@ -444,15 +439,15 @@ and gen_case (mn: module_name) (supply: Supply.t) (e: mexpr) (id: union_mono_id)
     ], supply)
 
 and when_to_case (mn: module_name) (id: union_mono_id) (var: CIdent.t) (case_ref: case_ref) (supply: Supply.t) (MTypedWhen (n, bindings, body)): c_switch_case * Supply.t =
-  let case_name = gen_member n
+  let case_name = gen_ident n
   and tag_value = union_tag_value id n
   in
   let get_binding binding_name =
     match case_ref with
     | CasePlain ->
-       CStructAccessor (CStructAccessor (CStructAccessor (CVar var, data_slot), case_name), gen_member binding_name)
+       CStructAccessor (CStructAccessor (CStructAccessor (CVar var, data_slot), case_name), gen_ident binding_name)
     | CaseRef ->
-       CAddressOf (CStructAccessor (CStructAccessor (CStructAccessor (CDeref (CVar var), data_slot), case_name), gen_member binding_name))
+       CAddressOf (CStructAccessor (CStructAccessor (CStructAccessor (CDeref (CVar var), data_slot), case_name), gen_ident binding_name))
   in
   let f (MonoBinding { name; ty; rename; }) =
     let ty =
@@ -476,10 +471,10 @@ let gen_params mn params =
   List.map (fun (MValueParameter (n, t)) -> CValueParam (gen_ident n, gen_type t)) params
 
 let gen_slots (slots: mono_slot list) =
-  List.map (fun (MonoSlot (n, t)) -> CSlot (gen_member n, gen_type t)) slots
+  List.map (fun (MonoSlot (n, t)) -> CSlot (gen_ident n, gen_type t)) slots
 
 let gen_cases (cases: mono_case list) =
-  List.map (fun (MonoCase (n, ss)) -> CSlot (gen_member n, CStructType (gen_slots ss))) cases
+  List.map (fun (MonoCase (n, ss)) -> CSlot (gen_ident n, CStructType (gen_slots ss))) cases
 
 let gen_method (mn: module_name) (supply: Supply.t) (MConcreteMethod (id, _, params, rt, body)) =
   let d = Desc "Method" in
@@ -564,10 +559,7 @@ let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_de
      ], supply)
   | MForeignFunction (id, _, params, rt, signature, underlying) ->
      let def_d = Desc "Foreign function" in
-     (* The parameters of the `extern` declaration are not escaped, and the
-        name is escaped where it is called and not where it is declared
-        (issue #92). *)
-     let ff_params = List.map (fun (n, t) -> CValueParam (CIdent.zustral_unescaped (ident_text n), gen_foreign_type t)) signature.params
+     let ff_params = List.map (fun (n, t) -> CValueParam (gen_ident n, gen_foreign_type t)) signature.params
      and ff_rt = gen_foreign_type signature.rt in
      let ff_local_decl = CLocalFunctionDeclaration (CIdent.external_name underlying, ff_params, ff_rt, LinkageExternal) in
      let make_param ((n, t): identifier * mono_ty foreign_ty) =
@@ -580,7 +572,7 @@ let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_de
           CVar (gen_ident n)
      in
      let args = List.map make_param signature.params in
-     let funcall = CFuncall (CIdent.external_escaped underlying, args) in
+     let funcall = CFuncall (CIdent.external_name underlying, args) in
      let body = CBlock [
                     ff_local_decl;
                     CReturn funcall

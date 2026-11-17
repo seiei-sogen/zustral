@@ -6,7 +6,10 @@
     { "type": "code", "content": "not a c name!" },
     { "type": "text", "content": " is not a C identifier." },
     { "type": "break" },
-    { "type": "text", "content": "A C identifier starts with a letter or an underscore, and has only letters, digits, and underscores." }
+    {
+      "type": "text",
+      "content": "A C identifier starts with a letter or an underscore, and has only letters, digits, and underscores."
+    }
   ],
   "span": {
     "filename": "test-programs/suites/031-declaration-errors/063-foreign-import-external-name-is-not-a-c-identifier/Test.zum",

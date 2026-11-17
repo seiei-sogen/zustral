@@ -131,9 +131,11 @@ rule token = parse
   | "=>" { RIGHT_ARROW }
   | ":=" { ASSIGN }
   | "!" { DEREF }
-  (* Strings and docstrings *)
-  | "\"\"\"" { read_triple_string [] lexbuf }
-  | '"' { read_string [] lexbuf }
+  (* Strings and docstrings. The rule that reads the rest of the string moves
+     the start of the token to its last lexeme, the closing quote, so the start
+     is put back: the span of a string constant begins at its opening quote. *)
+  | "\"\"\"" { let start = lexbuf.lex_start_p in let token = read_triple_string [] lexbuf in lexbuf.lex_start_p <- start; token }
+  | '"' { let start = lexbuf.lex_start_p in let token = read_string [] lexbuf in lexbuf.lex_start_p <- start; token }
   (* Identifiers and constants *)
   | "nil" { NIL }
   | "true" { TRUE }
