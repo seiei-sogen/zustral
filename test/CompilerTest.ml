@@ -140,7 +140,7 @@ let rec first_appearances (seen: string list) (words: string list): string list 
 (* The numbers follow the order the stages visit the statements in, which is
    not the order of the source: the last statement of a block first. They go on
    from the numbers of the built-in modules, so a change to those modules
-   shifts `_t127`, and this list is written again then. The base compiler of
+   shifts `_t128`, and this list is written again then. The base compiler of
    the refactoring gives the same names (compared when this test was written). *)
 let test_numbers_in_order _ =
   let c: string list = words (test_unit (render (compile numbered_names))) in
@@ -148,7 +148,7 @@ let test_numbers_in_order _ =
     prefix_and_number "_t" word || prefix_and_number "tmp" word || borrow_name word
   in
   assert_equal ~printer:(String.concat " ")
-    ["box_tmp_ref2"; "_t127"; "tmp2"; "_t128"; "_t129"; "tmp1"; "box_tmp_ref1"]
+    ["box_tmp_ref2"; "_t128"; "tmp2"; "_t129"; "_t130"; "tmp1"; "box_tmp_ref1"]
     (first_appearances [] (List.filter numbered c));
   List.iter
     (fun (prefix: string) ->
