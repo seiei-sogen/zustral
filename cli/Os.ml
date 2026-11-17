@@ -19,20 +19,35 @@ let reason_without_path (path: string) (reason: string): string =
   else
     reason
 
+(* Reads in a loop, not by recursion per line: a long file must not use up the
+   stack (#93). In_channel.input_all would do, but it needs OCaml 4.14, and
+   the build on macOS uses 4.13. *)
 let read_stream_to_string (stream: in_channel): string =
-  String.trim (In_channel.input_all stream)
+  let contents = Buffer.create 65536 in
+  let chunk = Bytes.create 65536 in
+  let rec read_chunks () =
+    let length = input stream chunk 0 (Bytes.length chunk) in
+    if length > 0 then begin
+      Buffer.add_subbytes contents chunk 0 length;
+      read_chunks ()
+    end
+  in
+  read_chunks ();
+  String.trim (Buffer.contents contents)
 
 let read_file_to_string (path: string): string =
   try
-    In_channel.with_open_text path read_stream_to_string
+    let stream = open_in path in
+    Fun.protect ~finally:(fun () -> close_in_noerr stream) (fun () -> read_stream_to_string stream)
   with Sys_error reason ->
     cli_error NoSpan (ReadError { path; reason = reason_without_path path reason })
 
 let write_string_to_file (path: string) (contents: string): unit =
   try
-    Out_channel.with_open_text path (fun stream ->
+    let stream = open_out path in
+    Fun.protect ~finally:(fun () -> close_out_noerr stream) (fun () ->
         output_string stream contents;
-        (* Closing flushes, and with_open_text would close without reporting
+        (* Closing flushes, and close_out_noerr would close without reporting
            a failure (a full disk). *)
         close_out stream)
   with Sys_error reason ->

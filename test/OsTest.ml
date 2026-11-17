@@ -32,8 +32,9 @@ let test_read_file_of_a_million_lines _ =
   let path = Filename.temp_file "zustral_test_" ".zum" in
   let contents =
     Fun.protect ~finally:(fun () -> Sys.remove path) (fun () ->
-        Out_channel.with_open_text path (fun channel ->
-            for _ = 1 to line_count do output_string channel "a\n" done);
+        let channel = open_out path in
+        for _ = 1 to line_count do output_string channel "a\n" done;
+        close_out channel;
         read_file_to_string path)
   in
   eq (2 * line_count - 1) (String.length contents)
