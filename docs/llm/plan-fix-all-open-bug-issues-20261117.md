@@ -222,16 +222,16 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 
 ### 3.5 Z 列（型クラス、型の照合、単相化、C の生成）
 
-- [ ] **Z1** #29、#157、#133、#93、#128 関数ポインタの呼び出し。
+- [x] **Z1** #29、#157、#133、#93、#128 関数ポインタの呼び出し。
   - 原因: `lib/CRenderer.ml:237` が、式の末尾に `;` を付ける。`lib/CodeGen.ml:262-264` が、引数の式から C の型を作り、`lib/MtastUtil.ml:27-28` が文字列リテラルで止まる。
   - 直し方: `;` を消す。引数の型を、関数ポインタの型から取る。小。
-- [ ] **Z2** #85、#122 関数ポインタの引数の個数。インスタンスの重なりの判定。
+- [x] **Z2** #85、#122 関数ポインタの引数の個数。インスタンスの重なりの判定。
   - 原因: `lib/TypeMatch.ml:174-177` が、長さを比べずに `map2_result` を呼ぶ。`lib/TypeClasses.ml:171-185` が、`Pointer` と `FnPtr` を、いつも重なると判定する。
   - 直し方: 長さが違えば、型の不一致にする。重なりは、構造で比べる。小。`042/050` と `042/051` の期待値を書き換える。
-- [ ] **Z3** #85、#163 名前付き引数の名前が違うと、`assert` で落ちる。
+- [x] **Z3** #85、#163 名前付き引数の名前が違うと、`assert` で落ちる。
   - 原因: `lib/TastUtil.ml:24`。
   - 直し方: 期待した名前と、渡された名前を言うエラーにする。重複は、重複と言う。小。
-- [ ] **Z4** #72、#128 組み込みの型へのインスタンスを、どのモジュールでも宣言できる。
+- [x] **Z4** #72、#128 組み込みの型へのインスタンスを、どのモジュールでも宣言できる。
   - 原因: `lib/TypeClasses.ml:205-249` の `is_type_local` が、組み込みの型に `true` を返す。`lib/Monomorphize.ml:220-226` が、汎用の関数のモジュールから見えるインスタンスだけを探す。
   - 直し方: 組み込みの型には `false` を返す。インスタンスは、すべてのモジュールから探す。小。
 - [ ] **Z5** #60 `printSpan` を `Printable` から外す。
@@ -327,3 +327,7 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 | X2 | `a0a4dee` | ない入力ファイルで `Fatal error: exception Sys_error`。`PATH` がないと `Not_found`。150 万行のファイルで `Stack overflow` | ``Failed to read file `DoesNotExist.zum`:`` などのエラーになり、終了コード 255。150 万行のファイルが通る | 14 個とも ok |
 | X3 | `ff43e51` | `$TMPDIR` に `zustral_XXXX.c` が残る。失敗するとカレントディレクトリに `error.html` を書く | 一時ファイルを消す。`error.html` を書かない。`lib/HtmlError.ml` を消した | 14 個とも ok |
 | X4 | `c43c7a2` | 予期しない例外が `Fatal error: exception …` で終了コード 2。C コンパイラの失敗の題が「Command Line Arguments Error」。シグナルで `Exit code: -7` | 「Internal Error」として報告し、終了コード 255。題は「C Compiler Error」。`Exit code: 137` | 14 個とも ok |
+| Z1 | `9b5f40f` | `printLn(f(7))` で gcc が `expected ')' before ';' token`。文字列リテラルを関数ポインタに渡すと `Generic Error: Type of the string constant` | 8 を出力する。文字列も通る。`Fn[Float32, Float32]` に `1.5` を渡すと 0.000000 になる不具合も、同じ原因で直った。`lib/MtastUtil.ml` を消した | 14 個とも ok |
+| Z2 | `d73851c` | 引数の個数の違う関数ポインタの型で `Invalid_argument("List.map2")`。`Pointer[U]` と `Int32` のインスタンスが `Instance overlaps.` | ``Cannot cast to `Fn[Int32, Int32]` from `Fn[Int32, Int32, Int32]` ``。インスタンスは両方とも通る | 14 個とも ok |
+| Z3 | `1f1a429` | 名前付き引数の名前が違うと `Assertion failed`（`TastUtil.ml` 24 行目） | ``There is no parameter named `c`. The parameters are `a`, `b`.`` と ``The argument `a` is given more than once.`` | 14 個とも ok |
+| Z4 | `37a660f` | 利用者のモジュールの `instance Printable(Int32)` が通り、呼び出しで初めてエラー。呼び出し側のモジュールのインスタンスが `Typeclass resolution failed. Dispatch type: Point` | 宣言の位置で `Orphan rule broken`。呼び出し側のインスタンスが見つかり、`point` を出力する | 14 個とも ok |
