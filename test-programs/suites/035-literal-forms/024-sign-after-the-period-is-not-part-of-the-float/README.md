@@ -1,0 +1,1 @@
+Pins that a sign after the period of a float literal is not part of the literal: `1.+5` is the literal `1.` followed by `+5`, which does not parse. The compiler used to read it as one literal, and C read it as `1. + 5` (issue #47).

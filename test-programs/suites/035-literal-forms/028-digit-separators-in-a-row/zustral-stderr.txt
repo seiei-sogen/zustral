@@ -1,0 +1,20 @@
+{
+  "module": null,
+  "kind": "Parse Error",
+  "text": [
+    { "type": "text", "content": "Character not allowed in source text: " },
+    { "type": "code", "content": "'" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/035-literal-forms/028-digit-separators-in-a-row/Test.zum",
+    "startp": { "line": 3, "column": 28 },
+    "end": { "line": 3, "column": 29 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        let x: Int32 := #xFF''FF;" ],
+    [ 4, "        printLn(x);" ],
+    [ 5, "        return ExitSuccess();" ]
+  ]
+}
