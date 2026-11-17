@@ -15,7 +15,7 @@ open Env
 open EnvTypes
 open EnvUtils
 
-(** Represents an Zustral import declaration, that is, in some code like:
+(** Represents a Zustral import declaration, that is, in some code like:
 
     {import Foo.Bar (A as D, B, C);}
 

@@ -306,7 +306,7 @@ diff -ruN a/lib/TypeCheckExpr.ml b/lib/TypeCheckExpr.ml
 +   typed AST, the monomorphizer and the code generator need no new node. *)
 +
 +let decimal_error (text: ErrorText.err_text) =
-+  zustral_raise TypeError text
++  austral_raise TypeError text
 +
 +let decimal_literal_text (e: aexpr): string option =
 +  match e with
@@ -859,14 +859,14 @@ diff -ruN a/lib/TypeParser.ml b/lib/TypeParser.ml
  
  module Errors = struct
 +  let bad_decimal_type (why: string) =
-+    zustral_raise TypeError [
++    austral_raise TypeError [
 +      Text "Invalid Decimal type: ";
 +      Text why;
 +      Text "."
 +    ]
 +
    let function_pointer_no_args () =
-     zustral_raise ParseError [
+     austral_raise ParseError [
        Text "Function pointer type specifier must have at least one argument."
 @@ -228,6 +235,29 @@
  
@@ -890,7 +890,7 @@ diff -ruN a/lib/TypeParser.ml b/lib/TypeParser.ml
 +      | _ ->
 +         Errors.bad_decimal_type "it takes exactly two integer literals, the precision and the scale")
 +  | QNatSpec n ->
-+     zustral_raise TypeError [
++     austral_raise TypeError [
 +         Text "The integer literal ";
 +         Code n;
 +         Text " is not a type. Only Decimal takes integer literals as type arguments."

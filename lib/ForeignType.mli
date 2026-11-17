@@ -15,7 +15,7 @@ type direction =
   | Import
   (** [Foreign_Import]: Zustral calls a C function. *)
   | Export
-  (** [Foreign_Export]: C calls an Zustral function. *)
+  (** [Foreign_Export]: C calls a Zustral function. *)
 
 (** A type that may cross the C boundary, by what C sees. ['leaf] is the
     Zustral type a pointer points to: {!Type.ty} when the signature is checked,

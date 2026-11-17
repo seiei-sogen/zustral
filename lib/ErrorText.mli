@@ -19,7 +19,7 @@ and text_elem =
   | Code of string
   (** Zustral text, like the name of an identifier or a type. *)
   | Type of ty
-  (** An Zustral type. *)
+  (** A Zustral type. *)
   | Break
   (** A paragraph break. *)
 

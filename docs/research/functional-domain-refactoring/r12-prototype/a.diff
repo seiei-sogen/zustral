@@ -15,12 +15,12 @@ diff --git a/lib/Error.ml b/lib/Error.ml
 index e2e88ec..a76a068 100644
 --- a/lib/Error.ml
 +++ b/lib/Error.ml
-@@ -33,17 +33,17 @@ exception Zustral_error of zustral_error
+@@ -33,17 +33,17 @@ exception Austral_error of austral_error
  
  (* Raising *)
  
-+let make_error (kind: error_kind) (text: err_text): zustral_error =
-+  ZustralError {
++let make_error (kind: error_kind) (text: err_text): austral_error =
++  AustralError {
 +      module_name = None;
 +      kind = kind;
 +      text = text;
@@ -28,9 +28,9 @@ index e2e88ec..a76a068 100644
 +      source_ctx = None;
 +    }
 +
- let zustral_raise (kind: error_kind) (text: err_text): 'a =
--  let error: zustral_error =
--    ZustralError {
+ let austral_raise (kind: error_kind) (text: err_text): 'a =
+-  let error: austral_error =
+-    AustralError {
 -        module_name = None;
 -        kind = kind;
 -        text = text;
@@ -38,59 +38,59 @@ index e2e88ec..a76a068 100644
 -        source_ctx = None;
 -      }
 -  in
--  raise (Zustral_error error)
-+  raise (Zustral_error (make_error kind text))
+-  raise (Austral_error error)
++  raise (Austral_error (make_error kind text))
  
  (* Error context-augmenting functions *)
  
 @@ -69,25 +69,26 @@ let adorn_error_with_module_name (new_module_name: module_name) (f: unit -> 'a):
-        let new_err = ZustralError { module_name = Some new_module_name; kind; text; span; source_ctx } in
-        raise (Zustral_error new_err)
+        let new_err = AustralError { module_name = Some new_module_name; kind; text; span; source_ctx } in
+        raise (Austral_error new_err)
  
-+let add_span (new_span: span) (error: zustral_error): zustral_error =
-+  let (ZustralError { module_name; kind; text; span; source_ctx }) = error in
++let add_span (new_span: span) (error: austral_error): austral_error =
++  let (AustralError { module_name; kind; text; span; source_ctx }) = error in
 +  match span with
 +  | Some span' ->
 +     (* The error already has a span. *)
 +     if span' = empty_span then
 +       (* The error has the empty span, add ours. *)
-+       ZustralError { module_name; kind; text; span = Some new_span; source_ctx }
++       AustralError { module_name; kind; text; span = Some new_span; source_ctx }
 +     else
 +       (* The error has a non-empty span, keep it. *)
 +       error
 +  | None ->
 +     (* Add the span *)
-+     ZustralError { module_name; kind; text; span = Some new_span; source_ctx }
++     AustralError { module_name; kind; text; span = Some new_span; source_ctx }
 +
  let adorn_error_with_span (new_span: span) (f: unit -> 'a): 'a =
    try
      f ()
-   with Zustral_error error ->
--    let (ZustralError { module_name; kind; text; span; source_ctx }) = error in
+   with Austral_error error ->
+-    let (AustralError { module_name; kind; text; span; source_ctx }) = error in
 -    match span with
 -    | Some span' ->
 -       (* The error already has a span. *)
 -       if span' = empty_span then
 -         (* The error has the empty span, add ours. *)
--         let new_err = ZustralError { module_name; kind; text; span = Some new_span; source_ctx } in
--         raise (Zustral_error new_err)
+-         let new_err = AustralError { module_name; kind; text; span = Some new_span; source_ctx } in
+-         raise (Austral_error new_err)
 -       else
 -         (* The error has a non-empty span, reraise. *)
--         raise (Zustral_error error)
+-         raise (Austral_error error)
 -    | None ->
 -       (* Add the span *)
--       let new_err = ZustralError { module_name; kind; text; span = Some new_span; source_ctx } in
--       raise (Zustral_error new_err)
-+    raise (Zustral_error (add_span new_span error))
+-       let new_err = AustralError { module_name; kind; text; span = Some new_span; source_ctx } in
+-       raise (Austral_error new_err)
++    raise (Austral_error (add_span new_span error))
  
  (* Error rendering to plain text *)
  
 @@ -218,20 +219,20 @@ let err (message: string) =
    in
-   raise (Zustral_error e)
+   raise (Austral_error e)
  
-+let internal_error (message: string): zustral_error =
-+  ZustralError {
++let internal_error (message: string): austral_error =
++  AustralError {
 +      module_name = None;
 +      kind = InternalError;
 +      text = [
@@ -105,8 +105,8 @@ index e2e88ec..a76a068 100644
 +    }
 +
  let internal_err (message: string) =
--  let e: zustral_error =
--    ZustralError {
+-  let e: austral_error =
+-    AustralError {
 -        module_name = None;
 -        kind = InternalError;
 -        text = [
@@ -120,27 +120,27 @@ index e2e88ec..a76a068 100644
 -        source_ctx = None;
 -      }
 -  in
--  raise (Zustral_error e)
-+  raise (Zustral_error (internal_error message))
+-  raise (Austral_error e)
++  raise (Austral_error (internal_error message))
 diff --git a/lib/Error.mli b/lib/Error.mli
 index 03e4c63..88f4164 100644
 --- a/lib/Error.mli
 +++ b/lib/Error.mli
-@@ -49,6 +49,15 @@ type zustral_error = ZustralError of {
- (** The exception that carries Zustral errors. *)
- exception Zustral_error of zustral_error
+@@ -49,6 +49,15 @@ type austral_error = AustralError of {
+ (** The exception that carries Austral errors. *)
+ exception Austral_error of austral_error
  
 +(** An error with the given kind and text, and no position. *)
-+val make_error : error_kind -> err_text -> zustral_error
++val make_error : error_kind -> err_text -> austral_error
 +
 +(** An internal error with the given message. *)
-+val internal_error : string -> zustral_error
++val internal_error : string -> austral_error
 +
 +(** Put the span in the error, if the error has none. *)
-+val add_span : span -> zustral_error -> zustral_error
++val add_span : span -> austral_error -> austral_error
 +
- (** Raise an Zustral error given the kind and text. *)
- val zustral_raise : error_kind -> err_text -> 'a
+ (** Raise an Austral error given the kind and text. *)
+ val austral_raise : error_kind -> err_text -> 'a
  
 diff --git a/lib/LinearityCheck.ml b/lib/LinearityCheck.ml
 index f3106e9..8901377 100644
@@ -225,7 +225,7 @@ index f3106e9..8901377 100644
 +       Ok (StateTable (others, pending))
       else
         if universe_linear_ish (type_universe ty) then
--         zustral_raise LinearityError [
+-         austral_raise LinearityError [
 +         fail LinearityError [
               Text "Forgot to consume a linear variable: ";
               Code (ident_string name);
@@ -284,7 +284,7 @@ index f3106e9..8901377 100644
 -let pending_error (names: identifier list) =
 +let pending_error (names: identifier list): 'a outcome =
    let c: int = List.length names in
--  zustral_raise LinearityError [
+-  austral_raise LinearityError [
 +  fail LinearityError [
        Text "The ";
        if (c = 1) then
@@ -384,7 +384,7 @@ index f3106e9..8901377 100644
 +  let* _ =
 +    traverse (fun (name, state_a, state_b) ->
        if state_a <> state_b then
--        zustral_raise LinearityError [
+-        austral_raise LinearityError [
 +        fail LinearityError [
              Text "The variable ";
              Code (ident_string name);
@@ -494,7 +494,7 @@ index f3106e9..8901377 100644
 -and error_consumed_more_than_once (name: identifier) (ty: ty) =
 +and error_consumed_more_than_once (name: identifier) (ty: ty): unit outcome =
    if universe_linear_ish (type_universe ty) then
--    zustral_raise LinearityError [
+-    austral_raise LinearityError [
 +    fail LinearityError [
          Text "The variable ";
          Code (ident_string name);
@@ -507,7 +507,7 @@ index f3106e9..8901377 100644
 -and error_read_borrowed_and_consumed (name: identifier) (ty: ty) =
 +and error_read_borrowed_and_consumed (name: identifier) (ty: ty): unit outcome =
    if universe_linear_ish (type_universe ty) then
--    zustral_raise LinearityError [
+-    austral_raise LinearityError [
 +    fail LinearityError [
          Text "The variable ";
          Code (ident_string name);
@@ -520,7 +520,7 @@ index f3106e9..8901377 100644
 -and error_write_borrowed_and_consumed (name: identifier) (ty: ty) =
 +and error_write_borrowed_and_consumed (name: identifier) (ty: ty): unit outcome =
    if universe_linear_ish (type_universe ty) then
--    zustral_raise LinearityError [
+-    austral_raise LinearityError [
 +    fail LinearityError [
          Text "The variable ";
          Code (ident_string name);
@@ -533,7 +533,7 @@ index f3106e9..8901377 100644
 -and error_already_consumed (name: identifier) (ty: ty) =
 +and error_already_consumed (name: identifier) (ty: ty): unit outcome =
    if universe_linear_ish (type_universe ty) then
--    zustral_raise LinearityError [
+-    austral_raise LinearityError [
 +    fail LinearityError [
          Text "The variable ";
          Code (ident_string name);
@@ -596,7 +596,7 @@ index f3106e9..8901377 100644
             match state with
             | Unconsumed | BorrowedRead | BorrowedWrite ->
                if universe_linear_ish (type_universe ty) then
--                zustral_raise LinearityError [
+-                austral_raise LinearityError [
 +                fail LinearityError [
                      Text "Cannot assign to the variable ";
                      Code (ident_string name);
@@ -672,7 +672,7 @@ index f3106e9..8901377 100644
             match state with
             | Unconsumed | BorrowedRead | BorrowedWrite ->
                if universe_linear_ish (type_universe ty) then
--                zustral_raise LinearityError [
+-                austral_raise LinearityError [
 +                fail LinearityError [
                      Text "Cannot assign to the variable ";
                      Code (ident_string name);
@@ -821,7 +821,7 @@ index f3106e9..8901377 100644
                  "reborrow"
              end
              in
--            zustral_raise LinearityError [
+-            austral_raise LinearityError [
 +            fail LinearityError [
                    Text ("Cannot " ^ mode_string ^ " the variable ");
                    Code (ident_string original);
@@ -871,7 +871,7 @@ index f3106e9..8901377 100644
 +                     Ok ()
                    | _ ->
                       if universe_linear_ish (type_universe ty) then
--                       zustral_raise LinearityError [
+-                       austral_raise LinearityError [
 +                       fail LinearityError [
                             Text "The variable ";
                             Code (ident_string name);
@@ -983,7 +983,7 @@ index 0000000..7ecdf32
 @@ -0,0 +1,47 @@
 +open Error
 +
-+type 'a outcome = ('a, zustral_error list) result
++type 'a outcome = ('a, austral_error list) result
 +
 +let bind = Result.bind
 +
@@ -1007,7 +1007,7 @@ index 0000000..7ecdf32
 +     let* ctx = f ctx first in
 +     fold f ctx rest
 +
-+(* zustral_raise, as a value. *)
++(* austral_raise, as a value. *)
 +let fail (kind: error_kind) (text: ErrorText.err_text): 'a outcome =
 +  Error [make_error kind text]
 +
@@ -1025,6 +1025,6 @@ index 0000000..7ecdf32
 +  | Ok value ->
 +     value
 +  | Error (first::_) ->
-+     raise (Zustral_error first)
++     raise (Austral_error first)
 +  | Error [] ->
 +     internal_err "A stage failed without an error."

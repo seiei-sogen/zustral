@@ -59,7 +59,7 @@
 +    | _ -> None
 +  in
 +  let try_operand (e: aexpr): texpr option =
-+    try Some (augment_expr ctx operand_ty e) with Zustral_error _ -> None
++    try Some (augment_expr ctx operand_ty e) with Austral_error _ -> None
 +  in
 +  let (lhs', rhs') =
 +    match (op, try_operand lhs, try_operand rhs) with

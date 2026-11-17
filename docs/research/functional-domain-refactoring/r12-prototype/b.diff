@@ -54,7 +54,7 @@ index 0000000..105bdb0
 @@ -0,0 +1,33 @@
 +open Error
 +
-+type 'a outcome = ('a, zustral_error list) result
++type 'a outcome = ('a, austral_error list) result
 +
 +let bind = Result.bind
 +
@@ -73,7 +73,7 @@ index 0000000..105bdb0
 +let catch (f: unit -> 'a): 'a outcome =
 +  try
 +    Ok (f ())
-+  with Zustral_error error ->
++  with Austral_error error ->
 +    Error [error]
 +
 +(* Temporary, until the caller of the stage returns an outcome itself. *)
@@ -82,6 +82,6 @@ index 0000000..105bdb0
 +  | Ok value ->
 +     value
 +  | Error (first::_) ->
-+     raise (Zustral_error first)
++     raise (Austral_error first)
 +  | Error [] ->
 +     internal_err "A stage failed without an error."

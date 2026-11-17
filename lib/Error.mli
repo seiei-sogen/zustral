@@ -50,7 +50,7 @@ type location =
   (** An error of the command line, or one with no span raised before the
       module has a name. *)
 
-(** An Zustral compiler error. The code that raises it gives the place, the
+(** A Zustral compiler error. The code that raises it gives the place, the
     driver adds the module name ({!add_module_name}), and the command line
     adds the source context. The type is private: outside this module an error
     is read by its fields, and made only by {!make_error} or the raising

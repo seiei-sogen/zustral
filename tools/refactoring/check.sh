@@ -79,7 +79,10 @@ in_base_shell() { # directory command
 
 # Two commits with the same compiler sources and the same packages share one
 # cached binary. The command-line library (cli/) exists from R9 on.
-compiler_sources=(lib bin dune-project concat_builtins.py zustral.opam flake.nix flake.lock shell.nix)
+# Before issue #46 the package and the executable were named austral.
+base_name=zustral
+git cat-file -e "$BASE_REF:zustral.opam" 2> /dev/null || base_name=austral
+compiler_sources=(lib bin dune-project concat_builtins.py "$base_name.opam" flake.nix flake.lock shell.nix)
 git cat-file -e "$BASE_REF:cli" 2> /dev/null && compiler_sources+=(cli)
 key=$(for s in "${compiler_sources[@]}"; do git rev-parse "$BASE_REF:$s"; done | sha1sum | cut -c1-16)
 base="$CACHE/$key/zustral"
@@ -87,9 +90,9 @@ if [[ ! -x $base ]]; then
   echo "== building the compiler at $BASE_REF"
   mkdir -p "$T/base" "$CACHE/$key"
   git archive "$BASE_REF" "${compiler_sources[@]}" | tar -x -C "$T/base"
-  in_base_shell "$T/base" "cd '$T/base' && python3 concat_builtins.py && dune build --root . ./bin/zustral.exe 2>&1" > "$T/base.log" 2>&1 \
+  in_base_shell "$T/base" "cd '$T/base' && python3 concat_builtins.py && dune build --root . ./bin/$base_name.exe 2>&1" > "$T/base.log" 2>&1 \
     || { echo "base build failed: $(tail -n 5 "$T/base.log")"; exit 2; }
-  cp "$T/base/_build/default/bin/zustral.exe" "$base"
+  cp "$T/base/_build/default/bin/$base_name.exe" "$base"
 fi
 
 failed=0

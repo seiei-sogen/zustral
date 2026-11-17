@@ -110,7 +110,7 @@ There is a small collection of example programs that demonstrate various
 language features and how to solve common tasks (e.g. Fibonacci, hello
 world). We are always looking for new programs to showcase Zustral.
 
-If you've written an Zustral program you think is useful, interesting, or
+If you've written a Zustral program you think is useful, interesting, or
 representative; and want to share it, feel free to open a PR or an
 [issue][issues].
 

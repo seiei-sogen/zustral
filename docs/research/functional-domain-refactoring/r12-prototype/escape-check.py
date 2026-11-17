@@ -9,7 +9,7 @@ exported function passes if it cannot raise, or if its body calls `catch`.
 import pathlib, re, sys
 
 root, module = pathlib.Path(sys.argv[1]), sys.argv[2]
-RAISE = re.compile(r'zustral_raise|(^|[^_a-zA-Z])err [("]|internal_err|Errors\.[a-z_]+|failwith|(^|[^_a-zA-Z])raise |assert false', re.M)
+RAISE = re.compile(r'austral_raise|(^|[^_a-zA-Z])err [("]|internal_err|Errors\.[a-z_]+|failwith|(^|[^_a-zA-Z])raise |assert false', re.M)
 DEFINITION = re.compile(r"^(?:let rec|let|and) ([a-z_][A-Za-z0-9_']*)[^=\n]*=", re.M)
 
 bodies = {}
