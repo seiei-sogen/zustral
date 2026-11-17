@@ -86,6 +86,9 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 直さない。issue にするかどうかは、所有者が決める。
 
 - 知らないエスケープ（`"\q"`）が、エラーにならず、C へそのまま書かれる。
+- `Os.read_stream_to_string` が、ソースの先頭の空行を `String.trim` で落とす。先頭に空行が3つあると、6 行目のエラーが 3 行目として報告される。
+- `run_command` が、子プロセスの stdout を読み切ってから stderr を読む。C コンパイラが stderr に多く書くと、止まるおそれがある（コードを読んだだけで、再現していない）。
+- 内部エラーとコマンドラインのエラーは、`--error-format=json` を付けても、平文で出る。
 
 ## 3. 単位
 
@@ -131,18 +134,18 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 
 ### 3.3 X 列（入口、字句、構文、リテラル）
 
-- [ ] **X1** #32、#144、#124 知らないコマンドとフラグが、使い方を表示して終了コード 0 を返す。`--no-entrypoint` の文面が違う。
+- [x] **X1** #32、#144、#124 知らないコマンドとフラグが、使い方を表示して終了コード 0 を返す。`--no-entrypoint` の文面が違う。
   - 原因: `cli/CliParser.ml:173-174` のすべてを受ける腕が `HelpCommand` を返す。`cli/CliParser.ml:74` が `"--no-entrypoint"` を渡している。
   - 直し方: 引数がないときだけ使い方を表示する。それ以外は、stderr にエラーを出し、0 以外で終わる。小。
   - テスト: `test-programs/cli`。
-- [ ] **X2** #85、#144、#93 ファイルと環境の失敗で、OCaml の例外のまま落ちる。
+- [x] **X2** #85、#144、#93 ファイルと環境の失敗で、OCaml の例外のまま落ちる。
   - 原因: `cli/Os.ml:24` の `open_in`、`:30` の `open_out`、`:43` の `getenv "PATH"`、`:14-19` の末尾再帰でない読み込み。
   - 直し方: `Sys_error` と `PATH` がない場合を、コマンドラインのエラーにする。読み込みを `In_channel.input_all` にする。小。
   - テスト: `test-programs/cli`。いまの誤った振る舞いを固定しているテスト（`004`、`023`、`024`、`025`、`030`）を書き換える。
-- [ ] **X3** #33 一時ファイルが残る。失敗すると `error.html` をカレントディレクトリに書く。
+- [x] **X3** #33 一時ファイルが残る。失敗すると `error.html` をカレントディレクトリに書く。
   - 原因: `cli/CliEngine.ml:174-176` が一時ファイルを消さない。`cli/CliEngine.ml:84` が、エラーのたびに `html_error_dump` を呼ぶ。
   - 直し方: `Fun.protect` で消す。`error.html` は、書く仕組みごと消す。小から中。
-- [ ] **X4** #85、#87、#144 最上位に、内部エラーの受け皿がない。C コンパイラの失敗の題が「Command Line Arguments Error」である。シグナルで終わった C コンパイラの終了コードが負になる。
+- [x] **X4** #85、#87、#144 最上位に、内部エラーの受け皿がない。C コンパイラの失敗の題が「Command Line Arguments Error」である。シグナルで終わった C コンパイラの終了コードが負になる。
   - 原因: `cli/Cli.ml:14-19` が `Zustral_error` だけを受ける。`lib/Error.ml:140`。`cli/ProcessStatus.ml:13`。
   - 直し方: それ以外の例外を「コンパイラの内部エラー」として報告する。C コンパイラの失敗に、専用の種別を与える。シグナルは `128 + 番号` にする。小。
 - [ ] **X5** #49、#85 リテラルだけの `7 / 0` で落ちる。
@@ -150,7 +153,7 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
   - 直し方: 除数が 0 のとき、位置の付いたエラーにする。小。畳み込みを型検査の後へ移す件（#37）は、この計画では扱わない。
 - [ ] **X6** #140、#133、#124 文字列と文字のリテラル。
   - 原因: `lib/Escape.ml:37` が、空白のエスケープの後ろをエスケープせずに返す。`lib/Lexer.mll:159-163` に `'\\' '\\'` の規則がない。`lib/HtmlError.ml` の `line_err` が行の長さを超える。`lib/Parser.mly:412` が引用符をすべて消す。
-  - 直し方: それぞれ小。X3 が `HtmlError` を消すなら、その分は要らない。
+  - 直し方: それぞれ小。`HtmlError` は X3 が消したので、その分は要らない。
 - [ ] **X7** #130 `@embed` の引数の中の `\1` と `$2` が、置換の指定として読まれる。
   - 原因: `lib/CRenderer.ml:265-279` が、引数ごとに `Str.global_replace` を繰り返す。
   - 直し方: `Str.global_substitute` で、1回で置き換える。小。
@@ -320,3 +323,7 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 | S4 | `851b793` | `docs/paths.md` が、構文解析の受け付けない `!(ref) := x;` を左辺値として挙げている | 文書が、変数と欄の並びの左辺値だけを挙げる | 14 個とも ok |
 | Y1 | `f6c6b0d` | 自分の `printLn` が無視され、`Pervasive` の `printLn` が呼ばれる。`record Int32` が通り、使うと `Cannot cast to Int32 from Int32`。2つの union の同じ名前の case が通る | 宣言の位置で、取り込んだ名前、組み込みの型の名前、既にある名前のどれと重なったかを言うエラーになる。引数は、同じ名前の取り込んだ関数より先に読まれる | 14 個とも ok |
 | Y2 | `885ec34` | `import Lib (Mode as Md)` の後の `let m: Md := Up()` が `Cannot cast to Md from Mode`。`Up as Rise` の後の `when Rise do` が `Non-exhaustive case statement.` | どちらも通り、1 を出力する。取り込んでいない名前 `Up` の `when` は断る | 14 個とも ok |
+| X1 | `1509778` | `zustral frobnicate` と `zustral --frobnicate` が、使い方を表示して終了コード 0 | stderr に ``Unknown command `frobnicate`.`` を出し、終了コード 255。引数がないときだけ使い方を表示する | 14 個とも ok |
+| X2 | `a0a4dee` | ない入力ファイルで `Fatal error: exception Sys_error`。`PATH` がないと `Not_found`。150 万行のファイルで `Stack overflow` | ``Failed to read file `DoesNotExist.zum`:`` などのエラーになり、終了コード 255。150 万行のファイルが通る | 14 個とも ok |
+| X3 | `ff43e51` | `$TMPDIR` に `zustral_XXXX.c` が残る。失敗するとカレントディレクトリに `error.html` を書く | 一時ファイルを消す。`error.html` を書かない。`lib/HtmlError.ml` を消した | 14 個とも ok |
+| X4 | `c43c7a2` | 予期しない例外が `Fatal error: exception …` で終了コード 2。C コンパイラの失敗の題が「Command Line Arguments Error」。シグナルで `Exit code: -7` | 「Internal Error」として報告し、終了コード 255。題は「C Compiler Error」。`Exit code: 137` | 14 個とも ok |
