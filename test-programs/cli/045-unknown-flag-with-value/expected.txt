@@ -1,15 +1,15 @@
-exit: 0
-files: 
+exit: 255
+files: error.html
 --- stdout
-zustral 0.2.0
-
-Usage:
-    zustral [options] <command>
-
-Options:
-    --help     Print this text.
-    --version  Print the compiler's version.
-
-Commands:
-    compile    Compile modules.
 --- stderr
+Error:
+  Title: Command Line Arguments Error
+  Module:
+    [unknown]
+  Location:
+    [no span available]
+  Description:
+    Unknown option `--frobnicate=1`. Run `zustral --help` to see the options.
+  Code:
+    [no span available]
+

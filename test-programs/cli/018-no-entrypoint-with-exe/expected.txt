@@ -9,7 +9,7 @@ Error:
   Location:
     [no span available]
   Description:
-    `--entrypoint` argument not provided.
+    `--no-entrypoint` requires `--target-type=c`, because otherwise the compiler will try to build the generated C code, and will fail because there is no entrypoint function.
   Code:
     [no span available]
 
