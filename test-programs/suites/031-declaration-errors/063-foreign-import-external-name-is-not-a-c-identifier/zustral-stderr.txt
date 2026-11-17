@@ -1,0 +1,23 @@
+{
+  "module": null,
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The external name " },
+    { "type": "code", "content": "not a c name!" },
+    { "type": "text", "content": " is not a C identifier." },
+    { "type": "break" },
+    { "type": "text", "content": "A C identifier starts with a letter or an underscore, and has only letters, digits, and underscores." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/063-foreign-import-external-name-is-not-a-c-identifier/Test.zum",
+    "startp": { "line": 4, "column": 43 },
+    "end": { "line": 4, "column": 58 }
+  },
+  "context": [
+    [ 2, "" ],
+    [ 3, "module body Test is" ],
+    [ 4, "    pragma Foreign_Import(External_Name => \"not a c name!\");" ],
+    [ 5, "    function bad(x: Int32): Int32 is" ],
+    [ 6, "    end;" ]
+  ]
+}
