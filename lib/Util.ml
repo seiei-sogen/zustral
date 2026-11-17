@@ -7,16 +7,12 @@
 *)
 
 open Identifier
-open Error
 
 let string_explode (s: string): char list =
   List.init (String.length s) (String.get s)
 
 let string_implode (l: char list): string =
   String.init (List.length l) (List.nth l)
-
-let remove_char (s: string) (c: char)  =
-  string_implode (List.filter (fun c' -> c <> c') (string_explode s))
 
 let replace_char (s: string) (c: char) (r: string): string =
   let replace char =
@@ -36,23 +32,6 @@ let search_replace (r: replacement): string =
 
 let remove_leading (s: string) (n: int): string =
   String.sub s n ((String.length s) - n)
-
-let parse_ascii_char (s: string): int =
-  match s with
-  | "\\n" ->
-     10
-  | "\\r" ->
-     13
-  | "\\t" ->
-     9
-  | "\\\\" ->
-     92
-  | _ ->
-     (match (string_explode s) with
-      | [c] ->
-         Char.code c
-      | _ ->
-         parse_error NoSpan (LongCharacter s))
 
 let rec count_leading_whitespace (s: string): int =
   let chars = string_explode s in

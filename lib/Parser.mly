@@ -105,7 +105,7 @@ open Span
 %token <string> HEX_CONSTANT
 %token <string> BIN_CONSTANT
 %token <string> OCT_CONSTANT
-%token <string> CHAR_CONSTANT
+%token <string * int> CHAR_CONSTANT
 %token <string> FLOAT_CONSTANT
 %token <string> IDENTIFIER
 /* Specials */
@@ -409,7 +409,7 @@ int_constant:
   | HEX_CONSTANT { CIntConstant (from_loc $loc, NumberLiteral.of_hexadecimal $1) }
   | BIN_CONSTANT { CIntConstant (from_loc $loc, NumberLiteral.of_binary $1) }
   | OCT_CONSTANT { CIntConstant (from_loc $loc, NumberLiteral.of_octal $1) }
-  | CHAR_CONSTANT { CIntConstant (from_loc $loc, NumberLiteral.of_character $1 (parse_ascii_char (remove_char $1 '\''))) }
+  | CHAR_CONSTANT { CIntConstant (from_loc $loc, NumberLiteral.of_character (fst $1) (snd $1)) }
   ;
 
 float_constant:

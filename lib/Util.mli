@@ -16,9 +16,6 @@ val string_explode : string -> char list
 (** Implode a list of characters into a string. *)
 val string_implode : char list -> string
 
-(** Remove all instances of a given character from a string. *)
-val remove_char : string -> char -> string
-
 (** Replace all instances of a given character with a string.
 
     The first argument is the string to search/replace on, the third
@@ -29,9 +26,6 @@ type replacement = { text: string; search: string; replacement: string }
 
 (** Replace a string with another in a text. *)
 val search_replace : replacement -> string
-
-(** Parse an ASCII character into its integer code, handling escape sequences. *)
-val parse_ascii_char : string -> int
 
 (** Take the contents of a triple-quoted string, and trim the leading and ending
    empty lines as well as indentation. *)

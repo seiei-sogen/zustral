@@ -44,7 +44,6 @@ let hex_constant = '#' 'x' hex_digit (hex_digit|'\'')*
 let bin_constant = '#' 'b' bin_digit (bin_digit|'\'')*
 let oct_constant = '#' 'o' oct_digit (oct_digit|'\'')*
 let float_constant = sign? dec_constant period dec_constant? (exponent sign? dec_constant)?
-let char_constant = '\'' (ascii_char | '\\' ['n' 'r' 't' '\\']) '\''
 
 (* Rules *)
 
@@ -141,7 +140,12 @@ rule token = parse
   | hex_constant { HEX_CONSTANT (Lexing.lexeme lexbuf) }
   | bin_constant { BIN_CONSTANT (Lexing.lexeme lexbuf) }
   | oct_constant { OCT_CONSTANT (Lexing.lexeme lexbuf) }
-  | char_constant { CHAR_CONSTANT (Lexing.lexeme lexbuf) }
+  (* A character constant is its code. `'''` is the quote character. *)
+  | '\'' (ascii_char as c) '\'' { CHAR_CONSTANT (Lexing.lexeme lexbuf, Char.code c) }
+  | "'\\n'" { CHAR_CONSTANT (Lexing.lexeme lexbuf, 10) }
+  | "'\\r'" { CHAR_CONSTANT (Lexing.lexeme lexbuf, 13) }
+  | "'\\t'" { CHAR_CONSTANT (Lexing.lexeme lexbuf, 9) }
+  | "'\\\\'" { CHAR_CONSTANT (Lexing.lexeme lexbuf, 92) }
   | identifier { IDENTIFIER (Lexing.lexeme lexbuf) }
   (* Specials *)
   | "@embed" { EMBED }
@@ -159,6 +163,7 @@ rule token = parse
 and read_string pieces = parse
   | '"' { STRING_CONSTANT (literal_text pieces) }
   | '\\' '"' { read_string ("\"" :: pieces) lexbuf }
+  | '\\' '\\' { read_string ("\\\\" :: pieces) lexbuf }
   | [^ '"'] { read_string (Lexing.lexeme lexbuf :: pieces) lexbuf }
   | eof { parse_error (AtSpan (Span.from_lexbuf lexbuf)) StringEof }
   | _ { parse_error (AtSpan (Span.from_lexbuf lexbuf)) (StringInvalidCharacter (Lexing.lexeme lexbuf)) }
@@ -167,5 +172,6 @@ and read_triple_string pieces = parse
   | "\"\"\"" { TRIPLE_STRING_CONSTANT (literal_text pieces) }
   | '\n' { new_line lexbuf; read_triple_string ("\n" :: pieces) lexbuf }
   | '\\' "\"\"\"" { read_triple_string ("\"\"\"" :: pieces) lexbuf }
+  | '\\' '\\' { read_triple_string ("\\\\" :: pieces) lexbuf }
   | eof { parse_error (AtSpan (Span.from_lexbuf lexbuf)) TripleStringEof }
   | _ { read_triple_string (Lexing.lexeme lexbuf :: pieces) lexbuf }
