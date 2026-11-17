@@ -1,0 +1,1 @@
+Test that a `Foreign_Export` pragma before a function declaration of the interface is rejected: it is written before the function definition in the body (issue #93). Before, every pragma in an interface was dropped without a word, and `f` was not exported.

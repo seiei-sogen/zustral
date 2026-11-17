@@ -1,0 +1,1 @@
+Test that a built-in type that takes no type arguments, such as `Int32`, is rejected when it is written with some (issue #90). Before, the type parser dropped the arguments, and the program printed 5.

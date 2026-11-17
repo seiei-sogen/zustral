@@ -1,0 +1,14 @@
+module body Test is
+    union Never: Free is
+    end;
+
+    function consume(n: Never): Unit is
+        case n of
+        end case;
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

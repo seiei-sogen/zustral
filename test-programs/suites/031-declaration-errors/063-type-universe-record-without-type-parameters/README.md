@@ -1,0 +1,1 @@
+Test that a record declared in the `Type` universe without type parameters is rejected where it is declared, also when no declaration uses it (issue #144). Before, only a use of the type was rejected, so this program compiled.

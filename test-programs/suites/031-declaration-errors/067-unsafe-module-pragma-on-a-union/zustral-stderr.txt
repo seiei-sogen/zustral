@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The pragma " },
+    { "type": "code", "content": "Unsafe_Module" },
+    { "type": "text", "content": " can only be written before " },
+    { "type": "code", "content": "module body" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/067-unsafe-module-pragma-on-a-union/Test.zum",
+    "startp": { "line": 3, "column": 4 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    pragma Unsafe_Module;" ],
+    [ 3, "    union U: Free is" ],
+    [ 4, "        case A;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    function main(): ExitCode is" ]
+  ]
+}

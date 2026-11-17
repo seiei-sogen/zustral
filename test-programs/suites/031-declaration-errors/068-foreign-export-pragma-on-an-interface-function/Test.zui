@@ -1,0 +1,5 @@
+module Test is
+    pragma Foreign_Export(External_Name => "exported");
+    function f(): Int32;
+    function main(): ExitCode;
+end module.

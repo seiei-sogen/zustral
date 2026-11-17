@@ -1,0 +1,14 @@
+pragma Unsafe_Module;
+
+module body Test is
+    pragma Foreign_Import(External_Name => "abs");
+    function myAbs(x: Int32): Int32 is
+        let y: Bool := 12345;
+        return thisDoesNotExist(y);
+    end;
+
+    function main(): ExitCode is
+        printLn(myAbs(-3));
+        return ExitSuccess();
+    end;
+end module body.
