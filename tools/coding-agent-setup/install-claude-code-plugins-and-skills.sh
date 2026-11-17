@@ -22,6 +22,9 @@ marketplace_sources_and_plugin_names=(
 skill_collection_repository_url="https://github.com/seiei-sogen/agent-skills"
 # skills/ の直下にあるグループのうち、入れないもの。
 skill_collection_excluded_group_names=("anma-tsukatte-nai")
+# 入れないスキルの名前。前の実行で入れたものは、消す。
+# poteto-mode は、pstack プラグインの /pstack:poteto-mode（原本）だけを使う。
+skill_collection_excluded_skill_names=("poteto-mode")
 
 claude_skills_directory="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills"
 # このスクリプトが置いたディレクトリの目印。目印のないディレクトリは、利用者のものとして触らない。
@@ -65,6 +68,12 @@ for source_directory in "${plugin_shaped_directories[@]}" "${plain_skill_directo
   source_path_in_repository="${source_directory#"$skill_collection_checkout_directory"/}"
   destination_directory="$claude_skills_directory/$installed_name"
 
+  if [[ " ${skill_collection_excluded_skill_names[*]} " == *" $installed_name "* ]]; then
+    if [[ -e "$destination_directory/$installed_marker_file_name" ]]; then
+      rm -rf "$destination_directory"
+    fi
+    continue
+  fi
   if [[ -n "${source_directory_by_installed_name[$installed_name]:-}" ]]; then
     echo "警告: $source_path_in_repository は入れない。同じ名前の" \
       "${source_directory_by_installed_name[$installed_name]} を先に入れた。" >&2
