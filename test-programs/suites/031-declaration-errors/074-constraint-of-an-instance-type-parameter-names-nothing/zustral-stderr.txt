@@ -1,0 +1,33 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "U" },
+    { "type": "text", "content": " of " },
+    { "type": "code", "content": "Show" },
+    { "type": "text", "content": " is constrained by " },
+    { "type": "code", "content": "Missing" },
+    {
+      "type": "text",
+      "content": ", but no typeclass with that name is declared or imported."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/074-constraint-of-an-instance-type-parameter-names-nothing/Test.zum",
+    "startp": { "line": 10, "column": 4 },
+    "end": { "line": 15, "column": 8 }
+  },
+  "context": [
+    [ 8, "    end;" ],
+    [ 9, "" ],
+    [ 10, "    generic [U: Free(Missing)]" ],
+    [ 11, "    instance Show(Box[U]) is" ],
+    [ 12, "        method show(x: Box[U]): Int32 is" ],
+    [ 13, "            return 1;" ],
+    [ 14, "        end;" ],
+    [ 15, "    end;" ],
+    [ 16, "" ],
+    [ 17, "    function main(): ExitCode is" ]
+  ]
+}

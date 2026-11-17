@@ -1,0 +1,30 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "R" },
+    { "type": "text", "content": " of " },
+    { "type": "code", "content": "show" },
+    { "type": "text", "content": " is constrained by " },
+    { "type": "code", "content": "Missing" },
+    {
+      "type": "text",
+      "content": ", but no typeclass with that name is declared or imported."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/075-constraint-of-a-method-type-parameter-names-nothing/Test.zum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    typeclass Show(T: Free) is" ],
+    [ 3, "        generic [R: Region(Missing)]" ],
+    [ 4, "        method show(x: T, r: &[Int32, R]): Int32;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    function main(): ExitCode is" ]
+  ]
+}

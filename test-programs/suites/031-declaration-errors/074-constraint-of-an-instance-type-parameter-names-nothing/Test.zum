@@ -1,0 +1,20 @@
+module body Test is
+    typeclass Show(T: Free) is
+        method show(x: T): Int32;
+    end;
+
+    record Box[T: Free]: Free is
+        x: T;
+    end;
+
+    generic [U: Free(Missing)]
+    instance Show(Box[U]) is
+        method show(x: Box[U]): Int32 is
+            return 1;
+        end;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

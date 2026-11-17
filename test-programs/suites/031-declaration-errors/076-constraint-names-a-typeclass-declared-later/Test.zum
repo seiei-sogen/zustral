@@ -1,0 +1,21 @@
+module body Test is
+    generic [T: Free(Show)]
+    function describe(x: T): Int32 is
+        return show(x);
+    end;
+
+    typeclass Show(T: Free) is
+        method show(x: T): Int32;
+    end;
+
+    instance Show(Int32) is
+        method show(x: Int32): Int32 is
+            return x;
+        end;
+    end;
+
+    function main(): ExitCode is
+        printLn(describe(7));
+        return ExitSuccess();
+    end;
+end module body.

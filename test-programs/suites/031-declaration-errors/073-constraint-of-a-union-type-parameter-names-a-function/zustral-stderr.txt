@@ -1,0 +1,32 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": " of " },
+    { "type": "code", "content": "Maybe" },
+    { "type": "text", "content": " is constrained by " },
+    { "type": "code", "content": "g" },
+    {
+      "type": "text",
+      "content": ", which is not a typeclass. A constraint must name a typeclass."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/073-constraint-of-a-union-type-parameter-names-a-function/Test.zum",
+    "startp": { "line": 6, "column": 4 },
+    "end": { "line": 10, "column": 8 }
+  },
+  "context": [
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    union Maybe[T: Free(g)]: Free is" ],
+    [ 7, "        case Nothing;" ],
+    [ 8, "        case Just is" ],
+    [ 9, "            value: T;" ],
+    [ 10, "    end;" ],
+    [ 11, "" ],
+    [ 12, "    function main(): ExitCode is" ]
+  ]
+}

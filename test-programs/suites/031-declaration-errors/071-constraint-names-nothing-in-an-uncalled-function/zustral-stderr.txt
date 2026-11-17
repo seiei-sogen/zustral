@@ -1,0 +1,30 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": " of " },
+    { "type": "code", "content": "f" },
+    { "type": "text", "content": " is constrained by " },
+    { "type": "code", "content": "NoSuchClass" },
+    {
+      "type": "text",
+      "content": ", but no typeclass with that name is declared or imported."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/071-constraint-names-nothing-in-an-uncalled-function/Test.zum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    generic [T: Free(NoSuchClass)]" ],
+    [ 3, "    function f(x: T): Int64 is" ],
+    [ 4, "        return 1;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    function main(): ExitCode is" ]
+  ]
+}
