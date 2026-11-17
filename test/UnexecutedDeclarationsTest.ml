@@ -299,20 +299,6 @@ let test_universes_of_arguments _ =
       assert_equal ~printer:show_universe universe (TypeBindings.replaced_universe universe [Unit]))
     [FreeUniverse; LinearUniverse; RegionUniverse]
 
-let test_the_type_of_a_pointer_slot _ =
-  let value = MPointerSlotAccessor (MLocalVar (make_ident "p", MonoPointer MonoUnit), make_ident "x", MonoBoolean) in
-  assert_equal ~printer:show_mono_ty MonoBoolean (MtastUtil.get_type value)
-
-(* A literal and a `sizeof` have these types when nothing converts them. No
-   program asks for them: a call through a function pointer, the one place
-   that asks for the type of an argument, gets every argument converted to the
-   type of its parameter. *)
-let test_the_type_of_an_unconverted_literal _ =
-  assert_equal ~printer:show_mono_ty (MonoInteger (Signed, Width32))
-    (MtastUtil.get_type (MIntConstant (NumberLiteral.of_value Z.zero)));
-  assert_equal ~printer:show_mono_ty (MonoInteger (Unsigned, Width64))
-    (MtastUtil.get_type (MSizeOf MonoUnit))
-
 (* Every kind of type, in both directions. Only a generic signature has a type
    variable, and a generic signature is not checked. *)
 let test_types_across_the_c_boundary _ =
@@ -629,7 +615,6 @@ let suite =
       "a symbol imported twice" >:: test_a_symbol_imported_twice;
       "signed ByteSize and Index" >:: test_signed_byte_size_and_index;
       "universes of arguments" >:: test_universes_of_arguments;
-      "the type of a pointer slot" >:: test_the_type_of_a_pointer_slot;
             "a region instance argument" >:: test_a_region_instance_argument;
       "overlap of every pair of kinds" >:: test_overlap_of_every_pair_of_kinds;
       "types across the C boundary" >:: test_types_across_the_c_boundary;
@@ -643,7 +628,6 @@ let suite =
       "parameters of region types" >:: test_parameters_of_region_types;
       "borrows of values that are not addresses" >:: test_borrows_of_values_that_are_not_addresses;
       "an imported function of an exported signature" >:: test_an_imported_function_of_an_exported_signature;
-      "the type of an unconverted literal" >:: test_the_type_of_an_unconverted_literal;
       "a struct before other declarations" >:: test_a_struct_before_other_declarations
     ]
 

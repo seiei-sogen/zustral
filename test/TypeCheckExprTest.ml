@@ -94,7 +94,7 @@ let test_variable _ =
 
 let test_function_pointer_call _ =
   let call: aexpr = FunctionCall (named "isZero", Positional [Variable (named "x")]) in
-  let expected: texpr = TFptrCall (make_ident "isZero", [TImplicitCast (TLocalVar (make_ident "x", int32), int32)], Boolean) in
+  let expected: texpr = TFptrCall (make_ident "isZero", [int32], [TImplicitCast (TLocalVar (make_ident "x", int32), int32)], Boolean) in
   assert_equal expected (TypeCheckExpr.infer ctx call);
   assert_equal expected (TypeCheckExpr.check ctx call Boolean)
 

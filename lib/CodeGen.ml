@@ -15,7 +15,6 @@ open MonoType
 open MonoTypeBindings
 open Stages.Tast
 open Stages.Mtast
-open MtastUtil
 open CRepr
 open Util
 open Escape
@@ -259,9 +258,8 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
      CFuncall (gen_ins_meth_id id, List.map g args)
   | MGenericMethodCall (_, id, args, _) ->
      CFuncall (gen_mono_id (mono_id_of_method id), List.map g args)
-  | MFptrCall (name, args, ty) ->
-     let argtys: mono_ty list = List.map get_type args in
-     CFptrCall (CVar (gen_ident name), gen_type ty, List.map gen_type argtys, List.map g args)
+  | MFptrCall (name, paramtys, args, ty) ->
+     CFptrCall (CVar (gen_ident name), gen_type ty, List.map gen_type paramtys, List.map g args)
   | MCast (e, t) ->
      CCast (g e, gen_type t)
   | MComparison (op, lhs, rhs) ->
@@ -331,9 +329,9 @@ let rec gen_stmt (mn: module_name) (supply: Supply.t) (stmt: mstmt): c_stmt * Su
      let l = CLet (gen_ident n, gen_type t, None) in
      let (b, supply) = gs supply b in
      (CBlock [l; b], supply)
-  | MDestructure (bs, e, b) ->
+  | MDestructure (bs, e, ty, b) ->
      let (tmp, supply) = new_variable supply in
-     let vardecl = CLet (tmp, gen_type (get_type e), Some (ge e))
+     let vardecl = CLet (tmp, gen_type ty, Some (ge e))
      and bs' = List.map (fun (MonoBinding { name; ty; rename; }) -> CLet (gen_ident rename, gen_type ty, Some (CStructAccessor (CVar tmp, gen_member name)))) bs
      and (b', supply) = gs supply b
      in
@@ -416,19 +414,19 @@ and gen_case (mn: module_name) (supply: Supply.t) (e: mexpr) (id: union_mono_id)
      being pattern-matched to that variable. Generate a switch statement over
      the tag enum. Each when statement that has bindings needs to generate some
      variable assignments for those bindings from the generated variable. *)
-  let ty = get_type e
+  let union_ty: c_ty = gen_type (MonoNamedType (mono_id_of_union id))
   and (var, supply) = new_variable supply in
   let (cases, supply) = Supply.map (when_to_case mn id var case_ref) supply whens in
-  let accessor =
+  let (ty, accessor) =
     match case_ref with
     | CasePlain ->
-       CStructAccessor (CVar var, tag_slot)
+       (union_ty, CStructAccessor (CVar var, tag_slot))
     | CaseRef ->
-       CPointerStructAccessor (CVar var, tag_slot)
+       (CPointer union_ty, CPointerStructAccessor (CVar var, tag_slot))
   in
   let switch = CSwitch (accessor, cases) in
   (CBlock [
-      CLet (var, gen_type ty, Some (gen_exp mn e));
+      CLet (var, ty, Some (gen_exp mn e));
       switch
     ], supply)
 

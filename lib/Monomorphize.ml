@@ -234,10 +234,11 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
      let substs = make_substs2 instance_bindings typarams in
      let mcall = TMethodCall (meth_id, method_name, typarams, arguments', rt, substs) in
      monomorphize_expr env mcall
-  | TFptrCall (name, args, ty) ->
+  | TFptrCall (name, paramtys, args, ty) ->
+     let (paramtys, env) = strip_and_mono_list env paramtys in
      let (args, env) = monomorphize_expr_list env args in
      let (ty, env) = strip_and_mono env ty in
-     (MFptrCall (name, args, ty), env)
+     (MFptrCall (name, paramtys, args, ty), env)
   | TCast (expr, ty) | TImplicitCast (expr, ty) ->
      let (ty, env) = strip_and_mono env ty in
      let (expr, env) = monomorphize_expr env expr in
@@ -332,11 +333,12 @@ let rec monomorphize_stmt (env: env) (stmt: tstmt): (mstmt * env) =
      let (ty, env) = strip_and_mono env ty in
      let (body, env) = monomorphize_stmt env body in
      (MLet (name, ty, body), env)
-  | TDestructure (_, _, bindings, value, body) ->
+  | TDestructure (span, _, bindings, value, body) ->
      let (bindings, env) = monomorphize_binding_list env (List.map (fun (TypedBinding { name; ty; rename; }) -> (name, strip_type ty, rename)) bindings) in
-     let (value, env) = monomorphize_expr env value in
+     let (mono_value, env) = monomorphize_expr env value in
+     let (ty, env) = strip_and_mono env (TastUtil.get_type (AtSpan span) value) in
      let (body, env) = monomorphize_stmt env body in
-     (MDestructure (bindings, value, body), env)
+     (MDestructure (bindings, mono_value, ty, body), env)
   | TAssign (_, lvalue, rvalue) ->
      let (lvalue, env) = monomorphize_expr env lvalue in
      let (rvalue, env) = monomorphize_expr env rvalue in

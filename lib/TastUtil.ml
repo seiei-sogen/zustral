@@ -74,7 +74,7 @@ let rec get_type (place: place) = function
      ty
   | TVarMethodCall { rt; _ } ->
      rt
-  | TFptrCall (_, _, rt) ->
+  | TFptrCall (_, _, _, rt) ->
      rt
   | TCast (_, ty) | TImplicitCast (_, ty) ->
      ty

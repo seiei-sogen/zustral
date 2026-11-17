@@ -254,7 +254,7 @@ and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (args: 
   (* The call has the return type of the pointer's type, wherever the call is:
      no type variable of that type is bound by the place either. *)
   let arguments = cast_arguments bindings params args in
-  TFptrCall (name, arguments, rt)
+  TFptrCall (name, paramtys, arguments, rt)
 
 and augment_callable (ctx: expr_ctx) (name: qident) (callable: callable) (from_context: context_bindings) (args: typed_arglist) =
   match callable with

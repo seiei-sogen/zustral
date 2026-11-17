@@ -42,7 +42,6 @@ type t =
   | TypeclassResolutionFailed of ty
   | ParameterNotFound
   | ParameterArgumentLengthMismatch of { parameters: type_parameter list; arguments: mono_ty list }
-  | TypeOfStringConstant
   | RegionAlreadyExists
   | NoBindingForParameter of identifier
   | InstanceOverlapTypeNotAllowed
@@ -163,10 +162,6 @@ let render (error: t): err_text =
              ^ (String.concat ", " (List.map show_type_parameter parameters))
              ^ "\narguments:\n"
              ^ (String.concat ", " (List.map show_mono_ty arguments)))
-     ]
-  | TypeOfStringConstant ->
-     [
-       Text "Type of the string constant"
      ]
   | RegionAlreadyExists ->
      [

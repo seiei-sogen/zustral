@@ -234,7 +234,7 @@ and render_expr = function
      and expr: string = render_expr expr
      and args: string = String.concat ", " (List.map render_expr args)
      in
-     ("((" ^ rt ^ "(*)(" ^ argtys ^ "))(" ^ expr ^ "))(" ^ args ^ ");")
+     ("((" ^ rt ^ "(*)(" ^ argtys ^ "))(" ^ expr ^ "))(" ^ args ^ ")")
   | (CCast (e, t)) ->
      let e' = render_expr e
      and t' = render_type t in

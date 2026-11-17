@@ -539,7 +539,9 @@ module Tast = struct
         rt: ty;
         bindings: type_bindings;
       }
-    | TFptrCall of identifier * texpr list * ty
+    | TFptrCall of identifier * ty list * texpr list * ty
+    (** A call through the function pointer the variable holds: the parameter
+        types of the pointer's type, the arguments, and its return type. *)
     | TCast of texpr * ty
     (** A type annotation that changed the expression: it gave a literal its
         type, or it turned a write reference into a read reference. The
@@ -638,7 +640,8 @@ module Mtast = struct
   and mstmt =
     | MSkip
     | MLet of identifier * mono_ty * mstmt
-    | MDestructure of mono_binding list * mexpr * mstmt
+    | MDestructure of mono_binding list * mexpr * mono_ty * mstmt
+    (** The type is the value's, a record type. *)
     | MAssign of mexpr * mexpr
     | MAssignVar of qident * mexpr
     | MInitialAssign of qident * mexpr
@@ -681,7 +684,9 @@ module Mtast = struct
     (** Represents a call to an instance method of a concrete instance. *)
     | MGenericMethodCall of ins_meth_id * method_mono_id * mexpr list * mono_ty
     (** Represents a call to an instance method of a generic instance. *)
-    | MFptrCall of identifier * mexpr list * mono_ty
+    | MFptrCall of identifier * mono_ty list * mexpr list * mono_ty
+    (** Represents a call through a function pointer, as {!TFptrCall}. The C
+        call converts the pointer to the function type these types make. *)
     | MCast of mexpr * mono_ty
     | MComparison of comparison_operator * mexpr * mexpr
     | MConjunction of mexpr * mexpr

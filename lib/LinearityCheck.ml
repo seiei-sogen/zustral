@@ -234,7 +234,7 @@ let rec count (name: identifier) (expr: texpr): appearances =
      merge_list (List.map c args)
   | TVarMethodCall { args; _ } ->
      merge_list (List.map c args)
-  | TFptrCall (_, args, _) ->
+  | TFptrCall (_, _, args, _) ->
      merge_list (List.map c args)
   | TCast (e, _) | TImplicitCast (e, _) ->
      c e

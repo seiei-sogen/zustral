@@ -178,7 +178,7 @@ let every_texpr (): texpr list =
    TVarMethodCall { source_module_name = test_mod; typeclass_id = w.describe_id; params = [];
                     method_name = q "describe"; args = []; dispatch_ty = w.tyvar; rt = int32;
                     bindings = TypeBindings.empty_bindings };
-   TFptrCall (i "fp", [], int32); TCast (x, int32); TImplicitCast (x, int32);
+   TFptrCall (i "fp", [], [], int32); TCast (x, int32); TImplicitCast (x, int32);
    TComparison (Equal, x, x); TConjunction (x, x); TDisjunction (x, x); TNegation x;
    TIfExpression (x, x, x); TRecordConstructor (box (), [(i "value", x)]);
    TUnionConstructor { union_id = w.shape_id; type_name = q "Shape"; tyargs = []; universe = FreeUniverse;
@@ -502,7 +502,7 @@ let test_constant_expression_of_every_expression _ =
   assert_equal false (TastUtil.is_constant_expression (TParamVar (x, int32)));
   assert_equal false (TastUtil.is_constant_expression (TLocalVar (x, int32)));
   assert_equal false (TastUtil.is_constant_expression (TTemporary (x, int32)));
-  assert_equal false (TastUtil.is_constant_expression (TFptrCall (x, [], int32)));
+  assert_equal false (TastUtil.is_constant_expression (TFptrCall (x, [], [], int32)));
   assert_equal true (TastUtil.is_constant_expression (TImplicitCast (TNilConstant, int32)));
   assert_equal true (TastUtil.is_constant_expression (TCast (TNilConstant, int32)))
 
