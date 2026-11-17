@@ -9,12 +9,12 @@ lib/BuiltInModules.ml: lib/builtin/*.zui lib/builtin/*.zum lib/prelude.c concat_
 	python3 concat_builtins.py
 
 $(BIN): $(SRC)
-	dune build
+	dune build --root .
 	cp -f _build/default/bin/zustral.exe $(BIN)
 
 .PHONY: test
 test: $(BIN)
-	dune runtest
+	dune runtest --root .
 
 # How much of the compiler the programs in the repository execute.
 .PHONY: coverage

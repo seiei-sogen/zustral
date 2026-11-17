@@ -109,7 +109,7 @@ echo "== building the working tree"
 in_shell 'make 2>&1' > "$T/head.log" 2>&1 || { echo "build failed:"; tail -n 40 "$T/head.log"; exit 2; }
 
 if ((!QUICK)); then
-  step "unit tests" in_shell 'dune runtest --force 2>&1'
+  step "unit tests" in_shell 'dune runtest --root . --force 2>&1'
   step "end-to-end suite" python3 test-programs/runner.py
   step "command-line tests" python3 test-programs/cli-runner.py
 fi
