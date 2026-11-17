@@ -1,0 +1,16 @@
+module body Test is
+    instance Printable(Int32) is
+        method print(value: Int32): Unit is
+            return nil;
+        end;
+
+        generic [R: Region]
+        method printSpan(value: Span[Int32, R]): Unit is
+            return nil;
+        end;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.
