@@ -10,7 +10,7 @@ lib/BuiltInModules.ml: lib/builtin/*.zui lib/builtin/*.zum lib/prelude.c concat_
 
 $(BIN): $(SRC)
 	dune build
-	cp _build/default/bin/zustral.exe $(BIN)
+	cp -f _build/default/bin/zustral.exe $(BIN)
 
 .PHONY: test
 test: $(BIN)
