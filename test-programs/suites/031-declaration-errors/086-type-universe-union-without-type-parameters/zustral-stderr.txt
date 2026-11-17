@@ -1,0 +1,31 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The type " },
+    { "type": "code", "content": "U" },
+    { "type": "text", "content": " is declared in the " },
+    { "type": "code", "content": "Type" },
+    {
+      "type": "text",
+      "content": " universe, but it has no type parameters. A type in that universe takes its universe from its type arguments. Declare it in the "
+    },
+    { "type": "code", "content": "Free" },
+    { "type": "text", "content": " or the " },
+    { "type": "code", "content": "Linear" },
+    { "type": "text", "content": " universe." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/086-type-universe-union-without-type-parameters/Test.zum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 4, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    union U: Type is" ],
+    [ 3, "        case A;" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    function main(): ExitCode is" ]
+  ]
+}
