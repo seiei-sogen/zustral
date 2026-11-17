@@ -7,7 +7,7 @@
     { "type": "text", "content": " which is not a union type." }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/110-case-through-reference-float64/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/110-case-through-reference-float64/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 7, "column": 17 }
   },

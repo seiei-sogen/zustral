@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/035-literal-forms/019-untyped-literal-as-embed-argument-too-big/Test.aum",
+    "filename": "test-programs/suites/035-literal-forms/019-untyped-literal-as-embed-argument-too-big/Test.zum",
     "startp": { "line": 5, "column": 8 },
     "end": { "line": 5, "column": 56 }
   },

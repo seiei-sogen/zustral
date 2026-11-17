@@ -15,7 +15,7 @@
     { "type": "code", "content": "var mut_x: Bool := x;" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/121-borrow-parameter-mutably-bool/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/121-borrow-parameter-mutably-bool/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 5, "column": 19 }
   },

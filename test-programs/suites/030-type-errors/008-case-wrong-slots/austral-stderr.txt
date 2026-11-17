@@ -12,7 +12,7 @@
     { "type": "text", "content": ")." }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/008-case-wrong-slots/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/008-case-wrong-slots/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 9, "column": 17 }
   },

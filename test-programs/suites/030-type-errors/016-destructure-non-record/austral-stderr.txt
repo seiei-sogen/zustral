@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/016-destructure-non-record/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/016-destructure-non-record/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 30 }
   },

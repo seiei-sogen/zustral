@@ -16,7 +16,7 @@
     { "type": "code", "content": "Region" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/007-instance-argument-not-type-variable-region/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/007-instance-argument-not-type-variable-region/Test.zum",
     "startp": { "line": 13, "column": 4 },
     "end": { "line": 15, "column": 8 }
   },

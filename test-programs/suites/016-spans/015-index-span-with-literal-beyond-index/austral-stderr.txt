@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/016-spans/015-index-span-with-literal-beyond-index/Test.aum",
+    "filename": "test-programs/suites/016-spans/015-index-span-with-literal-beyond-index/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 41 }
   },

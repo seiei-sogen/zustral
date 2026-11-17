@@ -12,7 +12,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/018-literal-operands/011-arith-literals-of-different-kinds/Test.aum",
+    "filename": "test-programs/suites/018-literal-operands/011-arith-literals-of-different-kinds/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 32 }
   },

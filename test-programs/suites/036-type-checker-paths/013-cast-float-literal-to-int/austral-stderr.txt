@@ -8,7 +8,7 @@
     { "type": "type", "content": "Float64" }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/013-cast-float-literal-to-int/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/013-cast-float-literal-to-int/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 36 }
   },

@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/016-spans/016-assign-element-with-boolean-index/Test.aum",
+    "filename": "test-programs/suites/016-spans/016-assign-element-with-boolean-index/Test.zum",
     "startp": { "line": 26, "column": 8 },
     "end": { "line": 26, "column": 23 }
   },

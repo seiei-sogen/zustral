@@ -8,7 +8,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/047-case-binding-collides/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/047-case-binding-collides/Test.zum",
     "startp": { "line": 5, "column": 8 },
     "end": { "line": 10, "column": 17 }
   },

@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/016-spans/014-index-span-with-int32-variable/Test.aum",
+    "filename": "test-programs/suites/016-spans/014-index-span-with-int32-variable/Test.zum",
     "startp": { "line": 5, "column": 8 },
     "end": { "line": 5, "column": 22 }
   },

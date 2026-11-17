@@ -8,7 +8,7 @@
     { "type": "type", "content": "Int32" }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/030-cast-to-type-variable-of-another-type/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/030-cast-to-type-variable-of-another-type/Test.zum",
     "startp": { "line": 15, "column": 8 },
     "end": { "line": 15, "column": 30 }
   },

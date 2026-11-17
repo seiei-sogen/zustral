@@ -8,7 +8,7 @@
     { "type": "type", "content": "&[Int32, Region<5>]" }
   ],
   "span": {
-    "filename": "test-programs/suites/039-numbering-order/004-region-in-case-branch/Test.aum",
+    "filename": "test-programs/suites/039-numbering-order/004-region-in-case-branch/Test.zum",
     "startp": { "line": 16, "column": 20 },
     "end": { "line": 16, "column": 55 }
   },

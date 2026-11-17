@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/032-other-errors/010-linearity-write-borrowed-and-consumed/Test.aum",
+    "filename": "test-programs/suites/032-other-errors/010-linearity-write-borrowed-and-consumed/Test.zum",
     "startp": { "line": 8, "column": 12 },
     "end": { "line": 8, "column": 26 }
   },

@@ -8,7 +8,7 @@
     { "type": "type", "content": "Box[Int32]" }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/052-instance-skipped-constraint-two-instances/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/052-instance-skipped-constraint-two-instances/Test.zum",
     "startp": { "line": 27, "column": 8 },
     "end": { "line": 27, "column": 26 }
   },

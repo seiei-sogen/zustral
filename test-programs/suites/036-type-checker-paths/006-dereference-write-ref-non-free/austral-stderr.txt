@@ -6,7 +6,7 @@
     { "type": "type", "content": "Foo" }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/006-dereference-write-ref-non-free/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/006-dereference-write-ref-non-free/Test.zum",
     "startp": { "line": 9, "column": 12 },
     "end": { "line": 9, "column": 34 }
   },

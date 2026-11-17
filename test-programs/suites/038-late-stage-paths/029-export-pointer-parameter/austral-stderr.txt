@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/038-late-stage-paths/029-export-pointer-parameter/Test.aum",
+    "filename": "test-programs/suites/038-late-stage-paths/029-export-pointer-parameter/Test.zum",
     "startp": { "line": 8, "column": 48 },
     "end": { "line": 11, "column": 8 }
   },

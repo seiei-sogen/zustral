@@ -10,7 +10,7 @@
     { "type": "type", "content": "Unit" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/051-if-condition-unit/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/051-if-condition-unit/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 5, "column": 15 }
   },

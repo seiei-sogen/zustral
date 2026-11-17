@@ -9,7 +9,7 @@
     { "type": "type", "content": "Unit" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/175-reference-slot-non-reference-unit/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/175-reference-slot-non-reference-unit/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 15 }
   },

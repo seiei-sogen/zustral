@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/088-add-literal-to-value-of-type-parameter/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/088-add-literal-to-value-of-type-parameter/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 23 }
   },

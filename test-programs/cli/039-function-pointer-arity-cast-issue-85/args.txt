@@ -1,1 +1,1 @@
-compile Arity.aum --target-type=tc
+compile Arity.zum --target-type=tc

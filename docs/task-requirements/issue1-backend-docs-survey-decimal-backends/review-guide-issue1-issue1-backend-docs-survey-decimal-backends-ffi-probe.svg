@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 470" font-family="sans-serif">
-<title>ffi プローブの組み立てと実行: run.sh が Probe.aum を一時ディレクトリへ複写して austral compile で ffi.c を出し、gcc が ffi.c と shim.c を別の翻訳単位として mpdecimal とリンクし、実行時は Zustral の main がポインタだけをシムへ渡す</title>
+<title>ffi プローブの組み立てと実行: run.sh が Probe.zum を一時ディレクトリへ複写して austral compile で ffi.c を出し、gcc が ffi.c と shim.c を別の翻訳単位として mpdecimal とリンクし、実行時は Zustral の main がポインタだけをシムへ渡す</title>
 <defs><marker id="b" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#57606a"/></marker></defs>
 <rect width="900" height="470" fill="#ffffff"/>
 <g font-size="13" fill="#1f2328" text-anchor="middle">
@@ -13,7 +13,7 @@
 <line x1="180" y1="45" x2="226" y2="45"/><line x1="430" y1="45" x2="476" y2="45"/><line x1="640" y1="45" x2="686" y2="45"/>
 <line x1="785" y1="110" x2="785" y2="74"/>
 </g>
-<text x="20" y="205" font-size="14" font-weight="bold" fill="#1f2328">実行時（Probe.aum の main）</text>
+<text x="20" y="205" font-size="14" font-weight="bold" fill="#1f2328">実行時（Probe.zum の main）</text>
 <g font-size="13" fill="#1f2328" text-anchor="middle">
 <rect x="20" y="220" width="200" height="40" rx="8" fill="#e8f1fb" stroke="#0b5cad"/><text x="120" y="245">Zustral main</text>
 <rect x="350" y="220" width="200" height="40" rx="8" fill="#fff8e5" stroke="#7d4e00"/><text x="450" y="245">shim_* （int32_t を返す）</text>

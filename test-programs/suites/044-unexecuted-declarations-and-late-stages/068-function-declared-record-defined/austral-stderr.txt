@@ -8,7 +8,7 @@
     { "type": "text", "content": "function" }
   ],
   "span": {
-    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/068-function-declared-record-defined/Test.aui",
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/068-function-declared-record-defined/Test.zui",
     "startp": { "line": 1, "column": 14 },
     "end": { "line": 2, "column": 24 }
   },

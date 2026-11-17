@@ -7,7 +7,7 @@
     { "type": "text", "content": " which is not a union type." }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/007-case-non-union/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/007-case-non-union/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 11, "column": 17 }
   },

@@ -1,21 +1,21 @@
 STDLIB := \
-		../../standard/src/Tuples.aui,../../standard/src/Tuples.aum \
-		../../standard/src/Bounded.aui,../../standard/src/Bounded.aum \
-		../../standard/src/Equality.aui,../../standard/src/Equality.aum \
-		../../standard/src/Order.aui,../../standard/src/Order.aum \
-		../../standard/src/Box.aui,../../standard/src/Box.aum \
-		../../standard/src/Buffer.aui,../../standard/src/Buffer.aum \
-		../../standard/src/String.aui,../../standard/src/String.aum \
-		../../standard/src/StringBuilder.aui,../../standard/src/StringBuilder.aum \
-		../../standard/src/IO/IO.aui,../../standard/src/IO/IO.aum \
-		../../standard/src/IO/Terminal.aui,../../standard/src/IO/Terminal.aum \
+		../../standard/src/Tuples.zui,../../standard/src/Tuples.zum \
+		../../standard/src/Bounded.zui,../../standard/src/Bounded.zum \
+		../../standard/src/Equality.zui,../../standard/src/Equality.zum \
+		../../standard/src/Order.zui,../../standard/src/Order.zum \
+		../../standard/src/Box.zui,../../standard/src/Box.zum \
+		../../standard/src/Buffer.zui,../../standard/src/Buffer.zum \
+		../../standard/src/String.zui,../../standard/src/String.zum \
+		../../standard/src/StringBuilder.zui,../../standard/src/StringBuilder.zum \
+		../../standard/src/IO/IO.zui,../../standard/src/IO/IO.zum \
+		../../standard/src/IO/Terminal.zui,../../standard/src/IO/Terminal.zum \
 		
 PROG := Fibonacci
 
 ENTRY := Example.$(PROG):main
 
 SRC := \
-	$(PROG).aui,$(PROG).aum
+	$(PROG).zui,$(PROG).zum
 
 .DEFAULT: all
 all: 

@@ -7,7 +7,7 @@
     { "type": "text", "content": " is not a reference." }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/208-pointer-slot-non-reference-region/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/208-pointer-slot-non-reference-region/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 13 }
   },

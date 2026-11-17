@@ -1,1 +1,1 @@
-compile Bad.aum --target-type=tc --error-format=json
+compile Bad.zum --target-type=tc --error-format=json

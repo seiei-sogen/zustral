@@ -425,11 +425,11 @@ Five of the 91 were reached with small programs, using the binary already built 
 
 | file:line | category | program | what the program does |
 |---|---|---|---|
-| lib/TypeCheckExpr.ml:438 | b (id + method name) | MissingMethod.aum | an instance leaves out a method of its typeclass; the method is called on that type |
-| lib/Monomorphize.ml:227 | b (id + method name) | MissingMethodGeneric.aum | the same, called through a generic function with a constraint |
-| lib/TypeMatch.ml:216 | g (user name) | ConstraintRecord.aum | a type parameter constraint names a record; the generic function is called |
-| lib/TypeMatch.ml:218 | g (user name) | ConstraintMissing.aum | a type parameter constraint names nothing that exists; the generic function is called |
-| lib/TypeParser.ml:184 | g (misc) | RegionRecord.aum | a record declared in the `Region` universe has a slot of its own type |
+| lib/TypeCheckExpr.ml:438 | b (id + method name) | MissingMethod.zum | an instance leaves out a method of its typeclass; the method is called on that type |
+| lib/Monomorphize.ml:227 | b (id + method name) | MissingMethodGeneric.zum | the same, called through a generic function with a constraint |
+| lib/TypeMatch.ml:216 | g (user name) | ConstraintRecord.zum | a type parameter constraint names a record; the generic function is called |
+| lib/TypeMatch.ml:218 | g (user name) | ConstraintMissing.zum | a type parameter constraint names nothing that exists; the generic function is called |
+| lib/TypeParser.ml:184 | g (misc) | RegionRecord.zum | a record declared in the `Region` universe has a slot of its own type |
 
 `docs/plan.md` (line 326) already knows the first case, and issue #128 lists internal errors of this kind; whether all five are in it was not checked. No file under `test-programs/` expects the text `Internal compiler error`.
 

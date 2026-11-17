@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/087-method-call-with-region-parameters-swapped-by-its-place/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/087-method-call-with-region-parameters-swapped-by-its-place/Test.zum",
     "startp": { "line": 24, "column": 12 },
     "end": { "line": 24, "column": 75 }
   },

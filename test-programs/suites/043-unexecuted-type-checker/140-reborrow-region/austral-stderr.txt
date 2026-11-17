@@ -8,7 +8,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/140-reborrow-region/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/140-reborrow-region/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 5, "column": 19 }
   },

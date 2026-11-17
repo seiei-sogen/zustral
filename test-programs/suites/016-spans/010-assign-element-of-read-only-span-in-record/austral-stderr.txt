@@ -8,7 +8,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/016-spans/010-assign-element-of-read-only-span-in-record/Test.aum",
+    "filename": "test-programs/suites/016-spans/010-assign-element-of-read-only-span-in-record/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 29 }
   },

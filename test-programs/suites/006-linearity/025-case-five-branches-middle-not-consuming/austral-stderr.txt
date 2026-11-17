@@ -16,7 +16,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/006-linearity/025-case-five-branches-middle-not-consuming/Test.aum",
+    "filename": "test-programs/suites/006-linearity/025-case-five-branches-middle-not-consuming/Test.zum",
     "startp": { "line": 23, "column": 8 },
     "end": { "line": 34, "column": 17 }
   },

@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/003-call-non-callable/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/003-call-non-callable/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 12 }
   },

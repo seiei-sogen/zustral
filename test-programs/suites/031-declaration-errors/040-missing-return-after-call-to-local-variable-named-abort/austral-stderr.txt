@@ -9,7 +9,7 @@
     { "type": "text", "content": " does not end in a return statement." }
   ],
   "span": {
-    "filename": "test-programs/suites/031-declaration-errors/040-missing-return-after-call-to-local-variable-named-abort/Test.aum",
+    "filename": "test-programs/suites/031-declaration-errors/040-missing-return-after-call-to-local-variable-named-abort/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 12, "column": 8 }
   },

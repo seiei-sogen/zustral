@@ -5,7 +5,7 @@
     { "type": "text", "content": "No binding for this parameter: T" }
   ],
   "span": {
-    "filename": "test-programs/suites/033-type-checker-errors/007-no-binding-for-parameter/Test.aum",
+    "filename": "test-programs/suites/033-type-checker-errors/007-no-binding-for-parameter/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 22 }
   },

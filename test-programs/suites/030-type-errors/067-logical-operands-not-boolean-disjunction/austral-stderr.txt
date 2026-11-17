@@ -13,7 +13,7 @@
     { "type": "type", "content": "Int32" }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/067-logical-operands-not-boolean-disjunction/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/067-logical-operands-not-boolean-disjunction/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 30 }
   },

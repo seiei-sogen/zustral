@@ -1,1 +1,1 @@
-compile Hello.aum --target-type=tc --bogus=1
+compile Hello.zum --target-type=tc --bogus=1

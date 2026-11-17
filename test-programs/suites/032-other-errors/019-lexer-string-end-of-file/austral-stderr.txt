@@ -3,7 +3,7 @@
   "kind": "Parse Error",
   "text": [ { "type": "text", "content": "End of file in string literal." } ],
   "span": {
-    "filename": "test-programs/suites/032-other-errors/019-lexer-string-end-of-file/Test.aum",
+    "filename": "test-programs/suites/032-other-errors/019-lexer-string-end-of-file/Test.zum",
     "startp": { "line": 3, "column": 98 },
     "end": { "line": 3, "column": 98 }
   },

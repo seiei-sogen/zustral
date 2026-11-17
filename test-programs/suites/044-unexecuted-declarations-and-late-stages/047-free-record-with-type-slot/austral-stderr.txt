@@ -12,7 +12,7 @@
     { "type": "text", "content": " universe." }
   ],
   "span": {
-    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/047-free-record-with-type-slot/Test.aum",
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/047-free-record-with-type-slot/Test.zum",
     "startp": { "line": 2, "column": 4 },
     "end": { "line": 4, "column": 8 }
   },

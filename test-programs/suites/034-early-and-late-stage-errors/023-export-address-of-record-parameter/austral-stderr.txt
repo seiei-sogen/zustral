@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/034-early-and-late-stage-errors/023-export-address-of-record-parameter/Test.aum",
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/023-export-address-of-record-parameter/Test.zum",
     "startp": { "line": 12, "column": 48 },
     "end": { "line": 15, "column": 8 }
   },

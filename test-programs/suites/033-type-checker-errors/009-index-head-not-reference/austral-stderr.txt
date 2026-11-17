@@ -9,7 +9,7 @@
     { "type": "type", "content": "Int32" }
   ],
   "span": {
-    "filename": "test-programs/suites/033-type-checker-errors/009-index-head-not-reference/Test.aum",
+    "filename": "test-programs/suites/033-type-checker-errors/009-index-head-not-reference/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 16 }
   },

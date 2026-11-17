@@ -1,1 +1,1 @@
-compile Embed.aum --entrypoint=Embed:main --target-type=c --output=out.c
+compile Embed.zum --entrypoint=Embed:main --target-type=c --output=out.c

@@ -8,7 +8,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/033-type-checker-errors/013-assign-through-read-reference/Test.aum",
+    "filename": "test-programs/suites/033-type-checker-errors/013-assign-through-read-reference/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 19 }
   },

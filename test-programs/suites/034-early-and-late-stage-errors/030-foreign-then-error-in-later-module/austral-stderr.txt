@@ -3,7 +3,7 @@
   "kind": "Generic Error",
   "text": [ { "type": "text", "content": "Not allowed" } ],
   "span": {
-    "filename": "test-programs/suites/034-early-and-late-stage-errors/030-foreign-then-error-in-later-module/Lib.aum",
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/030-foreign-then-error-in-later-module/Lib.zum",
     "startp": { "line": 4, "column": 48 },
     "end": { "line": 6, "column": 8 }
   },

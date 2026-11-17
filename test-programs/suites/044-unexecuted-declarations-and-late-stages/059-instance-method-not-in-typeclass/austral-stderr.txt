@@ -8,7 +8,7 @@
     { "type": "code", "content": "other" }
   ],
   "span": {
-    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/059-instance-method-not-in-typeclass/Test.aum",
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/059-instance-method-not-in-typeclass/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 14, "column": 8 }
   },

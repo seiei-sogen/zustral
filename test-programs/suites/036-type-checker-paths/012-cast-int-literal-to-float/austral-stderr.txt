@@ -8,7 +8,7 @@
     { "type": "type", "content": "Int32" }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/012-cast-int-literal-to-float/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/012-cast-int-literal-to-float/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 38 }
   },

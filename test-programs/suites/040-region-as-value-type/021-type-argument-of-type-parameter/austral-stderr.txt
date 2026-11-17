@@ -10,7 +10,7 @@
     { "type": "code", "content": "Region" }
   ],
   "span": {
-    "filename": "test-programs/suites/040-region-as-value-type/021-type-argument-of-type-parameter/Test.aum",
+    "filename": "test-programs/suites/040-region-as-value-type/021-type-argument-of-type-parameter/Test.zum",
     "startp": { "line": 6, "column": 4 },
     "end": { "line": 9, "column": 8 }
   },

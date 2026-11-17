@@ -14,7 +14,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/003-generic-function-value-unconstrained/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/003-generic-function-value-unconstrained/Test.zum",
     "startp": { "line": 12, "column": 8 },
     "end": { "line": 12, "column": 43 }
   },

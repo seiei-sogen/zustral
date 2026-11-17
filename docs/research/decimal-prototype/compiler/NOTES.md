@@ -96,7 +96,7 @@ I reused `grammar-literal.patch` as it is: a `typespec_arg` rule, `Cst.ConcreteN
 - `TypeCheckExpr.ml`, 437 inserted lines. Changed functions: `augment_expr` (the literal cases and the call case), `augment_comparison`, `augment_arithmetic`, `augment_function_call`, `augment_record_constructor`, `augment_union_constructor`. New functions: `decimal_literal_as`, `decimal_literal_minimal`, `coerce_decimal_literal_args`, `augment_decimal_arithmetic`, `augment_decimal_builtin`, and small helpers.
 - `DecimalLit.ml`, new, 74 lines. It parses a literal's text and computes the coefficient and the smallest type with Zarith. It uses no floats.
 - `Env.get_union_cases`, one line.
-- `BuiltIn.pervasive_imports` and `builtin/Pervasive.aui` for `RoundingMode`.
+- `BuiltIn.pervasive_imports` and `builtin/Pervasive.zui` for `RoundingMode`.
 - `prelude.h` and `prelude.c` for the runtime.
 
 ### Not touched
@@ -190,7 +190,7 @@ Only `prelude.c` is prepended to generated C (Read: `Compiler.ml:146`). `prelude
 - A literal costs a function call. `1.23` becomes `au_dec_lit(0, 0ULL, 123ULL)`. Module constants still work, because the compiler emits a constant as a `#define` (Ran: `literal-constant-declaration`). It is not a C constant expression.
 - Generic types are copied per (P, S), as the earlier report predicted. `Option[Decimal[3, 2]]` and `Option[Decimal[9, 4]]` are the separate structs `mono_13` and `mono_15` in the C for `stretch-checked` (Ran).
 - A typeclass instance works per concrete type. `instance Show(Decimal[9, 2])` and `instance Show(Decimal[12, 5])` live together and dispatch correctly, across a module interface (Ran: `interface-module`). No instance can cover all Decimal types, so `printLn` cannot get one in the language. `printLn(d)` fails with "does not implement the typeclass `Printable`" (Ran: probe `printLn`).
-- Interface and body agree on Decimal types. `interface-module` declares a constant, a record, two functions and two instances with Decimal types in `Money.aui` and defines them in `Money.aum` (Ran).
+- Interface and body agree on Decimal types. `interface-module` declares a constant, a record, two functions and two instances with Decimal types in `Money.zui` and defines them in `Money.zum` (Ran).
 - `Decimal[07, 02]` is accepted as `Decimal[7, 2]`. `Decimal[1'0, 2]` is rejected, because the digit separator is not stripped in type position. `Decimal[#x10, 2]` is a parse error. `Decimal[5, -1]` reaches `parse_type` as the literal `-1` and is rejected there (Ran: probes and `type-scale-negative`).
 
 ## Choices the design did not make

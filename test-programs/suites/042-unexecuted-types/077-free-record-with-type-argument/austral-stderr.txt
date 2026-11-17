@@ -8,7 +8,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/077-free-record-with-type-argument/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/077-free-record-with-type-argument/Test.zum",
     "startp": { "line": 14, "column": 4 },
     "end": { "line": 16, "column": 8 }
   },

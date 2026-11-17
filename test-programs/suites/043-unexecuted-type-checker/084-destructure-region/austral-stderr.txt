@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/084-destructure-region/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/084-destructure-region/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 30 }
   },

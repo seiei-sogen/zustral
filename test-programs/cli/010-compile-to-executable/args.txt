@@ -1,1 +1,1 @@
-compile Hello.aum --entrypoint=Hello:main --output=hello
+compile Hello.zum --entrypoint=Hello:main --output=hello

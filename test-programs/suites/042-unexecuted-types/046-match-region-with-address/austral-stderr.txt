@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/046-match-region-with-address/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/046-match-region-with-address/Test.zum",
     "startp": { "line": 19, "column": 8 },
     "end": { "line": 19, "column": 16 }
   },

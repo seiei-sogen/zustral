@@ -14,7 +14,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/014-constraint-not-typeclass/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/014-constraint-not-typeclass/Test.zum",
     "startp": { "line": 11, "column": 8 },
     "end": { "line": 11, "column": 19 }
   },

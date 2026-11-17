@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/057-instance-before-type-in-interface/Test.aui",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/057-instance-before-type-in-interface/Test.zui",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 6, "column": 27 }
   },

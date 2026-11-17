@@ -704,7 +704,7 @@ end module body.</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-sh" data-lang="sh">austral compile Test.aum --entrypoint=Test:main --target-type=c --output=gen.c
+<pre class="highlight"><code class="language-sh" data-lang="sh">austral compile Test.zum --entrypoint=Test:main --target-type=c --output=gen.c
 nix shell $NIXPKGS#gcc --command bash -c \
   "gcc -fwrapv -Wno-builtin-declaration-mismatch gen.c -L$OUT/lib -Wl,-rpath,$OUT/lib -lmpdec -lm -o t &amp;&amp; ./t"</code></pre>
 </div>
@@ -918,11 +918,11 @@ REQ-003 の例の「34桁」は、事前調査で gcc 13.3.0 の <code><em>DEC12
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>__int128</code> 固定小数点のプローブ。</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/ffi/Probe.aum</code>, <code>probes/ffi/shim.c</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/ffi/Probe.zum</code>, <code>probes/ffi/shim.c</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Zustral から <code>Foreign_Import</code> で各系統を呼ぶプローブと、そのシム。</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/ffi/UnitReturn.aum</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>probes/ffi/UnitReturn.zum</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">戻り値 <code>Unit</code> の <code>Foreign_Import</code> をコンパイラが拒むことを示すプローブ。</p></td>
 </tr>
 <tr>
@@ -1095,7 +1095,7 @@ REQ-003 の例の「34桁」は、事前調査で gcc 13.3.0 の <code><em>DEC12
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>ffi-unit-return</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Zustral FFI の制約</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>zustral</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>austral compile probes/ffi/UnitReturn.aum &#8230;&#8203;</code> の出力そのもの</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>austral compile probes/ffi/UnitReturn.zum &#8230;&#8203;</code> の出力そのもの</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>expected/ffi-unit-return.txt</code></p></td>
 </tr>
 </tbody>
@@ -1399,7 +1399,7 @@ mpdecimal と Intel DFP のライブラリ本体は、それぞれ nixpkgs と�
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><code>Probe.aum</code> を一時ディレクトリ <code>$T</code> へ複写し、そこで <code>austral compile Probe.aum --entrypoint=Probe:main --target-type=c --output=ffi.c</code> を実行して C を出す。</p>
+<p><code>Probe.zum</code> を一時ディレクトリ <code>$T</code> へ複写し、そこで <code>austral compile Probe.zum --entrypoint=Probe:main --target-type=c --output=ffi.c</code> を実行して C を出す。</p>
 </li>
 <li>
 <p><code>gcc -fwrapv -Wno-builtin-declaration-mismatch $T/ffi.c probes/ffi/shim.c -I&lt;mpdecimal.dev&gt;/include -L&lt;mpdecimal.out&gt;/lib -Wl,-rpath,&lt;mpdecimal.out&gt;/lib -lmpdec -lm</code> でリンクする。<code>-fwrapv -Wno-builtin-declaration-mismatch</code> と <code>-lm</code> は <code>test-programs/runner.py:400-408</code> の前例に合わせ、mpdecimal の <code>-I</code>、<code>-L</code>、<code>-rpath</code> を足す。</p>
@@ -1410,10 +1410,10 @@ mpdecimal と Intel DFP のライブラリ本体は、それぞれ nixpkgs と�
 </ol>
 </div>
 <div class="paragraph">
-<p><code>Probe.aum</code> とシムは、ポインタの値やアドレスのように実行ごとに変わりうる値を出力しない。出すのは演算結果と、成否を表す固定の文字列だけである。</p>
+<p><code>Probe.zum</code> とシムは、ポインタの値やアドレスのように実行ごとに変わりうる値を出力しない。出すのは演算結果と、成否を表す固定の文字列だけである。</p>
 </div>
 <div class="paragraph">
-<p><code>Probe.aum</code> が確かめること:</p>
+<p><code>Probe.zum</code> が確かめること:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1429,8 +1429,8 @@ mpdecimal と Intel DFP のライブラリ本体は、それぞれ nixpkgs と�
 </ul>
 </div>
 <div class="paragraph">
-<p><code>UnitReturn.aum</code> は、<code>void</code> の C 関数を戻り値 <code>Unit</code> で束縛して呼び、コンパイラが拒むことを出力で示す。
-記録にマシン固有の絶対パスが入らないよう、<code>run.sh</code> は <code>.aum</code> を一時ディレクトリへ複写し、そこでコンパイラを起動して相対パスを渡す。
+<p><code>UnitReturn.zum</code> は、<code>void</code> の C 関数を戻り値 <code>Unit</code> で束縛して呼び、コンパイラが拒むことを出力で示す。
+記録にマシン固有の絶対パスが入らないよう、<code>run.sh</code> は <code>.zum</code> を一時ディレクトリへ複写し、そこでコンパイラを起動して相対パスを渡す。
 コンパイラは起動したディレクトリに <code>calltree.html</code> を書くので、<code>docs/research/decimal-backend-survey/</code> で起動すると作業ツリーに <code>.gitignore</code> 済みのファイルが残る。実装中にこれを観測し、一時ディレクトリで起動する形に改めた。
 128ビット整数の型がないこととレコードを値で渡せないことは、コンパイラのソースの引用で示す（REQ-007）。</p>
 </div>

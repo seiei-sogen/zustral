@@ -16,7 +16,7 @@
     { "type": "code", "content": "Linear" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/011-instance-argument-not-type-variable-span-mut/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/011-instance-argument-not-type-variable-span-mut/Test.zum",
     "startp": { "line": 13, "column": 4 },
     "end": { "line": 15, "column": 8 }
   },

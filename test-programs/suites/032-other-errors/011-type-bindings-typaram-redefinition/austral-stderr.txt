@@ -10,7 +10,7 @@
     { "type": "type", "content": "Unit" }
   ],
   "span": {
-    "filename": "test-programs/suites/032-other-errors/011-type-bindings-typaram-redefinition/Test.aum",
+    "filename": "test-programs/suites/032-other-errors/011-type-bindings-typaram-redefinition/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 21 }
   },

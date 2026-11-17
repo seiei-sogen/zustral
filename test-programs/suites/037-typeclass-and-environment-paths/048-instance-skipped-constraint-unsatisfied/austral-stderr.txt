@@ -8,7 +8,7 @@
     { "type": "type", "content": "Box[Bool]" }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/048-instance-skipped-constraint-unsatisfied/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/048-instance-skipped-constraint-unsatisfied/Test.zum",
     "startp": { "line": 29, "column": 8 },
     "end": { "line": 29, "column": 26 }
   },

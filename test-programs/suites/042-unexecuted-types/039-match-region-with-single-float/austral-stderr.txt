@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/039-match-region-with-single-float/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/039-match-region-with-single-float/Test.zum",
     "startp": { "line": 19, "column": 8 },
     "end": { "line": 19, "column": 16 }
   },

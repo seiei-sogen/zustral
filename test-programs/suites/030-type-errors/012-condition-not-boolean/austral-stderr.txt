@@ -10,7 +10,7 @@
     { "type": "type", "content": "Int32" }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/012-condition-not-boolean/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/012-condition-not-boolean/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 5, "column": 15 }
   },

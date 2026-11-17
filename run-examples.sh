@@ -10,12 +10,12 @@ dune build
 
 function compile() {
     ./austral compile \
-        ./standard/src/Buffer.aui,./standard/src/Buffer.aum \
-        ./standard/src/String.aui,./standard/src/String.aum \
-        ./standard/src/StringBuilder.aui,./standard/src/StringBuilder.aum \
-        ./standard/src/IO/IO.aui,./standard/src/IO/IO.aum \
-        ./standard/src/IO/Terminal.aui,./standard/src/IO/Terminal.aum \
-        $1/$2.aui,$1/$2.aum \
+        ./standard/src/Buffer.zui,./standard/src/Buffer.zum \
+        ./standard/src/String.zui,./standard/src/String.zum \
+        ./standard/src/StringBuilder.zui,./standard/src/StringBuilder.zum \
+        ./standard/src/IO/IO.zui,./standard/src/IO/IO.zum \
+        ./standard/src/IO/Terminal.zui,./standard/src/IO/Terminal.zum \
+        $1/$2.zui,$1/$2.zum \
         --entrypoint=Example.$2:main --output=testbin
 
     if [ $# -eq 4 ] 

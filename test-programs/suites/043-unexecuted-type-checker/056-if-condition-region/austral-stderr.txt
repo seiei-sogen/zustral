@@ -10,7 +10,7 @@
     { "type": "type", "content": "Region<0>" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/056-if-condition-region/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/056-if-condition-region/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 5, "column": 15 }
   },

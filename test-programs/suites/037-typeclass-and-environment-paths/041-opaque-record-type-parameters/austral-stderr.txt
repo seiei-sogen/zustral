@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/041-opaque-record-type-parameters/Test.aui",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/041-opaque-record-type-parameters/Test.zui",
     "startp": { "line": 2, "column": 4 },
     "end": { "line": 2, "column": 28 }
   },

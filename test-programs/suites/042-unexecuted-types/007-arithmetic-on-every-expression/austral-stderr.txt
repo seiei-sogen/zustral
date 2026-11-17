@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/007-arithmetic-on-every-expression/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/007-arithmetic-on-every-expression/Test.zum",
     "startp": { "line": 15, "column": 8 },
     "end": { "line": 15, "column": 25 }
   },

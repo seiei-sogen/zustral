@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/157-call-non-callable-span/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/157-call-non-callable-span/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 13 }
   },

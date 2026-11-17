@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/045-match-region-with-span-mut/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/045-match-region-with-span-mut/Test.zum",
     "startp": { "line": 19, "column": 8 },
     "end": { "line": 19, "column": 16 }
   },

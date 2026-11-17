@@ -88,7 +88,7 @@ declare -A PATCHED=(
   [value-parameters]='Type\.ty|Type\.universe|MonoType\.mono_ty|Cst\.typespec|Stages\.Ast\.qtypespec'
 )
 
-# Compiles probes/Mono.aum with the HEAD compiler: one generic record and one
+# Compiles probes/Mono.zum with the HEAD compiler: one generic record and one
 # generic function, each instantiated at two type arguments that do not
 # change the layout. Prints how many C structs and functions came out.
 mono_c() {
@@ -98,7 +98,7 @@ mono_c() {
   (cd "$w" && timeout "$BUILD_TIMEOUT" nix develop "$ROOT" "${NIX_FLAGS[@]}" --command \
     bash -c 'python3 concat_builtins.py && dune build ./bin/austral.exe 2>&1') > "$T/head.log" \
     || { echo "build head failed, log: $(tail -n 3 "$T/head.log")" >&2; return 1; }
-  "$w/_build/default/bin/austral.exe" compile "$HERE/probes/Mono.aum" \
+  "$w/_build/default/bin/austral.exe" compile "$HERE/probes/Mono.zum" \
     --entrypoint=Mono:main --target-type=c --output="$T/mono.c" || return 1
   cc -w -o "$T/mono" "$T/mono.c" || return 1
   "$T/mono"; echo "exit $?"

@@ -9,7 +9,7 @@
     { "type": "text", "content": " does not end in a return statement." }
   ],
   "span": {
-    "filename": "test-programs/suites/031-declaration-errors/043-missing-return-in-method-after-call-to-parameter-named-abort/Test.aum",
+    "filename": "test-programs/suites/031-declaration-errors/043-missing-return-in-method-after-call-to-parameter-named-abort/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 14, "column": 8 }
   },

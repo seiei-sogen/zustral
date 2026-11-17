@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # usage: run-tests.sh <path-to-austral-binary>
 #
-# Each tests/NAME.aum has exactly one sibling that says what must happen:
+# Each tests/NAME.zum has exactly one sibling that says what must happen:
 #   NAME.expected  compiles, exits 0, and stdout equals the file
 #   NAME.error     fails to compile, and the compiler output contains the file's text
 #   NAME.trap      compiles, exits nonzero, and its output contains the file's text
-# An optional NAME.with lists modules under tests/modules/ to compile before NAME.aum.
+# An optional NAME.with lists modules under tests/modules/ to compile before NAME.zum.
 set -u
 
 if [ $# -ne 1 ] || [ ! -x "$1" ]; then
@@ -28,8 +28,8 @@ report() {
   fi
 }
 
-for src in "$tests"/*.aum; do
-  name=$(basename "$src" .aum)
+for src in "$tests"/*.zum; do
+  name=$(basename "$src" .zum)
   module=$(sed -n 's/^module body \([A-Za-z0-9_.]*\) is.*/\1/p' "$src" | head -1)
   # The compiler writes error.html and calltree.html into the current directory,
   # and leaves its intermediate austral_XXXXXX.c in $TMPDIR.

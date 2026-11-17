@@ -11,7 +11,7 @@
     { "type": "text", "content": " pragmas simultaneously." }
   ],
   "span": {
-    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/049-function-with-two-pragmas/Test.aum",
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/049-function-with-two-pragmas/Test.zum",
     "startp": { "line": 5, "column": 48 },
     "end": { "line": 8, "column": 8 }
   },

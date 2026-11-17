@@ -8,7 +8,7 @@
     { "type": "text", "content": "constant" }
   ],
   "span": {
-    "filename": "test-programs/suites/031-declaration-errors/029-constant-defined-as-typeclass/Test.aui",
+    "filename": "test-programs/suites/031-declaration-errors/029-constant-defined-as-typeclass/Test.zui",
     "startp": { "line": 2, "column": 4 },
     "end": { "line": 2, "column": 24 }
   },

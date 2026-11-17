@@ -10,7 +10,7 @@
     { "type": "type", "content": "Foo" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/055-if-condition-record/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/055-if-condition-record/Test.zum",
     "startp": { "line": 7, "column": 8 },
     "end": { "line": 9, "column": 15 }
   },

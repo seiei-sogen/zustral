@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/039-numbering-order/003-region-in-assigned-value/Test.aum",
+    "filename": "test-programs/suites/039-numbering-order/003-region-in-assigned-value/Test.zum",
     "startp": { "line": 13, "column": 8 },
     "end": { "line": 13, "column": 31 }
   },

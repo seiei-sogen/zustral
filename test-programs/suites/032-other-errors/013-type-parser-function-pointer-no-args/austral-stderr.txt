@@ -8,7 +8,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/032-other-errors/013-type-parser-function-pointer-no-args/Test.aum",
+    "filename": "test-programs/suites/032-other-errors/013-type-parser-function-pointer-no-args/Test.zum",
     "startp": { "line": 1, "column": 19 },
     "end": { "line": 4, "column": 8 }
   },

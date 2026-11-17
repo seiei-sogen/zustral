@@ -6,7 +6,7 @@
     { "type": "type", "content": "Lin" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/039-dereference-read-reference-to-linear/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/039-dereference-read-reference-to-linear/Test.zum",
     "startp": { "line": 7, "column": 8 },
     "end": { "line": 7, "column": 11 }
   },

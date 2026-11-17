@@ -14,7 +14,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/064-unconstrained-generic-function/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/064-unconstrained-generic-function/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 15 }
   },

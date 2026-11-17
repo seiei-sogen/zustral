@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/083-return-call-with-unbound-parameter-as-another-type-parameter/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/083-return-call-with-unbound-parameter-as-another-type-parameter/Test.zum",
     "startp": { "line": 16, "column": 8 },
     "end": { "line": 16, "column": 27 }
   },

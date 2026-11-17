@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/055-name-not-visible-after-its-block/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/055-name-not-visible-after-its-block/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 19 }
   },

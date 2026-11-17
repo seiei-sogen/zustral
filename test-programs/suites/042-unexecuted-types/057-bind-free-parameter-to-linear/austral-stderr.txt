@@ -12,7 +12,7 @@
     { "type": "code", "content": "Linear" }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/057-bind-free-parameter-to-linear/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/057-bind-free-parameter-to-linear/Test.zum",
     "startp": { "line": 20, "column": 8 },
     "end": { "line": 20, "column": 18 }
   },

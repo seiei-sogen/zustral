@@ -10,7 +10,7 @@
     { "type": "text", "content": " is not." }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/032-arithmetic-read-reference/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/032-arithmetic-read-reference/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 14 }
   },

@@ -8,7 +8,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/048-destructure-binding-collides/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/048-destructure-binding-collides/Test.zum",
     "startp": { "line": 9, "column": 8 },
     "end": { "line": 9, "column": 59 }
   },

@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/007-borrowing/018-consume-after-nested-read-borrow-ends/Test.aum",
+    "filename": "test-programs/suites/007-borrowing/018-consume-after-nested-read-borrow-ends/Test.zum",
     "startp": { "line": 12, "column": 12 },
     "end": { "line": 12, "column": 36 }
   },

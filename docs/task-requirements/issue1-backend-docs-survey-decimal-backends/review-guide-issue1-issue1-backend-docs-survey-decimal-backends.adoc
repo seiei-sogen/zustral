@@ -26,7 +26,7 @@
 . `run.sh` の `build` と `execute`。プローブごとのコンパイルの引数と、出力の末尾に `exit=<終了コード>` を足す形を見る。
 . `run.sh` のメインループ。図1と照らして読む。
 . `probes/i128.c`、`probes/d128.c`、`probes/mpd.c`、`probes/intel.c`、`probes/libdfp.c` と共有の `probes/bid128.h`（`print_bid128`）。どの値を `key=value` で出すかを見る。
-. `probes/ffi/Probe.aum`、`probes/ffi/shim.c`、`probes/ffi/UnitReturn.aum`。図2と照らして読む。
+. `probes/ffi/Probe.zum`、`probes/ffi/shim.c`、`probes/ffi/UnitReturn.zum`。図2と照らして読む。
 . `expected/*.txt` と `README.md`。README の `〔probe: <記録> / <key>〕` が記録の行を指していることを確かめる。
 
 == 実行時フロー
@@ -59,9 +59,9 @@ image::review-guide-issue1-issue1-backend-docs-survey-decimal-backends-run-sh-pr
 === Zustral から C ライブラリを呼ぶプローブ（`ffi`）
 
 .図2. `ffi` プローブの組み立てと実行
-image::review-guide-issue1-issue1-backend-docs-survey-decimal-backends-ffi-probe.svg[Probe.aum を C にし、shim.c と別の翻訳単位でリンクして、ポインタだけをシムへ渡す流れ]
+image::review-guide-issue1-issue1-backend-docs-survey-decimal-backends-ffi-probe.svg[Probe.zum を C にし、shim.c と別の翻訳単位でリンクして、ポインタだけをシムへ渡す流れ]
 
-入力:: `probes/ffi/Probe.aum` と `probes/ffi/shim.c`。
+入力:: `probes/ffi/Probe.zum` と `probes/ffi/shim.c`。
 判断:: Zustral の `Foreign_Import` は128ビット整数、レコードの値、戻り値 `Unit` を表せない（`lib/Type.ml:22-29`、`lib/CodeGen.ml:554-591`）。そのため10進の値は FFI を越えさせず、16バイトの領域や `mpd_t` へのポインタ（`Address[Nat8]`）だけを渡す。`void` を返すライブラリ関数は、`int32_t` を返す `shim_*` 関数で包む。
 設計理由:: mpdecimal のヘッダを生成 C と同じ翻訳単位に入れると型が衝突した（設計文書の実験2）。だから `shim.c` を別の翻訳単位にし、リンクだけで結ぶ。
 正常時:: `一致    ffi` の下に `mpd_qnew_direct=ok`、`mpd_add_01_02=0.3`、`d128_add_01_02=+3E-1`、`i128_add_01_02=0.300000000000000000`、`exit=0` が出る。

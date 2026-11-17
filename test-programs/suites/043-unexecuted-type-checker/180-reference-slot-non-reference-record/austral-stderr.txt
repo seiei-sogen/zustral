@@ -9,7 +9,7 @@
     { "type": "type", "content": "Foo" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/180-reference-slot-non-reference-record/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/180-reference-slot-non-reference-record/Test.zum",
     "startp": { "line": 7, "column": 8 },
     "end": { "line": 7, "column": 15 }
   },

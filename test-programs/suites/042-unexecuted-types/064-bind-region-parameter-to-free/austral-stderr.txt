@@ -12,7 +12,7 @@
     { "type": "code", "content": "Free" }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/064-bind-region-parameter-to-free/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/064-bind-region-parameter-to-free/Test.zum",
     "startp": { "line": 20, "column": 8 },
     "end": { "line": 20, "column": 18 }
   },

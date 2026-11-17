@@ -8,7 +8,7 @@
     { "type": "type", "content": "Unit" }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/037-if-statement-both-branches-fail/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/037-if-statement-both-branches-fail/Test.zum",
     "startp": { "line": 7, "column": 12 },
     "end": { "line": 7, "column": 32 }
   },

@@ -3,7 +3,7 @@
   "kind": "Type Error",
   "text": [ { "type": "text", "content": "Non-exhaustive case statement." } ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/005-case-non-exhaustive/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/005-case-non-exhaustive/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 7, "column": 17 }
   },

@@ -9,7 +9,7 @@
     { "type": "type", "content": "Float32" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/178-reference-slot-non-reference-float32/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/178-reference-slot-non-reference-float32/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 15 }
   },

@@ -40,9 +40,9 @@ let render (error: t): err_text =
        Code source;
        Break;
        Text "Sources must be supplied as either";
-       Code "interface.aui,body.aum";
+       Code "interface.zui,body.zum";
        Text " or ";
-       Code "body.aum"
+       Code "body.zum"
      ]
   | MissingEntrypoint ->
      [

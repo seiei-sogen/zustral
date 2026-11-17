@@ -8,7 +8,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/033-type-checker-errors/006-duplicate-region-name/Test.aum",
+    "filename": "test-programs/suites/033-type-checker-errors/006-duplicate-region-name/Test.zum",
     "startp": { "line": 5, "column": 12 },
     "end": { "line": 7, "column": 23 }
   },

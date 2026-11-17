@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/102-literal-float64-conjunction/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/102-literal-float64-conjunction/Test.zum",
     "startp": { "line": 30, "column": 8 },
     "end": { "line": 30, "column": 29 }
   },

@@ -5,7 +5,7 @@ PREFIX ?= /usr/local
 .PHONY: all
 all: $(BIN)
 
-lib/BuiltInModules.ml: lib/builtin/*.aui lib/builtin/*.aum lib/prelude.c concat_builtins.py
+lib/BuiltInModules.ml: lib/builtin/*.zui lib/builtin/*.zum lib/prelude.c concat_builtins.py
 	python3 concat_builtins.py
 
 $(BIN): $(SRC)

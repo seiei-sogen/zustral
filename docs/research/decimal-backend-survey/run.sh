@@ -142,8 +142,8 @@ build() { # id dir -> $dir/bin
     ffi)
       local dev=${DEP[mpdecimal]% *} lib=${DEP[mpdecimal]#* }/lib
       # The compiler writes error.html into its working directory on failure, so it runs in the temp dir.
-      cp "$HERE/probes/ffi/Probe.aum" "$d/" &&
-        (cd "$d" && "${DEP[zustral]}" compile Probe.aum --entrypoint=Probe:main --target-type=c --output=ffi.c) &&
+      cp "$HERE/probes/ffi/Probe.zum" "$d/" &&
+        (cd "$d" && "${DEP[zustral]}" compile Probe.zum --entrypoint=Probe:main --target-type=c --output=ffi.c) &&
         "${DEP[gcc]}/bin/gcc" -fwrapv -Wno-builtin-declaration-mismatch "$d/ffi.c" "$HERE/probes/ffi/shim.c" \
           -I"$dev/include" -L"$lib" -Wl,-rpath,"$lib" -lmpdec -lm -o "$d/bin" ;;
   esac
@@ -151,8 +151,8 @@ build() { # id dir -> $dir/bin
 
 execute() { # id dir out
   if [[ $1 == ffi-unit-return ]]; then
-    cp "$HERE/probes/ffi/UnitReturn.aum" "$2/"
-    (cd "$2" && "${DEP[zustral]}" compile UnitReturn.aum --entrypoint=UnitReturn:main --target-type=c --output=out.c)
+    cp "$HERE/probes/ffi/UnitReturn.zum" "$2/"
+    (cd "$2" && "${DEP[zustral]}" compile UnitReturn.zum --entrypoint=UnitReturn:main --target-type=c --output=out.c)
   else
     (cd "$HERE" && "$2/bin")
   fi >"$3" 2>&1

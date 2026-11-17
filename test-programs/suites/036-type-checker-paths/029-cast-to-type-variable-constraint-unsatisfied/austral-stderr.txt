@@ -8,7 +8,7 @@
     { "type": "type", "content": "Int32" }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/029-cast-to-type-variable-constraint-unsatisfied/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/029-cast-to-type-variable-constraint-unsatisfied/Test.zum",
     "startp": { "line": 9, "column": 8 },
     "end": { "line": 9, "column": 30 }
   },

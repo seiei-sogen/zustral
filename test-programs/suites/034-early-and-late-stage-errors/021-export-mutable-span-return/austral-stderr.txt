@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/034-early-and-late-stage-errors/021-export-mutable-span-return/Test.aum",
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/021-export-mutable-span-return/Test.zum",
     "startp": { "line": 4, "column": 48 },
     "end": { "line": 7, "column": 8 }
   },

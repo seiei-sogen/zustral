@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/032-other-errors/017-linearity-mutable-borrow-after-consume/Test.aum",
+    "filename": "test-programs/suites/032-other-errors/017-linearity-mutable-borrow-after-consume/Test.zum",
     "startp": { "line": 9, "column": 8 },
     "end": { "line": 11, "column": 19 }
   },

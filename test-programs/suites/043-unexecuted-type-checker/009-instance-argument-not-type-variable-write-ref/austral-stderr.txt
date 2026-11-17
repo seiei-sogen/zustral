@@ -16,7 +16,7 @@
     { "type": "code", "content": "Linear" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/009-instance-argument-not-type-variable-write-ref/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/009-instance-argument-not-type-variable-write-ref/Test.zum",
     "startp": { "line": 13, "column": 4 },
     "end": { "line": 15, "column": 8 }
   },

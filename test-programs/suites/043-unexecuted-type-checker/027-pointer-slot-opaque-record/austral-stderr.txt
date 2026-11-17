@@ -9,7 +9,7 @@
     { "type": "text", "content": " and so cannot be read." }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/027-pointer-slot-opaque-record/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/027-pointer-slot-opaque-record/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 39 }
   },

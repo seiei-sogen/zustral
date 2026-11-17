@@ -7,7 +7,7 @@
     { "type": "text", "content": " constructor must be named." }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/036-record-constructor-positional/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/036-record-constructor-positional/Test.zum",
     "startp": { "line": 7, "column": 8 },
     "end": { "line": 7, "column": 29 }
   },

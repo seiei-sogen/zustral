@@ -16,7 +16,7 @@ Options:
                     `bin` target.
 
 Positional arguments:
-    module    Of the form 'file.aui,file.aum' for modules with
-              both an interface and body file, or 'file.aum' for
+    module    Of the form 'file.zui,file.zum' for modules with
+              both an interface and body file, or 'file.zum' for
               modules with only a body.
 --- stderr

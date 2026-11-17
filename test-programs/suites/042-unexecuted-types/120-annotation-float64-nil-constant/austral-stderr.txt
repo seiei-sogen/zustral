@@ -8,7 +8,7 @@
     { "type": "type", "content": "Unit" }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/120-annotation-float64-nil-constant/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/120-annotation-float64-nil-constant/Test.zum",
     "startp": { "line": 30, "column": 8 },
     "end": { "line": 30, "column": 35 }
   },

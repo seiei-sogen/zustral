@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/006-linearity/030-if-expression-branch-consumes-twice/Test.aum",
+    "filename": "test-programs/suites/006-linearity/030-if-expression-branch-consumes-twice/Test.zum",
     "startp": { "line": 19, "column": 8 },
     "end": { "line": 19, "column": 61 }
   },

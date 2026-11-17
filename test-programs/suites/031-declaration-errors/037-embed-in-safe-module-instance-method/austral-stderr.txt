@@ -10,7 +10,7 @@
     { "type": "code", "content": "pragma Unsafe_Module;" }
   ],
   "span": {
-    "filename": "test-programs/suites/031-declaration-errors/037-embed-in-safe-module-instance-method/Test.aum",
+    "filename": "test-programs/suites/031-declaration-errors/037-embed-in-safe-module-instance-method/Test.zum",
     "startp": { "line": 9, "column": 28 },
     "end": { "line": 9, "column": 54 }
   },

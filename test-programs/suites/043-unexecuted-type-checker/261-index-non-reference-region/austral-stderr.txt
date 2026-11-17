@@ -9,7 +9,7 @@
     { "type": "type", "content": "Region<0>" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/261-index-non-reference-region/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/261-index-non-reference-region/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 16 }
   },

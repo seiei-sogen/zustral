@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/018-literal-operands/007-negate-float/Test.aum",
+    "filename": "test-programs/suites/018-literal-operands/007-negate-float/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 20 }
   },

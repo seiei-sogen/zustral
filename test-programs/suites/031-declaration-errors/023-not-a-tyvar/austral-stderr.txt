@@ -16,7 +16,7 @@
     { "type": "code", "content": "Free" }
   ],
   "span": {
-    "filename": "test-programs/suites/031-declaration-errors/023-not-a-tyvar/Test.aum",
+    "filename": "test-programs/suites/031-declaration-errors/023-not-a-tyvar/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 6, "column": 8 }
   },

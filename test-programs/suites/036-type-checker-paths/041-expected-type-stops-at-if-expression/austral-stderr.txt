@@ -14,7 +14,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/041-expected-type-stops-at-if-expression/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/041-expected-type-stops-at-if-expression/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 61 }
   },

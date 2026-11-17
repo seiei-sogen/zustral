@@ -8,7 +8,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/277-cast-write-reference-to-address/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/277-cast-write-reference-to-address/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 54 }
   },

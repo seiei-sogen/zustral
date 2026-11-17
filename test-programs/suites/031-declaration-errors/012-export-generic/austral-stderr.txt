@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/031-declaration-errors/012-export-generic/Test.aum",
+    "filename": "test-programs/suites/031-declaration-errors/012-export-generic/Test.zum",
     "startp": { "line": 3, "column": 4 },
     "end": { "line": 6, "column": 8 }
   },

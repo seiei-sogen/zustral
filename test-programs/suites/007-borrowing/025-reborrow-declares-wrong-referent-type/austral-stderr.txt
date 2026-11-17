@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/007-borrowing/025-reborrow-declares-wrong-referent-type/Test.aum",
+    "filename": "test-programs/suites/007-borrowing/025-reborrow-declares-wrong-referent-type/Test.zum",
     "startp": { "line": 5, "column": 12 },
     "end": { "line": 7, "column": 23 }
   },

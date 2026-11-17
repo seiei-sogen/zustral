@@ -9,7 +9,7 @@
     { "type": "text", "content": " does not end in a return statement." }
   ],
   "span": {
-    "filename": "test-programs/suites/031-declaration-errors/044-missing-return-after-call-to-borrow-named-abort/Test.aum",
+    "filename": "test-programs/suites/031-declaration-errors/044-missing-return-after-call-to-borrow-named-abort/Test.zum",
     "startp": { "line": 1, "column": 19 },
     "end": { "line": 7, "column": 8 }
   },

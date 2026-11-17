@@ -12,7 +12,7 @@
     { "type": "code", "content": "Type" }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/058-bind-free-parameter-to-type/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/058-bind-free-parameter-to-type/Test.zum",
     "startp": { "line": 21, "column": 8 },
     "end": { "line": 21, "column": 18 }
   },

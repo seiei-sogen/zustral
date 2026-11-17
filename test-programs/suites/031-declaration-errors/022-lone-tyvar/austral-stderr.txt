@@ -8,7 +8,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/031-declaration-errors/022-lone-tyvar/Test.aum",
+    "filename": "test-programs/suites/031-declaration-errors/022-lone-tyvar/Test.zum",
     "startp": { "line": 5, "column": 4 },
     "end": { "line": 7, "column": 8 }
   },

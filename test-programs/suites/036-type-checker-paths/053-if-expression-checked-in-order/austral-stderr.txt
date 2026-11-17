@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/053-if-expression-checked-in-order/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/053-if-expression-checked-in-order/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 73 }
   },

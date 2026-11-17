@@ -8,7 +8,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/033-type-checker-errors/001-shadowed-variable/Test.aum",
+    "filename": "test-programs/suites/033-type-checker-errors/001-shadowed-variable/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 26 }
   },

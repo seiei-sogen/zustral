@@ -9,7 +9,7 @@
     { "type": "text", "content": " does not end in a return statement." }
   ],
   "span": {
-    "filename": "test-programs/suites/031-declaration-errors/042-missing-return-after-call-to-destructured-binding-named-abort/Test.aum",
+    "filename": "test-programs/suites/031-declaration-errors/042-missing-return-after-call-to-destructured-binding-named-abort/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 13, "column": 8 }
   },

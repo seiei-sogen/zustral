@@ -10,7 +10,7 @@
     { "type": "type", "content": "&![Int32, R]" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/058-if-condition-write-ref/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/058-if-condition-write-ref/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 6, "column": 15 }
   },

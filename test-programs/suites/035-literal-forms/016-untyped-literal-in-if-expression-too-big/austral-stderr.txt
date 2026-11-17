@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/035-literal-forms/016-untyped-literal-in-if-expression-too-big/Test.aum",
+    "filename": "test-programs/suites/035-literal-forms/016-untyped-literal-in-if-expression-too-big/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 45 }
   },

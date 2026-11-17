@@ -10,7 +10,7 @@
     { "type": "type", "content": "Int32" }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/020-condition-not-boolean-while/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/020-condition-not-boolean-while/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 5, "column": 18 }
   },

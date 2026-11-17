@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/025-call-undefined/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/025-call-undefined/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 34 }
   },

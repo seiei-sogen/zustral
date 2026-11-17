@@ -8,7 +8,7 @@
     { "type": "type", "content": "U" }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/076-let-annotates-value-with-another-type-parameter/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/076-let-annotates-value-with-another-type-parameter/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 22 }
   },

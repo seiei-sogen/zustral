@@ -6,7 +6,7 @@
     { "type": "type", "content": "T" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/042-dereference-write-reference-to-type/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/042-dereference-write-reference-to-type/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 11 }
   },

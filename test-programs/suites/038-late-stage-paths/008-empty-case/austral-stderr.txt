@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/038-late-stage-paths/008-empty-case/Test.aum",
+    "filename": "test-programs/suites/038-late-stage-paths/008-empty-case/Test.zum",
     "startp": { "line": 11, "column": 8 },
     "end": { "line": 11, "column": 17 }
   },

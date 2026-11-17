@@ -8,7 +8,7 @@
     { "type": "text", "content": "constant" }
   ],
   "span": {
-    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/062-constant-declared-union-defined/Test.aui",
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/062-constant-declared-union-defined/Test.zui",
     "startp": { "line": 2, "column": 4 },
     "end": { "line": 2, "column": 22 }
   },

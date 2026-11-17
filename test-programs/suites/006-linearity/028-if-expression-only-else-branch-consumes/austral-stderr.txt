@@ -12,7 +12,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/006-linearity/028-if-expression-only-else-branch-consumes/Test.aum",
+    "filename": "test-programs/suites/006-linearity/028-if-expression-only-else-branch-consumes/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 60 }
   },

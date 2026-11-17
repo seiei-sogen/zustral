@@ -142,14 +142,14 @@
       ]
     },
     {
-      "path": "examples/ffi/FFI.aum",
+      "path": "examples/ffi/FFI.zum",
       "relevance": "medium",
       "role": "Foreign_Import で C 関数を呼ぶ最小の既存例。Zustral 経由の FFI プローブの雛形になる。",
       "key_symbols": [
         {
           "name": "Put_Character / Put_String",
           "kind": "function",
-          "location": "examples/ffi/FFI.aum:1-14",
+          "location": "examples/ffi/FFI.zum:1-14",
           "note": "pragma Unsafe_Module と pragma Foreign_Import(External_Name => ...) の書き方。"
         }
       ]
@@ -243,7 +243,7 @@
       {
         "name": "@embed",
         "meaning": "C の式を直接埋め込む脱出口。FFI で表せない呼び出しの代替経路になりうる。",
-        "evidence": "test-programs/suites/001-trivial/002-embed/Test.aum:9"
+        "evidence": "test-programs/suites/001-trivial/002-embed/Test.zum:9"
       }
     ],
     "flows": [
@@ -353,8 +353,8 @@
       "name": "Foreign_Import による C 呼び出し",
       "description": "pragma Unsafe_Module のモジュールで、本体のない関数に pragma Foreign_Import(External_Name => \"sym\") を付ける。",
       "examples": [
-        "examples/ffi/FFI.aum:1-14",
-        "standard/src/IO/Terminal.aum:145-149"
+        "examples/ffi/FFI.zum:1-14",
+        "standard/src/IO/Terminal.zum:145-149"
       ],
       "applies_to": "C ABI 観点を Zustral プログラムから確かめるプローブ"
     },
@@ -391,7 +391,7 @@
       "reason": "問いと5観点の正本。"
     },
     {
-      "path": "examples/ffi/FFI.aum:1",
+      "path": "examples/ffi/FFI.zum:1",
       "reason": "Zustral 経由の FFI プローブの雛形。"
     },
     {

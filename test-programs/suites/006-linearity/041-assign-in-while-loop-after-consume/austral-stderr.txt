@@ -12,7 +12,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/006-linearity/041-assign-in-while-loop-after-consume/Test.aum",
+    "filename": "test-programs/suites/006-linearity/041-assign-in-while-loop-after-consume/Test.zum",
     "startp": { "line": 17, "column": 8 },
     "end": { "line": 19, "column": 18 }
   },

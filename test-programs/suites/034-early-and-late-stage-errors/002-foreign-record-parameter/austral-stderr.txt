@@ -3,7 +3,7 @@
   "kind": "Generic Error",
   "text": [ { "type": "text", "content": "Not allowed" } ],
   "span": {
-    "filename": "test-programs/suites/034-early-and-late-stage-errors/002-foreign-record-parameter/Test.aum",
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/002-foreign-record-parameter/Test.zum",
     "startp": { "line": 8, "column": 48 },
     "end": { "line": 10, "column": 8 }
   },

@@ -3,7 +3,7 @@
   "kind": "Generic Error",
   "text": [ { "type": "text", "content": "Not allowed" } ],
   "span": {
-    "filename": "test-programs/suites/034-early-and-late-stage-errors/027-foreign-after-type-error/Test.aum",
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/027-foreign-after-type-error/Test.zum",
     "startp": { "line": 9, "column": 48 },
     "end": { "line": 11, "column": 8 }
   },

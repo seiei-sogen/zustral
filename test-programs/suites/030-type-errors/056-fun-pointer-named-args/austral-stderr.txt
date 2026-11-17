@@ -8,7 +8,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/056-fun-pointer-named-args/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/056-fun-pointer-named-args/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 19 }
   },

@@ -64,7 +64,7 @@ end module body.
 
 [source,sh]
 ----
-austral compile Test.aum --entrypoint=Test:main --target-type=c --output=gen.c
+austral compile Test.zum --entrypoint=Test:main --target-type=c --output=gen.c
 nix shell $NIXPKGS#gcc --command bash -c \
   "gcc -fwrapv -Wno-builtin-declaration-mismatch gen.c -L$OUT/lib -Wl,-rpath,$OUT/lib -lmpdec -lm -o t && ./t"
 ----
@@ -197,9 +197,9 @@ REQ-003 の例の「34桁」は、事前調査で gcc 13.3.0 の `__DEC128_MANT_
 |Intel DFP（libbid）のプローブ。
 |`probes/i128.c`
 |`__int128` 固定小数点のプローブ。
-|`probes/ffi/Probe.aum`, `probes/ffi/shim.c`
+|`probes/ffi/Probe.zum`, `probes/ffi/shim.c`
 |Zustral から `Foreign_Import` で各系統を呼ぶプローブと、そのシム。
-|`probes/ffi/UnitReturn.aum`
+|`probes/ffi/UnitReturn.zum`
 |戻り値 `Unit` の `Foreign_Import` をコンパイラが拒むことを示すプローブ。
 |`expected/<probe>.txt`
 |記録した出力。リポジトリにコミットする照合の正本。
@@ -294,7 +294,7 @@ REQ-003 の例の「34桁」は、事前調査で gcc 13.3.0 の `__DEC128_MANT_
 |`ffi-unit-return`
 |Zustral FFI の制約
 |`zustral`
-|`austral compile probes/ffi/UnitReturn.aum ...` の出力そのもの
+|`austral compile probes/ffi/UnitReturn.zum ...` の出力そのもの
 |`expected/ffi-unit-return.txt`
 |===
 
@@ -475,20 +475,20 @@ REQ-002 の観点のうち、このマシンで観測できるものをプロー
 <<experiments>> の実験2で、mpdecimal のヘッダを生成 C と同じ翻訳単位に入れると型が衝突すると確かめた。
 そこで、ライブラリのヘッダは生成 C に入れず、別の翻訳単位のシムだけが読む。
 
-. `Probe.aum` を一時ディレクトリ `$T` へ複写し、そこで `austral compile Probe.aum --entrypoint=Probe:main --target-type=c --output=ffi.c` を実行して C を出す。
+. `Probe.zum` を一時ディレクトリ `$T` へ複写し、そこで `austral compile Probe.zum --entrypoint=Probe:main --target-type=c --output=ffi.c` を実行して C を出す。
 . `gcc -fwrapv -Wno-builtin-declaration-mismatch $T/ffi.c probes/ffi/shim.c -I<mpdecimal.dev>/include -L<mpdecimal.out>/lib -Wl,-rpath,<mpdecimal.out>/lib -lmpdec -lm` でリンクする。`-fwrapv -Wno-builtin-declaration-mismatch` と `-lm` は `test-programs/runner.py:400-408` の前例に合わせ、mpdecimal の `-I`、`-L`、`-rpath` を足す。
 . できた実行ファイルを2回実行し、`expected/ffi.txt` と照合する。
 
-`Probe.aum` とシムは、ポインタの値やアドレスのように実行ごとに変わりうる値を出力しない。出すのは演算結果と、成否を表す固定の文字列だけである。
+`Probe.zum` とシムは、ポインタの値やアドレスのように実行ごとに変わりうる値を出力しない。出すのは演算結果と、成否を表す固定の文字列だけである。
 
-`Probe.aum` が確かめること:
+`Probe.zum` が確かめること:
 
 * mpdecimal: ポインタを返す `mpd_qnew` を、シムなしで直接 `Address[Nat8]` として受け取れる。`void` を返す関数（`mpd_add` など）はシム経由で呼ぶ。
 * GCC `_Decimal128`: Zustral 側で確保した16バイトの領域へのポインタをシムに渡し、シムが値を読み書きする。値そのものは FFI を越えない。
 * `__int128`: 同じく、16バイトの領域へのポインタ越しに渡す。
 
-`UnitReturn.aum` は、`void` の C 関数を戻り値 `Unit` で束縛して呼び、コンパイラが拒むことを出力で示す。
-記録にマシン固有の絶対パスが入らないよう、`run.sh` は `.aum` を一時ディレクトリへ複写し、そこでコンパイラを起動して相対パスを渡す。
+`UnitReturn.zum` は、`void` の C 関数を戻り値 `Unit` で束縛して呼び、コンパイラが拒むことを出力で示す。
+記録にマシン固有の絶対パスが入らないよう、`run.sh` は `.zum` を一時ディレクトリへ複写し、そこでコンパイラを起動して相対パスを渡す。
 コンパイラは起動したディレクトリに `calltree.html` を書くので、`docs/research/decimal-backend-survey/` で起動すると作業ツリーに `.gitignore` 済みのファイルが残る。実装中にこれを観測し、一時ディレクトリで起動する形に改めた。
 128ビット整数の型がないこととレコードを値で渡せないことは、コンパイラのソースの引用で示す（REQ-007）。
 

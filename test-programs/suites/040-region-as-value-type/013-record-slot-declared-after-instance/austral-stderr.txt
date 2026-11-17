@@ -15,7 +15,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/040-region-as-value-type/013-record-slot-declared-after-instance/Test.aum",
+    "filename": "test-programs/suites/040-region-as-value-type/013-record-slot-declared-after-instance/Test.zum",
     "startp": { "line": 5, "column": 8 },
     "end": { "line": 12, "column": 8 }
   },

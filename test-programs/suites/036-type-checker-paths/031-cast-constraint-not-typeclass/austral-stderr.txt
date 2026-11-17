@@ -8,7 +8,7 @@
     { "type": "type", "content": "Int32" }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/031-cast-constraint-not-typeclass/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/031-cast-constraint-not-typeclass/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 30 }
   },

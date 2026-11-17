@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/016-spans/019-index-span-with-generic-call-on-literal/Test.aum",
+    "filename": "test-programs/suites/016-spans/019-index-span-with-generic-call-on-literal/Test.zum",
     "startp": { "line": 9, "column": 8 },
     "end": { "line": 9, "column": 29 }
   },

@@ -14,7 +14,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/055-constraint-names-union-case/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/055-constraint-names-union-case/Test.zum",
     "startp": { "line": 24, "column": 8 },
     "end": { "line": 24, "column": 13 }
   },

@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/035-literal-forms/020-untyped-literal-in-record-constructor-too-big/Test.aum",
+    "filename": "test-programs/suites/035-literal-forms/020-untyped-literal-in-record-constructor-too-big/Test.zum",
     "startp": { "line": 7, "column": 8 },
     "end": { "line": 7, "column": 54 }
   },

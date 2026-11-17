@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/081-return-union-of-another-type-parameter/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/081-return-union-of-another-type-parameter/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 32 }
   },

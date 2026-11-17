@@ -18,7 +18,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/038-late-stage-paths/010-assign-through-import-alias/Test.aum",
+    "filename": "test-programs/suites/038-late-stage-paths/010-assign-through-import-alias/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 15 }
   },

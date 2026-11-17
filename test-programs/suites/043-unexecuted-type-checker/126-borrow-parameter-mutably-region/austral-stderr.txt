@@ -15,7 +15,7 @@
     { "type": "code", "content": "var mut_x: Region<0> := x;" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/126-borrow-parameter-mutably-region/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/126-borrow-parameter-mutably-region/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 5, "column": 19 }
   },

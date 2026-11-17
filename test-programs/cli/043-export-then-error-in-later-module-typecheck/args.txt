@@ -1,1 +1,1 @@
-compile Lib.aum Test.aum --target-type=tc --error-format=json
+compile Lib.zum Test.zum --target-type=tc --error-format=json
