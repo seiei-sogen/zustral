@@ -674,11 +674,17 @@ let validate_constant_expression (expr: texpr): unit =
   else
     type_error NoSpan ExpressionNotConstant
 
-let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (supply: Supply.t) (decl: linked_definition): typed_decl * Supply.t =
+let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (module_constants: identifier list) (supply: Supply.t) (decl: linked_definition): typed_decl * Supply.t =
   let rm = empty_region_map in
   match decl with
   | LConstant (decl_id, vis, name, ty, expr, doc) ->
-     let expr' = check_expr NoSpan module_name env rm empty_typarams empty_lexenv expr ty in
+     (* The value names only the constants declared before this one (#142),
+        which rules out cycles: a constant is a C macro, and C does not expand
+        a macro inside itself. *)
+     let not_yet_defined: identifier list =
+       List.of_seq (Seq.drop_while (fun constant -> not (equal_identifier constant name)) (List.to_seq module_constants))
+     in
+     let expr' = TypeCheckExpr.check (TypeCheckExpr.make_constant_value_ctx module_name env not_yet_defined) expr ty in
      let _ = validate_constant_expression expr' in
      (TConstant (decl_id, vis, name, ty, expr', doc), supply)
   | LRecord (decl_id, vis, name, typarams, universe, slots, doc) ->
@@ -749,8 +755,17 @@ and augment_method_def module_name menv rm instance_typarams supply (LMethodDef 
   (TypedMethodDef (ins_meth_id, name, params, rt, body'), supply)
 
 let augment_module menv (supply: Supply.t) (LinkedModule { name; decls; kind; _ }): (typed_module * Supply.t) Outcome.t =
+  (* In the order of the declarations: the public ones, then the private ones. *)
+  let module_constants: identifier list =
+    List.filter_map
+      (fun decl ->
+        match decl with
+        | LConstant (_, _, name, _, _, _) -> Some name
+        | LRecord _ | LUnion _ | LFunction _ | LTypeclass _ | LInstance _ -> None)
+      decls
+  in
   Outcome.map (fun (supply, decls') -> (TypedModule (name, decls'), supply))
     (Outcome.traverse_with_context
-       (fun (supply, decl) -> Outcome.catch (fun () -> let (decl, supply) = augment_decl name kind menv supply decl in (supply, decl)))
+       (fun (supply, decl) -> Outcome.catch (fun () -> let (decl, supply) = augment_decl name kind menv module_constants supply decl in (supply, decl)))
        supply
        decls)

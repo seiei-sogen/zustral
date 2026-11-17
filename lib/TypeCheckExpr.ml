@@ -46,10 +46,30 @@ type expr_ctx =
       (** The lexical environment. *)
       place: place;
       (** Where an error in the expression is reported. *)
+      constants_not_yet_defined: identifier list;
+      (** In the value of a constant, that constant and the constants after it
+          in the module, which the value cannot name (#142). Empty elsewhere. *)
     }
 
 let make_ctx (place: place) (module_name: module_name) (env: env) (rm: region_map) (typarams: typarams) (lexenv: lexenv): expr_ctx =
-  ExpressionContext { module_name; env; rm; typarams; lexenv; place }
+  ExpressionContext { module_name; env; rm; typarams; lexenv; place; constants_not_yet_defined = [] }
+
+let make_constant_value_ctx (module_name: module_name) (env: env) (constants_not_yet_defined: identifier list): expr_ctx =
+  ExpressionContext {
+      module_name;
+      env;
+      rm = empty_region_map;
+      typarams = empty_typarams;
+      lexenv = empty_lexenv;
+      place = NoSpan;
+      constants_not_yet_defined;
+    }
+
+(* Whether the constant is one that the expression cannot name. *)
+let is_constant_not_yet_defined (ctx: expr_ctx) (constant: qident): bool =
+  let (ExpressionContext { module_name; constants_not_yet_defined; _ }) = ctx in
+  (equal_module_name (source_module_name constant) module_name)
+  && (List.exists (equal_identifier (original_name constant)) constants_not_yet_defined)
 
 let ctx_module_name (ctx: expr_ctx): module_name =
   let (ExpressionContext { module_name; _ }) = ctx in
@@ -631,7 +651,10 @@ and augment_variable (ctx: expr_ctx) (name: qident) (from_context: context_bindi
       | Some (ty, src) ->
          (match src with
           | VarConstant ->
-             TConstVar (name, ty)
+             if is_constant_not_yet_defined ctx name then
+               declaration_error (ctx_place ctx) (ConstantNotYetDefined (original_name name))
+             else
+               TConstVar (name, ty)
           | VarLexical VarParam ->
              TParamVar ((local_name name), ty)
           | VarLexical (VarLocal _) ->

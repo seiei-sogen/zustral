@@ -65,6 +65,7 @@ type t =
   (** [module_name] is the module the name is imported from. *)
   | DeclarationNameIsBuiltInType of identifier
   | RegionNameIsTypeParameter of identifier
+  | ConstantNotYetDefined of identifier
   | ModuleAlreadyExists of module_name
   | UnknownModule of module_name
   | ExportGeneric of identifier
@@ -221,6 +222,12 @@ let render (error: t): err_text =
        Text "The name ";
        Code (ident_string name);
        Text " is the name of a type parameter, so a borrow cannot name its region with it."
+     ]
+  | ConstantNotYetDefined name ->
+     [
+       Text "The value of a constant can only name the constants declared before it, and ";
+       Code (ident_string name);
+       Text " is not one of them."
      ]
   | ModuleAlreadyExists name ->
      [

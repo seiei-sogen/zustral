@@ -21,6 +21,10 @@ type expr_ctx
 
 val make_ctx : Error.place -> module_name -> env -> region_map -> typarams -> lexenv -> expr_ctx
 
+(** The context of the value of a constant of the module. The value cannot
+    name the constants of the list: the constant and those declared after it. *)
+val make_constant_value_ctx : module_name -> env -> identifier list -> expr_ctx
+
 (** Type check an expression that stands where nothing says what its type is:
     an operand, an argument, a condition. The type of the result is the type
     of the expression. A generic function used as a value, and a call whose
