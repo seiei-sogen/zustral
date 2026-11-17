@@ -305,7 +305,7 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
      and idx = g idx in
      let elem_ty = gen_type elem_ty in
      CCast (
-         CFuncall (CIdent.generated "au_array_index", [expr; idx; CSizeOf elem_ty]),
+         CFuncall (CIdent.generated "au_array_index", [CDeref expr; idx; CSizeOf elem_ty]),
          CPointer elem_ty
        )
   | MSpanIndex (expr, idx, elem_ty, _, _) ->
@@ -313,7 +313,7 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
      and idx = g idx in
      let elem_ty = gen_type elem_ty in
      CCast (
-         CFuncall (CIdent.generated "au_array_index", [CAddressOf expr; idx; CSizeOf elem_ty]),
+         CFuncall (CIdent.generated "au_array_index", [expr; idx; CSizeOf elem_ty]),
          CPointer elem_ty
        )
 

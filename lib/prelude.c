@@ -173,8 +173,8 @@ double au_negate_float64(double value) {
   return -value;
 }
 
-void* au_array_index(au_span_t* array, size_t index, size_t elem_size) {
-  if (index >= array->size) {
+void* au_array_index(au_span_t array, size_t index, size_t elem_size) {
+  if (index >= array.size) {
     au_abort_internal("Array index out of bounds.");
   }
 
@@ -183,7 +183,7 @@ void* au_array_index(au_span_t* array, size_t index, size_t elem_size) {
     au_abort_internal("Multiplication overflow in array indexing operation.");
   }
 
-  char* data = (char*) array->data;
+  char* data = (char*) array.data;
   char* ptr = data + offset;
   return (void*)(ptr);
 }
