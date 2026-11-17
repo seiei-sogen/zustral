@@ -188,32 +188,34 @@ let every_texpr (): texpr list =
    TEmbed (int32, "1", []); TDeref (x, int32); TSizeOf int32]
 
 let int_literals: texpr list =
-  [TIntConstant one; TCast (TIntConstant one, int32); TImplicitCast (TIntConstant one, int32)]
+  [TIntConstant one; TImplicitCast (TIntConstant one, int32)]
 
 let float_literals: texpr list =
-  [TFloatConstant half; TCast (TFloatConstant half, DoubleFloat); TImplicitCast (TFloatConstant half, DoubleFloat)]
+  [TFloatConstant half; TImplicitCast (TFloatConstant half, DoubleFloat)]
+
+let annotated_literals: texpr list =
+  [TCast (TIntConstant one, int32); TCast (TFloatConstant half, DoubleFloat)]
 
 (* In a place that expects a number type, a literal of that kind is typed by
-   the place, also under a cast, and nothing else is. *)
+   the place, also under a cast the type checker added, and nothing else is.
+   An annotated literal has the type of its annotation, which has to be the
+   type of the place, as for any other value (issue #163). *)
 let test_literal_matches _ =
   List.iter (fun e ->
       assert_equal (List.mem e int_literals) (LiteralTyping.literal_matches NoSpan int32 e);
       assert_equal (List.mem e float_literals) (LiteralTyping.literal_matches NoSpan DoubleFloat e))
-    (every_texpr () @ int_literals @ float_literals)
+    (every_texpr () @ int_literals @ float_literals @ annotated_literals)
 
 (* An annotation types a bare literal only. *)
 let test_annotation_types_literal _ =
   List.iter (fun e ->
       assert_equal (e = TIntConstant one) (LiteralTyping.annotation_types_literal NoSpan int32 e);
       assert_equal (e = TFloatConstant half) (LiteralTyping.annotation_types_literal NoSpan SingleFloat e))
-    (every_texpr () @ int_literals @ float_literals)
+    (every_texpr () @ int_literals @ float_literals @ annotated_literals)
 
 (* The signed widths of sizes and indices: the type parser makes both
-   unsigned, the bounds are there all the same. The bounds of a byte size fix
-   what the code does today, not what it should do: they are those of 8 bits,
-   and a byte size is a `size_t`. The unsigned bound (0 to 255) is the same
-   mistake, and a program reaches it (issue #144). When that is fixed, these
-   expectations change with it. *)
+   unsigned, the bounds are there all the same. A byte size is a `size_t`,
+   so its bounds are those of an index (issue #144). *)
 let test_signed_size_widths _ =
   let fits ty n = LiteralTyping.literal_matches NoSpan ty (TIntConstant (NumberLiteral.of_decimal n)) in
   let does_not_fit ty n =
@@ -222,8 +224,8 @@ let test_signed_size_widths _ =
       (raised (fun () -> LiteralTyping.literal_matches NoSpan ty (TIntConstant literal)))
   in
   let byte = Integer (Signed, WidthByteSize) and index = Integer (Signed, WidthIndex) in
-  assert_bool "-128 is a signed byte size" (fits byte "-128");
-  does_not_fit byte "128";
+  assert_bool "-2^63 is a signed byte size" (fits byte "-9223372036854775808");
+  does_not_fit byte "9223372036854775808";
   assert_bool "2^63-1 is a signed index" (fits index "9223372036854775807");
   does_not_fit index "9223372036854775808"
 

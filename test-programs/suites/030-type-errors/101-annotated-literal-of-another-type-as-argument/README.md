@@ -1,0 +1,1 @@
+Test that an annotated literal has the type of its annotation: `(200 : Int64)` is not an argument for a `Nat8` parameter. The compiler used to treat it like a bare literal and accept it in an integer place of any type (issue #163).

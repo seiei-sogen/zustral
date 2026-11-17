@@ -1,0 +1,10 @@
+module body Test is
+    function f8(x: Nat8): Nat8 is
+        return x;
+    end;
+
+    function main(): ExitCode is
+        printLn(f8((200 : Int64)));
+        return ExitSuccess();
+    end;
+end module body.

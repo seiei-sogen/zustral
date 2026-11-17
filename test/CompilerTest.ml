@@ -178,11 +178,36 @@ let test_same_error_twice _ =
   let second: Error.zustral_error list = errors (compile numbered_region) in
   assert_equal first second
 
+(* A decimal constant of C from 2^63 up has no 64-bit signed type: gcc warns
+   that it "is so large that it is unsigned", and the warning does not reach
+   the user. The C of such a literal says its type itself (issue #157). *)
+let test_64_bit_literals_in_c _ =
+  let c: string = test_unit (render (compile {|
+module body Test is
+    function main(): ExitCode is
+        let n: Nat64 := 18446744073709551615;
+        let m: Int64 := -9223372036854775808;
+        return ExitSuccess();
+    end;
+end module body.
+|})) in
+  let contains (part: string): bool =
+    let n = String.length part in
+    let rec at (i: int): bool =
+      i + n <= String.length c && (String.equal (String.sub c i n) part || at (i + 1))
+    in
+    at 0
+  in
+  assert_bool "2^64 - 1 has the suffix U" (contains "18446744073709551615U");
+  assert_bool "-2^63 is written as a subtraction" (contains "(-9223372036854775807 - 1)");
+  assert_bool "2^63 is not a constant of the C" (not (contains "9223372036854775808"))
+
 let suite =
   "Compiler" >::: [
       "the same program twice gives the same C" >:: test_same_c_twice;
       "the generated names have the numbers the stages hand out, in their order" >:: test_numbers_in_order;
-      "the same failing program twice gives the same error" >:: test_same_error_twice
+      "the same failing program twice gives the same error" >:: test_same_error_twice;
+      "a literal from 2^63 up, or -2^63, is a constant of C with no warning" >:: test_64_bit_literals_in_c
     ]
 
 let _ = run_test_tt_main suite

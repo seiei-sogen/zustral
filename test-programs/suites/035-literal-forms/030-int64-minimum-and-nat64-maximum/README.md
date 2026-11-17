@@ -1,0 +1,1 @@
+Pins the values of the integer literals whose C needs care: the least `Int64`, which C cannot write as one constant, and a `Nat64` at or above 2^63, which needs the suffix `U` (issue #157). `test/CompilerTest.ml` checks the C text; this program checks that the C compiles and keeps the values.

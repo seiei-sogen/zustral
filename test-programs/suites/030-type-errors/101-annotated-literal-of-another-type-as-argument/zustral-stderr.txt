@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "Nat8" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "Int64" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/101-annotated-literal-of-another-type-as-argument/Test.zum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 7, "column": 35 }
+  },
+  "context": [
+    [ 5, "" ],
+    [ 6, "    function main(): ExitCode is" ],
+    [ 7, "        printLn(f8((200 : Int64)));" ],
+    [ 8, "        return ExitSuccess();" ],
+    [ 9, "    end;" ]
+  ]
+}
