@@ -50,7 +50,7 @@ lib/Lexer.mll	171	4	0	0	0	0	0	0	0	0	0
 lib/LiftControlPass.ml	226	0	0	0	0	0	0	0	0	0	0
 lib/LinearityCheck.ml	652	16	0	0	0	0	0	2	0	0	0
 lib/LinearityErrors.ml	198	0	0	0	0	0	0	0	0	0	0
-lib/LiteralTyping.ml	167	1	0	0	0	0	0	0	0	0	0
+lib/LiteralTyping.ml	165	2	0	0	0	0	0	0	0	0	0
 lib/MonoType.ml	38	0	0	0	0	0	0	0	0	0	0
 lib/MonoTypeBindings.ml	45	0	0	0	0	0	0	0	0	0	0
 lib/Monomorphize.ml	783	5	0	0	0	0	0	3	0	0	0
@@ -74,7 +74,7 @@ lib/Type.ml	282	0	0	0	0	1	0	0	0	0	0
 lib/TypeBindings.ml	172	2	0	0	0	0	0	0	0	0	0
 lib/TypeCheckExpr.ml	1015	44	0	0	0	1	0	0	0	0	0
 lib/TypeClasses.ml	241	13	0	0	0	0	0	0	0	0	0
-lib/TypeErrors.ml	493	0	0	0	0	0	0	0	0	0	0
+lib/TypeErrors.ml	498	0	0	0	0	0	0	0	0	0	0
 lib/TypeMatch.ml	370	5	0	0	0	0	0	1	0	0	0
 lib/TypeParameter.ml	36	0	0	0	0	0	0	0	0	0	0
 lib/TypeParameters.ml	61	2	0	0	0	0	0	0	0	0	0

@@ -15,23 +15,23 @@ module AstDB = Stages.AstDB
 
 (* Folding *)
 
-let rec fold_integer_arithmetic (e: Ast.aexpr): Ast.aexpr =
-  match try_folding' e with
+let rec fold_integer_arithmetic (place: place) (e: Ast.aexpr): Ast.aexpr =
+  match try_folding' place e with
   | Some bi ->
      Ast.IntConstant (NumberLiteral.of_value bi)
   | None ->
      e
 
-and try_folding' (e: Ast.aexpr): Z.t option =
+and try_folding' (place: place) (e: Ast.aexpr): Z.t option =
   match e with
   | Ast.IntConstant i ->
      Some i.value
   | Ast.ArithmeticExpression (op, lhs, rhs) -> begin
-      match (try_folding' lhs) with
+      match (try_folding' place lhs) with
       | Some lhs -> begin
-          match (try_folding' rhs) with
+          match (try_folding' place rhs) with
           | Some rhs -> begin
-              Some (apply_op op lhs rhs)
+              Some (apply_op place op lhs rhs)
             end
           | None -> None
         end
@@ -44,15 +44,13 @@ and try_folding' (e: Ast.aexpr): Z.t option =
   | Ast.BorrowExpr _ | Ast.Reborrow _ ->
      None
 
-and apply_op (op: arithmetic_operator) (lhs: Z.t) (rhs: Z.t): Z.t =
-  let f =
-    match op with
-    | Add -> Z.add
-    | Subtract -> Z.sub
-    | Multiply -> Z.mul
-    | Divide -> Z.div
-  in
-  f lhs rhs
+and apply_op (place: place) (op: arithmetic_operator) (lhs: Z.t) (rhs: Z.t): Z.t =
+  match op with
+  | Add -> Z.add lhs rhs
+  | Subtract -> Z.sub lhs rhs
+  | Multiply -> Z.mul lhs rhs
+  | Divide when Z.equal rhs Z.zero -> type_error place DivisorIsZero
+  | Divide -> Z.div lhs rhs
 
 (* Operands *)
 

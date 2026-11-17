@@ -19,8 +19,9 @@ open Stages.Tast
 
 (** An arithmetic expression whose operands are integer literals is the
     integer literal of its value. The operands can be such expressions
-    themselves. Any other expression is returned as it is. *)
-val fold_integer_arithmetic : Stages.Ast.aexpr -> Stages.Ast.aexpr
+    themselves. Any other expression is returned as it is. A division whose
+    divisor is zero raises the error that says so, at the place given. *)
+val fold_integer_arithmetic : Error.place -> Stages.Ast.aexpr -> Stages.Ast.aexpr
 
 (** {1 Operands} *)
 

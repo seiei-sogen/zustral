@@ -88,6 +88,7 @@ type t =
   | TypeArgumentWrongUniverse of { param: type_parameter; expected: universe; actual: universe }
   | UnresolvedType of identifier
   | IntegerDoesNotFit of { literal: NumberLiteral.int_literal; ty: ty }
+  | DivisorIsZero
   | PointerAccessNotReference of ty
   | ArrayIndexNotReference of ty
   | CaseNotUnionOrReference of ty
@@ -474,6 +475,10 @@ let render (error: t): err_text =
        Text" does not fit the type ";
        Type ty;
        Text "."
+     ]
+  | DivisorIsZero ->
+     [
+       Text "The divisor of this division is zero."
      ]
   | PointerAccessNotReference ty ->
      [

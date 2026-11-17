@@ -67,9 +67,9 @@ and abs_expr place im expr =
   | CVariable (_, i) -> Variable (qualify_identifier im i)
   | CFuncall (_, name, args) ->
      FunctionCall (qualify_identifier im name, abs_arglist place im args)
-  | CArith (_, op, lhs, rhs) ->
+  | CArith (span, op, lhs, rhs) ->
      let e: aexpr = ArithmeticExpression (op, abs_expr place im lhs, abs_expr place im rhs) in
-     LiteralTyping.fold_integer_arithmetic e
+     LiteralTyping.fold_integer_arithmetic (place_inside place span) e
   | CComparison (_, op, lhs, rhs) ->
      Comparison (op, abs_expr place im lhs, abs_expr place im rhs)
   | CConjunction (_, lhs, rhs) ->
