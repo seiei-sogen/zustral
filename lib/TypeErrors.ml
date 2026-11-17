@@ -94,6 +94,7 @@ type t =
   | PointerAccessNotReference of ty
   | ArrayIndexNotReference of ty
   | CaseNotUnionOrReference of ty
+  | ReferenceRegionNotARegion of ty
 
 (* Names in code, separated by commas. *)
 let code_list (names: string list): err_text =
@@ -511,4 +512,14 @@ let render (error: t): err_text =
      [
        Text "The type for the expression in a case statement must be a union or a reference to a union, but I got ";
        Type ty
+     ]
+  | ReferenceRegionNotARegion ty ->
+     [
+       Text "The region of a reference or a span must be a region, such as ";
+       Code "Static";
+       Text " or a type parameter of the ";
+       Code "Region";
+       Text " universe, but ";
+       Type ty;
+       Text " is not a region."
      ]

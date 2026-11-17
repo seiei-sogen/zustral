@@ -43,3 +43,6 @@ val replaced_universe : universe -> ty list -> universe
 
 val replace_region_variables : type_bindings -> ref_region -> ref_region
 
+(** A type of the Region universe as the region of a reference or a span. An
+    internal error for any other type. *)
+val ref_region_of_region_type : ty -> ref_region

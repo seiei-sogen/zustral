@@ -70,37 +70,45 @@ let parse_built_in_type (place: place) (name: qident) (args: ty list): ty option
              actual = None;
            })
     else
+      (* Every other built-in type but Fn takes no type arguments (#90). *)
+      let without_type_arguments (ty: ty): ty option =
+        match args with
+        | [] ->
+           Some ty
+        | _ :: _ ->
+           generic_error place (TypeWrongArity { typename = original_name name; expected = 0; actual = None })
+      in
       match BuiltInNames.type_of_name (ident_string (original_name name)) with
       | Some BuiltInNames.Unit ->
-         Some Unit
+         without_type_arguments Unit
       | Some BuiltInNames.Bool ->
-         Some Boolean
+         without_type_arguments Boolean
       | Some BuiltInNames.Nat8 ->
-         Some (Integer (Unsigned, Width8))
+         without_type_arguments (Integer (Unsigned, Width8))
       | Some BuiltInNames.Nat16 ->
-         Some (Integer (Unsigned, Width16))
+         without_type_arguments (Integer (Unsigned, Width16))
       | Some BuiltInNames.Nat32 ->
-         Some (Integer (Unsigned, Width32))
+         without_type_arguments (Integer (Unsigned, Width32))
       | Some BuiltInNames.Nat64 ->
-         Some (Integer (Unsigned, Width64))
+         without_type_arguments (Integer (Unsigned, Width64))
       | Some BuiltInNames.Int8 ->
-         Some (Integer (Signed, Width8))
+         without_type_arguments (Integer (Signed, Width8))
       | Some BuiltInNames.Int16 ->
-         Some (Integer (Signed, Width16))
+         without_type_arguments (Integer (Signed, Width16))
       | Some BuiltInNames.Int32 ->
-         Some (Integer (Signed, Width32))
+         without_type_arguments (Integer (Signed, Width32))
       | Some BuiltInNames.Int64 ->
-         Some (Integer (Signed, Width64))
+         without_type_arguments (Integer (Signed, Width64))
       | Some BuiltInNames.ByteSize ->
-         Some (Integer (Unsigned, WidthByteSize))
+         without_type_arguments (Integer (Unsigned, WidthByteSize))
       | Some BuiltInNames.Index ->
-         Some (Integer (Unsigned, WidthIndex))
+         without_type_arguments (Integer (Unsigned, WidthIndex))
       | Some BuiltInNames.Float32 ->
-         Some SingleFloat
+         without_type_arguments SingleFloat
       | Some BuiltInNames.Float64 ->
-         Some DoubleFloat
+         without_type_arguments DoubleFloat
       | Some BuiltInNames.Static ->
-         Some (RegionTy static_region)
+         without_type_arguments (RegionTy static_region)
       | Some BuiltInNames.Fn ->
          Some (parse_function_pointer place args)
       | None ->
@@ -214,24 +222,34 @@ let rec parse_type (place: place) (env: env) (sigs: type_signature list) (rm: re
                  parse_user_defined_type place env sigs name args')))
   | QReadRef (ty, r) ->
      let ty' = parse_type place env sigs rm typarams ty
-     and r' = parse_type place env sigs rm typarams r
+     and r' = parse_region place env sigs rm typarams r
      in
-     ReadRef (ty', ref_region_of_ty r')
+     ReadRef (ty', r')
   | QWriteRef (ty, r) ->
      let ty' = parse_type place env sigs rm typarams ty
-     and r' = parse_type place env sigs rm typarams r
+     and r' = parse_region place env sigs rm typarams r
      in
-     WriteRef (ty', ref_region_of_ty r')
+     WriteRef (ty', r')
   | QSpan (ty, r) ->
      let ty' = parse_type place env sigs rm typarams ty
-     and r' = parse_type place env sigs rm typarams r
+     and r' = parse_region place env sigs rm typarams r
      in
-     Span (ty', ref_region_of_ty r')
+     Span (ty', r')
   | QSpanWrite (ty, r) ->
      let ty' = parse_type place env sigs rm typarams ty
-     and r' = parse_type place env sigs rm typarams r
+     and r' = parse_region place env sigs rm typarams r
      in
-     SpanMut (ty', ref_region_of_ty r')
+     SpanMut (ty', r')
+
+(* The region of a reference or a span: a region, or a type parameter of the
+   Region universe (#90). *)
+and parse_region (place: place) (env: env) (sigs: type_signature list) (rm: region_map) (typarams: typarams) (ts: qtypespec): ref_region =
+  let ty = parse_type place env sigs rm typarams ts in
+  match ref_region_of_ty ty with
+  | Some region ->
+     region
+  | None ->
+     type_error place (ReferenceRegionNotARegion ty)
 
 (* Is the given name a type parameter in the list of type paramters? If so,
    return it as a type variable. *)

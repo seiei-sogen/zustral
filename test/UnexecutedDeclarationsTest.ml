@@ -303,6 +303,20 @@ let test_universes_of_arguments _ =
       assert_equal ~printer:show_universe universe (TypeBindings.replaced_universe universe [Unit]))
     [FreeUniverse; LinearUniverse; RegionUniverse]
 
+(* Only a region or a region variable is the region of a reference (#90). The
+   type parser rejects every other type, and a program reaches one kind of type
+   at a time. The later stages convert types they know to be regions, so any
+   other type is an internal error there. *)
+let test_only_a_region_is_the_region_of_a_reference _ =
+  let (_, record_id) = Env.reserve_record_id Env.empty_env in
+  let not_regions: ty list =
+    List.filter (fun ty -> ty <> region) (one_of_each_kind (RecordTypeId record_id))
+    @ [tyvar "T" LinearUniverse; tyvar "T" TypeUniverse]
+  in
+  List.iter (fun ty -> assert_bool (type_string ty) (Option.is_none (ref_region_of_ty ty))) not_regions;
+  assert_equal (Some (RefRegion Region.static_region)) (ref_region_of_ty region);
+  assert_equal (internal "Not a region: Unit") (error_of (fun () -> TypeBindings.ref_region_of_region_type Unit))
+
 (* Every kind of type, in both directions. Only a generic signature has a type
    variable, and a generic signature is not checked. *)
 let test_types_across_the_c_boundary _ =
@@ -649,6 +663,7 @@ let suite =
       "a symbol imported twice" >:: test_a_symbol_imported_twice;
       "signed ByteSize and Index" >:: test_signed_byte_size_and_index;
       "universes of arguments" >:: test_universes_of_arguments;
+      "only a region is the region of a reference" >:: test_only_a_region_is_the_region_of_a_reference;
             "a region instance argument" >:: test_a_region_instance_argument;
       "overlap of every pair of kinds" >:: test_overlap_of_every_pair_of_kinds;
       "types across the C boundary" >:: test_types_across_the_c_boundary;

@@ -123,6 +123,16 @@ let replaced_universe (u: universe) (args: ty list): universe =
   | FreeUniverse | LinearUniverse | RegionUniverse ->
      u
 
+(* A type of the Region universe as the region of a reference or a span. The
+   type parser puts only such a type there, and try_add_binding binds a region
+   parameter only to one. *)
+let ref_region_of_region_type (ty: ty): ref_region =
+  match ref_region_of_ty ty with
+  | Some region ->
+     region
+  | None ->
+     internal_err NoSpan ("Not a region: " ^ type_string ty)
+
 let rec replace_variables bindings ty =
   match ty with
   | Unit ->
@@ -160,7 +170,7 @@ let rec replace_variables bindings ty =
      FnPtr (List.map (replace_variables bindings) args, replace_variables bindings rt)
 
 and replace_region_variables bindings (region: ref_region): ref_region =
-  ref_region_of_ty (replace_variables bindings (ty_of_ref_region region))
+  ref_region_of_region_type (replace_variables bindings (ty_of_ref_region region))
 
 let rec bindings_from_list (place: place) lst =
   match lst with

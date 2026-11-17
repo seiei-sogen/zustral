@@ -56,9 +56,6 @@ and ref_region =
   | RefRegion of region
   | RefRegionVar of type_var
   (* A type variable of the Region universe. *)
-  | NotARegion of ty
-  (* Whatever else the program wrote in the region position: the type parser
-     does not check it, so `&[Int32, Int32]` is accepted (#90). *)
 
 type typed_slot = TypedSlot of identifier * ty
 
@@ -67,26 +64,25 @@ type typed_case = TypedCase of identifier * typed_slot list
 type value_parameter = ValueParameter of identifier * ty
 
 (* Matching, equality, substitution and printing see the region field as a
-   type, so that a NotARegion behaves as the type it holds (#90). *)
+   type. *)
 let ty_of_ref_region (r: ref_region): ty =
   match r with
   | RefRegion r -> RegionTy r
   | RefRegionVar tv -> TyVar tv
-  | NotARegion ty -> ty
 
-let ref_region_of_ty (ty: ty): ref_region =
+let ref_region_of_ty (ty: ty): ref_region option =
   match ty with
   | RegionTy r ->
-     RefRegion r
+     Some (RefRegion r)
   | TyVar (TypeVariable (_, universe, _, _) as tv) ->
      (match universe with
       | RegionUniverse ->
-         RefRegionVar tv
+         Some (RefRegionVar tv)
       | FreeUniverse | LinearUniverse | TypeUniverse ->
-         NotARegion ty)
+         None)
   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | ReadRef _
   | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ ->
-     NotARegion ty
+     None
 
 let universe_string = function
   | FreeUniverse -> "Free"

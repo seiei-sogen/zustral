@@ -56,9 +56,6 @@ and ref_region =
   | RefRegion of region
   | RefRegionVar of type_var
   (** A type variable of the Region universe. *)
-  | NotARegion of ty
-  (** Whatever else the program wrote in the region position: the type parser
-      does not check it, so [&\[Int32, Int32\]] is accepted (#90). *)
 
 type typed_slot = TypedSlot of identifier * ty
 
@@ -69,9 +66,9 @@ type value_parameter = ValueParameter of identifier * ty
 (** The region field as a type. *)
 val ty_of_ref_region : ref_region -> ty
 
-(** A type in the region position: a region, a region variable, or anything
-    else as it was written (#90). *)
-val ref_region_of_ty : ty -> ref_region
+(** A region or a type variable of the Region universe as the region of a
+    reference or a span; [None] for any other type. *)
+val ref_region_of_ty : ty -> ref_region option
 
 val universe_string : universe -> string
 
