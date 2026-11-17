@@ -191,9 +191,9 @@ let register (type id) (place: place) (env: env) (registration: id registration)
   | NewUnionCase { mod_id; vis; union_id; name; docstring; slots } ->
      name_must_be_free mod_id name;
      add_decl fresh_union_case_id (fun id -> UnionCase { id; vis; mod_id; union_id; name; docstring; slots })
-  | NewFunction { mod_id; vis; name; docstring; typarams; value_params; rt; impl } ->
+  | NewFunction { mod_id; span; vis; name; docstring; typarams; value_params; rt; impl } ->
      name_must_be_free mod_id name;
-     add_decl fresh_function_id (fun id -> Function { id; mod_id; vis; name; docstring; typarams; value_params; rt; impl })
+     add_decl fresh_function_id (fun id -> Function { id; mod_id; span; vis; name; docstring; typarams; value_params; rt; impl })
   | NewTypeClass { mod_id; vis; name; docstring; param } ->
      name_must_be_free mod_id name;
      add_decl fresh_typeclass_id (fun id -> TypeClass { id; mod_id; vis; name; docstring; param })

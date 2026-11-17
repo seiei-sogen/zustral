@@ -1,5 +1,5 @@
 {
-  "module": null,
+  "module": "Test",
   "kind": "Entrypoint Definition Error",
   "text": [
     {
@@ -9,6 +9,16 @@
     { "type": "code", "content": "RootCapability" },
     { "type": "text", "content": ", or none at all, but it has several." }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/032-other-errors/001-entrypoint-multiple-parameters/Test.zum",
+    "startp": { "line": 1, "column": 19 },
+    "end": { "line": 4, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function main(a: Int32, b: Int32): ExitCode is" ],
+    [ 3, "        return ExitSuccess();" ],
+    [ 4, "    end;" ],
+    [ 5, "end module body." ]
+  ]
 }

@@ -453,6 +453,7 @@ and reserve_definition (env: env) (mod_id: mod_id) (mn: module_name) (def: combi
          name_must_be_free place env mod_id name;
          let fn_input: function_input = {
              mod_id = mod_id;
+             span = span;
              vis = vis;
              name = name;
              docstring = docstring;

@@ -44,6 +44,7 @@ let ctx: TypeCheckExpr.expr_ctx =
   let (env, _) =
     Env.register NoSpan env (EnvTypes.NewFunction {
         mod_id;
+        span = Zustral_core.Span.empty_span;
         vis = VisPublic;
         name = make_ident "make";
         docstring = Docstring "";

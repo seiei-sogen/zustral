@@ -122,7 +122,7 @@ let finish: Pipeline.finish = fun (env: env) (units: c_unit list) (entrypoint: e
   let* (env, entrypoint_decls, entrypoint) =
     match entrypoint with
     | Some (mn, i) ->
-       let* (env, decls, code) = entrypoint_code env (make_qident (mn, i, i)) in
+       let* (env, decls, code) = in_module mn (entrypoint_code env (make_qident (mn, i, i))) in
        Ok (env, decls, Some code)
     | None ->
        Ok (env, [], None)

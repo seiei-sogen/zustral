@@ -23,6 +23,7 @@ let internal_error_of (f: unit -> 'a): string option =
 let register_function (env: Env.env) (mod_id: Id.mod_id) (name: string): Env.env * Id.function_id =
   Env.register NoSpan env (NewFunction {
       mod_id;
+      span = Zustral_core.Span.empty_span;
       vis = VisPublic;
       name = make_ident name;
       docstring = Docstring "";
@@ -98,6 +99,7 @@ let test_monomorph_key_not_registered _ =
   let (env, _) =
     Env.register NoSpan env (NewFunction {
         mod_id;
+        span = Zustral_core.Span.empty_span;
         vis = VisPublic;
         name = main;
         docstring = Docstring "";

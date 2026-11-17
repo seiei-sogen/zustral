@@ -1,5 +1,5 @@
 {
-  "module": null,
+  "module": "Test",
   "kind": "Entrypoint Definition Error",
   "text": [
     { "type": "text", "content": "The entrypoint function is not public." },
@@ -9,6 +9,16 @@
       "content": "Consider declaring it in the module interface."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/032-other-errors/005-entrypoint-not-public/Test.zum",
+    "startp": { "line": 1, "column": 19 },
+    "end": { "line": 4, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        return ExitSuccess();" ],
+    [ 4, "    end;" ],
+    [ 5, "end module body." ]
+  ]
 }

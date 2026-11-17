@@ -1,5 +1,5 @@
 {
-  "module": null,
+  "module": "Test",
   "kind": "Entrypoint Definition Error",
   "text": [
     {
@@ -10,6 +10,20 @@
     { "type": "text", "content": " but it is " },
     { "type": "type", "content": "Token" }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/078-entrypoint-parameter-linear-record/Test.zum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 9, "column": 8 }
+  },
+  "context": [
+    [ 2, "    record Token: Linear is" ],
+    [ 3, "        x: Int32;" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    function main(t: Token): ExitCode is" ],
+    [ 7, "        let { x: Int32 } := t;" ],
+    [ 8, "        return ExitSuccess();" ],
+    [ 9, "    end;" ],
+    [ 10, "end module body." ]
+  ]
 }

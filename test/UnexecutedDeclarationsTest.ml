@@ -58,6 +58,7 @@ let add_example (env: Env.env): Env.env * Id.mod_id =
 let register_function (env: Env.env) (mod_id: Id.mod_id) (name: string) (params: value_parameter list) (rt: ty) (impl: function_impl): Env.env * Id.function_id =
   Env.register NoSpan env (NewFunction {
       mod_id;
+      span = Zustral_core.Span.empty_span;
       vis = VisPublic;
       name = make_ident name;
       docstring;

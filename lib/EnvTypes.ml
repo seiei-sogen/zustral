@@ -89,6 +89,9 @@ type function_impl =
 type function_decl = {
     id: function_id;
     mod_id: mod_id;
+    span: Span.span;
+    (** The span of the definition, where an error about the function as an
+        entrypoint is reported. *)
     vis: vis;
     name: identifier;
     docstring: docstring;
@@ -260,6 +263,7 @@ type union_case_input = {
 
 type function_input = {
     mod_id: mod_id;
+    span: Span.span;
     vis: vis;
     name: identifier;
     docstring: docstring;

@@ -1,5 +1,5 @@
 {
-  "module": null,
+  "module": "Test",
   "kind": "Entrypoint Definition Error",
   "text": [
     {
@@ -10,6 +10,16 @@
     { "type": "text", "content": " but it is " },
     { "type": "type", "content": "Unit" }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/089-entrypoint-returns-unit/Test.zum",
+    "startp": { "line": 1, "column": 19 },
+    "end": { "line": 4, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function main(): Unit is" ],
+    [ 3, "        return nil;" ],
+    [ 4, "    end;" ],
+    [ 5, "end module body." ]
+  ]
 }
