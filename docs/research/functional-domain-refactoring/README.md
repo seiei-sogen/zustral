@@ -24,8 +24,8 @@
 ## 等価性の検査（`equivalence.py`）
 
 ```
-python3 equivalence.py snapshot ./zustral OUT_A
-python3 equivalence.py snapshot path/to/other/zustral OUT_B
+python3 equivalence.py snapshot ./austral OUT_A
+python3 equivalence.py snapshot path/to/other/austral OUT_B
 python3 equivalence.py compare OUT_A OUT_B
 ```
 
@@ -74,7 +74,7 @@ python3 equivalence.py compare OUT_A OUT_B
 
 | 指標 | 数 | 意味 |
 |---|---|---|
-| `raise` | 476 | 例外を投げる箇所。`zustral_raise`、`err`、`internal_err`、`Errors.x`、`failwith`、`raise`、`assert false` |
+| `raise` | 476 | 例外を投げる箇所。`austral_raise`、`err`、`internal_err`、`Errors.x`、`failwith`、`raise`、`assert false` |
 | `internal` | 93 | `raise` のうち、`internal_err` の数。「ここには来ないはず」とコードが考えている箇所である。型が、その状態を表せてしまっている |
 | `adhoc` | 43 | `raise` のうち、`err "..."` の数。名前のないエラーである |
 | `catch` | 56 | 例外を捕まえるか、位置を付け直す箇所。`try`、`adorn_error_with_*` |
@@ -91,7 +91,7 @@ python3 equivalence.py compare OUT_A OUT_B
 
 | 仕組み | 数 |
 |---|---|
-| `zustral_raise`。文面を作って投げる箇所。うち1つは `zustral_raise` 自身の定義である。これを呼ぶ関数は 140 個で、エラーの種類の数に当たる | 145 |
+| `austral_raise`。文面を作って投げる箇所。うち1つは `austral_raise` 自身の定義である。これを呼ぶ関数は 140 個で、エラーの種類の数に当たる | 145 |
 | `Errors.x`。その関数を呼ぶ箇所 | 184 |
 | `internal_err` | 93 |
 | `err "..."` | 43 |
