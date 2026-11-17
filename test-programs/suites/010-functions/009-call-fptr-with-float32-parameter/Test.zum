@@ -1,0 +1,12 @@
+module body Test is
+    function same(x: Float32): Float32 is
+        return x;
+    end;
+
+    function main(): ExitCode is
+        let f: Fn[Float32, Float32] := same;
+        let y: Float32 := f(1.5);
+        printLn(y);
+        return ExitSuccess();
+    end;
+end module body.

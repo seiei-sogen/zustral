@@ -1,1 +1,1 @@
-Pins `Type of the string constant` (lib/MtastUtil.ml, `get_type`): a string literal is an argument of a call through a function pointer.
+Test that a string literal can be an argument of a call through a function pointer (issues #93 and #128). The compiler stopped with `Type of the string constant`: it built the C type of the pointer from the types of the arguments, and had none for a string literal.
