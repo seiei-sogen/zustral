@@ -1,17 +1,4 @@
-exit: 255
-files: 
+exit: 0
+files: out.c
 --- stdout
 --- stderr
-Error:
-  Title: Internal Error
-  Module:
-    [unknown]
-  Location:
-    [no span available]
-  Description:
-    Internal compiler error: Failure("Str.replace: reference to unmatched group")
-    
-    This is a bug in the compiler, please open an issue here: `https://github.com/seiei-sogen/zustral/issues`
-  Code:
-    [no span available]
-
