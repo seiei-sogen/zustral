@@ -1,0 +1,15 @@
+module Lib is
+    typeclass Show(T: Free) is
+        method show(x: T): Unit;
+    end;
+
+    record Box[U: Free]: Free is
+        inner: U;
+    end;
+
+    generic [U: Free(Show)]
+    instance Show(Box[U]);
+
+    generic [T: Free(Show)]
+    function showIt(x: T): Unit;
+end module.

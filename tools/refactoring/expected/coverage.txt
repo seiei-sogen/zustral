@@ -1,4 +1,4 @@
-total-with-generated	84.52	11899/14078
+total-with-generated	84.54	11914/14093
 cli/Cli.ml	87.50	7/8
 cli/CliEngine.ml	100.00	93/93
 cli/CliParser.ml	100.00	73/73
@@ -15,7 +15,7 @@ lib/CIntegerConstant.ml	100.00	8/8
 lib/CRenderer.ml	100.00	229/229
 lib/CliErrors.ml	100.00	17/17
 lib/CodeGen.ml	100.00	523/523
-lib/CombiningPass.ml	100.00	199/199
+lib/CombiningPass.ml	100.00	205/205
 lib/Compiler.ml	100.00	86/86
 lib/Cst.ml	100.00	19/19
 lib/CstUtil.ml	100.00	161/161
@@ -73,10 +73,10 @@ lib/Supply.ml	100.00	15/15
 lib/TastUtil.ml	100.00	109/109
 lib/Type.ml	100.00	378/378
 lib/TypeBindings.ml	100.00	121/121
-lib/TypeCheckExpr.ml	98.55	885/898
+lib/TypeCheckExpr.ml	98.55	884/897
 lib/TypeClasses.ml	100.00	338/338
 lib/TypeErrors.ml	100.00	144/144
-lib/TypeMatch.ml	100.00	384/384
+lib/TypeMatch.ml	100.00	391/391
 lib/TypeParameter.ml	100.00	11/11
 lib/TypeParameters.ml	100.00	24/24
 lib/TypeParser.ml	100.00	154/154
@@ -85,8 +85,8 @@ lib/TypeStripping.ml	100.00	38/38
 lib/TypeSystem.ml	100.00	88/88
 lib/TypeVarSet.ml	100.00	0/0
 lib/TypeclassNamedByConstraint.ml	100.00	9/9
-lib/TypingPass.ml	97.97	578/590
+lib/TypingPass.ml	97.98	581/593
 lib/Util.ml	100.00	68/68
 lib/Version.ml	100.00	3/3
-programs-alone-hand-written	95.73	8543/8924
-total-hand-written	99.55	8884/8924
+programs-alone-hand-written	95.74	8558/8939
+total-hand-written	99.55	8899/8939

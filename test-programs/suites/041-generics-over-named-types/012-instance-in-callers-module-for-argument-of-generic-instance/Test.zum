@@ -1,0 +1,21 @@
+import Lib (Show, show, Box, showIt);
+
+module body Test is
+    record Foo: Free is
+        n: Int64;
+    end;
+
+    instance Show(Foo) is
+        method show(x: Foo): Unit is
+            printLn(x.n);
+            return nil;
+        end;
+    end;
+
+    function main(): ExitCode is
+        let b: Box[Foo] := Box(inner => Foo(n => 7));
+        show(b);
+        showIt(b);
+        return ExitSuccess();
+    end;
+end module body.

@@ -698,7 +698,7 @@ let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (
   let rm = empty_region_map in
   match decl with
   | LConstant (decl_id, vis, name, ty, expr, doc) ->
-     (* The value names only the constants declared before this one (#142),
+     (* The value names only the constants defined before this one (#142),
         which rules out cycles: a constant is a C macro, and C does not expand
         a macro inside itself. *)
      let rec this_constant_and_the_later_ones (constants: identifier list): identifier list =
@@ -785,14 +785,20 @@ and augment_method_def module_name menv rm place instance_typarams supply (LMeth
   (TypedMethodDef (ins_meth_id, name, params, rt, body'), supply)
 
 let augment_module menv (supply: Supply.t) (LinkedModule { name; decls; kind; _ }): (typed_module * Supply.t) Outcome.t =
-  (* In the order of the declarations: the public ones, then the private ones. *)
+  (* In the order the body defines them. The span of a constant is that of its
+     definition in the body, also for one the interface declares
+     (CombiningPass), and a span is plain data: OCaml's order puts the earlier
+     one of a file first. The declarations are not in that order: those of the
+     interface come before the private ones. *)
   let module_constants: identifier list =
-    List.filter_map
-      (fun (_, decl) ->
-        match decl with
-        | LConstant (_, _, name, _, _, _) -> Some name
-        | LRecord _ | LUnion _ | LFunction _ | LTypeclass _ | LInstance _ -> None)
-      decls
+    List.map snd
+      (List.stable_sort (fun (span, _) (span', _) -> compare span span')
+         (List.filter_map
+            (fun (span, decl) ->
+              match decl with
+              | LConstant (_, _, name, _, _, _) -> Some (span, name)
+              | LRecord _ | LUnion _ | LFunction _ | LTypeclass _ | LInstance _ -> None)
+            decls))
   in
   Outcome.map (fun (supply, decls') -> (TypedModule (name, decls'), supply))
     (Outcome.traverse_with_context

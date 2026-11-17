@@ -254,7 +254,7 @@ let rec combine (env: env) (cmi: concrete_module_interface) (cmb: concrete_modul
           (im, bm))
   in
   let* public_decls = Outcome.traverse (fun decl -> Outcome.catch (fun () -> parse_decl mn im bm cmb decl)) decls in
-  let* private_decls = parse_defs mn cmi bm defs in
+  let* private_decls = parse_defs mn cmi cmb bm defs in
   Ok (CombinedModule {
           name = mn;
           kind = kind;
@@ -323,18 +323,27 @@ and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb
                  parse_method_decls (AtSpan span) module_name im methods,
                  docstring)
 
-and parse_defs (mn: module_name) (cmi: concrete_module_interface) (im: import_map) (defs: concrete_def list): combined_definition list Outcome.t =
+and parse_defs (mn: module_name) (cmi: concrete_module_interface) (cmb: concrete_module_body) (im: import_map) (defs: concrete_def list): combined_definition list Outcome.t =
   Outcome.map (List.filter_map (fun def -> def))
-    (Outcome.traverse (fun def -> Outcome.catch (fun () -> parse_def mn cmi im def)) defs)
+    (Outcome.traverse (fun def -> Outcome.catch (fun () -> parse_def mn cmi cmb im def)) defs)
 
-and parse_def (module_name: module_name) (cmi: concrete_module_interface) (im: import_map) (def: concrete_def): combined_definition option =
+and parse_def (module_name: module_name) (cmi: concrete_module_interface) (cmb: concrete_module_body) (im: import_map) (def: concrete_def): combined_definition option =
   match def with
   | ConcreteNamedDef named ->
-     (* If this def exists in the interface, skip it: parse_decl took it, or
-        rejected it (body_must_not_define). *)
-     (match get_concrete_decl cmi (def_name named) with
+     (* If this def exists in the interface, skip it: parse_decl took the first
+        definition of the name in the body, or rejected it
+        (body_must_not_define). A later definition of the name would be
+        another declaration of it, which nothing else sees (#126). *)
+     let name: identifier = def_name named in
+     (match get_concrete_decl cmi name with
       | (Some _) ->
-         None
+         let is_a_later_definition: bool =
+           Option.fold ~none:false ~some:(fun first_definition -> first_definition != named) (get_concrete_def cmb name)
+         in
+         if is_a_later_definition then
+           declaration_error (AtSpan (def_span named)) (DeclarationAlreadyExists { name; module_name })
+         else
+           None
       | None ->
          Some (private_def module_name im def))
   | ConcreteInstanceDef (ConcreteInstance (_, name, typarams, argument, _, _)) ->
@@ -366,7 +375,7 @@ let body_as_combined (env: env) (body: concrete_module_body): combined_module Ou
   (* We fake an empty module interface. *)
   let cmi: concrete_module_interface = ConcreteModuleInterface (mn, Docstring "", [], []) in
   let* imports = Outcome.catch (fun () -> resolve mn kind env body_imports) in
-  let* decls = parse_defs mn cmi imports defs in
+  let* decls = parse_defs mn cmi body imports defs in
   (* Go through the declarations and make them public. *)
   let decls = List.map as_public decls in
   Ok (CombinedModule {

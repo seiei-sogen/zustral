@@ -558,7 +558,6 @@ module Tast = struct
     | TFuncall of function_id * qident * texpr list * ty * type_bindings * written_argument_order
     | TMethodCall of ins_meth_id * qident * typarams * texpr list * ty * type_bindings * written_argument_order
     | TVarMethodCall of {
-        source_module_name: module_name;
         typeclass_id: typeclass_id;
         params: value_parameter list;
         method_name: qident;

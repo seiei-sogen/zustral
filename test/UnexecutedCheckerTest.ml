@@ -175,7 +175,7 @@ let every_texpr (): texpr list =
    TParamVar (i "p", int32); x; TFunVar (w.f_id, FnPtr ([], int32), TypeBindings.empty_bindings);
    TTemporary (i "t", int32); TFuncall (w.f_id, q "f", [], int32, TypeBindings.empty_bindings, []);
    TMethodCall (w.meth_id, q "describe", TypeParameters.empty_typarams, [x], int32, TypeBindings.empty_bindings, [0]);
-   TVarMethodCall { source_module_name = test_mod; typeclass_id = w.describe_id; params = [];
+   TVarMethodCall { typeclass_id = w.describe_id; params = [];
                     method_name = q "describe"; args = []; written_order = []; dispatch_ty = w.tyvar; rt = int32;
                     bindings = TypeBindings.empty_bindings };
    TFptrCall (i "fp", [], [], int32); TCast (x, int32); TImplicitCast (x, int32);

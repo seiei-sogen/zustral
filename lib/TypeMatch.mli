@@ -52,11 +52,12 @@ Parameters are: environment, source module name, dispatch type, and ID of the
 typeclass. *)
 val get_instance : Error.place -> env -> module_name -> ty -> typeclass_id -> (instance_decl * type_bindings) option
 
-(** {!get_instance} among the instances of every module, also those the source
-    module does not see. For a method call in a generic function, whose
-    instance can be in the module that instantiates it (issue #128). The orphan
-    rule leaves at most one instance that matches. *)
-val get_instance_from_every_module : Error.place -> env -> module_name -> ty -> typeclass_id -> (instance_decl * type_bindings) option
+(** {!get_instance} among the instances of every module, whatever module sees
+    them. For a method call in a generic function, whose instance can be in the
+    module that instantiates it (issue #128). A constraint of the instance's
+    type parameters is looked up among the instances of every module too. The
+    orphan rule leaves at most one instance that matches. *)
+val get_instance_from_every_module : Error.place -> env -> ty -> typeclass_id -> (instance_decl * type_bindings) option
 
 (** The method of the given name of an instance found by {!get_instance}: a
     type error if the instance does not define it. *)

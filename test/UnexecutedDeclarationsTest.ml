@@ -544,7 +544,6 @@ let test_a_method_call_leaves_out_an_unbound_parameter _ =
   let (env, _) = register_instance_method env instance_id method_id (Some (Stages.Tast.TSkip span)) in
   let call: Stages.Tast.texpr =
     TVarMethodCall {
-        source_module_name = example;
         typeclass_id;
         params = [];
         method_name = named "m";
@@ -569,7 +568,6 @@ let test_a_method_call_on_a_type_without_an_instance _ =
   let (env, typeclass_id, _) = register_typeclass_with_method env mod_id in
   let call: Stages.Tast.texpr =
     TVarMethodCall {
-        source_module_name = example;
         typeclass_id;
         params = [];
         method_name = named "m";

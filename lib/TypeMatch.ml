@@ -22,9 +22,22 @@ open Error
 
 type ctx = env * module_name * place
 
+(* The instances that a constraint of a type parameter is looked up among. *)
+type instance_scope =
+  | InstancesVisibleFrom of module_name
+  (* Where a type is checked: the instances of the module, and those it
+     imports. *)
+  | InstancesOfEveryModule
+  (* Where a generic function is instantiated. The type checker checked the
+     constraints where the function was called, in a module that can see
+     instances that the module of the function cannot (#128). *)
+
+(* What the matcher works with: a `ctx` that says the scope. *)
+type scoped_ctx = env * instance_scope * place
+
 let ctx_env (env, _, _) = env
 
-let ctx_mn (_, mn, _) = mn
+let ctx_scope ((_, scope, _): scoped_ctx): instance_scope = scope
 
 let ctx_place (_, _, place) = place
 
@@ -50,7 +63,7 @@ let map2_result (f: 'a -> 'b -> ('c, 'e) result) (l1: 'a list) (l2: 'b list): ('
    reports it. Two callers go on after a failure. The instance lookup tries
    the next instance, and a cast reports an error of its own. Every other
    caller uses the raising functions after this group. *)
-let rec try_match_type (ctx: ctx) (a: ty) (b: ty): (type_bindings, error) result =
+let rec try_match_type (ctx: scoped_ctx) (a: ty) (b: ty): (type_bindings, error) result =
   match a with
   | Unit ->
      (match b with
@@ -184,7 +197,7 @@ let rec try_match_type (ctx: ctx) (a: ty) (b: ty): (type_bindings, error) result
       | Pointer _ | FnPtr _ ->
          Error (Type (TypeMismatch { expected = a; actual = b })))
 
-and try_match_type_var (ctx: ctx) (tv: type_var) (ty: ty): (type_bindings, error) result =
+and try_match_type_var (ctx: scoped_ctx) (tv: type_var) (ty: ty): (type_bindings, error) result =
   let (TypeVariable (_, _, _, constraints, matching)) = tv in
   match matching with
   | StandsForItself ->
@@ -218,7 +231,7 @@ and try_match_type_var (ctx: ctx) (tv: type_var) (ty: ty): (type_bindings, error
          (* If the constraints are satisfied, add a straightforward binding. *)
          try_add_binding empty_bindings (tyvar_to_typaram tv) ty)
 
-and check_type_implements_constraints (ctx: ctx) (tv: type_var) (ty: ty) (constraints: sident list): (unit, error) result =
+and check_type_implements_constraints (ctx: scoped_ctx) (tv: type_var) (ty: ty) (constraints: sident list): (unit, error) result =
   (* If there are no constraints, do nothing. *)
   if constraints = [] then
     Ok ()
@@ -233,7 +246,7 @@ and check_type_implements_constraints (ctx: ctx) (tv: type_var) (ty: ty) (constr
       (Ok ())
       (List.of_seq (SIdentSet.to_seq constraints))
 
-and try_constraint (ctx: ctx) (tv: type_var) (ty: ty) (typeclass_name: sident): (unit, error) result =
+and try_constraint (ctx: scoped_ctx) (tv: type_var) (ty: ty) (typeclass_name: sident): (unit, error) result =
   (* get_decl_by_name raises when the module of the name is not in the
      environment. The miss is returned here, before it can. *)
   match get_module_by_name (ctx_env ctx) (sident_module_name typeclass_name) with
@@ -242,31 +255,35 @@ and try_constraint (ctx: ctx) (tv: type_var) (ty: ty) (typeclass_name: sident): 
   | Some _ ->
   let* id = TypeclassNamedByConstraint.typeclass_named_by_constraint (ctx_place ctx) (ctx_env ctx) tv typeclass_name in
   (* Try to find an instance for the given typeclass name that implements this type. *)
-  let* instance = try_get_instance (ctx_place ctx) (ctx_env ctx) (ctx_mn ctx) ty id in
+  let* instance = try_get_instance (ctx_place ctx) (ctx_env ctx) (ctx_scope ctx) ty id in
   (match instance with
    | Some _ ->
       Ok ()
    | None ->
       Error (Type (UnsatisfiedConstraint { tyvar = tv; ty; typeclass = typeclass_name })))
 
-and try_get_instance (place: place) (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: typeclass_id): ((instance_decl * type_bindings) option, error) result =
-  match get_module_by_name env source_module_name with
-  | None ->
-     Error (Declaration (DeclarationErrors.UnknownModule source_module_name))
-  (* visible_instances looks the module up again, by this ID. It was found
-     here, so that lookup does not miss. *)
-  | Some (ModRec { id = mod_id; _ }) ->
-     try_get_instance_among place env source_module_name (visible_instances place env mod_id) dispatch_ty typeclass
+and try_get_instance (place: place) (env: env) (scope: instance_scope) (dispatch_ty: ty) (typeclass: typeclass_id): ((instance_decl * type_bindings) option, error) result =
+  match scope with
+  | InstancesOfEveryModule ->
+     try_get_instance_among place env scope (all_instances env) dispatch_ty typeclass
+  | InstancesVisibleFrom source_module_name ->
+     (match get_module_by_name env source_module_name with
+      | None ->
+         Error (Declaration (DeclarationErrors.UnknownModule source_module_name))
+      (* visible_instances looks the module up again, by this ID. It was found
+         here, so that lookup does not miss. *)
+      | Some (ModRec { id = mod_id; _ }) ->
+         try_get_instance_among place env scope (visible_instances place env mod_id) dispatch_ty typeclass)
 
-(* The one of these instances that matches the dispatch type. The match runs in
-   the source module: a constraint of the instance's type parameters is looked
-   up among the instances visible from there. *)
-and try_get_instance_among (place: place) (env: env) (source_module_name: module_name) (instances: instance_decl list) (dispatch_ty: ty) (typeclass: typeclass_id): ((instance_decl * type_bindings) option, error) result =
+(* The one of these instances, those of the scope, that matches the dispatch
+   type. A constraint of the instance's type parameters is looked up in the
+   same scope. *)
+and try_get_instance_among (place: place) (env: env) (scope: instance_scope) (instances: instance_decl list) (dispatch_ty: ty) (typeclass: typeclass_id): ((instance_decl * type_bindings) option, error) result =
   let pred (decl: instance_decl): (instance_decl * type_bindings) option =
     match decl with
     | { typeclass_id; argument; _ } ->
        if equal_typeclass_id typeclass_id typeclass then
-         (match try_match_type (env, source_module_name, place) (signature_type_at_use argument) dispatch_ty with
+         (match try_match_type (env, scope, place) (signature_type_at_use argument) dispatch_ty with
           | Ok bindings ->
              Some (decl, bindings)
           | Error _ ->
@@ -294,7 +311,7 @@ and try_get_instance_among (place: place) (env: env) (source_module_name: module
   | [] ->
      Ok None
 
-and try_match_type_list (ctx: ctx) (tys: ty list) (tys': ty list): (type_bindings, error) result =
+and try_match_type_list (ctx: scoped_ctx) (tys: ty list) (tys': ty list): (type_bindings, error) result =
   (* Every pair is matched before any bindings are merged, so a pair that does
      not match is reported before two pairs that bind one parameter to
      different types. *)
@@ -306,14 +323,25 @@ and try_match_type_list (ctx: ctx) (tys: ty list) (tys': ty list): (type_binding
     (Ok empty_bindings)
     bs
 
+(* The matchers of the type checker, which checks the types of a module: a
+   constraint is looked up among the instances visible from that module. *)
+let scoped_to_module ((env, module_name, place): ctx): scoped_ctx =
+  (env, InstancesVisibleFrom module_name, place)
+
+let try_match_type (ctx: ctx) (a: ty) (b: ty): (type_bindings, error) result =
+  try_match_type (scoped_to_module ctx) a b
+
+let try_match_type_list (ctx: ctx) (tys: ty list) (tys': ty list): (type_bindings, error) result =
+  try_match_type_list (scoped_to_module ctx) tys tys'
+
 let match_type (ctx: ctx) (a: ty) (b: ty): type_bindings =
   ok_or_raise (ctx_place ctx) (try_match_type ctx a b)
 
 let get_instance (place: place) (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: typeclass_id): (instance_decl * type_bindings) option =
-  ok_or_raise place (try_get_instance place env source_module_name dispatch_ty typeclass)
+  ok_or_raise place (try_get_instance place env (InstancesVisibleFrom source_module_name) dispatch_ty typeclass)
 
-let get_instance_from_every_module (place: place) (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: typeclass_id): (instance_decl * type_bindings) option =
-  ok_or_raise place (try_get_instance_among place env source_module_name (all_instances env) dispatch_ty typeclass)
+let get_instance_from_every_module (place: place) (env: env) (dispatch_ty: ty) (typeclass: typeclass_id): (instance_decl * type_bindings) option =
+  ok_or_raise place (try_get_instance place env InstancesOfEveryModule dispatch_ty typeclass)
 
 let get_method_of_instance (place: place) (env: env) (instance: instance_decl) (method_name: identifier): ins_meth_id =
   let (InsMethRec { id; _ }) = get_instance_method_from_instance_id_and_method_name place env instance.id method_name in

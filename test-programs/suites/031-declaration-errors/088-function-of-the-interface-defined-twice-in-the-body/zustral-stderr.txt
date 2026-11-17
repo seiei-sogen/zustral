@@ -1,0 +1,27 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "A declaration with the name " },
+    { "type": "code", "content": "answer" },
+    { "type": "text", "content": " already exists in the module " },
+    { "type": "code", "content": "Test" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/088-function-of-the-interface-defined-twice-in-the-body/Test.zum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 8, "column": 8 }
+  },
+  "context": [
+    [ 2, "    function answer(): Int32 is" ],
+    [ 3, "        return 1;" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    function answer(): Int32 is" ],
+    [ 7, "        return 2;" ],
+    [ 8, "    end;" ],
+    [ 9, "" ],
+    [ 10, "    function main(): ExitCode is" ]
+  ]
+}

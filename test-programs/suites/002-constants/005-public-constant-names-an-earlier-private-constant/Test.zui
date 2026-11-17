@@ -1,0 +1,4 @@
+module Test is
+    constant Pub: Int32;
+    function main(): ExitCode;
+end module.

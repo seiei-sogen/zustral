@@ -1,0 +1,4 @@
+module Test is
+    function answer(): Int32;
+    function main(): ExitCode;
+end module.

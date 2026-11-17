@@ -419,7 +419,6 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
               resolution, because we don't have a type to resolve an
               instance for. So we have to freeze the process. *)
            TVarMethodCall {
-               source_module_name = (ctx_module_name ctx);
                typeclass_id = typeclass_id;
                params = params;
                method_name = callable_name;
