@@ -1,6 +1,6 @@
 pragma Unsafe_Module;
 
-import Austral.Memory (Address);
+import Zustral.Memory (Address);
 
 module body Test is
     typeclass Tagged(T: Type) is

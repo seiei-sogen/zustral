@@ -1,5 +1,5 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -30,13 +30,13 @@ type location =
   | InModule of module_name
   | Nowhere
 
-type austral_error = AustralError of {
+type zustral_error = ZustralError of {
       location: location;
       error: error;
       source_ctx: source_ctx option;
     }
 
-exception Austral_error of austral_error
+exception Zustral_error of zustral_error
 
 let error_text (error: error): err_text =
   match error with
@@ -78,11 +78,11 @@ let location_span (location: location): span option =
 (* Raising. Every function takes the place first: the code that raises
    says where the error is. *)
 
-let make_error (place: place) (error: error): austral_error =
-  AustralError { location = locate None place; error; source_ctx = None }
+let make_error (place: place) (error: error): zustral_error =
+  ZustralError { location = locate None place; error; source_ctx = None }
 
 let raise_error (place: place) (error: error): 'a =
-  raise (Austral_error (make_error place error))
+  raise (Zustral_error (make_error place error))
 
 let parse_error (place: place) (e: ParseErrors.t): 'a = raise_error place (Parse e)
 
@@ -112,23 +112,23 @@ let place_inside (outer: place) (span: span): place =
 
 (* Error context-augmenting functions *)
 
-let add_source_ctx (error: austral_error) (ctx: source_ctx): austral_error =
-  let (AustralError { location; error = cause; source_ctx }) = error in
+let add_source_ctx (error: zustral_error) (ctx: source_ctx): zustral_error =
+  let (ZustralError { location; error = cause; source_ctx }) = error in
   match source_ctx with
   | Some _ ->
      error
   | None ->
-     AustralError { location; error = cause; source_ctx = Some ctx; }
+     ZustralError { location; error = cause; source_ctx = Some ctx; }
 
-let add_module_name (error: austral_error) (new_module_name: module_name): austral_error =
-  let (AustralError { location; error = cause; source_ctx }) = error in
+let add_module_name (error: zustral_error) (new_module_name: module_name): zustral_error =
+  let (ZustralError { location; error = cause; source_ctx }) = error in
   match location with
   | At { module_name = Some _; _ } | InModule _ ->
      error
   | At { module_name = None; span } ->
-     AustralError { location = locate (Some new_module_name) (AtSpan span); error = cause; source_ctx }
+     ZustralError { location = locate (Some new_module_name) (AtSpan span); error = cause; source_ctx }
   | Nowhere ->
-     AustralError { location = locate (Some new_module_name) NoSpan; error = cause; source_ctx }
+     ZustralError { location = locate (Some new_module_name) NoSpan; error = cause; source_ctx }
 
 (* Error rendering to plain text *)
 
@@ -155,8 +155,8 @@ let indent_text (text: string) (indent: int): string =
   in
   String.concat "\n" lines
 
-let render_error_to_plain (error: austral_error): string =
-  let (AustralError { location; error = cause; source_ctx }) = error in
+let render_error_to_plain (error: zustral_error): string =
+  let (ZustralError { location; error = cause; source_ctx }) = error in
   let mn_text: string =
     match location_module_name location with
     | Some mn ->
@@ -217,9 +217,9 @@ let source_ctx_json (ctx: source_ctx): Yojson.Basic.t =
   in
   `List (List.map line_json lines)
 
-let render_error_to_json (error: austral_error): Yojson.Basic.t =
+let render_error_to_json (error: zustral_error): Yojson.Basic.t =
   (* Break up the error. *)
-  let (AustralError { location; error = cause; source_ctx }) = error in
+  let (ZustralError { location; error = cause; source_ctx }) = error in
   (* Render components to JSON. *)
   let module_name: Yojson.Basic.t =
     match location_module_name location with

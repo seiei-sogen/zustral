@@ -1,5 +1,5 @@
-BIN := austral
-SRC := lib/*.ml lib/*.mli lib/*.mll lib/*.mly lib/dune cli/*.ml cli/*.mli cli/dune bin/dune bin/austral.ml lib/BuiltInModules.ml
+BIN := zustral
+SRC := lib/*.ml lib/*.mli lib/*.mll lib/*.mly lib/dune cli/*.ml cli/*.mli cli/dune bin/dune bin/zustral.ml lib/BuiltInModules.ml
 PREFIX ?= /usr/local
 
 .PHONY: all
@@ -10,7 +10,7 @@ lib/BuiltInModules.ml: lib/builtin/*.zui lib/builtin/*.zum lib/prelude.c concat_
 
 $(BIN): $(SRC)
 	dune build
-	cp _build/default/bin/austral.exe $(BIN)
+	cp _build/default/bin/zustral.exe $(BIN)
 
 .PHONY: test
 test: $(BIN)
@@ -23,11 +23,11 @@ coverage:
 
 .PHONY: install
 install: $(BIN)
-	install -D -m 755 austral $(PREFIX)/bin/austral
+	install -D -m 755 zustral $(PREFIX)/bin/zustral
 
 .PHONY: uninstall
 uninstall:
-	sudo rm $(PREFIX)/bin/austral
+	sudo rm $(PREFIX)/bin/zustral
 
 .PHONY: clean
 clean:

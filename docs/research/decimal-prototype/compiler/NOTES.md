@@ -149,7 +149,7 @@ The spec has to pick one of two things: guarantee that a union's C tag is its de
 
 ### Pervasive names win over the program's own names
 
-`RoundingMode` and its seven cases are added to the names that every module imports from `Austral.Pervasive`. An imported name wins over a declaration in the program. A program with its own `union Direction` that has a case `TowardZero` gets "Cannot cast to `Direction` from `RoundingMode`" for `let d: Direction := TowardZero();` (Ran: `gap-rounding-mode-case-name-taken`). A program function named `NearestEven` is hidden the same way (Ran: probe `name-collision-function`).
+`RoundingMode` and its seven cases are added to the names that every module imports from `Zustral.Pervasive`. An imported name wins over a declaration in the program. A program with its own `union Direction` that has a case `TowardZero` gets "Cannot cast to `Direction` from `RoundingMode`" for `let d: Direction := TowardZero();` (Ran: `gap-rounding-mode-case-name-taken`). A program function named `NearestEven` is hidden the same way (Ran: probe `name-collision-function`).
 
 The design adds eight names that programs can no longer use, and the error does not say why. The existing pervasive names, such as `Some` and `None`, have the same property. I did not test that.
 
@@ -170,13 +170,13 @@ The lexer also accepts `1.` as a float literal, and it reads a sign as part of t
 
 ### The result type of `*` must be written out by hand
 
-Austral has no type inference for `let`. The user must compute P1 + P2 and S1 + S2 and write `let total: Decimal[12, 5] := price * quantity;`. The literal rule makes the answer depend on the literal's digits: `price * 2` is `Decimal[8, 2]` and `price * 10` is `Decimal[9, 2]`.
+Zustral has no type inference for `let`. The user must compute P1 + P2 and S1 + S2 and write `let total: Decimal[12, 5] := price * quantity;`. The literal rule makes the answer depend on the literal's digits: `price * 2` is `Decimal[8, 2]` and `price * 10` is `Decimal[9, 2]`.
 
 A wrong annotation gives "Cannot cast to `Decimal[9, 2]` from `Decimal[8, 2]`" (Ran: `mul-result-type-is-exact`). The message names the real type, which helps. It says "cast" because a `let` is an ascription.
 
 ### The embedded runtime's `puts` declaration broke existing programs
 
-`decimal.c` declares `extern int puts(const char *text);` inside `au_dec_debug_print`. Austral programs that import `puts` get a local `extern au_int32_t puts(au_nat8_t* str);` in the same C file, and gcc rejects the pair as conflicting types. Five of the repository's end-to-end tests import `puts` and failed (Ran).
+`decimal.c` declares `extern int puts(const char *text);` inside `au_dec_debug_print`. Zustral programs that import `puts` get a local `extern au_int32_t puts(au_nat8_t* str);` in the same C file, and gcc rejects the pair as conflicting types. Five of the repository's end-to-end tests import `puts` and failed (Ran).
 
 `embed-runtime.py` now rewrites that one function to call the prelude's `au_printf("%s\n", buf)`. This is the only change I made to the runtime text. The assertion in the script fails if `decimal.c` stops containing the original lines. The parent may prefer to make the same change in `decimal.c`.
 
@@ -214,13 +214,13 @@ For each, the prototype does what is listed. Each one is a question for the spec
 - The `#16` rule is never reached. The Decimal branch in `augment_arithmetic` runs before the "one operand is a constant" rule, and no `TCast` is ever built for a Decimal (Ran: `add-literal-too-large` and `add-literal-misfit` are compile errors).
 - The compiler does not check that the operands of a comparison are comparable. `augment_comparison` only matches the two types. Decimal comparison compiles to a C comparison of two `__int128` values.
 - The command-line tool prints its usage text and exits 0 for an unknown command. A typo in my test runner made one test "compile" with no output file.
-- The compiler leaves `austral_XXXXXX.c` in `$TMPDIR` and writes `error.html` and `calltree.html` into the current directory. `run-tests.sh` runs each compile in its own temporary directory for that reason. My earlier runs left files named `austral_*.c` in `/tmp`. I did not delete them, because other sessions may own some of them.
+- The compiler leaves `zustral_XXXXXX.c` in `$TMPDIR` and writes `error.html` and `calltree.html` into the current directory. `run-tests.sh` runs each compile in its own temporary directory for that reason. My earlier runs left files named `zustral_*.c` in `/tmp`. I did not delete them, because other sessions may own some of them.
 
 ## Layout of this directory
 
 - `compiler-slice.patch` is `git diff HEAD` of the worktree. It holds compiler and prelude changes only.
 - `tests/` holds 81 programs: 28 with `.expected`, 44 with `.error` and 9 with `.trap`. `tests/modules/` holds the two-file module that `interface-module` compiles with. Tests named `gap-*` pin down behaviour that falls short of the design or that the design does not cover. They pass when the prototype behaves as described in these notes.
-- `run-tests.sh <austral>` runs the tests.
+- `run-tests.sh <zustral>` runs the tests.
 - `verify-patch.sh <checkout>` exports HEAD, applies the patch, builds, and runs the tests.
 - `build.sh`, `embed-runtime.py` are described above.
 - `experiments/` holds the expected-type experiment and its observed output.

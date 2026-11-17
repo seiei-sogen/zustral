@@ -1,13 +1,13 @@
 (lang dune 2.7)
 (using menhir 2.0)
 
-(name austral)
+(name zustral)
 (version 0.0.1)
 
 (package
- (name austral)
- (synopsis "The bootstrapping compiler for Austral")
- (description "The bootstrapping compiler for Austral.")
+ (name zustral)
+ (synopsis "The bootstrapping compiler for Zustral")
+ (description "The bootstrapping compiler for Zustral.")
  (homepage https://austral-lang.org/)
  (bug_reports https://github.com/austral/austral/issues)
  (depends

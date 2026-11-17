@@ -1,4 +1,4 @@
-import Austral.Memory (Pointer);
+import Zustral.Memory (Pointer);
 
 module body Test is
     function main(): ExitCode is

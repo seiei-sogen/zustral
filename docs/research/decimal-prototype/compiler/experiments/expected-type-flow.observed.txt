@@ -1,5 +1,5 @@
 Observed with compiler-slice.patch + expected-type-flow.patch (apply both with patch -p1, in that order).
-Programs are in work/probe.py under the names below. Run: python3 work/probe.py <austral> exp-
+Programs are in work/probe.py under the names below. Run: python3 work/probe.py <zustral> exp-
 
 == exp-widen-plus-let          let gross: Decimal[16, 9] := widen(amount) + tax;
   | 32.458762500

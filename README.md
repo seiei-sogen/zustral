@@ -88,7 +88,7 @@ end module body.
 ビルドして実行する。
 
 ```bash
-$ austral compile fib.zum --entrypoint=Fib:main --output=fib
+$ zustral compile fib.zum --entrypoint=Fib:main --output=fib
 $ ./fib
 fib(10) = 55
 ```
@@ -110,8 +110,7 @@ $ make
 
 Zustral のコンパイラのビルドには、`make` と、OCaml のビルドシステム `dune` が
 要る。出力されたものをビルドするには、C コンパイラが要る。OCaml は 4.13.0 以上を
-入れること。コンパイラの実行ファイルの名前は、Austral から受け継いだ `austral` の
-ままである。
+入れること。コンパイラの実行ファイルの名前は `zustral` である。
 
 まず、次を実行する。
 
@@ -127,11 +126,11 @@ $ sudo apt-get install opam
 $ opam init
 ```
 
-それから、`austral` という名前の opam の switch を作り、opam で依存パッケージを入れる。
+それから、`zustral` という名前の opam の switch を作り、opam で依存パッケージを入れる。
 
 ```bash
-opam switch create austral 4.13.0
-eval $(opam env --switch=austral)
+opam switch create zustral 4.13.0
+eval $(opam env --switch=zustral)
 opam install --deps-only -y .
 ```
 
@@ -171,7 +170,7 @@ src/C.zum
 これをコンパイルするには、次を実行する。
 
 ```bash
-$ austral compile \
+$ zustral compile \
     src/A.zui,src/A.zum \
     src/B.zui,src/B.zum \
     src/C.zui,src/C.zum \
@@ -193,20 +192,20 @@ $ austral compile \
 作る。C のコードだけを作るには、次のとおりにする。
 
 ```bash
-$ austral compile --target-type=c [modules...] --entrypoint=Foo:main --output=program.c
+$ zustral compile --target-type=c [modules...] --entrypoint=Foo:main --output=program.c
 ```
 
 エントリポイントが要らない場合（ライブラリをコンパイルするときなど）は、
 `--entrypoint` の代わりに `--no-entrypoint` を渡す必要がある。
 
 ```bash
-$ austral compile --target-type=c [modules...] --no-entrypoint --output=program.c
+$ zustral compile --target-type=c [modules...] --no-entrypoint --output=program.c
 ```
 
 コンパイルせずに型検査だけをしたい場合は、ターゲットの種類 `tc` を使う。
 
 ```bash
-$ austral compile --target-type=tc [modules...]
+$ zustral compile --target-type=tc [modules...]
 ```
 
 生成された C のコードは、次のようにコンパイルすること。
@@ -219,7 +218,7 @@ $ gcc -fwrapv generated.c -lm
 
 1. OCaml で書かれたブートストラップ用のコンパイラは、実装済みである。主な制約は、
    分割コンパイルに対応していないことである。実際には問題にならない。それが効いて
-   くるほどの量の Austral のコードが、まだないからである。
+   くるほどの量の Zustral のコードが、まだないからである。
 
 2. コンパイラは、仕様のすべての機能を実装している。
 

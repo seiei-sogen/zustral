@@ -1,5 +1,5 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -15,19 +15,19 @@ type t
     with a C reserved word. *)
 val generated : string -> t
 
-(** A name the user wrote in Austral: a variable, a parameter. It is spelled
+(** A name the user wrote in Zustral: a variable, a parameter. It is spelled
     with the reserved-word escape. *)
-val austral : string -> t
+val zustral : string -> t
 
 (** A name the user gave in a pragma for a C symbol. It is spelled as it is. *)
 val external_name : string -> t
 
-(** A name the user wrote in Austral that reaches C without the reserved-word
+(** A name the user wrote in Zustral that reaches C without the reserved-word
     escape: a record slot, a union case, a parameter in the [extern]
     declaration of a foreign function, a constant where it is defined. A slot
     called [double] breaks the C compile (issue #92). The fix for that issue
-    replaces every use with [austral]. *)
-val austral_unescaped : string -> t
+    replaces every use with [zustral]. *)
+val zustral_unescaped : string -> t
 
 (** A name from a pragma that reaches C with the reserved-word escape: a
     foreign function where it is called, the wrapper of an exported function.

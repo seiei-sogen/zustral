@@ -1,5 +1,5 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -68,7 +68,7 @@ type union_case_decl = {
 (** What a function has besides its signature. *)
 type function_impl =
   | BodyNotAttached
-  (** A function written in Austral, until its body is stored after type
+  (** A function written in Zustral, until its body is stored after type
       checking ({!Env.store_function_body}). *)
   | Body of tstmt
   | Foreign of string * ty ForeignType.foreign_signature

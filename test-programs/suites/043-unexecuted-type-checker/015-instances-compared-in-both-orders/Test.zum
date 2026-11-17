@@ -1,6 +1,6 @@
 pragma Unsafe_Module;
 
-import Austral.Memory (Address, Pointer);
+import Zustral.Memory (Address, Pointer);
 
 module body Test is
     record Foo: Free is

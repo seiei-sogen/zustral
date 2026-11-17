@@ -1,18 +1,18 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 open OUnit2
-open Austral_core
-open Austral_core.Identifier
-open Austral_core.Common
-open Austral_core.Type
-open Austral_core.Error
-open Austral_core.Stages.Tast
-module A = Austral_core.Stages.AstDB
-module Linked = Austral_core.Stages.Linked
+open Zustral_core
+open Zustral_core.Identifier
+open Zustral_core.Common
+open Zustral_core.Type
+open Zustral_core.Error
+open Zustral_core.Stages.Tast
+module A = Zustral_core.Stages.AstDB
+module Linked = Zustral_core.Stages.Linked
 
 (* The type checker and the checks around it, given values that the stages
    before them never make: a syntax tree of a shape the lifting and desugaring
@@ -31,14 +31,14 @@ let get (outcome: 'a Outcome.t): 'a =
 let the_error (outcome: 'a Outcome.t): error =
   match outcome with
   | Ok _ -> assert_failure "the stage did not fail"
-  | Error (AustralError { error; _ }, []) -> error
+  | Error (ZustralError { error; _ }, []) -> error
   | Error _ -> assert_failure "the stage failed with more than one error"
 
 (* The error a function stops with. *)
 let raised (f: unit -> 'a): error =
   match f () with
   | _ -> assert_failure "no error was raised"
-  | exception Austral_error (AustralError { error; _ }) -> error
+  | exception Zustral_error (ZustralError { error; _ }) -> error
 
 (* The stages before the type checker, on a module body. *)
 let front (env: Env.env) (code: string): (Env.env * Linked.linked_module) Outcome.t =
@@ -50,7 +50,7 @@ let front (env: Env.env) (code: string): (Env.env * Linked.linked_module) Outcom
   let* (env, small) = Env.with_supply env (fun supply -> DesugaringPass.desugar supply returning) in
   ExtractionPass.extract env small
 
-(* The declarations of Austral.Pervasive, which the module below uses. *)
+(* The declarations of Zustral.Pervasive, which the module below uses. *)
 let pervasive: Env.env Lazy.t =
   lazy (get (
     let* ci = ParserInterface.parse_module_int BuiltInModules.pervasive_interface_source "" in

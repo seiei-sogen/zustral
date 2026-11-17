@@ -10,7 +10,7 @@ string literals it is built from: every literal in the arm of `render` for the
 constructor, and every literal in the other functions of the module, which
 give the words of an enumeration (`declaration_kind_word`). A piece is pinned
 if it appears in the expected output of some test: the message in an
-`austral-stderr.txt` of the end-to-end suite, or an `expected.txt` of the
+`zustral-stderr.txt` of the end-to-end suite, or an `expected.txt` of the
 command-line tests.
 
 A piece on the recorded list is one that no program can reach, or that a known
@@ -42,7 +42,7 @@ ARM = re.compile(r"^  \| ([A-Z][A-Za-z0-9_]*)", re.M)
 
 def expected_texts() -> str:
     texts = []
-    for f in ROOT.glob("test-programs/suites/*/*/austral-stderr.txt"):
+    for f in ROOT.glob("test-programs/suites/*/*/zustral-stderr.txt"):
         raw = f.read_text()
         try:
             error = json.loads(raw)

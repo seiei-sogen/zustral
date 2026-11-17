@@ -1,10 +1,10 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
-open Austral_core
+open Zustral_core
 open Unix
 open Error
 open HtmlError
@@ -59,5 +59,5 @@ let compile_c_code (source_path: string) (output_path: string): command_output =
   else
     o
 
-let html_error_dump (error: austral_error): unit =
+let html_error_dump (error: zustral_error): unit =
   write_string_to_file "error.html" (render_error_to_html error)

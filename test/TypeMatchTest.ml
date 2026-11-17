@@ -1,18 +1,18 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 open OUnit2
-open Austral_core.Identifier
-open Austral_core.Common
-open Austral_core.EnvTypes
-open Austral_core.Error
-open Austral_core.Type
-module Env = Austral_core.Env
-module TypeMatch = Austral_core.TypeMatch
-module InstanceIdSet = Austral_core.InstanceIdSet.InstanceIdSet
+open Zustral_core.Identifier
+open Zustral_core.Common
+open Zustral_core.EnvTypes
+open Zustral_core.Error
+open Zustral_core.Type
+module Env = Zustral_core.Env
+module TypeMatch = Zustral_core.TypeMatch
+module InstanceIdSet = Zustral_core.InstanceIdSet.InstanceIdSet
 
 (* No program reaches these: the compiler qualifies the name of a constraint
    against a module that exists (lib/CombiningPass.ml), and matches types from
@@ -40,7 +40,7 @@ let env_with_instance: Env.env * sident =
         vis = VisPublic;
         name = make_ident "C";
         docstring = Docstring "";
-        param = Austral_core.TypeParameter.make_typaram (make_ident "T", TypeUniverse, make_qident (example, make_ident "C", make_ident "C"), [])
+        param = Zustral_core.TypeParameter.make_typaram (make_ident "T", TypeUniverse, make_qident (example, make_ident "C", make_ident "C"), [])
       })
   in
   let (env, _) =
@@ -49,7 +49,7 @@ let env_with_instance: Env.env * sident =
         vis = VisPublic;
         typeclass_id;
         docstring = Docstring "";
-        typarams = Austral_core.TypeParameters.empty_typarams;
+        typarams = Zustral_core.TypeParameters.empty_typarams;
         argument = Pointer (TyVar (constrained "U" (make_sident nope (make_ident "D"))))
       })
   in

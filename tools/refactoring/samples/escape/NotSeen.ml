@@ -5,7 +5,7 @@
 
 (* An operator is not a name the check follows. *)
 let ( +! ) (a: int) (b: int): int =
-  if a < 0 then raise (Austral_error (negative a)) else a + b
+  if a < 0 then raise (Zustral_error (negative a)) else a + b
 
 let stage_operator (n: int): int Outcome.t =
   Ok (n +! 1)
@@ -13,7 +13,7 @@ let stage_operator (n: int): int Outcome.t =
 (* A function made in one place and called in another: the call names a
    variable, not the function. *)
 let stage_closure (n: int): int Outcome.t =
-  match Outcome.catch (fun _ -> (fun m -> if m < 0 then raise (Austral_error (negative m)) else m)) with
+  match Outcome.catch (fun _ -> (fun m -> if m < 0 then raise (Zustral_error (negative m)) else m)) with
   | Ok check -> Ok (check n)
   | Error errors -> Error errors
 

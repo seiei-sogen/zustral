@@ -1,11 +1,11 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 open OUnit2
-open Austral_core.BuiltInNames
+open Zustral_core.BuiltInNames
 
 (* This type and the constructors after it, in the order of the definition.
    The match has no wildcard arm, so a new constructor of [builtin_type] does

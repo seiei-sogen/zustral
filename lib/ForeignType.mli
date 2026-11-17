@@ -1,5 +1,5 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -13,12 +13,12 @@ open Error
 (** Which way a function crosses the C boundary. *)
 type direction =
   | Import
-  (** [Foreign_Import]: Austral calls a C function. *)
+  (** [Foreign_Import]: Zustral calls a C function. *)
   | Export
-  (** [Foreign_Export]: C calls an Austral function. *)
+  (** [Foreign_Export]: C calls an Zustral function. *)
 
 (** A type that may cross the C boundary, by what C sees. ['leaf] is the
-    Austral type a pointer points to: {!Type.ty} when the signature is checked,
+    Zustral type a pointer points to: {!Type.ty} when the signature is checked,
     {!MonoType.mono_ty} after monomorphization. The type is private: a value
     comes from {!check_signature}, or from {!map_signature} on one that did,
     so a signature that is not allowed cannot be built. *)

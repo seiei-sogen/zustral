@@ -1,1 +1,1 @@
-./austral compile --target-type=c $DIR/Foreign.zui,$DIR/Foreign.zum $DIR/Test.zum --entrypoint=Test:main --output=$C_PATH --error-format=json
+./zustral compile --target-type=c $DIR/Foreign.zui,$DIR/Foreign.zum $DIR/Test.zum --entrypoint=Test:main --output=$C_PATH --error-format=json

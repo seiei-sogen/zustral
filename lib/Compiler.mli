@@ -1,5 +1,5 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -9,7 +9,7 @@
     exported functions and, if asked for, the entrypoint. The entrypoint is a
     module name and the name of a function in it.
 
-    This reads no file, writes none, and raises no [Austral_error]: the error
+    This reads no file, writes none, and raises no [Zustral_error]: the error
     that stopped it is in the result. *)
 val compile : Pipeline.compile
 

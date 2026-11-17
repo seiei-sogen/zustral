@@ -31,7 +31,7 @@
 
       in {
         packages.default = pkgs.stdenv.mkDerivation {
-          pname = "austral";
+          pname = "zustral";
           version = "0.2.0";
           src = ./.;
           installFlags = [ "PREFIX=$(out)" ];

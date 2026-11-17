@@ -1,1 +1,0 @@
-Tests of the `Austral.Memory` module.

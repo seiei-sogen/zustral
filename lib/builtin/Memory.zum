@@ -1,5 +1,5 @@
 --
--- Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+-- Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
 -- See LICENSE file for details.
 --
 -- SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -7,7 +7,7 @@
 -- `@embed` is only allowed in an unsafe module.
 pragma Unsafe_Module;
 
-module body Austral.Memory is
+module body Zustral.Memory is
     record Address[T: Type]: Free is end;
     record Pointer[T: Type]: Free is end;
 

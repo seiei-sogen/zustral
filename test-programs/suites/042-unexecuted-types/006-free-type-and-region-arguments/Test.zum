@@ -1,6 +1,6 @@
 pragma Unsafe_Module;
 
-import Austral.Memory (Pointer);
+import Zustral.Memory (Pointer);
 
 module body Test is
     record Tri[A: Type, B: Type, R: Region]: Type is

@@ -1,10 +1,10 @@
 exit: 0
 files: 
 --- stdout
-austral compile
+zustral compile
 
 Usage:
-    austral compile [options] <module...>
+    zustral compile [options] <module...>
 
 Options:
     --help          Print this text.

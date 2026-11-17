@@ -1,6 +1,6 @@
 pragma Unsafe_Module;
 
-import Austral.Memory (Pointer, Address);
+import Zustral.Memory (Pointer, Address);
 
 module body Test is
     generic [R: Region]

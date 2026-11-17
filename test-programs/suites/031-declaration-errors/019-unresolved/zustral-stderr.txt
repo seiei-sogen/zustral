@@ -5,7 +5,7 @@
     { "type": "text", "content": "No declaration with the name " },
     { "type": "code", "content": "Nonexistent" },
     { "type": "text", "content": " in the module " },
-    { "type": "code", "content": "Austral.Pervasive" }
+    { "type": "code", "content": "Zustral.Pervasive" }
   ],
   "span": null,
   "context": null

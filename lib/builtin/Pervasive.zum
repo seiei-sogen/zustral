@@ -1,5 +1,5 @@
 --
--- Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+-- Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
 -- See LICENSE file for details.
 --
 -- SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -7,7 +7,7 @@
 -- `@embed` is only allowed in an unsafe module.
 pragma Unsafe_Module;
 
-module body Austral.Pervasive is
+module body Zustral.Pervasive is
     generic [T: Type, R: Region]
     function spanLength(sp: Span[T, R]): Index is
         return @embed(Index, "$1.size", sp);

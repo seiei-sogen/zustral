@@ -1,5 +1,5 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -79,42 +79,42 @@ let new_variable (supply: Supply.t): CIdent.t * Supply.t =
 
 (* Identifiers *)
 
-let austral_prefix: string = ""
+let zustral_prefix: string = ""
 
 let ident_text (i: identifier): string =
-  austral_prefix ^ (ident_string i)
+  zustral_prefix ^ (ident_string i)
 
 (* A variable or a parameter. *)
 let gen_ident (i: identifier): CIdent.t =
-  CIdent.austral (ident_text i)
+  CIdent.zustral (ident_text i)
 
 (* A record slot or a union case. *)
 let gen_member (i: identifier): CIdent.t =
-  CIdent.austral_unescaped (ident_text i)
+  CIdent.zustral_unescaped (ident_text i)
 
 let gen_module_name (n: module_name): string =
-  austral_prefix ^ replace_char (mod_name_string n) '.' "__"
+  zustral_prefix ^ replace_char (mod_name_string n) '.' "__"
 
 (* A constant where it is used. *)
 let gen_qident (i: qident): CIdent.t =
-  CIdent.austral ((gen_module_name (source_module_name i)) ^ "____" ^ (ident_text (original_name i)))
+  CIdent.zustral ((gen_module_name (source_module_name i)) ^ "____" ^ (ident_text (original_name i)))
 
 (* A constant where it is defined. The two spellings differ when the name of
    the module starts with a C reserved word (issue #92). *)
 let gen_sident (mn: module_name) (i: identifier): CIdent.t =
-  CIdent.austral_unescaped ((gen_module_name mn) ^ "____" ^ (ident_text i))
+  CIdent.zustral_unescaped ((gen_module_name mn) ^ "____" ^ (ident_text i))
 
 let gen_function_id (id: function_id): CIdent.t =
-  CIdent.generated (austral_prefix ^ "decl_" ^ (string_of_int (function_id_number id)))
+  CIdent.generated (zustral_prefix ^ "decl_" ^ (string_of_int (function_id_number id)))
 
 let mono_id_text (id: mono_id): string =
-  austral_prefix ^ "mono_" ^ (string_of_int (mono_id_number id))
+  zustral_prefix ^ "mono_" ^ (string_of_int (mono_id_number id))
 
 let gen_mono_id (id: mono_id): CIdent.t =
   CIdent.generated (mono_id_text id)
 
 let gen_ins_meth_id (id: ins_meth_id): CIdent.t =
-  CIdent.generated (austral_prefix ^ "meth_" ^ (string_of_int (ins_meth_id_number id)))
+  CIdent.generated (zustral_prefix ^ "meth_" ^ (string_of_int (ins_meth_id_number id)))
 
 (* The members of the struct that represents a union: see the notes above. *)
 let tag_slot: CIdent.t = CIdent.generated "tag"
@@ -178,7 +178,7 @@ let rec gen_type (ty: mono_ty): c_ty =
      fn_type
 
 (* The C type of a type that crosses the C boundary. For every type a rule of
-   ForeignType accepts, this is the C type of the Austral type, except a span,
+   ForeignType accepts, this is the C type of the Zustral type, except a span,
    which C receives as a pointer to its elements. *)
 let rec gen_foreign_type (ty: mono_ty foreign_ty): c_ty =
   match ty with
@@ -555,7 +555,7 @@ let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_de
      (* The parameters of the `extern` declaration are not escaped, and the
         name is escaped where it is called and not where it is declared
         (issue #92). *)
-     let ff_params = List.map (fun (n, t) -> CValueParam (CIdent.austral_unescaped (ident_text n), gen_foreign_type t)) signature.params
+     let ff_params = List.map (fun (n, t) -> CValueParam (CIdent.zustral_unescaped (ident_text n), gen_foreign_type t)) signature.params
      and ff_rt = gen_foreign_type signature.rt in
      let ff_local_decl = CLocalFunctionDeclaration (CIdent.external_name underlying, ff_params, ff_rt, LinkageExternal) in
      let make_param ((n, t): identifier * mono_ty foreign_ty) =

@@ -3,7 +3,7 @@
 
 (* The two other ways the standard library raises. *)
 let helper_notrace (n: int): int =
-  if n < 0 then raise_notrace (Austral_error (negative n)) else n
+  if n < 0 then raise_notrace (Zustral_error (negative n)) else n
 
 let helper_backtrace (error: exn) (trace: Printexc.raw_backtrace): int =
   Printexc.raise_with_backtrace error trace

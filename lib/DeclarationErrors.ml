@@ -1,5 +1,5 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -317,7 +317,7 @@ let render (error: t): err_text =
   | ImportMemoryInSafeModule ->
      [
        Text "Cannot import from the ";
-       Code "Austral.Memory";
+       Code "Zustral.Memory";
        Text " module in a safe module.";
        Break;
        Text "Consider using a safe wrapper or adding ";

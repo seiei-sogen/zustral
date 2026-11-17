@@ -19,7 +19,7 @@ SRC := \
 
 .DEFAULT: all
 all: 
-	../../austral compile $(STDLIB) $(SRC) --entrypoint=$(ENTRY) --output=main
+	../../zustral compile $(STDLIB) $(SRC) --entrypoint=$(ENTRY) --output=main
 
 .PHONY: clean
 clean:

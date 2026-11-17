@@ -103,7 +103,7 @@ def example_commands() -> list[tuple[str, list[str]]]:
     for example in sorted(p for p in EXAMPLES.iterdir() if (p / "Makefile").exists()):
         # `make -n` prints the compile command with the Makefile's variables expanded.
         printed = subprocess.run(["make", "-n", "-C", str(example)], capture_output=True, text=True).stdout
-        line = next((l for l in printed.splitlines() if "austral compile" in l), None)
+        line = next((l for l in printed.splitlines() if "zustral compile" in l), None)
         if line is None:
             sys.exit(f"no compile command in {example}/Makefile")
         words = []
@@ -139,7 +139,7 @@ def run_one(compiler: str, outdir: pathlib.Path, name: str, words: list[str], in
         done = subprocess.run(command, cwd=cwd, capture_output=True, timeout=600)
         generated = pathlib.Path(c_path).read_bytes() if os.path.exists(c_path) else b""
         # The compiler names its temporary C file at random.
-        scrub = lambda data: re.sub(rb"[^\s'\"`]*/austral_[0-9a-f]+\.c", b"$TMP.c", data.replace(cwd.encode(), b"$CWD").replace(str(ROOT).encode(), b"$ROOT"))
+        scrub = lambda data: re.sub(rb"[^\s'\"`]*/zustral_[0-9a-f]+\.c", b"$TMP.c", data.replace(cwd.encode(), b"$CWD").replace(str(ROOT).encode(), b"$ROOT"))
         error_page = pathlib.Path(cwd, "error.html")
         left_behind = sorted(f.name for f in pathlib.Path(cwd).iterdir() if f.name != "out.c" and f.name not in copied)
         (target / "exit").write_text(f"{done.returncode}\n")

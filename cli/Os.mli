@@ -1,12 +1,12 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 (** Everything the compiler asks of the operating system: reading and writing
     files, and running the C compiler. *)
-open Austral_core
+open Zustral_core
 open Error
 
 (** Read the file at the given path into a string. *)
@@ -33,4 +33,4 @@ val compile_c_code : string -> string -> command_output
 
 (** Write the HTML page for the error to error.html in the working
     directory. *)
-val html_error_dump : austral_error -> unit
+val html_error_dump : zustral_error -> unit

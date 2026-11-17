@@ -35,19 +35,19 @@
 git archive HEAD | tar -x -C $S/exp
 nix develop path:$S/exp --command bash -c 'ocaml -version; dune --version'
 nix develop path:$S/exp --command bash -c \
-  'make clean >/dev/null; export DUNE_CACHE=disabled; time make >/dev/null 2>&1; ./austral --version'
+  'make clean >/dev/null; export DUNE_CACHE=disabled; time make >/dev/null 2>&1; ./zustral --version'
 ----
 
-結果: OCaml 4.14.1、dune 3.8.1。クリーンビルドは `real 0m2.360s`（user 7.349s）で、`austral 0.2.0` ができた。
+結果: OCaml 4.14.1、dune 3.8.1。クリーンビルドは `real 0m2.360s`（user 7.349s）で、`zustral 0.2.0` ができた。
 dev shell の初回取得はこの測定より前に済んでおり、その時間は測っていない。
 作業ツリーの flake でも `nix develop <worktree> --command bash -c 'ocaml -version'` が 0.32 秒で通り、`git status` は変わらなかった。
 
 次の Zustral プログラムを `--target-type=c` で C にし、mpdecimal と手でリンクした。
 
-[source,austral]
+[source,zustral]
 ----
 pragma Unsafe_Module;
-import Austral.Memory (Address);
+import Zustral.Memory (Address);
 module body Test is
     pragma Foreign_Import(External_Name => "mpd_version");
     function Mpd_Version(): Address[Nat8] is
@@ -64,14 +64,14 @@ end module body.
 
 [source,sh]
 ----
-austral compile Test.zum --entrypoint=Test:main --target-type=c --output=gen.c
+zustral compile Test.zum --entrypoint=Test:main --target-type=c --output=gen.c
 nix shell $NIXPKGS#gcc --command bash -c \
   "gcc -fwrapv -Wno-builtin-declaration-mismatch gen.c -L$OUT/lib -Wl,-rpath,$OUT/lib -lmpdec -lm -o t && ./t"
 ----
 
 結果: `4.0.1` を出力し、終了状態 0。
 リンクしたのは固定した nixpkgs の gcc 16.2.0 で、設計がプローブに使うものと同じである。
-`austral compile` は dev shell の外で実行しており、ビルドした `austral` は dev shell なしで動く。
+`zustral compile` は dev shell の外で実行しており、ビルドした `zustral` は dev shell なしで動く。
 生成 C は、外部関数をラッパー関数の中の局所的な `extern au_nat8_t* mpd_version();` として宣言していた。
 
 === 実験2: mpdecimal のヘッダと生成 C の衝突
@@ -206,7 +206,7 @@ REQ-003 の例の「34桁」は、事前調査で gcc 13.3.0 の `__DEC128_MANT_
 |===
 
 ビルドの中間物、ダウンロードしたソース、実行時の出力は `mktemp -d` で作る一時ディレクトリに置き、終了時に消す。
-例外は Zustral コンパイラで、リポジトリの `make` がリポジトリ直下に `austral`、`_build/`、`lib/BuiltInModules.ml` を作る。
+例外は Zustral コンパイラで、リポジトリの `make` がリポジトリ直下に `zustral`、`_build/`、`lib/BuiltInModules.ml` を作る。
 3つとも `.gitignore` 済みで、作業ツリーの `git status` は変わらない。
 
 == データの形
@@ -294,7 +294,7 @@ REQ-003 の例の「34桁」は、事前調査で gcc 13.3.0 の `__DEC128_MANT_
 |`ffi-unit-return`
 |Zustral FFI の制約
 |`zustral`
-|`austral compile probes/ffi/UnitReturn.zum ...` の出力そのもの
+|`zustral compile probes/ffi/UnitReturn.zum ...` の出力そのもの
 |`expected/ffi-unit-return.txt`
 |===
 
@@ -319,7 +319,7 @@ Zustral の生成コードが常に `-fwrapv` 付きでビルドされるため�
 レポートは `〔probe: mpd / div_1_3〕` の形で、記録ファイルと行のキーを根拠として引く（REQ-003、REQ-005）。
 ランナーは、プローブを `2>&1` で標準出力と標準エラーを1つの流れにして実行し、その後ろに `exit=<終了コード>` の1行を足したものを「実際の出力」とする。
 異常終了も、コンパイラが拒むことを示すプローブ（`ffi-unit-return`）も、同じ照合で扱える。
-`ffi-unit-return` にはビルドの段がなく、`austral compile` そのものを「実行」として2回行う。
+`ffi-unit-return` にはビルドの段がなく、`zustral compile` そのものを「実行」として2回行う。
 
 1プローブの結果は次の3つのどれかである。
 
@@ -475,7 +475,7 @@ REQ-002 の観点のうち、このマシンで観測できるものをプロー
 <<experiments>> の実験2で、mpdecimal のヘッダを生成 C と同じ翻訳単位に入れると型が衝突すると確かめた。
 そこで、ライブラリのヘッダは生成 C に入れず、別の翻訳単位のシムだけが読む。
 
-. `Probe.zum` を一時ディレクトリ `$T` へ複写し、そこで `austral compile Probe.zum --entrypoint=Probe:main --target-type=c --output=ffi.c` を実行して C を出す。
+. `Probe.zum` を一時ディレクトリ `$T` へ複写し、そこで `zustral compile Probe.zum --entrypoint=Probe:main --target-type=c --output=ffi.c` を実行して C を出す。
 . `gcc -fwrapv -Wno-builtin-declaration-mismatch $T/ffi.c probes/ffi/shim.c -I<mpdecimal.dev>/include -L<mpdecimal.out>/lib -Wl,-rpath,<mpdecimal.out>/lib -lmpdec -lm` でリンクする。`-fwrapv -Wno-builtin-declaration-mismatch` と `-lm` は `test-programs/runner.py:400-408` の前例に合わせ、mpdecimal の `-I`、`-L`、`-rpath` を足す。
 . できた実行ファイルを2回実行し、`expected/ffi.txt` と照合する。
 
@@ -555,7 +555,7 @@ Intel DFP は `BID_UINT128` を値で渡すか、`CALL_BY_REF=1` のビルドで
 |コンパイラをビルドできれば Zustral プログラムで確かめる
 |`run.sh` の出力に `一致 ffi` と、その下に Zustral プログラムの実際の出力が表示される。
 |コンパイラをビルドできなければ理由を残して C だけで確かめる
-|`ZUSTRAL_BUILD_TIMEOUT=0.01` で実行すると `ffi` が未実行と理由付きで表示される。`timeout` は `nix develop` の起動ごと包み、その起動だけで約0.3秒かかる（実験1）ので、`austral` がビルド済みでも上限を超える。`0` は GNU timeout では無制限を意味するので使わない。レポートには、その場合に C だけの根拠に切り替える旨と、このマシンではビルドできた事実を書く。
+|`ZUSTRAL_BUILD_TIMEOUT=0.01` で実行すると `ffi` が未実行と理由付きで表示される。`timeout` は `nix develop` の起動ごと包み、その起動だけで約0.3秒かかる（実験1）ので、`zustral` がビルド済みでも上限を超える。`0` は GNU timeout では無制限を意味するので使わない。レポートには、その場合に C だけの根拠に切り替える旨と、このマシンではビルドできた事実を書く。
 |結果が一致しない組み合わせは隠さず示される
 |変種だけの記録を作る前の再実行では、`不一致` の行が変種の id（`<系統>@<コンパイラ>-<最適化>`）と、記録と実際の出力の差分を示す。記録を作った後は、その変種が `一致*` と表示され、レポートが系統の記録と変種の記録の両方の出力を載せる。
 |clang でコンパイルできない系統は clang 比較を未実行と示す

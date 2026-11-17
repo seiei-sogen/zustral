@@ -19,7 +19,7 @@ The `suites` directory has numbered subdirectories, each representing a test sui
 
 Each test directory contains some Zustral source files (in the simplest cases, `Test.zui` and `Test.zum`) and some control files:
 
-1. `austral-stderr.txt` is the compiler's error message if the test is expected to fail.
+1. `zustral-stderr.txt` is the compiler's error message if the test is expected to fail.
 
 2. `program-stdout.txt` is the compiled program's stdout if the compiler is expected to succeed and the program is expected to produce stdout and return normally.
 

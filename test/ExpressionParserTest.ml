@@ -1,14 +1,14 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 open OUnit2
-(*open Austral_core.Common*)
-open Austral_core.Cst
-open Austral_core.NumberLiteral
-open Austral_core.ParserInterface
+(*open Zustral_core.Common*)
+open Zustral_core.Cst
+open Zustral_core.NumberLiteral
+open Zustral_core.ParserInterface
 open TestUtil
 
 let p = parse_expr

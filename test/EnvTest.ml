@@ -1,23 +1,23 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 open OUnit2
-open Austral_core.Identifier
-open Austral_core.Common
-open Austral_core.EnvTypes
-open Austral_core.Error
-module Env = Austral_core.Env
-module Id = Austral_core.Id
-module InstanceIdSet = Austral_core.InstanceIdSet.InstanceIdSet
+open Zustral_core.Identifier
+open Zustral_core.Common
+open Zustral_core.EnvTypes
+open Zustral_core.Error
+module Env = Zustral_core.Env
+module Id = Zustral_core.Id
+module InstanceIdSet = Zustral_core.InstanceIdSet.InstanceIdSet
 
 (* The message of the internal error the function raises, if it raises one. *)
 let internal_error_of (f: unit -> 'a): string option =
   match f () with
   | _ -> None
-  | exception Austral_error (AustralError { error = Internal message; _ }) -> Some message
+  | exception Zustral_error (ZustralError { error = Internal message; _ }) -> Some message
 
 let register_function (env: Env.env) (mod_id: Id.mod_id) (name: string): Env.env * Id.function_id =
   Env.register NoSpan env (NewFunction {
@@ -25,9 +25,9 @@ let register_function (env: Env.env) (mod_id: Id.mod_id) (name: string): Env.env
       vis = VisPublic;
       name = make_ident name;
       docstring = Docstring "";
-      typarams = Austral_core.TypeParameters.empty_typarams;
+      typarams = Zustral_core.TypeParameters.empty_typarams;
       value_params = [];
-      rt = Austral_core.Type.Unit;
+      rt = Zustral_core.Type.Unit;
       impl = BodyNotAttached
     })
 
@@ -71,8 +71,8 @@ let test_id_from_another_lineage _ =
    monomorphized the entrypoint, and the stage that asks for the monomorph of
    its return type registers it, and returns its declaration to be generated. *)
 let test_monomorph_key_not_registered _ =
-  let pervasive = Austral_core.BuiltIn.pervasive_module_name
-  and exit_code = make_ident Austral_core.BuiltInNames.exit_code_name
+  let pervasive = Zustral_core.BuiltIn.pervasive_module_name
+  and exit_code = make_ident Zustral_core.BuiltInNames.exit_code_name
   and main = make_ident "main" in
   let (env, mod_id) =
     Env.add_module Env.empty_env {
@@ -88,8 +88,8 @@ let test_monomorph_key_not_registered _ =
         vis = TypeVisPublic;
         name = exit_code;
         docstring = Docstring "";
-        typarams = Austral_core.TypeParameters.empty_typarams;
-        universe = Austral_core.Type.FreeUniverse
+        typarams = Zustral_core.TypeParameters.empty_typarams;
+        universe = Zustral_core.Type.FreeUniverse
       })
   in
   let (env, _) =
@@ -98,14 +98,14 @@ let test_monomorph_key_not_registered _ =
         vis = VisPublic;
         name = main;
         docstring = Docstring "";
-        typarams = Austral_core.TypeParameters.empty_typarams;
+        typarams = Zustral_core.TypeParameters.empty_typarams;
         value_params = [];
-        rt = Austral_core.Type.NamedType (make_qident (pervasive, exit_code, exit_code), Id.UnionTypeId exit_code_id, [], Austral_core.Type.FreeUniverse);
+        rt = Zustral_core.Type.NamedType (make_qident (pervasive, exit_code, exit_code), Id.UnionTypeId exit_code_id, [], Zustral_core.Type.FreeUniverse);
         impl = BodyNotAttached
       })
   in
   let entrypoint_code (env: Env.env) =
-    match Austral_core.Entrypoint.entrypoint_code env (make_qident (pervasive, main, main)) with
+    match Zustral_core.Entrypoint.entrypoint_code env (make_qident (pervasive, main, main)) with
     | Ok (env, decls, _) -> (env, decls)
     | Error _ -> assert_failure "the entrypoint is valid"
   in

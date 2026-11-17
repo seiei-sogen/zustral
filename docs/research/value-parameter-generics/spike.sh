@@ -49,7 +49,7 @@ sites() { # name types-regex
     /^Warning 8 / { kind = "partial"; ex = ""; grab = 1; next }
     /^Warning 4 / { kind = "fragile"; next }
     kind == "fragile" && /constructors are added to type/ {
-      t = $0; sub(/.*to type /, "", t); sub(/\.$/, "", t); sub(/^Austral_core__/, "", t)
+      t = $0; sub(/.*to type /, "", t); sub(/\.$/, "", t); sub(/^Zustral_core__/, "", t)
       if (t !~ /\./) { m = file; sub(/.*\//, "", m); sub(/\.ml$/, "", m); t = m "." t }
       if (t ~ "^(" types ")$") print "fragile\t" file "\t" line "\t" t
       kind = ""; next
@@ -96,9 +96,9 @@ mono_c() {
   mkdir -p "$w"
   git -C "$ROOT" archive "$BASE" | tar -x -C "$w"
   (cd "$w" && timeout "$BUILD_TIMEOUT" nix develop "$ROOT" "${NIX_FLAGS[@]}" --command \
-    bash -c 'python3 concat_builtins.py && dune build ./bin/austral.exe 2>&1') > "$T/head.log" \
+    bash -c 'python3 concat_builtins.py && dune build ./bin/zustral.exe 2>&1') > "$T/head.log" \
     || { echo "build head failed, log: $(tail -n 3 "$T/head.log")" >&2; return 1; }
-  "$w/_build/default/bin/austral.exe" compile "$HERE/probes/Mono.zum" \
+  "$w/_build/default/bin/zustral.exe" compile "$HERE/probes/Mono.zum" \
     --entrypoint=Mono:main --target-type=c --output="$T/mono.c" || return 1
   cc -w -o "$T/mono" "$T/mono.c" || return 1
   "$T/mono"; echo "exit $?"

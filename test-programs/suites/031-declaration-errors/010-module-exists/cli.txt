@@ -1,1 +1,1 @@
-./austral compile $DIR/Test.zum $DIR/Again.zum --entrypoint=Test:main --target-type=c --output=$C_PATH --error-format=json
+./zustral compile $DIR/Test.zum $DIR/Again.zum --entrypoint=Test:main --target-type=c --output=$C_PATH --error-format=json

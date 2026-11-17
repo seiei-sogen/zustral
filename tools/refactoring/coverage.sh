@@ -73,11 +73,11 @@ in_shell() {
   if [[ -n ${IN_NIX_SHELL:-} ]]; then bash -c "$1"; else nix develop "$ROOT" "${NIX_FLAGS[@]}" --command bash -c "$1"; fi
 }
 
-in_shell 'python3 concat_builtins.py && dune build --root . --build-dir _build_coverage --instrument-with bisect_ppx ./bin/austral.exe 2>&1' > "$T/build.log" 2>&1 \
+in_shell 'python3 concat_builtins.py && dune build --root . --build-dir _build_coverage --instrument-with bisect_ppx ./bin/zustral.exe 2>&1' > "$T/build.log" 2>&1 \
   || { echo "instrumented build failed: $(tail -n 8 "$T/build.log")" >&2; exit 2; }
 
 if [[ $ONLY != unit ]]; then
-  ZUSTRAL_EQUIVALENCE_ONLY="$ONLY" BISECT_FILE="$T/cov/bisect" python3 "$HERE/equivalence.py" snapshot "$ROOT/_build_coverage/default/bin/austral.exe" "$T/snapshot" > "$T/snapshot.log" 2>&1 \
+  ZUSTRAL_EQUIVALENCE_ONLY="$ONLY" BISECT_FILE="$T/cov/bisect" python3 "$HERE/equivalence.py" snapshot "$ROOT/_build_coverage/default/bin/zustral.exe" "$T/snapshot" > "$T/snapshot.log" 2>&1 \
     || { echo "corpus run failed: $(tail -n 5 "$T/snapshot.log")" >&2; exit 2; }
 fi
 

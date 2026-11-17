@@ -1,5 +1,5 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -7,14 +7,14 @@
 
 (** What a stage of the compiler returns: its result, or the errors that
     stopped it. Inside a stage an error travels as the exception
-    [Austral_error]; the functions the driver calls turn it into a value with
+    [Zustral_error]; the functions the driver calls turn it into a value with
     {!catch}, so that no exception leaves a stage
     ([tools/refactoring/escape-check.py] checks this). *)
 open Error
 
 (** The errors of a stage that failed: the first, and the ones after it. There
     is at least one, so nobody has to say what a failure without an error is. *)
-type errors = austral_error * austral_error list
+type errors = zustral_error * zustral_error list
 
 type 'a t = ('a, errors) result
 
@@ -28,7 +28,7 @@ val catch : (unit -> 'a) -> 'a t
 
     The operator is [Result.bind] at its own type, not at {!t}: the matching
     of types returns one error with no place in the source, not a list of
-    {!Error.austral_error}, and chains its steps with the same operator. *)
+    {!Error.zustral_error}, and chains its steps with the same operator. *)
 module Syntax : sig
   val ( let* ) : ('a, 'e) result -> ('a -> ('b, 'e) result) -> ('b, 'e) result
 end
@@ -37,7 +37,7 @@ end
 val map : ('a -> 'b) -> 'a t -> 'b t
 
 (** Apply a function to every error of a failure. *)
-val map_errors : (austral_error -> austral_error) -> 'a t -> 'a t
+val map_errors : (zustral_error -> zustral_error) -> 'a t -> 'a t
 
 (** Apply a function to the elements of a list, in order, and return the
     results. This is how the declarations of a module are gone through. It

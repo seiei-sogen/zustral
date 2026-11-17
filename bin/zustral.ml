@@ -1,9 +1,9 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
-open Austral_cli.Cli
+open Zustral_cli.Cli
 
 let _ = main (Array.to_list Sys.argv)

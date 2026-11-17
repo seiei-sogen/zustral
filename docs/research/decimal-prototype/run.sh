@@ -24,7 +24,7 @@ grep -E '^(match|mutants|oracle)' "$T/runtime.log"
 # `dune build --root .` keeps dune from adopting an enclosing checkout as its root.
 build() { # tree
   (cd "$1" && timeout "$BUILD_TIMEOUT" nix develop "$ROOT" "${NIX_FLAGS[@]}" --command \
-    bash -c 'python3 concat_builtins.py && dune build --root . 2>&1 && cp -f _build/default/bin/austral.exe austral') > "$1/build.log" 2>&1
+    bash -c 'python3 concat_builtins.py && dune build --root . 2>&1 && cp -f _build/default/bin/zustral.exe zustral') > "$1/build.log" 2>&1
 }
 
 tree="$T/compiler"
@@ -33,7 +33,7 @@ git -C "$ROOT" archive "$BASE" | tar -x -C "$tree"
 
 echo "== compiler: tests against the unpatched compiler (they must fail)"
 if build "$tree"; then
-  "$HERE/compiler/run-tests.sh" "$tree/austral" | tail -n 1
+  "$HERE/compiler/run-tests.sh" "$tree/zustral" | tail -n 1
 else
   echo "build failed: $(tail -n 3 "$tree/build.log")"; failed=1
 fi
@@ -42,7 +42,7 @@ echo "== compiler: slice applied to a clean export of the base commit"
 (cd "$tree" && patch -s -p1 --no-backup-if-mismatch < "$HERE/compiler/compiler-slice.patch") || failed=1
 python3 "$HERE/compiler/embed-runtime.py" "$tree" "$HERE/runtime" || failed=1
 if build "$tree"; then
-  "$HERE/compiler/run-tests.sh" "$tree/austral" > "$T/slice.log"
+  "$HERE/compiler/run-tests.sh" "$tree/zustral" > "$T/slice.log"
   [[ $? -eq 0 ]] || failed=1
   grep '^FAIL' "$T/slice.log"
   tail -n 1 "$T/slice.log"
@@ -53,7 +53,7 @@ fi
 echo "== compiler: slice plus the expected-type experiment (two tests that assert the error must flip)"
 (cd "$tree" && patch -s -p1 --no-backup-if-mismatch < "$HERE/compiler/experiments/expected-type-flow.patch") || failed=1
 if build "$tree"; then
-  "$HERE/compiler/run-tests.sh" "$tree/austral" > "$T/experiment.log"
+  "$HERE/compiler/run-tests.sh" "$tree/zustral" > "$T/experiment.log"
   flipped=$(grep '^FAIL' "$T/experiment.log" | sed -E 's/^FAIL  ([^:]+):.*/\1/' | sort | tr '\n' ' ')
   tail -n 1 "$T/experiment.log"
   echo "flipped: $flipped"

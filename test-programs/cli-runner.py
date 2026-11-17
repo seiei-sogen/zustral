@@ -35,7 +35,7 @@ def arguments(test: pathlib.Path) -> list[str]:
 def scrub(text: str, cwd: str) -> str:
     text = text.replace(cwd, "$CWD")
     # The compiler names its temporary C file at random.
-    text = re.sub(r"[^\s'\"`]*/austral_[0-9a-f]+\.c", "$TMP.c", text)
+    text = re.sub(r"[^\s'\"`]*/zustral_[0-9a-f]+\.c", "$TMP.c", text)
     # What the C compiler prints depends on the C compiler.
     return re.sub(r"(Standard error:\n).*", r"\1$CC_STDERR\n", text, flags=re.S)
 
@@ -57,7 +57,7 @@ def run(compiler: str, test: pathlib.Path) -> str:
 
 def main() -> int:
     args = sys.argv[1:]
-    compiler = str((HERE.parent / "austral").resolve())
+    compiler = str((HERE.parent / "zustral").resolve())
     if "--compiler" in args:
         i = args.index("--compiler")
         compiler = str(pathlib.Path(args[i + 1]).resolve())

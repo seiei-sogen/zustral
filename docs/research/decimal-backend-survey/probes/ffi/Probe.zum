@@ -1,6 +1,6 @@
 pragma Unsafe_Module;
 
-import Austral.Memory (Address, Pointer, allocateBuffer, nullCheck);
+import Zustral.Memory (Address, Pointer, allocateBuffer, nullCheck);
 
 module body Probe is
     pragma Foreign_Import(External_Name => "puts");

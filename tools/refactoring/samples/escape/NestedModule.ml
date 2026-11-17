@@ -7,10 +7,10 @@
 module Limits = struct
   let helper_in_module (n: int): int =
     let limit = 0 in
-    if n < limit then raise (Austral_error (negative n)) else n
+    if n < limit then raise (Zustral_error (negative n)) else n
 
   let same_name (n: int): int =
-    raise (Austral_error (negative n))
+    raise (Zustral_error (negative n))
 end
 
 (* A second definition of a name must not hide the first. *)
@@ -39,11 +39,11 @@ let guarded_in_module (n: int): int Outcome.t =
    not take the text that follows them. *)
 let stage_packed (n: int): int Outcome.t =
   register (module struct let accepts (m: int): bool = m >= 0 end : Acceptor);
-  if n < 0 then raise (Austral_error (negative n)) else Ok n
+  if n < 0 then raise (Zustral_error (negative n)) else Ok n
 
 let stage_local_module (n: int): int Outcome.t =
   let module Local = struct
     let first (m: int): int = m
     let second (m: int): int = m + 1
   end in
-  if n < 0 then raise (Austral_error (negative n)) else Ok (Local.second n)
+  if n < 0 then raise (Zustral_error (negative n)) else Ok (Local.second n)

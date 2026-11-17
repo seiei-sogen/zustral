@@ -1,4 +1,4 @@
-import Austral.Pervasive (abort as die);
+import Zustral.Pervasive (abort as die);
 
 module body Test is
     function quiet(x: Int32): Unit is

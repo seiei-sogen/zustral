@@ -1,5 +1,5 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
@@ -58,12 +58,12 @@ val memory_module : string
 val wrappers_module : string
 val wrappers_unit_name : string
 
-(* Austral.Memory *)
+(* Zustral.Memory *)
 
 val address_name : string
 val pointer_name : string
 
-(* Austral.Pervasive *)
+(* Zustral.Pervasive *)
 
 val abort_name : string
 val root_capability_name : string
@@ -74,7 +74,7 @@ val exit_failure_name : string
 (** The method an arithmetic operator is a call to. *)
 val arithmetic_method_name : arithmetic_operator -> string
 
-(** The names every module imports from [Austral.Pervasive], in the order
+(** The names every module imports from [Zustral.Pervasive], in the order
     they are imported. *)
 val pervasive_import_names : string list
 

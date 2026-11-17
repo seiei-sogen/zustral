@@ -3,22 +3,22 @@
   "kind": "Generic Error",
   "text": [
     { "type": "text", "content": "The type " },
-    { "type": "code", "content": "Pointer" },
+    { "type": "code", "content": "Address" },
     { "type": "text", "content": " expects " },
     { "type": "code", "content": "1" },
     { "type": "text", "content": " type arguments" },
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/069-pointer-wrong-number-of-type-arguments/Test.zum",
+    "filename": "test-programs/suites/030-type-errors/068-address-wrong-number-of-type-arguments/Test.zum",
     "startp": { "line": 5, "column": 19 },
     "end": { "line": 8, "column": 8 }
   },
   "context": [
-    [ 3, "import Austral.Memory (Pointer);" ],
+    [ 3, "import Zustral.Memory (Address);" ],
     [ 4, "" ],
     [ 5, "module body Test is" ],
-    [ 6, "    function f(a: Pointer[Int32, Int32]): Unit is" ],
+    [ 6, "    function f(a: Address[Int32, Int32]): Unit is" ],
     [ 7, "        return nil;" ],
     [ 8, "    end;" ],
     [ 9, "" ],

@@ -31,9 +31,9 @@ Two lookups return a value or raise: `module_name_from_id` (Env.ml:84) and `visi
 | lib/CodeGen.ml:468 | `get_monomorph` | id | `mono_id` | internal_err | :472 (`get_mono_or_die`) |
 | lib/CodeGen.ml:475 | `get_decl_by_id` | id | `decl_id` stored in a monomorph | internal_err | :483; a decl with no name (an instance) is a second `internal_err` at :481 |
 | lib/Entrypoint.ml:79 | `get_decl_by_name` | user-written name | entrypoint name from the command line | named user error | `Errors.no_such_function`; wrong kind is `Errors.not_function` (:107) |
-| lib/Entrypoint.ml:162 | `get_decl_by_name` | name, not directly user-written | compiler-fixed name `Austral.Pervasive.RootCapability` | internal_err | `\| _ ->` at :169 also covers a decl that is not `Record` |
+| lib/Entrypoint.ml:162 | `get_decl_by_name` | name, not directly user-written | compiler-fixed name `Zustral.Pervasive.RootCapability` | internal_err | `\| _ ->` at :169 also covers a decl that is not `Record` |
 | lib/Entrypoint.ml:164 | `get_type_monomorph` | id | `decl_id` of the record + empty bindings | internal_err | :168 |
-| lib/Entrypoint.ml:176 | `get_decl_by_name` | name, not directly user-written | compiler-fixed name `Austral.Pervasive.ExitCode` | internal_err | `\| _ ->` at :183 also covers a decl that is not `Union` |
+| lib/Entrypoint.ml:176 | `get_decl_by_name` | name, not directly user-written | compiler-fixed name `Zustral.Pervasive.ExitCode` | internal_err | `\| _ ->` at :183 also covers a decl that is not `Union` |
 | lib/Entrypoint.ml:178 | `get_type_monomorph` | id | `decl_id` of the union + empty bindings | internal_err | :182 |
 | lib/EnvExtras.ml:15 | `get_module_by_id` | id | `mod_id` (wrapper `get_module_or_die`, used only inside EnvExtras) | internal_err | :17 |
 | lib/EnvExtras.ml:24 | `get_decl_by_name` | name, not directly user-written | wrapper `get_decl_by_name_or_die`; its one caller (TypeClasses.ml:260) passes the name inside a resolved `NamedType` | internal_err | :27 |
@@ -247,9 +247,9 @@ Notes on how the categories were applied:
 | lib/CombiningPass.ml:404 | `parse_decl` | Couldn't parse declaration declaration | e (concrete tree) | concrete tree: `concrete_decl_name` is `None` only for `ConcreteInstanceDecl`; the second match cannot know that |
 | lib/CombiningPass.ml:429 | `parse_def` | Couldn't parse definition | e (concrete tree) | concrete tree: same for `def_name` and `ConcreteInstanceDef` |
 | lib/Entrypoint.ml:168 | `get_root_capability_monomorph` | No monomorph of RootCapability. | b (id + type arguments) | `get_type_monomorph` by declaration id + empty bindings |
-| lib/Entrypoint.ml:170 | `get_root_capability_monomorph` | Can't find the RootCapability type in the environment. | g (fixed name) | lookup by the fixed name `Austral.Pervasive.RootCapability`; the arm covers no decl and not-a-`Record` |
+| lib/Entrypoint.ml:170 | `get_root_capability_monomorph` | Can't find the RootCapability type in the environment. | g (fixed name) | lookup by the fixed name `Zustral.Pervasive.RootCapability`; the arm covers no decl and not-a-`Record` |
 | lib/Entrypoint.ml:182 | `get_exit_code_monomorph` | No monomorph of ExitCode. | b (id + type arguments) | `get_type_monomorph` |
-| lib/Entrypoint.ml:184 | `get_exit_code_monomorph` | Can't find the ExitCode type in the environment. | g (fixed name) | lookup by the fixed name `Austral.Pervasive.ExitCode`; the arm covers no decl and not-a-`Union` |
+| lib/Entrypoint.ml:184 | `get_exit_code_monomorph` | Can't find the ExitCode type in the environment. | g (fixed name) | lookup by the fixed name `Zustral.Pervasive.ExitCode`; the arm covers no decl and not-a-`Union` |
 | lib/Env.ml:89 | `module_name_from_id` | No module with this ID | b |  |
 | lib/Env.ml:358 | `visible_instances` | No module with ID. | b |  |
 | lib/Env.ml:368 | `store_function_body` | No function with this ID: <id> | b |  |

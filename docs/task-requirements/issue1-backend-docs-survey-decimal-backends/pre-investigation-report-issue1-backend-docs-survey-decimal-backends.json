@@ -183,13 +183,13 @@
     {
       "path": "Makefile",
       "relevance": "low",
-      "role": "コンパイラのビルド手順（BuiltInModules 生成、dune build、austral バイナリの複写）。",
+      "role": "コンパイラのビルド手順（BuiltInModules 生成、dune build、zustral バイナリの複写）。",
       "key_symbols": [
         {
           "name": "all",
           "kind": "config",
           "location": "Makefile:7-12",
-          "note": "make でコンパイラ austral を作る。"
+          "note": "make でコンパイラ zustral を作る。"
         }
       ]
     }
@@ -209,7 +209,7 @@
     {
       "component": "FFI ラッパー生成",
       "path": "lib/CodeGen.ml",
-      "responsibility": "Foreign_Import 関数ごとに、Austral 由来の型で extern 宣言を書いた内部 C 関数を生成し、渡せない型を codegen 時のエラーで拒む。",
+      "responsibility": "Foreign_Import 関数ごとに、Zustral 由来の型で extern 宣言を書いた内部 C 関数を生成し、渡せない型を codegen 時のエラーで拒む。",
       "collaborators": [
         "lib/TypingPass.ml",
         "lib/Error.ml"
@@ -232,7 +232,7 @@
     "key_concepts": [
       {
         "name": "Foreign_Import",
-        "meaning": "C 関数を Austral の関数として宣言する pragma。型パラメータを持てず、Unsafe_Module 内に限られる。",
+        "meaning": "C 関数を Zustral の関数として宣言する pragma。型パラメータを持てず、Unsafe_Module 内に限られる。",
         "evidence": "lib/TypingPass.ml:619-627"
       },
       {
@@ -248,7 +248,7 @@
     ],
     "flows": [
       {
-        "trigger": "austral compile <module> --entrypoint=M:main --target-type=c --output=x.c",
+        "trigger": "zustral compile <module> --entrypoint=M:main --target-type=c --output=x.c",
         "steps": [
           {
             "location": "lib/TypingPass.ml:619-627",

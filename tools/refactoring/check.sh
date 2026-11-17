@@ -79,17 +79,17 @@ in_base_shell() { # directory command
 
 # Two commits with the same compiler sources and the same packages share one
 # cached binary. The command-line library (cli/) exists from R9 on.
-compiler_sources=(lib bin dune-project concat_builtins.py austral.opam flake.nix flake.lock shell.nix)
+compiler_sources=(lib bin dune-project concat_builtins.py zustral.opam flake.nix flake.lock shell.nix)
 git cat-file -e "$BASE_REF:cli" 2> /dev/null && compiler_sources+=(cli)
 key=$(for s in "${compiler_sources[@]}"; do git rev-parse "$BASE_REF:$s"; done | sha1sum | cut -c1-16)
-base="$CACHE/$key/austral"
+base="$CACHE/$key/zustral"
 if [[ ! -x $base ]]; then
   echo "== building the compiler at $BASE_REF"
   mkdir -p "$T/base" "$CACHE/$key"
   git archive "$BASE_REF" "${compiler_sources[@]}" | tar -x -C "$T/base"
-  in_base_shell "$T/base" "cd '$T/base' && python3 concat_builtins.py && dune build --root . ./bin/austral.exe 2>&1" > "$T/base.log" 2>&1 \
+  in_base_shell "$T/base" "cd '$T/base' && python3 concat_builtins.py && dune build --root . ./bin/zustral.exe 2>&1" > "$T/base.log" 2>&1 \
     || { echo "base build failed: $(tail -n 5 "$T/base.log")"; exit 2; }
-  cp "$T/base/_build/default/bin/austral.exe" "$base"
+  cp "$T/base/_build/default/bin/zustral.exe" "$base"
 fi
 
 failed=0
@@ -111,7 +111,7 @@ if ((!QUICK)); then
   step "command-line tests" python3 test-programs/cli-runner.py
 fi
 python3 "$HERE/equivalence.py" snapshot "$base" "$T/a" > /dev/null || { echo "FAIL  base snapshot"; exit 2; }
-python3 "$HERE/equivalence.py" snapshot "$ROOT/austral" "$T/b" > /dev/null || { echo "FAIL  head snapshot"; exit 2; }
+python3 "$HERE/equivalence.py" snapshot "$ROOT/zustral" "$T/b" > /dev/null || { echo "FAIL  head snapshot"; exit 2; }
 step "equivalence with $BASE_REF" python3 "$HERE/equivalence.py" compare "${NORMALIZE[@]}" "$T/a" "$T/b"
 if ((failed)); then python3 "$HERE/equivalence.py" compare "${NORMALIZE[@]}" "$T/a" "$T/b" | head -n 60; fi
 step "metrics" "$HERE/measure.sh"

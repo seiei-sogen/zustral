@@ -1,6 +1,6 @@
 # Contributing
 
-This document describes how and where to contribute to Austral. We welcome
+This document describes how and where to contribute to Zustral. We welcome
 contributions from anyone: you don't have to be a member of the community to
 open an issue or a PR. Thank you for considering a contribution!
 
@@ -108,14 +108,14 @@ Specific contribution areas:
 
 There is a small collection of example programs that demonstrate various
 language features and how to solve common tasks (e.g. Fibonacci, hello
-world). We are always looking for new programs to showcase Austral.
+world). We are always looking for new programs to showcase Zustral.
 
-If you've written an Austral program you think is useful, interesting, or
+If you've written an Zustral program you think is useful, interesting, or
 representative; and want to share it, feel free to open a PR or an
 [issue][issues].
 
 If you have an existing small program you think would be a useful demo, you can
-try porting it to Austral and opening an PR.
+try porting it to Zustral and opening an PR.
 
 We appreciate any and all contributions. The current collection of examples is
 small, but we hope it will grow and help new users understand the language.
@@ -184,7 +184,7 @@ the compiler externally, that is, by running the executable binary. This allows
 us to change the internals freely, since the external interface remains the
 same.
 
-Each test consists of some Austral code, along with the expected output of
+Each test consists of some Zustral code, along with the expected output of
 running that code, if it's a successful test (i.e. meant to compile and run
 successfully), or the expected compiler error message, if it's a test that's
 meant to fail to compile.

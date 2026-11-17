@@ -1,19 +1,19 @@
 (*
-   Part of the Austral project, under the Apache License v2.0 with LLVM Exceptions.
+   Part of the Zustral project, under the Apache License v2.0 with LLVM Exceptions.
    See LICENSE file for details.
 
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 open Error
 
-type errors = austral_error * austral_error list
+type errors = zustral_error * zustral_error list
 
 type 'a t = ('a, errors) result
 
 let catch (f: unit -> 'a): 'a t =
   try
     Ok (f ())
-  with Austral_error error ->
+  with Zustral_error error ->
     Error (error, [])
 
 module Syntax = struct
@@ -23,7 +23,7 @@ open Syntax
 
 let map: ('a -> 'b) -> 'a t -> 'b t = Result.map
 
-let map_errors (f: austral_error -> austral_error) (outcome: 'a t): 'a t =
+let map_errors (f: zustral_error -> zustral_error) (outcome: 'a t): 'a t =
   Result.map_error (fun (first, rest) -> (f first, List.map f rest)) outcome
 
 let rec traverse (f: 'a -> 'b t) (list: 'a list): 'b list t =

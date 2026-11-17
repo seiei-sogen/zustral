@@ -16,7 +16,7 @@ Zustral の組み込みの10進固定小数点型 `Decimal[P, S]` の仕様で�
 `Decimal[P, S]` は、全体で P 桁、小数点より下が S 桁の、符号付きの10進数である。
 P を精度、S をスケールと呼ぶ。
 
-```austral
+```zustral
 let price: Decimal[9, 2] := 1980.00;
 let rate: Decimal[5, 4] := 0.0825;
 ```
@@ -115,7 +115,7 @@ Decimal として読まれる位置では、リテラルだけの式は1つの�
 - 型が届かない位置では、式は自分の型を持つ。スケールは、`+` と `-` では両辺の大きい方、`*` では両辺の和である。括弧と単項の `-` は、中の式のスケールのままである。精度は、計算した値をそのスケールで表せる最小の精度である。`1 + 0.0825` は `Decimal[5, 4]` になる。
 - リテラルだけの式は、全体で1つのリテラルである。4節の「型が中へ進む規則」と、5節の演算子の規則は、式の中には当てはめない。`let d: Decimal[4, 4] := 1 - 0.0825;` は通る。値は 0.9175 で、`Decimal[4, 4]` で表せる。途中の 1 が `Decimal[4, 4]` で表せないことは、問わない。
 
-```austral
+```zustral
 let with_tax: Decimal[11, 2] := round(price * (1 + 0.0825), NearestEven());
 let fee: Decimal[11, 0] := round(amount * (7 / 100), TowardZero());   -- コンパイルエラー
 let fee: Decimal[11, 0] := round(amount * 0.07, TowardZero());        -- こう書く
@@ -239,7 +239,7 @@ let fee: Decimal[11, 0] := round(amount * 0.07, TowardZero());        -- こう�
 - 割る数がリテラルで、値が 0 なら、コンパイルエラーになる。リテラルだけの式でも同じである。
 - **Decimal の演算の引数に、整数の `/` は書けない。** `*` の片方、`divide`、`round`、`exact`、`widen` と、その `checked` の形の引数の式に、整数の `/` があれば、コンパイルエラーになる。括弧、単項の `-`、`+`、`-`、`*`、`if` 式の枝を通して調べる。関数の呼び出しの中までは調べない。
 
-  ```austral
+  ```zustral
   let interest: Decimal[11, 0] := round(balance * (days / 365), TowardZero());   -- コンパイルエラー
   let interest: Decimal[11, 0] := divide(balance * days, 365, TowardZero());      -- こう書く
   ```
@@ -254,7 +254,7 @@ let fee: Decimal[11, 0] := round(amount * 0.07, TowardZero());        -- こう�
 
 ### 5.5 例
 
-```austral
+```zustral
 -- unit_price: Decimal[9, 0]、quantity: Int32、discount: Decimal[11, 0]
 let gross: Decimal[19, 0] := unit_price * quantity;
 let subtotal: Decimal[19, 0] := gross - widen(discount);
@@ -496,10 +496,10 @@ Decimal の正準の表記は1つである。
 
 演算子、比較、リテラル、型名 `Decimal` は、取り込まずに使える。
 
-演算の名前と `RoundingMode` は、組み込みのモジュール `Austral.Decimal` にある。使うモジュールが明示的に取り込む。
+演算の名前と `RoundingMode` は、組み込みのモジュール `Zustral.Decimal` にある。使うモジュールが明示的に取り込む。
 
-```austral
-import Austral.Decimal (RoundingMode, NearestEven, divide, round, widen);
+```zustral
+import Zustral.Decimal (RoundingMode, NearestEven, divide, round, widen);
 ```
 
 このモジュールが持つ名前は、次のとおりである。
@@ -510,12 +510,12 @@ import Austral.Decimal (RoundingMode, NearestEven, divide, round, widen);
 - `parse`
 
 取り込んでいないプログラムの `round` は、ただの利用者の関数である。予約語は増えない。
-名前がぶつかるときは、`import Austral.Decimal (round as roundDecimal);` と、名前を変えて取り込む。
+名前がぶつかるときは、`import Zustral.Decimal (round as roundDecimal);` と、名前を変えて取り込む。
 今のコンパイラは、名前を変えて取り込んだ型と union の case を正しく扱えない（issue #50）。関数では通る。
 
 演算の呼び出しは、位置で渡す引数だけを取る。演算を関数の値として渡すことはできない（issue #67）。
 
-モジュールの名前が `Austral.` で始まるのは、今の組み込みのモジュールに合わせたためである。言語の名前の扱いは、issue #46 で決める。
+モジュールの名前は、ほかの組み込みのモジュールと同じく `Zustral.` で始まる（issue #46）。
 
 （issue #24）
 
@@ -610,32 +610,32 @@ import Austral.Decimal (RoundingMode, NearestEven, divide, round, widen);
 
 **積は、宣言した型で受ける。** 積の型は、掛けた2つの型から決まる。そのまま束縛すると、元の型を変えたときに、積の型も書き直すことになる。`round`、`exact`、`widen`、`divide` に直接渡せば、積の型を書かずに済む。
 
-```austral
+```zustral
 let tax: Decimal[11, 0] := round(subtotal * 0.10, TowardZero());
 ```
 
 **率は、型を付けた定数にする。** リテラルを式に直接書くと、値を変えたときに積の型が変わりうる。定数にすれば変わらない。
 
-```austral
+```zustral
 constant TAX_RATE: Decimal[3, 2] := 0.10;
 ```
 
 **広く計算して、格納するところで検査する。** 途中は正確な積と広い型で持ち、最後に1回だけ丸める。不正なデータで止めたくないバッチでは、最後を `checkedRound` にして、`None` のレコードをよける。
 
-```austral
+```zustral
 let stored: Option[Decimal[11, 0]] := checkedRound(balance * rate, TowardZero());
 ```
 
 **等分は、割ってから残りを寄せる。** 100 円を3人で分けると、33 円、33 円、34 円になる。
 
-```austral
+```zustral
 let share: Decimal[11, 0] := divide(total, 3, TowardZero());
 let last: Decimal[11, 0] := (total - share) - share;
 ```
 
 **日数や数量は、そのまま掛ける。** 割るのは最後に1回である。
 
-```austral
+```zustral
 let interest: Decimal[11, 0] := divide((balance * days) * rate, 365, TowardZero());
 ```
 
@@ -708,7 +708,7 @@ COBOL は、`ON SIZE ERROR` を書かなければ、あふれた上位の桁を�
 | #18 | テストの枠組みの調査 |
 | #19 | 試作による裏取り |
 | #23 | 型が届く位置と、リテラルの扱いの残り |
-| #24 | 名前は `Austral.Decimal` に置き、明示的に取り込む |
+| #24 | 名前は `Zustral.Decimal` に置き、明示的に取り込む |
 
 仕様書を書き切るときに、2つの視点（実装する人、金額の計算を書く人）でレビューし、次のことを決めた。上の決定を変えたものは、元の issue にも書いてある。
 
