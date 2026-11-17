@@ -681,9 +681,12 @@ let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (
      (* The value names only the constants declared before this one (#142),
         which rules out cycles: a constant is a C macro, and C does not expand
         a macro inside itself. *)
-     let not_yet_defined: identifier list =
-       List.of_seq (Seq.drop_while (fun constant -> not (equal_identifier constant name)) (List.to_seq module_constants))
+     let rec this_constant_and_the_later_ones (constants: identifier list): identifier list =
+       match constants with
+       | first :: later when not (equal_identifier first name) -> this_constant_and_the_later_ones later
+       | _ -> constants
      in
+     let not_yet_defined: identifier list = this_constant_and_the_later_ones module_constants in
      let expr' = TypeCheckExpr.check (TypeCheckExpr.make_constant_value_ctx module_name env not_yet_defined) expr ty in
      let _ = validate_constant_expression expr' in
      (TConstant (decl_id, vis, name, ty, expr', doc), supply)
