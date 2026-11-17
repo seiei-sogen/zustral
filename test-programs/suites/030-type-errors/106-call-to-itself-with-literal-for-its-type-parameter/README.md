@@ -1,0 +1,1 @@
+Test that a generic function that calls itself cannot pass a value of its type parameter `T` and an integer literal to two parameters of the type `T`: the call has one type argument, and it cannot be both `T` and `Int32`. Before, the call was accepted and converted the `T` to `Int32`, so that 4294967596 was equal to 300 (issue #156).

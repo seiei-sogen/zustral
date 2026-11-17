@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": " cannot be bound to both " },
+    { "type": "type", "content": "T" },
+    { "type": "text", "content": " and " },
+    { "type": "type", "content": "Int32" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/106-call-to-itself-with-literal-for-its-type-parameter/Test.zum",
+    "startp": { "line": 5, "column": 12 },
+    "end": { "line": 5, "column": 53 }
+  },
+  "context": [
+    [
+      3, "    function equalsThreeHundred(x: T, y: T, first: Bool): Bool is"
+    ],
+    [ 4, "        if first then" ],
+    [ 5, "            return equalsThreeHundred(x, 300, false);" ],
+    [ 6, "        end if;" ],
+    [ 7, "        return x = y;" ]
+  ]
+}
