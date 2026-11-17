@@ -263,6 +263,13 @@ let test_name_declared_twice _ =
   assert_equal (Internal "An entry exists in the state table with this name: x")
     (the_error (check_linearity [ValueParameter (i "x", int32)] (TLet (sp, Immutable, i "x", int32, TSkip sp))))
 
+(* An assignment to a variable that no statement declared: the type checker
+   finds a variable by the name the program wrote, as this pass does. Before
+   issue #163, an assignment to the nickname of an imported name reached this. *)
+let test_name_not_declared _ =
+  assert_equal (Internal "variable `y` not in state table. Table contents: \n\nEntries:\nx\tLinearityCheck.Unconsumed")
+    (the_error (check_linearity [ValueParameter (i "x", int32)] (TAssignVar (sp, q "y", TNilConstant))))
+
 let t: identifier = i "t"
 let let_t: tstmt = TLetTmp (t, linear, TNilConstant)
 let use_t: tstmt = TDiscarding (sp, TTemporary (t, linear))
@@ -508,6 +515,7 @@ let suite =
       "pragma arguments" >:: test_pragma_arguments;
       "an undeclared temporary" >:: test_undeclared_temporary;
       "a name declared twice" >:: test_name_declared_twice;
+      "a name not declared" >:: test_name_not_declared;
       "assigning a temporary" >:: test_assign_temporary;
       "checked as inferred" >:: test_checked_as_inferred;
       "a pointer slot of a non-reference" >:: test_pointer_slot_of_non_reference;

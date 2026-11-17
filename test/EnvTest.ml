@@ -35,7 +35,8 @@ let register_function (env: Env.env) (mod_id: Id.mod_id) (name: string): Env.env
 let add_module (env: Env.env) (name: string): Env.env * Id.mod_id =
   Env.add_module env {
       name = make_mod_name name;
-      imported_instances = InstanceIdSet.empty
+      imported_instances = InstanceIdSet.empty;
+      imported_symbols = []
     }
 
 (* No program reaches this: an ID is in the environment that made it and in
@@ -78,7 +79,8 @@ let test_monomorph_key_not_registered _ =
   let (env, mod_id) =
     Env.add_module Env.empty_env {
         name = pervasive;
-        imported_instances = InstanceIdSet.empty
+        imported_instances = InstanceIdSet.empty;
+        imported_symbols = []
       }
   in
   let (env, exit_code_id) = Env.reserve_union_id env in

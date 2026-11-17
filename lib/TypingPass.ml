@@ -304,7 +304,7 @@ and augment_assign_var (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span
              an expression looks a name up, so that assigning to one is said
              to be that, and not an unknown name. *)
           let variable: (ty * variable_source) option = get_variable place env lexenv name in
-          let name: identifier = original_name name in
+          let name: identifier = local_name name in
         match variable with
         | (Some (orig_ty, src)) -> begin
             let _ =

@@ -91,7 +91,7 @@ let module_name_from_id (place: place) (env: env) (mod_id: mod_id): module_name 
   name
 
 let add_module (env: env) (input: mod_input): (env * mod_id) =
-  let { name; imported_instances } = input in
+  let { name; imported_instances; imported_symbols } = input in
   let _ = ensure_no_mod_with_name env name in
   let (Env { mods; methods; decls; instances; monos; exports; supply }) = env in
   let (id, supply) = fresh_mod_id supply in
@@ -99,6 +99,7 @@ let add_module (env: env) (input: mod_input): (env * mod_id) =
                id;
                name;
                imported_instances;
+               imported_symbols;
              }
   in
   let env = Env { mods = md :: mods; methods; decls; instances; monos; exports; supply } in
@@ -121,18 +122,27 @@ let get_decl_by_name (place: place) (env: env) (name: sident): decl option =
   | None ->
      declaration_error place (UnknownModule (sident_module_name name))
 
-(* The duplicate rule: a name is taken if any declaration of the module has it,
-   union cases and typeclass methods included. The rule does not look at the
-   names the module imports (#28) or at the names of the built-in types (#51).
-   This is the only place that has it: `register` calls it, and so does the
-   extraction of a function, before it checks a foreign signature. *)
+(* The duplicate rule: a name is taken if it names a built-in type (#51), if the
+   module imports it (#28), or if any declaration of the module has it, union
+   cases and typeclass methods included (#86). In each case the name would find
+   the other thing. This is the only place that has the rule: `register` calls
+   it, and so does the extraction of a function, before it checks a foreign
+   signature. *)
 let name_must_be_free (place: place) (env: env) (mod_id: mod_id) (name: identifier): unit =
-  let module_name: module_name = module_name_from_id place env mod_id in
-  match get_decl_by_name place env (make_sident module_name name) with
+  let (ModRec { name = module_name; imported_symbols; _ }) = get_module_by_id place env mod_id in
+  match BuiltInNames.type_of_name (ident_string name) with
   | Some _ ->
-     declaration_error place (DeclarationAlreadyExists { name; module_name })
+     declaration_error place (DeclarationNameIsBuiltInType name)
   | None ->
-     ()
+     (match List.find_opt (fun symbol -> equal_identifier (local_name symbol) name) imported_symbols with
+      | Some symbol ->
+         declaration_error place (DeclarationNameIsImported { name; module_name = source_module_name symbol })
+      | None ->
+         (match get_decl_by_name place env (make_sident module_name name) with
+          | Some _ ->
+             declaration_error place (DeclarationAlreadyExists { name; module_name })
+          | None ->
+             ()))
 
 (* The one way a declaration or an instance method enters the environment. A
    kind of registration that is not checked against the duplicate rule today
@@ -179,8 +189,7 @@ let register (type id) (place: place) (env: env) (registration: id registration)
      in
      add_reserved has_id id (fun id -> Union { id; mod_id; vis; name; docstring; typarams; universe })
   | NewUnionCase { mod_id; vis; union_id; name; docstring; slots } ->
-     (* Not checked (#86): a case can take the name of another case, or of any
-        other declaration of the module. *)
+     name_must_be_free mod_id name;
      add_decl fresh_union_case_id (fun id -> UnionCase { id; vis; mod_id; union_id; name; docstring; slots })
   | NewFunction { mod_id; vis; name; docstring; typarams; value_params; rt; impl } ->
      name_must_be_free mod_id name;
@@ -189,8 +198,7 @@ let register (type id) (place: place) (env: env) (registration: id registration)
      name_must_be_free mod_id name;
      add_decl fresh_typeclass_id (fun id -> TypeClass { id; mod_id; vis; name; docstring; param })
   | NewTypeClassMethod { mod_id; vis; typeclass_id; name; docstring; typarams; value_params; rt } ->
-     (* Not checked (#86): a method can take the name of a method of another
-        typeclass, or of any other declaration of the module. *)
+     name_must_be_free mod_id name;
      add_decl fresh_typeclass_method_id (fun id -> TypeClassMethod { id; mod_id; vis; typeclass_id; name; docstring; typarams; value_params; rt })
   | NewInstance { mod_id; vis; typeclass_id; docstring; typarams; argument } ->
      (* Not checked here: an instance has no name. The caller checks that it
@@ -344,7 +352,9 @@ let get_callable (place: place) (env: env) (importing_module_name: module_name) 
      None
 
 let get_variable (place: place) (env: env) (lexenv: lexenv) (name: qident): (ty * variable_source) option =
-  match get_var lexenv (original_name name) with
+  (* A variable has the name the program wrote, which is the nickname of an
+     import of that name. *)
+  match get_var lexenv (local_name name) with
   | Some (ty, src) ->
      Some (ty, VarLexical src)
   | None ->

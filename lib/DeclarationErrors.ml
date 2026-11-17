@@ -61,6 +61,9 @@ type t =
   | PragmaArgumentError of known_pragma
   | UnknownPragma of identifier
   | DeclarationAlreadyExists of { name: identifier; module_name: module_name }
+  | DeclarationNameIsImported of { name: identifier; module_name: module_name }
+  (** [module_name] is the module the name is imported from. *)
+  | DeclarationNameIsBuiltInType of identifier
   | ModuleAlreadyExists of module_name
   | UnknownModule of module_name
   | ExportGeneric of identifier
@@ -197,6 +200,20 @@ let render (error: t): err_text =
        Text " already exists in the module ";
        Code (mod_name_string module_name);
        Text "."
+     ]
+  | DeclarationNameIsImported { name; module_name } ->
+     [
+       Text "The module imports the name ";
+       Code (ident_string name);
+       Text " from the module ";
+       Code (mod_name_string module_name);
+       Text ", so it cannot declare that name."
+     ]
+  | DeclarationNameIsBuiltInType name ->
+     [
+       Text "The name ";
+       Code (ident_string name);
+       Text " is the name of a built-in type, so a declaration cannot have it."
      ]
   | ModuleAlreadyExists name ->
      [

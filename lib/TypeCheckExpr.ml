@@ -598,8 +598,15 @@ and infer_operand (ctx: expr_ctx) (operand: aexpr) (other_operand: aexpr): texpr
 
 and augment_variable (ctx: expr_ctx) (name: qident) (from_context: context_bindings): texpr =
   let env = ctx_env ctx in
-  (* Does this name a declaration? *)
-  match get_decl_by_name (ctx_place ctx) env (qident_to_sident name) with
+  (* A variable hides a function the module imports under its name, as it
+     does in a call (augment_call). A variable cannot have the name of a
+     declaration of the module (check_var_doesnt_collide_with_decl). *)
+  let declaration: decl option =
+    match get_var (ctx_lexenv ctx) (local_name name) with
+    | Some _ -> None
+    | None -> get_decl_by_name (ctx_place ctx) env (qident_to_sident name)
+  in
+  match declaration with
   | Some (Function { id; typarams; value_params; rt; _ }) ->
      let arg_tys: ty list = List.map (fun (ValueParameter (_, ty)) -> ty) value_params in
      let fn_ty: ty = FnPtr (arg_tys, rt) in
@@ -622,9 +629,9 @@ and augment_variable (ctx: expr_ctx) (name: qident) (from_context: context_bindi
           | VarConstant ->
              TConstVar (name, ty)
           | VarLexical VarParam ->
-             TParamVar ((original_name name), ty)
+             TParamVar ((local_name name), ty)
           | VarLexical (VarLocal _) ->
-             TLocalVar ((original_name name), ty))
+             TLocalVar ((local_name name), ty))
       | None ->
          generic_error (ctx_place ctx) (UnknownName { kind = VariableName; name = original_name name }))
 

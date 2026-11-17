@@ -1,8 +1,8 @@
 module body Test is
     union Choice[R: Region]: Free is
-        case Some is
+        case Held is
             r: R;
-        case None;
+        case Nothing;
     end;
 
     function main(): ExitCode is

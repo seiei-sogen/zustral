@@ -185,20 +185,11 @@ let get_type_signature (place: place) (env: env) (sigs: type_signature list) (na
        None
   in
   match get_local_type_signature sigs name with
-  | (Some (TypeSignature (n, typarams, universe, local_id))) ->
-     (* The local signature is found by the local name, also for a name that
-        the module imports and declares as a type (#28): the checks read the
-        local type, and the type is the imported declaration. So the ID is the
-        one of the declaration the name stands for, when that is a record or a
-        union, and the reserved one of the local type otherwise: a type of the
-        module that is not registered yet, or a name that also stands for a
-        union case or a typeclass method (#86). *)
-     let id: type_decl_id =
-       match get_foreign_type_signature env name with
-       | Some (TypeSignature (_, _, _, id)) -> id
-       | None -> local_id
-     in
-     Some (TypeSignature (n, typarams, universe, id))
+  | Some signature ->
+     (* A type of the module, registered or not yet. The name stands for no
+        other declaration: a name that the module also imports or declares
+        again is rejected when its declaration is registered (#28, #86). *)
+     Some signature
   | None ->
      get_foreign_type_signature env name
 

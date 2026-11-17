@@ -32,5 +32,8 @@ val importing_module_kind : import_map -> Common.module_kind
 (** Find a symbol from its local nickname. Returns {!None} if not imported. *)
 val get_symbol : import_map -> identifier -> qident option
 
+(** The imported symbols, each under its local nickname. *)
+val imported_symbols : import_map -> qident list
+
 (** The list of imported typeclass instances. *)
 val imported_instances : import_map -> instance_id list

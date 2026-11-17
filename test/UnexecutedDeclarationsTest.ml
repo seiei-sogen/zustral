@@ -53,7 +53,7 @@ let tyvar (name: string) (universe: universe): ty =
   TyVar (TypeVariable (make_ident name, universe, named "f", []))
 
 let add_example (env: Env.env): Env.env * Id.mod_id =
-  Env.add_module env { name = example; imported_instances = InstanceIdSet.empty }
+  Env.add_module env { name = example; imported_instances = InstanceIdSet.empty; imported_symbols = [] }
 
 let register_function (env: Env.env) (mod_id: Id.mod_id) (name: string) (params: value_parameter list) (rt: ty) (impl: function_impl): Env.env * Id.function_id =
   Env.register NoSpan env (NewFunction {
@@ -384,7 +384,7 @@ let test_overlap_of_every_pair_of_kinds _ =
 
 let test_a_region_or_type_variable_is_local_to_no_module _ =
   let (env, mod_id) = add_example Env.empty_env in
-  let (env, other_id) = Env.add_module env { name = make_mod_name "Other"; imported_instances = InstanceIdSet.empty } in
+  let (env, other_id) = Env.add_module env { name = make_mod_name "Other"; imported_instances = InstanceIdSet.empty; imported_symbols = [] } in
   List.iter
     (fun (ty: ty) ->
       assert_equal ~msg:(type_string ty) (Some (Generic BrokenOrphanRule))

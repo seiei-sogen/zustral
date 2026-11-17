@@ -34,7 +34,8 @@ let ctx: TypeCheckExpr.expr_ctx =
   let (env, mod_id) =
     Env.add_module Env.empty_env {
         name = example;
-        imported_instances = InstanceIdSet.InstanceIdSet.empty
+        imported_instances = InstanceIdSet.InstanceIdSet.empty;
+        imported_symbols = []
       }
   in
   let t: TypeParameter.type_parameter =

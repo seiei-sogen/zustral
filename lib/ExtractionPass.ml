@@ -196,6 +196,7 @@ let rec extract (env: env) (cmodule: combined_module): (env * linked_module) Out
         let input: mod_input = {
             name;
             imported_instances;
+            imported_symbols = (imported_symbols interface_imports) @ (imported_symbols body_imports);
           }
         in
         add_module env input)

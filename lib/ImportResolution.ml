@@ -49,7 +49,7 @@ let resolve_import (env: env) (imports: import_map) (idecl: import_decl): import
   | Some decl ->
      if is_importable decl then
        match get_symbol imports nickname with
-       | Some _ -> declaration_error NoSpan (DoubleImport name)
+       | Some _ -> declaration_error NoSpan (DoubleImport nickname)
        | None ->
           let safe: bool =
             match importing_module_kind imports with

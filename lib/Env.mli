@@ -80,9 +80,10 @@ val module_name_from_id : Error.place -> env -> mod_id -> module_name
 (** Register a declaration or an instance method. Returns the environment that
     has it, and its ID. This is the only way either enters the environment.
 
-    Raises a declaration error if a constant, record, union, function or
-    typeclass takes a name that a declaration of its module already has. Union
-    cases, typeclass methods, instances and instance methods are not checked. *)
+    Raises a declaration error if a constant, record, union, union case,
+    function, typeclass or typeclass method takes a name that is taken
+    ({!name_must_be_free}). Instances and instance methods have no name of
+    their own, and are not checked. *)
 val register : Error.place -> env -> 'id registration -> (env * 'id)
 
 (** The ID of a record that the module being extracted declares, before the
@@ -98,9 +99,10 @@ val reserve_record_id : env -> (env * record_id)
 (** {!reserve_record_id} for a union. *)
 val reserve_union_id : env -> (env * union_id)
 
-(** Raise the error [register] raises when a declaration of the module already
-    has the name. For a check that must report a taken name before its own
-    errors, as the extraction of a foreign function does. *)
+(** Raise the error [register] raises when the name is taken: it names a
+    built-in type, the module imports it, or a declaration of the module already
+    has it. For a check that must report a taken name before its own errors, as
+    the extraction of a foreign function does. *)
 val name_must_be_free : Error.place -> env -> mod_id -> identifier -> unit
 
 (** Given a function ID, the export name of that function and its checked
