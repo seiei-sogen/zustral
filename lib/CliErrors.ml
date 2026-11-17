@@ -26,6 +26,8 @@ type t =
   | UnknownFlagType of string
   | CCompilerError of { command: string; exit_code: int; stdout: string; stderr: string }
   | WriteError of { path: string; reason: string }
+  | ReadError of { path: string; reason: string }
+  | PathVariableNotSet
 
 let render (error: t): err_text =
   match error with
@@ -151,4 +153,20 @@ let render (error: t): err_text =
        Text ": ";
        Break;
        Text reason
+     ]
+  | ReadError { path; reason } ->
+     [
+       Text "Failed to read file ";
+       Code path;
+       Text ":";
+       Break;
+       Text reason
+     ]
+  | PathVariableNotSet ->
+     [
+       Text "The environment variable ";
+       Code "PATH";
+       Text " is not set, so the C compiler ";
+       Code "cc";
+       Text " cannot be found."
      ]
