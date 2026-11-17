@@ -207,6 +207,61 @@ let test_lookups_by_an_id_from_a_later_environment _ =
   assert_equal (no ("monomorph with ID `" ^ (Id.show_mono_id mono_id) ^ "`"))
     (error_of (fun () -> Env.store_record_monomorph_definition before record_mono_id []))
 
+(* Env: `MonoNamedType` holds the ID of a record's or a union's monomorph, and
+   no program puts there the ID of a function's or a method's. *)
+let test_the_monomorph_of_a_function_or_a_method_is_no_type _ =
+  let (env, mod_id) = add_example Env.empty_env in
+  let (env, function_id) = register_function env mod_id "f" [] Unit BodyNotAttached in
+  let (env, typeclass_id, method_id) = register_typeclass_with_method env mod_id in
+  let (env, instance_id) = register_instance env mod_id typeclass_id TypeParameters.empty_typarams Unit in
+  let (env, ins_meth_id) = register_instance_method env instance_id method_id None in
+  let (env, function_mono) = Env.add_or_get_function_monomorph env function_id MonoTypeBindings.empty_mono_bindings in
+  let (env, method_mono) = Env.add_or_get_instance_method_monomorph env ins_meth_id MonoTypeBindings.empty_mono_bindings in
+  List.iter
+    (fun (mono_id: Id.mono_id) ->
+      assert_equal (internal ("No record or union monomorph with ID `" ^ (Id.show_mono_id mono_id) ^ "` in this environment."))
+        (error_of (fun () -> Env.get_type_monomorph env mono_id)))
+    [Id.mono_id_of_function function_mono; Id.mono_id_of_method method_mono]
+
+(* Env: a limit, as in EnvTest. Two lineages of environments give out the same
+   numbers, so an ID of one can find a monomorph of another kind in the other.
+   Storing a definition under it is then the error of storing it under an ID
+   that nothing has. Here four lineages have one monomorph each, of the four
+   kinds, under one number. *)
+let test_a_definition_stored_under_the_id_of_another_kind _ =
+  let (env, mod_id) = add_example Env.empty_env in
+  let (env, record_id) = register_record env mod_id "R" in
+  let (env, union_id) = Env.reserve_union_id env in
+  let (env, function_id) = register_function env mod_id "f" [] Unit BodyNotAttached in
+  let (env, typeclass_id, method_id) = register_typeclass_with_method env mod_id in
+  let (env, instance_id) = register_instance env mod_id typeclass_id TypeParameters.empty_typarams Unit in
+  let (env, ins_meth_id) = register_instance_method env instance_id method_id None in
+  let none = MonoTypeBindings.empty_mono_bindings in
+  let (with_record, record_mono) = Env.add_or_get_record_monomorph env record_id none in
+  let (with_union, union_mono) = Env.add_or_get_union_monomorph env union_id none in
+  let (with_function, function_mono) = Env.add_or_get_function_monomorph env function_id none in
+  let (with_method, method_mono) = Env.add_or_get_instance_method_monomorph env ins_meth_id none in
+  let stores: (Id.mono_id * (Env.env -> Env.env)) list = [
+      (Id.mono_id_of_record record_mono, fun env -> Env.store_record_monomorph_definition env record_mono []);
+      (Id.mono_id_of_union union_mono, fun env -> Env.store_union_monomorph_definition env union_mono []);
+      (Id.mono_id_of_function function_mono, fun env -> Env.store_function_monomorph_definition env function_mono MSkip);
+      (Id.mono_id_of_method method_mono, fun env -> Env.store_instance_method_monomorph_definition env method_mono MSkip)
+    ]
+  in
+  List.iteri
+    (fun (lineage: int) (env: Env.env) ->
+      List.iteri
+        (fun (kind: int) ((mono_id, store): Id.mono_id * (Env.env -> Env.env)) ->
+          let expected: error option =
+            if lineage = kind then
+              None
+            else
+              internal ("No monomorph with ID `" ^ (Id.show_mono_id mono_id) ^ "` in this environment.")
+          in
+          assert_equal expected (error_of (fun () -> store env)))
+        stores)
+    [with_record; with_union; with_function; with_method]
+
 let test_a_reserved_id_registered_twice _ =
   let (env, mod_id) = add_example Env.empty_env in
   let (env, id) = Env.reserve_record_id env in
@@ -657,6 +712,8 @@ let test_a_type_variable_left_for_the_code_generator _ =
 let suite =
   "Unexecuted declarations" >::: [
       "lookups by an ID from a later environment" >:: test_lookups_by_an_id_from_a_later_environment;
+      "the monomorph of a function or a method is no type" >:: test_the_monomorph_of_a_function_or_a_method_is_no_type;
+      "a definition stored under the ID of another kind" >:: test_a_definition_stored_under_the_id_of_another_kind;
       "a reserved ID registered twice" >:: test_a_reserved_id_registered_twice;
       "a function body stored twice" >:: test_a_function_body_stored_twice;
       "a method body stored twice" >:: test_a_method_body_stored_twice;

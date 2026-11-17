@@ -19,6 +19,8 @@ val mono_bindings_as_list : mono_type_bindings -> (type_parameter * mono_ty) lis
 
 val mono_bindings_from_list : (type_parameter * mono_ty) list -> mono_type_bindings
 
-val equal_mono_bindings : mono_type_bindings -> mono_type_bindings -> bool
+(** An order on bindings. Two are equal when they bind the same type parameters
+    to the same types. *)
+val compare_mono_bindings : mono_type_bindings -> mono_type_bindings -> int
 
 val get_mono_binding : mono_type_bindings -> type_parameter -> mono_ty option
