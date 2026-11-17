@@ -50,7 +50,7 @@ let typarams (params: TypeParameter.type_parameter list): TypeParameters.typaram
   TypeParameters.typarams_from_list NoSpan params
 
 let tyvar (name: string) (universe: universe): ty =
-  TyVar (TypeVariable (make_ident name, universe, named "f", []))
+  TyVar (TypeVariable (make_ident name, universe, named "f", [], StandsForItself))
 
 let add_example (env: Env.env): Env.env * Id.mod_id =
   Env.add_module env { name = example; imported_instances = InstanceIdSet.empty; imported_symbols = [] }

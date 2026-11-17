@@ -432,7 +432,7 @@ let render (error: t): err_text =
        Text "."
      ]
   | UnsatisfiedConstraint { tyvar; ty; typeclass } ->
-     let (TypeVariable (tyvar_name, _, _, _)) = tyvar in
+     let (TypeVariable (tyvar_name, _, _, _, _)) = tyvar in
      [
        Text "Type constraint not satisfied: the type ";
        Type ty;
@@ -445,7 +445,7 @@ let render (error: t): err_text =
        Text "."
      ]
   | ConstraintNotTypeclass { tyvar; typeclass } ->
-     let (TypeVariable (tyvar_name, _, source, _)) = tyvar in
+     let (TypeVariable (tyvar_name, _, source, _, _)) = tyvar in
      [
        Text "The type parameter ";
        Code (ident_string tyvar_name);
@@ -456,7 +456,7 @@ let render (error: t): err_text =
        Text ", which is not a typeclass. A constraint must name a typeclass."
      ]
   | ConstraintUnknownTypeclass { tyvar; typeclass } ->
-     let (TypeVariable (tyvar_name, _, source, _)) = tyvar in
+     let (TypeVariable (tyvar_name, _, source, _, _)) = tyvar in
      [
        Text "The type parameter ";
        Code (ident_string tyvar_name);

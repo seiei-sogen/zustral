@@ -72,7 +72,7 @@ lib/Stages.ml	727	0	0	0	0	0	8	0	0	0	0
 lib/StringSet.ml	9	0	0	0	0	0	0	0	0	0	0
 lib/Supply.ml	74	0	0	0	0	0	0	0	0	0	0
 lib/TastUtil.ml	177	3	0	0	0	0	0	0	0	0	0
-lib/Type.ml	278	0	0	0	0	1	0	0	0	0	0
+lib/Type.ml	288	0	0	0	0	1	0	0	0	0	0
 lib/TypeBindings.ml	182	3	0	0	0	0	0	1	0	0	0
 lib/TypeCheckExpr.ml	1038	45	0	0	0	1	0	0	0	0	0
 lib/TypeClasses.ml	241	13	0	0	0	0	0	0	0	0	0

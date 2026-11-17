@@ -38,7 +38,7 @@ let check_instance_argument_has_right_shape (place: place) (typarams: typarams) 
     | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ ->
        declaration_error place (InstanceArgumentNotATyvar { ty; universe = type_universe ty })
   and all_distinct (tyvars: type_var list): unit =
-    let names: identifier list = List.map (fun (TypeVariable (name, _, _, _)) -> name) tyvars in
+    let names: identifier list = List.map (fun (TypeVariable (name, _, _, _, _)) -> name) tyvars in
     let set: IdentifierSet.t = IdentifierSet.of_list names in
     if List.length tyvars = IdentifierSet.cardinal set then
       ()

@@ -21,7 +21,7 @@ let type_universe = function
   | WriteRef _ -> LinearUniverse
   | Span _ -> FreeUniverse
   | SpanMut _ -> LinearUniverse
-  | TyVar (TypeVariable (_, u, _, _)) -> u
+  | TyVar (TypeVariable (_, u, _, _, _)) -> u
   | Address _ -> FreeUniverse
   | Pointer _ -> FreeUniverse
   | FnPtr _ -> FreeUniverse

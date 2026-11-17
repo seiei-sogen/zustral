@@ -131,7 +131,7 @@ let world: world Lazy.t =
     and shape_id = pick (function Linked.LUnion (id, _, _, _, _, _, _) -> Some id | _ -> None)
     and describe_id = pick (function Linked.LTypeclass (id, _, n, _, _, _) when n = i "Describe" -> Some id | _ -> None)
     and meth_id = pick (function Linked.LInstance (_, _, _, _, _, [Linked.LMethodDef (id, _, _, _, _, _)], _) -> Some id | _ -> None) in
-    let tyvar: ty = TyVar (TypeVariable (i "T", FreeUniverse, q "f", [make_sident test_mod (i "Describe")])) in
+    let tyvar: ty = TyVar (TypeVariable (i "T", FreeUniverse, q "f", [make_sident test_mod (i "Describe")], StandsForItself)) in
     (* Constants of types no constant of a program has. *)
     let constant env name ty =
       fst (Env.register NoSpan env (EnvTypes.NewConstant { mod_id; vis = VisPublic; name = i name; ty; docstring = Docstring "" }))
@@ -252,7 +252,7 @@ let test_undeclared_temporary _ =
 
 let sp: Span.span = Span.empty_span
 
-let linear: ty = TyVar (TypeVariable (i "L", LinearUniverse, q "f", []))
+let linear: ty = TyVar (TypeVariable (i "L", LinearUniverse, q "f", [], StandsForItself))
 
 let check_linearity (params: value_parameter list) (body: tstmt): unit Outcome.t =
   let w = Lazy.force world in

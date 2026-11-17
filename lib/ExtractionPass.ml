@@ -121,7 +121,7 @@ let parsers (env: env) (local_types: type_signature list)
    a function pointer are one C type whatever their types are. *)
 let rec region_held_by_value (place: place) (env: env) (seen: ty list) (ty: ty): identifier option =
   match ty with
-  | TyVar (TypeVariable (name, _, _, _)) ->
+  | TyVar (TypeVariable (name, _, _, _, _)) ->
      (* The instance has no type parameters, and a method's own are regions
         (TypeClasses.check_method_type_parameters_are_regions). *)
      Some name

@@ -184,10 +184,10 @@ let rec try_match_type (ctx: ctx) (a: ty) (b: ty): (type_bindings, error) result
          Error (Type (TypeMismatch { expected = a; actual = b })))
 
 and try_match_type_var (ctx: ctx) (tv: type_var) (ty: ty): (type_bindings, error) result =
-  let (TypeVariable (name, universe, from, constraints)) = tv in
+  let (TypeVariable (name, universe, from, constraints, _)) = tv in
   (* Check if the argument type is a variable. *)
   match ty with
-  | (TyVar (TypeVariable (i', u', from', constraints'))) ->
+  | (TyVar (TypeVariable (i', u', from', constraints', _))) ->
      (* When the argument type is a type variable, check if the variables have
         the same name and provenance. *)
      if (equal_identifier name i') && (universe = u') && (equal_qident from from') then

@@ -776,7 +776,7 @@ and mono_to_ty (env: env) (ty: mono_ty): ty =
   | MonoFnPtr (args, rt) ->
      FnPtr (List.map r args, r rt)
   | MonoRegionTyVar (name, source) ->
-     TyVar (TypeVariable (name, RegionUniverse, source, []))
+     TyVar (TypeVariable (name, RegionUniverse, source, [], StandsForItself))
 
 let monomorphize_wrappers (env: env): (env * mdecl list * (string * mono_id * mono_ty foreign_signature) list) Outcome.t =
   Outcome.catch (fun () ->

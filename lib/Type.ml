@@ -30,7 +30,17 @@ type signedness =
   | Signed
 [@@deriving (eq, show)]
 
-type type_var = TypeVariable of identifier * universe * qident * sident list
+(* What the matching of two types does with a type variable (TypeMatch). *)
+type type_var_matching =
+  | StandsForItself
+  (* In the types of a declaration as it is declared, its signature and its
+     body: the type parameter is the same type as itself and as no other. *)
+  | BoundAtUse
+  (* In the types of the signature of a declaration where it is used: matching
+     binds the type parameter to the type the use has in its place. *)
+[@@deriving eq]
+
+type type_var = TypeVariable of identifier * universe * qident * sident list * type_var_matching
 [@@deriving eq]
 
 type ty =
@@ -74,7 +84,7 @@ let ref_region_of_ty (ty: ty): ref_region option =
   match ty with
   | RegionTy r ->
      Some (RefRegion r)
-  | TyVar (TypeVariable (_, universe, _, _) as tv) ->
+  | TyVar (TypeVariable (_, universe, _, _, _) as tv) ->
      (match universe with
       | RegionUniverse ->
          Some (RefRegionVar tv)
@@ -127,7 +137,7 @@ let rec type_string = function
      BuiltInNames.span_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string (ty_of_ref_region r)) ^ "]"
   | SpanMut (t, r) ->
      BuiltInNames.span_mut_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string (ty_of_ref_region r)) ^ "]"
-  | TyVar (TypeVariable (n, _, _, _)) ->
+  | TyVar (TypeVariable (n, _, _, _, _)) ->
      ident_string n
   | Address ty ->
      BuiltInNames.address_name ^ "[" ^ (type_string ty) ^ "]"

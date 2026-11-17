@@ -62,7 +62,7 @@ let rec strip_type (ty: ty): stripped_ty =
      let ty = strip_type ty in
      let r = strip_type (ty_of_ref_region r) in
      SSpanMut (ty, r)
-  | TyVar (TypeVariable (name, u, source, _)) ->
+  | TyVar (TypeVariable (name, u, source, _, _)) ->
      (match u with
       | RegionUniverse ->
          SRegionTyVar (name, source)

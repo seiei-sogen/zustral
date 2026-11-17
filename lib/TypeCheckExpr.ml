@@ -406,7 +406,7 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
   let dispatch_ty: ty = bound_type (ctx_place ctx) bindings'' typaram in
      (* Is the dispatch type a type variable? *)
      (match dispatch_ty with
-      | TyVar (TypeVariable (typaram, _, _, constraints)) ->
+      | TyVar (TypeVariable (typaram, _, _, constraints, _)) ->
          (* If so, check if the constraints say that it implements the typeclass. *)
          let tc_name: sident = get_decl_sident_or_die (ctx_place ctx) (ctx_env ctx) typeclass_id in
          if List.exists (fun c -> equal_sident tc_name c) constraints then
@@ -509,9 +509,9 @@ and is_return_type_polymorphic (params: value_parameter list) (rt: ty): bool =
     let param_ty_vars: type_var list = TypeVarSet.elements param_type_vars
     in
     let var_name_in_typarams (n: identifier): bool =
-      List.exists (fun (TypeVariable (n', _, _, _)) -> equal_identifier n n') param_ty_vars
+      List.exists (fun (TypeVariable (n', _, _, _, _)) -> equal_identifier n n') param_ty_vars
     in
-    TypeVarSet.of_list (List.filter (fun (TypeVariable (n, _, _, _)) -> not (var_name_in_typarams n)) (TypeVarSet.elements rt_type_vars))
+    TypeVarSet.of_list (List.filter (fun (TypeVariable (n, _, _, _, _)) -> not (var_name_in_typarams n)) (TypeVarSet.elements rt_type_vars))
   in
   (TypeVarSet.cardinal vars_not_params) > 0
 
