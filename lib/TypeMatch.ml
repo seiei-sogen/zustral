@@ -194,29 +194,27 @@ and try_match_type_var (ctx: ctx) (tv: type_var) (ty: ty): (type_bindings, error
        (* If so, do nothing: we don't want circular bindings *)
        Ok empty_bindings
      else
-       (* Check that the tyvar implements the type variable's constraints, if any. *)
-       let _ = check_tyvar_implements_constraints constraints constraints' in
-       (* Otherwise, add a new binding.
+       (* The argument's type variable must have every constraint of the
+          parameter's: its constraints are all that is known of the type it
+          stands for (#128, #158). *)
+       (match List.find_opt (fun (c: sident) -> not (List.mem c constraints')) constraints with
+        | Some typeclass ->
+           Error (Type (UnsatisfiedConstraint { tyvar = tv; ty; typeclass }))
+        | None ->
+           (* Otherwise, add a new binding.
 
-          The idea here is: suppose we have a function `f` that accepts an
-          argument of a generic type `T`. Now we're type-checking a function `g`
-          that accepts an argument `x` of generic type `U`. If we encounter a
-          function call `f(x)`, then the parameter type is `T` and the argument
-          type is `U`, so we create a binding `T -> U`.  *)
-       try_add_binding empty_bindings (tyvar_to_typaram tv) ty
+              The idea here is: suppose we have a function `f` that accepts an
+              argument of a generic type `T`. Now we're type-checking a function `g`
+              that accepts an argument `x` of generic type `U`. If we encounter a
+              function call `f(x)`, then the parameter type is `T` and the argument
+              type is `U`, so we create a binding `T -> U`.  *)
+           try_add_binding empty_bindings (tyvar_to_typaram tv) ty)
   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
   | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ ->
      (* Check that the type implements the type variable's constraints, if any. *)
      let* () = check_type_implements_constraints ctx tv ty constraints in
      (* If the constraints are satisfied, add a straightforward binding. *)
      try_add_binding empty_bindings (tyvar_to_typaram tv) ty
-
-and check_tyvar_implements_constraints (param: sident list) (arg: sident list): bool =
-  (* Check that the param is a subset of the param. *)
-  let param: SIdentSet.t = SIdentSet.of_list param
-  and arg: SIdentSet.t = SIdentSet.of_list arg
-  in
-  SIdentSet.subset param arg
 
 and check_type_implements_constraints (ctx: ctx) (tv: type_var) (ty: ty) (constraints: sident list): (unit, error) result =
   (* If there are no constraints, do nothing. *)
@@ -339,10 +337,13 @@ let match_typarams (ctx: ctx) (typarams: typarams) (args: ty list): type_binding
    signature of a function that is called, and wrong for two types of the
    body: the body would have to be right for one type argument only. *)
 let expect_same_type (ctx: ctx) (expected: ty) (actual: ty): unit =
-  match bindings_list (match_type ctx expected actual) with
-  | [] ->
+  (* A failure is a mismatch too: the error of a binding that `match_type`
+     tried, a constraint or a universe of a type variable, would say that the
+     variable could stand for the actual type (#156, #163). *)
+  match try_match_type ctx expected actual with
+  | Ok bindings when bindings_list bindings = [] ->
      ()
-  | _ :: _ ->
+  | Ok _ | Error _ ->
      type_error (ctx_place ctx) (TypeMismatch { expected; actual })
 
 let expect_value_of_type (ctx: ctx) (expected: ty) (value: texpr): unit =

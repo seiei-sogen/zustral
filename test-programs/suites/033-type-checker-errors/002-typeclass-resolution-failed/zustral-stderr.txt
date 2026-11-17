@@ -1,12 +1,30 @@
 {
   "module": "Test",
-  "kind": "Generic Error",
+  "kind": "Type Error",
   "text": [
+    { "type": "text", "content": "Type constraint not satisfied: the type " },
+    { "type": "type", "content": "U" },
+    { "type": "text", "content": " does not implement the typeclass " },
+    { "type": "code", "content": "TC" },
+    { "type": "text", "content": "." },
+    { "type": "break" },
     {
       "type": "text",
-      "content": "Typeclass resolution failed. Dispatch type: Bool"
-    }
+      "content": "This constraint is for the type variable "
+    },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": "." }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/033-type-checker-errors/002-typeclass-resolution-failed/Test.zum",
+    "startp": { "line": 13, "column": 8 },
+    "end": { "line": 13, "column": 20 }
+  },
+  "context": [
+    [ 11, "    generic [U: Free]" ],
+    [ 12, "    function g(x: U): Unit is" ],
+    [ 13, "        return f(x);" ],
+    [ 14, "    end;" ],
+    [ 15, "" ]
+  ]
 }

@@ -39,7 +39,6 @@ type t =
   | BadWhitespaceEscape
   | SymbolImportedTwice
   | VariableAlreadyExists of identifier
-  | TypeclassResolutionFailed of ty
   | ParameterNotFound
   | ParameterArgumentLengthMismatch of { parameters: type_parameter list; arguments: mono_ty list }
   | RegionAlreadyExists
@@ -145,11 +144,6 @@ let render (error: t): err_text =
   | VariableAlreadyExists name ->
      [
        Text ("push_var: var with the name " ^ (ident_string name) ^ " already exists")
-     ]
-  | TypeclassResolutionFailed dispatch_ty ->
-     [
-       Text ("Typeclass resolution failed. Dispatch type: "
-             ^ (type_string dispatch_ty))
      ]
   | ParameterNotFound ->
      [

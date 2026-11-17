@@ -475,6 +475,29 @@ let test_a_method_call_leaves_out_an_unbound_parameter _ =
   assert_equal (Some (Generic (ParameterArgumentLengthMismatch { parameters = [u]; arguments = [] })))
     (instantiate env)
 
+(* A method call on a type parameter whose type argument has no instance: the
+   type checker checks the constraints wherever it binds a type parameter (#128,
+   #158), so no program gets this call past it. *)
+let test_a_method_call_on_a_type_without_an_instance _ =
+  let (env, mod_id) = add_example Env.empty_env in
+  let (env, typeclass_id, _) = register_typeclass_with_method env mod_id in
+  let call: Stages.Tast.texpr =
+    TVarMethodCall {
+        source_module_name = example;
+        typeclass_id;
+        params = [];
+        method_name = named "m";
+        args = [];
+        dispatch_ty = Boolean;
+        rt = Unit;
+        bindings = TypeBindings.empty_bindings
+      }
+  in
+  let (env, function_id) = register_function env mod_id "g" [] Unit BodyNotAttached in
+  let env = Env.store_function_body env function_id (TDiscarding (span, call)) in
+  let (env, _) = Env.add_or_get_function_monomorph env function_id MonoTypeBindings.empty_mono_bindings in
+  assert_equal (internal "Typeclass resolution failed. Dispatch type: Bool") (instantiate env)
+
 (* CodeGen: monomorphic declarations the monomorphizer never makes. *)
 
 let generate (env: Env.env) (decls: mdecl list): CRepr.c_decl list =
@@ -636,6 +659,7 @@ let suite =
       "a method monomorph without a body" >:: test_a_method_monomorph_without_a_body;
       "a monomorph with bindings for other parameters" >:: test_a_monomorph_with_bindings_for_other_parameters;
       "a method call leaves out an unbound parameter" >:: test_a_method_call_leaves_out_an_unbound_parameter;
+      "a method call on a type without an instance" >:: test_a_method_call_on_a_type_without_an_instance;
       "parameters of region types" >:: test_parameters_of_region_types;
       "borrows of values that are not addresses" >:: test_borrows_of_values_that_are_not_addresses;
       "an imported function of an exported signature" >:: test_an_imported_function_of_an_exported_signature;

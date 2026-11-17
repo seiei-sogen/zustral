@@ -36,7 +36,7 @@ lib/Escape.ml	53	1	0	0	0	1	1	0	0	0	0
 lib/ExportInstantiation.ml	31	0	0	0	0	0	0	0	0	0	0
 lib/ExtractionPass.ml	582	14	0	0	0	0	0	0	0	0	0
 lib/ForeignType.ml	119	2	0	0	0	0	0	0	0	0	0
-lib/GenericErrors.ml	192	0	0	0	0	0	0	0	0	0	0
+lib/GenericErrors.ml	186	0	0	0	0	0	0	0	0	0	0
 lib/Id.ml	143	0	0	0	0	0	0	0	0	0	0
 lib/Identifier.ml	63	0	0	0	0	0	2	0	0	0	0
 lib/IdentifierMap.ml	16	0	0	0	0	0	0	0	0	0	0
@@ -53,7 +53,7 @@ lib/LinearityErrors.ml	198	0	0	0	0	0	0	0	0	0	0
 lib/LiteralTyping.ml	167	1	0	0	0	0	0	0	0	0	0
 lib/MonoType.ml	38	0	0	0	0	0	0	0	0	0	0
 lib/MonoTypeBindings.ml	45	0	0	0	0	0	0	0	0	0	0
-lib/Monomorphize.ml	781	5	0	0	0	0	0	2	0	0	0
+lib/Monomorphize.ml	783	5	0	0	0	0	0	3	0	0	0
 lib/NumberLiteral.ml	83	0	0	0	0	0	2	0	0	0	0
 lib/Outcome.ml	59	0	1	0	0	0	0	0	0	0	0
 lib/ParseErrors.ml	53	0	0	0	0	0	3	0	0	0	0
@@ -75,7 +75,7 @@ lib/TypeBindings.ml	172	2	0	0	0	0	0	0	0	0	0
 lib/TypeCheckExpr.ml	1015	44	0	0	0	1	0	0	0	0	0
 lib/TypeClasses.ml	241	13	0	0	0	0	0	0	0	0	0
 lib/TypeErrors.ml	493	0	0	0	0	0	0	0	0	0	0
-lib/TypeMatch.ml	369	5	0	0	0	0	0	1	0	0	0
+lib/TypeMatch.ml	370	5	0	0	0	0	0	1	0	0	0
 lib/TypeParameter.ml	36	0	0	0	0	0	0	0	0	0	0
 lib/TypeParameters.ml	61	2	0	0	0	0	0	0	0	0	0
 lib/TypeParser.ml	317	9	0	0	0	2	0	0	0	0	0

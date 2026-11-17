@@ -225,7 +225,9 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
        (match get_instance_from_every_module NoSpan env source_module_name dispatch_ty typeclass_id with
         | Some (i, b) -> (i, b)
         | None ->
-           generic_error NoSpan (TypeclassResolutionFailed dispatch_ty))
+           (* The type checker checks the constraints wherever it binds a type
+              parameter, to a type or to another type parameter (#128, #158). *)
+           internal_err NoSpan ("Typeclass resolution failed. Dispatch type: " ^ (type_string dispatch_ty)))
      in
      let params' = List.map (fun (ValueParameter (n, t)) -> ValueParameter (n, replace_variables instance_bindings t)) params in
      let arguments' = TypeCheckExpr.cast_arguments instance_bindings params' args in
