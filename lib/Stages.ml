@@ -506,6 +506,13 @@ module Tast = struct
     (** A borrow made around the statement that holds an anonymous borrow
         ([&x]). The temporaries in its body are read after it. *)
 
+  (** The order a call wrote its arguments in: for each argument, from the
+      first one written to the last, the index of its parameter. A call holds
+      its arguments in the order of the parameters, and evaluates them in the
+      order it wrote them, which is another order when the arguments are
+      named (issue #53). *)
+  type written_argument_order = int list
+
   type tstmt =
     | TSkip of span
     | TLet of span * mutability * identifier * ty * tstmt
@@ -548,14 +555,15 @@ module Tast = struct
     | TFunVar of function_id * ty * type_bindings
     | TTemporary of identifier * ty
     (** Represents accessing a function as a value. *)
-    | TFuncall of function_id * qident * texpr list * ty * type_bindings
-    | TMethodCall of ins_meth_id * qident * typarams * texpr list * ty * type_bindings
+    | TFuncall of function_id * qident * texpr list * ty * type_bindings * written_argument_order
+    | TMethodCall of ins_meth_id * qident * typarams * texpr list * ty * type_bindings * written_argument_order
     | TVarMethodCall of {
         source_module_name: module_name;
         typeclass_id: typeclass_id;
         params: value_parameter list;
         method_name: qident;
         args: texpr list;
+        written_order: written_argument_order;
         dispatch_ty: ty;
         rt: ty;
         bindings: type_bindings;

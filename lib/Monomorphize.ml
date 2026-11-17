@@ -183,7 +183,7 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
      else
        (* The function is concrete. *)
        (MConcreteFunVar (decl_id, rt), env)
-  | TFuncall (decl_id, name, args, rt, substs) ->
+  | TFuncall (decl_id, name, args, rt, substs, _) ->
      (* Monomorphize the return type. *)
      let (rt, env) = strip_and_mono env rt in
      (* Monomorphize the arglist *)
@@ -201,7 +201,7 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
      else
        (* The function is concrete. *)
        (MConcreteFuncall (decl_id, name, args, rt), env)
-  | TMethodCall (ins_meth_id, name, typarams, args, rt, substs) ->
+  | TMethodCall (ins_meth_id, name, typarams, args, rt, substs, _) ->
      ((* Monomorphize the return type. *)
       let (rt, env) = strip_and_mono env rt in
       (* Monomorphize the arglist *)
@@ -219,7 +219,7 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
       else
         (* The instance is concrete. *)
         (MConcreteMethodCall (ins_meth_id, name, args, rt), env))
-  | TVarMethodCall { dispatch_ty; typeclass_id; source_module_name; params; args; method_name; rt; _ } ->
+  | TVarMethodCall { dispatch_ty; typeclass_id; source_module_name; params; args; written_order; method_name; rt; _ } ->
      (* Continue the instance resolution process we halted in the typing pass.
         The generic function's module need not see the instance: the module
         that instantiates it can declare it. *)
@@ -238,7 +238,7 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
         call on a type parameter is resolved only here. *)
      let meth_id: ins_meth_id = get_method_of_instance NoSpan env instance (original_name method_name) in
      let substs = make_substs2 instance_bindings typarams in
-     let mcall = TMethodCall (meth_id, method_name, typarams, arguments', rt, substs) in
+     let mcall = TMethodCall (meth_id, method_name, typarams, arguments', rt, substs, written_order) in
      monomorphize_expr env mcall
   | TFptrCall (name, paramtys, args, ty) ->
      let (paramtys, env) = strip_and_mono_list env paramtys in
@@ -543,9 +543,9 @@ and monomorphize_method (env: env) (meth: typed_method_def): (env * concrete_met
 
 open Outcome.Syntax
 
-let rec monomorphize (env: env) (m: LinearityCheck.checked_module): (env * mono_module) Outcome.t =
+let rec monomorphize (env: env) (m: EvaluationOrderOfModule.ordered_module): (env * mono_module) Outcome.t =
   (* Monomorphize what we can: concrete definitions. *)
-  let (TypedModule (module_name, decls)) = LinearityCheck.as_typed_module m in
+  let (TypedModule (module_name, decls)) = EvaluationOrderOfModule.as_typed_module m in
   let* (env, declopts) =
     Outcome.traverse_with_context
       (fun (e, d) -> Outcome.catch (fun () -> let (d, e) = monomorphize_decl e d in (e, d)))

@@ -106,7 +106,7 @@ let test_call_that_needs_the_expected_type _ =
     (Some (Type (UnconstrainedGenericFunction (make_ident "make"))))
     (error_of (fun () -> TypeCheckExpr.infer ctx call_make));
   (match TypeCheckExpr.check ctx call_make int32 with
-   | TFuncall (_, name, [], rt, _) ->
+   | TFuncall (_, name, [], rt, _, _) ->
       assert_bool "the callable is make" (equal_qident name (named "make"));
       assert_equal int32 rt
    | _ ->

@@ -10,7 +10,7 @@
 
 段の型と、流れの全体の型は、`lib/Pipeline.mli` に1か所にまとめてある。各段のモジュールは、入口の関数にこの型を付ける。段の型を変えるときは、このファイルを変える。ビルドが、合わなくなった箇所を挙げる。
 
-例外は、return の検査と線形性の検査である。この2つは、返す型（`ReturnCheck.returning_module`、`LinearityCheck.checked_module`）を自分のモジュールで定義する。`lib/Pipeline.mli` はその型を名指しするので、検査のモジュールが `Pipeline` の型を名指しすると、依存が輪になる。そこで、2つの検査は自分のインターフェースに型を書き、`lib/Compiler.ml` が `Pipeline.check_returns` と `Pipeline.check_linearity` の型を付けて使う。型が食い違えば、そこでビルドが止まる。
+例外は、return の検査、線形性の検査、評価順の固定である。この3つは、返す型（`ReturnCheck.returning_module`、`LinearityCheck.checked_module`、`EvaluationOrderOfModule.ordered_module`）を自分のモジュールで定義する。`lib/Pipeline.mli` はその型を名指しするので、これらのモジュールが `Pipeline` の型を名指しすると、依存が輪になる。そこで、3つの段は自分のインターフェースに型を書き、`lib/Compiler.ml` が `Pipeline.check_returns`、`Pipeline.check_linearity`、`Pipeline.fix_evaluation_order` の型を付けて使う。型が食い違えば、そこでビルドが止まる。
 
 流れの全体は、次の2つの関数である。どちらも `lib/Compiler.ml` にある。
 
@@ -31,10 +31,10 @@ type check = module_source list -> unit Outcome.t
 
 段の型から、次のことが読める。
 
-- `Outcome.t` を返す段は、失敗しうる。今は、すべての段が `Outcome.t` を返す。
+- `Outcome.t` を返す段は、失敗しうる。評価順の固定だけは、失敗しないので、`Outcome.t` を返さない。
 - `env` を返す段は、環境を変える。抽出、本体の取り出し、単相化である。
 - `Supply.t` を引数で受け取る段は、番号の元から番号を取る。脱糖、型検査、C の生成である。`lib/Compiler.ml` は `Env.with_supply` で環境から番号の元を取り出して渡し、段が返した番号の元を環境に戻す。抽出と単相化は、引数では受け取らない。環境の中の番号の元から、宣言の id と単相の id を取る。
-- 検査の段は、検査を通ったことを表す抽象型を返す。`ReturnCheck.returning_module` と `LinearityCheck.checked_module` である。作れるのは検査の関数だけである。次の段はこの型を受け取るので、検査を飛ばすことも、順序を入れ替えることもできない。
+- 検査の段は、検査を通ったことを表す抽象型を返す。`ReturnCheck.returning_module` と `LinearityCheck.checked_module` である。作れるのは検査の関数だけである。次の段はこの型を受け取るので、検査を飛ばすことも、順序を入れ替えることもできない。評価順の固定も、同じ理由で、自分だけが作れる抽象型 `EvaluationOrderOfModule.ordered_module` を返す。
 
 ## 構文解析
 
@@ -157,10 +157,51 @@ type check_linearity = Tast.typed_module -> LinearityCheck.checked_module Outcom
 
 式の中で数えるのは、変数が使われた回数だけである。無名の借用（`&x`、`&!x`、借り直しの `&~x`）は、脱糖が `borrow` 文に書き換えている。
 
+## 評価順の固定
+
+```ocaml
+type fix_evaluation_order = LinearityCheck.checked_module -> EvaluationOrderOfModule.ordered_module
+```
+
+Zustral は、1つの演算の被演算子を、書いた順に評価する（issue #53）。
+
+- 算術の演算子と比較は、左辺、右辺の順に評価する。
+- 呼び出しの引数は、呼び出しに書いた順に評価する。関数、メソッド、関数ポインタの呼び出し、レコードと union の構築、`@embed` で同じである。名前付きの引数も、仮引数や欄を宣言した順ではなく、書いた順に評価する。
+- 添字の式（`a[i]`）は、添字を付ける値、添字の順に評価する。
+- `and` と `or` は、左辺を評価し、それで結果が決まらないときだけ、右辺を評価する。`if` 式は、条件を評価し、選ばれた枝だけを評価する。
+- 変数を読む被演算子の値は、その被演算子を評価する時点の値である。後ろの被演算子が、その変数を書き込みで借用して変えても、変わらない。
+- 代入文は、右辺を評価してから、左辺のパスを評価する。制御の持ち上げが、右辺を一時変数に入れる文を、代入の前に置くからである。
+
+生成する C では、1つの演算の被演算子が、1つの C の演算の被演算子になる。C は、関数の引数や演算子の両辺を、どの順に評価するかを決めていない。gcc は引数を後ろから評価し、clang は前から評価する。`lib/EvaluationOrderOfModule.ml` の `fix_evaluation_order_of_module` が、関数とメソッドの本体を、C の順が結果に出ない形に書き換える。
+
+書き換えるのは、式である（`lib/EvaluationOrderOfExpression.ml`）。演算ごとに、被演算子を前から順に見る。その被演算子と、それより後ろのどれかの被演算子が、どちらも「評価の順で結果が変わりうる式」なら、その被演算子を一時変数に入れる文を作り、式を持つ文の前に置く（`lib/EvaluationOrderOfStatement.ml`）。式の中の元の位置には、一時変数を読む式を入れる。評価の順で結果が変わりうる式は、2種類ある（`lib/EvaluationOrderDependence.ml`）。
+
+- プログラムから見えることをする式。呼び出し、`@embed`、プログラムを止めることのある演算（添字、単項の `-`）である。算術の演算子は、メソッドの呼び出しである。
+- 書き込みの借用が及んでいる変数を読む式。間に評価される被演算子が、参照を通して、その変数を変えられる。
+
+それ以外の被演算子は、動かさない。変数、定数、リテラルがそうである。評価の順で結果が変わりうる被演算子が1つしかない演算も、そのままである。こうした式から生成する C は、この段がないときと同じである。
+
+`and` と `or` の右辺、`if` 式の枝は、片方の道でだけ評価される。その中の被演算子を一時変数に入れる文は、その道でだけ実行しなければならない。C の `&&`、`||`、`?:` の中には文を書けないので、式を `if` 文に書き換える。`if` 文の枝が、その文を実行し、式の値を一時変数に代入する。
+
+一時変数の名前は、`_evaluated_in_order_` に番号を付けたものである。番号は、関数ごとに 0 から振る。型は、型検査が式に付けた型である（`TastUtil.get_type`）。
+
+この段を、線形性の検査の後、本体の取り出しの前に置く理由は、3つある。
+
+- 型検査と線形性の検査は、書いたままの式を見る。エラーの文面と位置は、この段があっても変わらない。一時変数が線形の値や参照を持っても、検査はもう済んでいる。
+- 無名の借用は、脱糖が、文を包む `borrow` 文に書き換えている。この段が作る文は、その `borrow` 文の中に入る。脱糖より前に被演算子を別の文に分けると、文ごとに別の `borrow` 文になり、前の被演算子の借用が、後ろの被演算子の前に終わる。読み取りの参照を持ったまま、同じ変数を書き込みで借用できてしまう。
+- 汎用の関数の本体は、環境に入る前に書き換わる。どの単相も、書き換えた後の本体から作られる。
+
+呼び出しの節（`TFuncall`、`TMethodCall`、`TVarMethodCall`）は、引数を仮引数の順に持つ。名前付きの引数を書いた順は、型検査が、節の `written_argument_order` に残す。レコードと union の構築の節は、引数を書いた順に持つ。C の構造体の初期化は、欄を名指しするので、順を問わない。
+
+この段が書き換えないものがある。
+
+- 定数の値。C のマクロになるので、前に文を置けない。
+- `@embed` の C の文字列。一時変数に入れなかった引数は、文字列の `$N` の位置に、式のまま入る。その式を、いつ、何回評価するかは、書いた C が決める。
+
 ## 本体の取り出し
 
 ```ocaml
-type extract_bodies = env -> LinearityCheck.checked_module -> env Outcome.t
+type extract_bodies = env -> EvaluationOrderOfModule.ordered_module -> env Outcome.t
 ```
 
 `lib/BodyExtractionPass.ml` の `extract_bodies` が、関数とインスタンスのメソッドの本体を、環境に入れる。汎用の関数を単相化するときに、本体が要るからである。失敗は、環境の内部エラーだけである。
@@ -168,7 +209,7 @@ type extract_bodies = env -> LinearityCheck.checked_module -> env Outcome.t
 ## 単相化
 
 ```ocaml
-type monomorphize = env -> LinearityCheck.checked_module -> (env * Mtast.mono_module) Outcome.t
+type monomorphize = env -> EvaluationOrderOfModule.ordered_module -> (env * Mtast.mono_module) Outcome.t
 ```
 
 `lib/Monomorphize.ml` の `monomorphize` が、汎用の宣言を、使われている型ごとの宣言に展開する。出力は `Mtast` である。単相は環境に登録する。単相の本体の中で、さらに別の単相が見つかれば、それも登録する。新しい単相がなくなるまで繰り返す。汎用の本体の型変数は、型引数の型で置き換える。型引数が名前のある型なら、名前のある型をそのまま入れる。置き換えた後の木は、汎用でないソースを型検査した木と同じ形である。単相化の後の型（`MonoType.mono_ty`）には、型変数が残らない。領域は、実行時の値を持たないので、どれも `Static` になる。関数とメソッドの単相の領域の型引数も、レコードと union の単相の領域の型引数も、借用の領域も同じである。そのため、`Tag[Rho]` と `Tag[Static]` は1つの単相になり、領域の型引数を取る関数に、借用の領域のレコードを渡せる（issue #142）。

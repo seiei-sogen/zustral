@@ -75,11 +75,12 @@ let parse_and_combine (env: env) (source: module_source): (module_name * Combine
         let* (combined: Combined.combined_module) = body_as_combined env cb in
         Ok (name, combined))
 
-(* The two checks define the types they return, which Pipeline names, so their
-   interfaces cannot name Pipeline's types without a cycle. The types are
-   checked here instead. *)
+(* The two checks and the stage that fixes the order of evaluation define the
+   types they return, which Pipeline names, so their interfaces cannot name
+   Pipeline's types without a cycle. The types are checked here instead. *)
 let check_returns: Pipeline.check_returns = check_ends_in_return
 let check_linearity: Pipeline.check_linearity = check_module_linearity
+let fix_evaluation_order: Pipeline.fix_evaluation_order = EvaluationOrderOfModule.fix_evaluation_order_of_module
 
 let compile_mod (c: compiler) (source: module_source): compiler Outcome.t =
   let (Compiler (env, units)) = c in
@@ -94,8 +95,9 @@ let compile_mod (c: compiler) (source: module_source): compiler Outcome.t =
        with_supply env (fun supply -> augment_module env supply linked)
      in
      let* (checked: checked_module) = check_linearity typed in
-     let* (env: env) = extract_bodies env checked in
-     let* ((env, mono): env * mono_module) = monomorphize env checked in
+     let ordered: EvaluationOrderOfModule.ordered_module = fix_evaluation_order checked in
+     let* (env: env) = extract_bodies env ordered in
+     let* ((env, mono): env * mono_module) = monomorphize env ordered in
      let* ((env, unit): env * c_unit) = with_supply env (fun supply -> gen_module env supply mono) in
      Ok (Compiler (env, units @ [unit])))
 

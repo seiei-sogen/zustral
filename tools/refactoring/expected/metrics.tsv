@@ -18,7 +18,7 @@ lib/CliErrors.ml	141	0	1	0	0	0	12	0	0	0	0
 lib/CodeGen.ml	711	0	0	0	0	0	0	0	0	0	0
 lib/CombiningPass.ml	380	13	0	0	0	0	0	0	0	0	0
 lib/Common.ml	71	0	0	0	0	0	3	0	0	0	0
-lib/Compiler.ml	152	0	0	0	0	0	0	0	0	0	0
+lib/Compiler.ml	154	0	0	0	0	0	0	0	0	0	0
 lib/Cst.ml	175	0	0	0	0	0	2	0	0	0	0
 lib/CstUtil.ml	202	7	0	0	0	0	0	0	0	0	0
 lib/DeclarationErrors.ml	525	0	0	0	0	0	3	0	0	0	0
@@ -34,6 +34,11 @@ lib/EnvUtils.ml	53	0	0	0	0	0	0	0	0	0	0
 lib/Error.ml	255	13	0	0	0	0	1	1	0	0	0
 lib/ErrorText.ml	44	0	0	0	0	0	2	0	0	0	0
 lib/Escape.ml	53	1	0	0	0	1	1	0	0	0	0
+lib/EvaluationOrderDependence.ml	30	0	0	0	0	0	0	0	0	0	0
+lib/EvaluationOrderOfExpression.ml	175	0	0	0	0	0	0	0	0	0	0
+lib/EvaluationOrderOfModule.ml	30	0	0	0	0	0	0	0	0	0	0
+lib/EvaluationOrderOfStatement.ml	86	0	0	0	0	0	0	0	0	0	0
+lib/EvaluationOrderSteps.ml	33	0	0	0	0	0	0	0	0	0	0
 lib/ExportInstantiation.ml	30	0	0	0	0	0	0	0	0	0	0
 lib/ExternalNameCheck.ml	17	2	0	0	0	0	0	0	0	0	0
 lib/ExtractionPass.ml	633	17	0	0	0	0	0	0	0	0	0
@@ -62,7 +67,7 @@ lib/Outcome.ml	59	0	1	0	0	0	0	0	0	0	0
 lib/ParseErrors.ml	46	0	0	0	0	0	2	0	0	0	0
 lib/Parser.mly	575	0	0	0	0	0	0	0	0	0	0
 lib/ParserInterface.ml	28	1	1	1	0	0	0	0	0	0	0
-lib/Pipeline.mli	92	0	0	0	0	0	6	0	0	0	0
+lib/Pipeline.mli	98	0	0	0	0	0	6	0	0	0	0
 lib/Qualifier.ml	31	0	0	0	0	0	0	0	0	0	0
 lib/Region.ml	20	0	0	0	0	0	0	0	0	0	0
 lib/RegionMap.ml	25	1	0	0	0	0	0	0	0	0	0
@@ -70,13 +75,13 @@ lib/ReturnCheck.ml	133	3	0	0	0	0	0	0	0	0	0
 lib/SignatureTypeAtUse.ml	41	0	0	0	0	0	0	0	0	0	0
 lib/SourceContext.ml	54	0	0	0	0	0	1	0	0	0	0
 lib/Span.ml	63	0	0	0	0	0	1	0	0	0	0
-lib/Stages.ml	743	0	0	0	0	0	8	0	0	0	0
+lib/Stages.ml	751	0	0	0	0	0	8	0	0	0	0
 lib/StringSet.ml	9	0	0	0	0	0	0	0	0	0	0
 lib/Supply.ml	74	0	0	0	0	0	0	0	0	0	0
-lib/TastUtil.ml	177	3	0	0	0	0	0	0	0	0	0
+lib/TastUtil.ml	185	3	0	0	0	0	0	0	0	0	0
 lib/Type.ml	288	0	0	0	0	1	0	0	0	0	0
 lib/TypeBindings.ml	182	3	0	0	0	0	0	1	0	0	0
-lib/TypeCheckExpr.ml	1041	44	0	0	0	1	0	0	0	0	0
+lib/TypeCheckExpr.ml	1045	44	0	0	0	1	0	0	0	0	0
 lib/TypeClasses.ml	241	13	0	0	0	0	0	0	0	0	0
 lib/TypeErrors.ml	579	0	0	0	0	0	0	0	0	0	0
 lib/TypeMatch.ml	359	5	0	0	0	0	0	1	0	0	0

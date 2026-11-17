@@ -311,7 +311,7 @@ and augment_function_call (ctx: expr_ctx) (id: function_id) name typarams params
   check_bindings (ctx_place ctx) typarams bindings'';
   let arguments' = cast_arguments bindings'' params arguments in
   let substs = make_substs (ctx_place ctx) bindings'' typarams in
-  TFuncall (id, name, arguments', rt'', substs)
+  TFuncall (id, name, arguments', rt'', substs, written_order_of_arguments (args, param_names))
 
 and augment_record_constructor (ctx: expr_ctx) (id: record_id) (name: qident) (typarams: typarams) (universe: universe) (slots: typed_slot list) (from_context: context_bindings) (args: typed_arglist) =
   (* Check: the argument list must be named *)
@@ -345,8 +345,9 @@ and augment_record_constructor (ctx: expr_ctx) (id: record_id) (name: qident) (t
     check_bindings (ctx_place ctx) typarams (merge_bindings (ctx_place ctx) bindings bindings');
     (* The universe of rt'' is compatible with the declared one: it is that
        one, or, when that is `Type`, `Free`, `Linear` or `Type`
-       (`replaced_universe`). *)
-    TRecordConstructor (rt'', List.map2 (fun a b -> (a, b)) slot_names arguments)
+       (`replaced_universe`). The values are in the order the constructor
+       wrote them, which is the order they are evaluated in (#53). *)
+    TRecordConstructor (rt'', args')
 
 and augment_union_constructor (ctx: expr_ctx) (union_id: union_id) (type_name: qident) (typarams: typarams) (universe: universe) (case: typed_case) (from_context: context_bindings) (args: typed_arglist) =
   let args' = (match args with
@@ -381,14 +382,15 @@ and augment_union_constructor (ctx: expr_ctx) (union_id: union_id) (type_name: q
        when that is `Type`: the replacement computed it again from the
        arguments. *)
     let tyargs = List.map (replace_variables bindings'') tyargs in
-    (* As for a record, this universe is compatible with the declared one. *)
+    (* As for a record, this universe is compatible with the declared one, and
+       the values are in the order the constructor wrote them. *)
     TUnionConstructor {
         union_id;
         type_name;
         tyargs;
         universe = type_universe rt'';
         case_name;
-        args = List.map2 (fun a b -> (a, b)) slot_names arguments;
+        args = args';
       }
 
 and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: type_parameter) (callable_name: qident) (params: value_parameter list) (rt: ty) (from_context: context_bindings) (args: typed_arglist): texpr =
@@ -404,6 +406,7 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
   (* Use the bindings to get the effective return type *)
   let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) (local_name callable_name) params rt from_context bindings in
   let bindings'' = merge_bindings (ctx_place ctx) bindings bindings' in
+  let written_order: written_argument_order = written_order_of_arguments (args, param_names) in
   let dispatch_ty: ty = bound_type (ctx_place ctx) bindings'' typaram in
      (* Is the dispatch type a type variable? *)
      (match dispatch_ty with
@@ -421,6 +424,7 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
                params = params;
                method_name = callable_name;
                args = arguments;
+               written_order = written_order;
                dispatch_ty = dispatch_ty;
                rt = rt'';
                bindings = bindings'';
@@ -444,7 +448,7 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
          let { typarams; _ }: instance_decl = instance in
          let meth_id: ins_meth_id = get_method_of_instance (ctx_place ctx) (ctx_env ctx) instance (original_name callable_name) in
          let substs = make_substs (ctx_place ctx) instance_bindings typarams in
-         TMethodCall (meth_id, callable_name, typarams, arguments', rt'', substs))
+         TMethodCall (meth_id, callable_name, typarams, arguments', rt'', substs, written_order))
 
 and cast_arguments (bindings: type_bindings) (params: value_parameter list) (arguments: texpr list): texpr list =
   let f (ValueParameter (_, expected)) value =

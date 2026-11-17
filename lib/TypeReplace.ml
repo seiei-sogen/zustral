@@ -37,23 +37,23 @@ let rec replace_tyvars_expr (bindings: type_bindings) (expr: texpr): texpr =
   | TTemporary (name, ty) ->
      let ty = replace_variables bindings ty in
      TTemporary (name, ty)
-  | TFuncall (id, name, args, rt, substs) ->
+  | TFuncall (id, name, args, rt, substs, written_order) ->
      let args = List.map (replace_tyvars_expr bindings) args
      and rt = replace_variables bindings rt
      and substs = bindings_from_list Error.NoSpan (List.map (fun (n, t) -> (n, replace_variables bindings t)) (bindings_list substs)) in
-     TFuncall (id, name, args, rt, substs)
-  | TMethodCall (meth_id, name, instance, args, rt, substs) ->
+     TFuncall (id, name, args, rt, substs, written_order)
+  | TMethodCall (meth_id, name, instance, args, rt, substs, written_order) ->
      let args = List.map (replace_tyvars_expr bindings) args
      and rt = replace_variables bindings rt
      and substs = bindings_from_list Error.NoSpan (List.map (fun (n, t) -> (n, replace_variables bindings t)) (bindings_list substs)) in
-     TMethodCall (meth_id, name, instance, args, rt, substs)
-  | TVarMethodCall { source_module_name; typeclass_id; params; method_name; args; dispatch_ty; rt; bindings=bindings'; } ->
+     TMethodCall (meth_id, name, instance, args, rt, substs, written_order)
+  | TVarMethodCall { source_module_name; typeclass_id; params; method_name; args; written_order; dispatch_ty; rt; bindings=bindings'; } ->
      (* FIXME: Do we have to replace the params and the bindings? *)
      let args = List.map (replace_tyvars_expr bindings) args
      and dispatch_ty = replace_variables bindings dispatch_ty
      and rt = replace_variables bindings rt
      in
-     TVarMethodCall { source_module_name; typeclass_id; params; method_name; args; dispatch_ty; rt; bindings=bindings'; }
+     TVarMethodCall { source_module_name; typeclass_id; params; method_name; args; written_order; dispatch_ty; rt; bindings=bindings'; }
   | TFptrCall (name, paramtys, args, rt) ->
      let paramtys = List.map (replace_variables bindings) paramtys
      and args = List.map (replace_tyvars_expr bindings) args

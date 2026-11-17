@@ -20,6 +20,7 @@ digraph G {
         linked[shape=rect fillcolor=aquamarine4 label="Linked.linked_module"]
         typed[shape=rect fillcolor=chartreuse1 label="Tast.typed_module"]
         checked[shape=rect fillcolor=chartreuse3 label="LinearityCheck.checked_module"]
+        ordered[shape=rect fillcolor=chartreuse4 label="EvaluationOrderOfModule.ordered_module"]
         mono[shape=rect fillcolor=firebrick2 label="Mtast.mono_module"]
         unit[shape=rect fillcolor=coral label="c_unit"]
 
@@ -32,6 +33,7 @@ digraph G {
         extract[label="extract"]
         augment[label="augment_module"]
         linearity[label="check_module_linearity"]
+        order[label="fix_evaluation_order_of_module"]
         bodies[label="extract_bodies"]
         monomorphize[label="monomorphize"]
         gen[label="gen_module"]
@@ -55,9 +57,9 @@ digraph G {
     zum -> parse_body -> bcst -> pervasive
     pervasive -> combine
     combine -> combined -> check_returns -> returning -> desugar -> small -> extract -> linked
-    linked -> augment -> typed -> linearity -> checked
-    checked -> bodies
-    checked -> monomorphize -> mono -> gen -> unit
+    linked -> augment -> typed -> linearity -> checked -> order -> ordered
+    ordered -> bodies
+    ordered -> monomorphize -> mono -> gen -> unit
     unit -> program [label="c_unit list, all modules"]
     ep -> entry
     wrappers -> program

@@ -1,1 +1,3 @@
 Pins that the C text of an `@embed` argument goes into the template as written (issue #130): `\1` is the C character `'\1'`, `'\\'` keeps both backslashes, and a `$2` inside the text of argument 1 is not replaced by argument 2. A marker with no argument (`$2` with one argument) stays as written. The compiler used to read the text as a replacement template: `\1` stopped it with an OCaml exception, `\\` became `\`, and the text of each argument was searched again for the markers of the next.
+
+Argument 2 of the third `@embed` is a variable. When both arguments are `@embed`s, the first is evaluated into a temporary before the outer `@embed` (issue #53), and the template gets the name of the temporary, not the text.

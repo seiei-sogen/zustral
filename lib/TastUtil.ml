@@ -49,6 +49,14 @@ and find_arg_with_name l name =
   let (_, value) = List.find (fun (n, _) -> name = n) l in
   value
 
+let written_order_of_arguments ((args, parameter_names): typed_arglist * identifier list): written_argument_order =
+  match args with
+  | TPositionalArglist arguments ->
+     List.mapi (fun index _ -> index) arguments
+  | TNamedArglist arguments ->
+     let index_of_parameter: (identifier * int) list = List.mapi (fun index name -> (name, index)) parameter_names in
+     List.map (fun (name, _) -> List.assoc name index_of_parameter) arguments
+
 let reference_type (elem_ty: ty) (region: ref_region): Common.borrowing_mode -> ty = function
   | ReadBorrow -> ReadRef (elem_ty, region)
   | WriteBorrow -> WriteRef (elem_ty, region)
@@ -74,9 +82,9 @@ let rec get_type (place: place) = function
      ty
   | TTemporary (_, ty) ->
      ty
-  | TFuncall (_, _, _, ty, _) ->
+  | TFuncall (_, _, _, ty, _, _) ->
      ty
-  | TMethodCall (_, _, _, _, ty, _) ->
+  | TMethodCall (_, _, _, _, ty, _, _) ->
      ty
   | TVarMethodCall { rt; _ } ->
      rt

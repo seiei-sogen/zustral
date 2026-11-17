@@ -35,6 +35,11 @@ open Identifier
 *)
 val arglist_to_positional : Error.place -> typed_arglist * identifier list -> texpr list
 
+(** The order a call wrote its arguments in, from the argument list and the
+    names of the parameters. Call it after {!arglist_to_positional}, which
+    checks that a named list names each parameter once. *)
+val written_order_of_arguments : typed_arglist * identifier list -> written_argument_order
+
 val get_type : Error.place -> texpr -> ty
 
 (** Whether an expression may be the value of a constant: literals, other

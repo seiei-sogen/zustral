@@ -228,9 +228,9 @@ let rec count (name: identifier) (expr: texpr): appearances =
        zero_appearances
   | TFunVar _ ->
      zero_appearances
-  | TFuncall (_, _, args, _, _) ->
+  | TFuncall (_, _, args, _, _, _) ->
      merge_list (List.map c args)
-  | TMethodCall (_, _, _, args, _, _) ->
+  | TMethodCall (_, _, _, args, _, _, _) ->
      merge_list (List.map c args)
   | TVarMethodCall { args; _ } ->
      merge_list (List.map c args)
