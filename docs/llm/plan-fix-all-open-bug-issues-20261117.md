@@ -95,6 +95,9 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 - `generic [A: Free] instance TC(Int32)` のように、引数に現れない型引数を持つインスタンスが、宣言の時点で通る。呼ぶと、単相化の段で `Parameter list and argument list don't have the same length` になる（`033/004` が固定している）。
 - 型クラスの型引数を使わないメソッド（`method answer(): Int32`）が、宣言の時点で通る。呼ぶと `No binding for this parameter: T` になる（`033/007` が固定している）。
 - 自分を呼ぶたびに型引数が大きくなる汎用の関数（`Option[T]` を渡して自分を呼ぶ）で、コンパイルが終わらない。
+- 組み込みのモジュールの中の位置が、ファイル名が空で、行が 1 つ多い（`cli/052` が固定している）。
+- 無名の借用の領域が、エラーの文面に `_tmp_region_N` と出る。利用者が書いた名前がないからである。
+- 取り込んだ定数の借用は、まだ「変数が見つからない」と出るはずである（コードを読んだだけで、実行していない）。
 - 本体の関数の定義の位置が、前のトークンの末尾から始まる。構文規則が、空になりうる `generic_segment` で始まるからである。
 
 ## 3. 単位
@@ -214,10 +217,10 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 - [x] **Y9** #87 位置の出ないエラー。
   - 原因: 結合した定義が位置を持たない（`lib/Stages.ml:451`）ので、`lib/TypingPass.ml:652`、`:658`、`:667`、`:680`、`:721` と `lib/DesugarBorrows.ml:259` が `NoSpan` で動く。`lib/CombiningPass.ml:176`、`:204`、`:268`、`:277`。`lib/Entrypoint.ml:32-71` が `in_module` の外で呼ばれる。
   - 直し方: 結合した定義に、宣言の位置を持たせ、文の文脈に渡す。中。
-- [ ] **Y10** #144、#31、#93、#163、#124 文の位置。
+- [x] **Y10** #144、#31、#93、#163、#124 文の位置。
   - 原因: `lib/Error.ml:109-112` の `place_inside` が、`NoSpan` と空の位置から「0 行目、空のファイル名」を作る。`lib/DesugarBorrows.ml:155-156` と `lib/LiftControlPass.ml:40-131` が、`empty_span` で文を包む。
   - 直し方: 空の位置なら外側の位置を返す。包む文に、元の文の位置を渡す。`for` の境界の型は、キャストより前に調べる。小から中。
-- [ ] **Y11** #144、#30、#124、#133 文面。
+- [x] **Y11** #144、#30、#124、#133 文面。
   - 直し方:
     - 領域に、表示用の名前を持たせる。`Static` と、利用者が書いた領域の名前を出す（`lib/Type.ml:125`、`lib/Region.ml`）。中。期待値のファイルが多く変わる。
     - `lib/TypeErrors.ml:178-179` の「領域が違う」を、型も違う場合の文面に直す。
@@ -370,3 +373,5 @@ issue か `docs/plan.md` に推奨があるものは、推奨を既定にして�
 | Z12 | `ccb0010`、`a27d0dc` | 同じ名前の借用を2回書くと gcc が `redefinition of rr`。定数のスパンの要素の借用で `lvalue required as unary & operand` | 1、1 と 98 を出力する | 14 個とも ok |
 | Z13 | `d63a0c1` | `let f: Fn[Int32, Bool, Unit] := foo` が ``Cannot cast to `Fn[Bool, Int32, Unit]` from `Fn[Int32, Bool, Unit]` `` | 通って動く | 14 個とも ok |
 | Z15 | `4ed9a47` | レコード、union、スパンどうしの `=` で gcc が `invalid operands to binary ==` | ``Values of the type `R` cannot be compared.``。参照どうしの比較も断る。型変数は、いまのまま受ける | 14 個とも ok |
+| Y10 | `a47266b` | `printLn(&nope)` のエラーが関数全体か「0 行目、空のファイル名」を指す。`r.x := 5` のエラーが前の `let` の行を指す。`if` と `while` の条件のエラーが前の `let` を指す。`for i from true to 10` が、位置のないキャストのエラー | どれも、その文の位置を指す。`for` は ``The initial bound of a `for` loop has the type `Bool`, but it must have the type `Index`.`` | 14 個とも ok |
+| Y11 | `23b02c8` | 領域が `Region<0>`、`Region<2>` と出る。```x`cannot`` に空白がない。union の分解が「パスを取れない」。定数の借用が「変数が見つからない」 | `Static` と、利用者が書いた領域の名前が出る。文面を直した。``Cannot borrow the constant `c`: only a variable can be borrowed.``。期待値 96 個は、領域の表示だけが変わった | 14 個とも ok |
