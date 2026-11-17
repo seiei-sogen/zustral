@@ -1,0 +1,29 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The " },
+    { "type": "text", "content": "final" },
+    { "type": "text", "content": " bound of a " },
+    { "type": "code", "content": "for" },
+    { "type": "text", "content": " loop has the type " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": ", but it must have the type " },
+    { "type": "type", "content": "Index" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/107-for-final-bound-not-index/Test.zum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 6, "column": 16 }
+  },
+  "context": [
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        let last: Int32 := 10;" ],
+    [ 4, "        for i from 0 to last do" ],
+    [ 5, "            printLn(i);" ],
+    [ 6, "        end for;" ],
+    [ 7, "        return ExitSuccess();" ],
+    [ 8, "    end;" ]
+  ]
+}

@@ -1,0 +1,1 @@
+Test that an error in the condition of an `if` statement points at the `if` statement (issues #93, #163). The compiler computes the condition in a statement of its own before the `if` (lib/LiftControlPass.ml), and that statement had the position of the `let` before the `if`.

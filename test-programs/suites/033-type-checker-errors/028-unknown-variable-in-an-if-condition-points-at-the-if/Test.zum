@@ -1,0 +1,10 @@
+module body Test is
+    function main(): ExitCode is
+        let a: Int32 := 1;
+        printLn(a);
+        if nope = 1 then
+            printLn("x");
+        end if;
+        return ExitSuccess();
+    end;
+end module body.

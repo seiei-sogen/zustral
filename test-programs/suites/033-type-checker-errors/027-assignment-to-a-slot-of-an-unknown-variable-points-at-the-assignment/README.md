@@ -1,0 +1,1 @@
+Test that the error of assigning to a slot of a variable that does not exist points at the assignment (issue #31). The borrow statement the compiler adds around the assignment (lib/DesugarBorrows.ml) had no position of its own, so the error had the position of the function.

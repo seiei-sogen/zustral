@@ -1,0 +1,7 @@
+module body Test is
+    function main(): ExitCode is
+        printLn(1);
+        nope.x := 1;
+        return ExitSuccess();
+    end;
+end module body.

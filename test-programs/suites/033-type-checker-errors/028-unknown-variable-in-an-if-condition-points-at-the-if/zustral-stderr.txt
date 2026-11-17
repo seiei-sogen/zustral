@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "I can't find a " },
+    { "type": "text", "content": "variable" },
+    { "type": "text", "content": " named " },
+    { "type": "code", "content": "nope" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/033-type-checker-errors/028-unknown-variable-in-an-if-condition-points-at-the-if/Test.zum",
+    "startp": { "line": 5, "column": 8 },
+    "end": { "line": 7, "column": 15 }
+  },
+  "context": [
+    [ 3, "        let a: Int32 := 1;" ],
+    [ 4, "        printLn(a);" ],
+    [ 5, "        if nope = 1 then" ],
+    [ 6, "            printLn(\"x\");" ],
+    [ 7, "        end if;" ],
+    [ 8, "        return ExitSuccess();" ],
+    [ 9, "    end;" ]
+  ]
+}

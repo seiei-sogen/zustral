@@ -1,0 +1,1 @@
+Test that an error in the expression of a `case` statement points at the `case` statement (issue #163). The compiler computes the expression in a statement of its own before the `case` (lib/LiftControlPass.ml), and that statement had the position of the `let` before the `case`.

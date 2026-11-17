@@ -1,0 +1,1 @@
+Test that an error in the condition of a `while` statement points at the `while` statement (issue #93). The compiler computes the condition in a statement of its own before the loop (lib/LiftControlPass.ml), and that statement had the position of the `var` before the loop.

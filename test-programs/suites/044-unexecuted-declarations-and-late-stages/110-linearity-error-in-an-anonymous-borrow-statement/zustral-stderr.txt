@@ -9,9 +9,15 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "",
-    "startp": { "line": 0, "column": 0 },
-    "end": { "line": 0, "column": 0 }
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/110-linearity-error-in-an-anonymous-borrow-statement/Test.zum",
+    "startp": { "line": 18, "column": 8 },
+    "end": { "line": 18, "column": 17 }
   },
-  "context": null
+  "context": [
+    [ 16, "    function f(b: Box): Unit is" ],
+    [ 17, "        consume(b);" ],
+    [ 18, "        peek(&b);" ],
+    [ 19, "        return nil;" ],
+    [ 20, "    end;" ]
+  ]
 }

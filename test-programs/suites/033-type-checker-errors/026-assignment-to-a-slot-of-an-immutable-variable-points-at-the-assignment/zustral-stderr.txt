@@ -1,0 +1,21 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot borrow the variable " },
+    { "type": "code", "content": "r" },
+    { "type": "text", "content": " mutably because the variable is immutable." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/033-type-checker-errors/026-assignment-to-a-slot-of-an-immutable-variable-points-at-the-assignment/Test.zum",
+    "startp": { "line": 9, "column": 8 },
+    "end": { "line": 9, "column": 17 }
+  },
+  "context": [
+    [ 7, "        let r: Rec := Rec(x => 1);" ],
+    [ 8, "        printLn(1);" ],
+    [ 9, "        r.x := 5;" ],
+    [ 10, "        printLn(r.x);" ],
+    [ 11, "        return ExitSuccess();" ]
+  ]
+}

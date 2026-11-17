@@ -1,0 +1,15 @@
+module body Test is
+    union Shape: Free is
+        case Dot;
+    end;
+
+    function main(): ExitCode is
+        let a: Int32 := 1;
+        printLn(a);
+        case nope of
+            when Dot do
+                skip;
+        end case;
+        return ExitSuccess();
+    end;
+end module body.

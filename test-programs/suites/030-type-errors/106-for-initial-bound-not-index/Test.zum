@@ -1,0 +1,8 @@
+module body Test is
+    function main(): ExitCode is
+        for i from true to 10 do
+            printLn(i);
+        end for;
+        return ExitSuccess();
+    end;
+end module body.
