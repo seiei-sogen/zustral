@@ -170,7 +170,9 @@ and exec_target (mods: Pipeline.module_source list) (target: target): unit Outco
      Outcome.catch (fun () ->
          (* Write the output to a temporary file, which `cc` compiles. *)
          let cfile: string = Filename.temp_file "zustral_" ".c" in
-         Fun.protect ~finally:(fun () -> Sys.remove cfile) (fun () ->
+         (* The file may be gone already (a cleaner of the temporary directory):
+            removing it must not replace the result of the compilation. *)
+         Fun.protect ~finally:(fun () -> if Sys.file_exists cfile then Sys.remove cfile) (fun () ->
              write_string_to_file cfile code;
              let _ = compile_c_code cfile bin_path in
              ()))
