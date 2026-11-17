@@ -57,7 +57,7 @@ type combine_body = env -> concrete_module_body -> Combined.combined_module Outc
 
 結合は、取り込みを解決し（`lib/ImportResolution.ml`）、名前を修飾する。文と式は、抽象構文木（`Ast`）になる（`lib/AbstractionPass.ml`）。
 
-安全なモジュール（`pragma Unsafe_Module;` のないモジュール）に書けないもののうち、`Zustral.Memory` からの取り込みと `@embed` の式は、この段で拒む。外部の関数の宣言（`Foreign_Import`）は、型検査が拒む。`@embed` は、任意の C の式を任意の型の値にするので、安全なモジュールで使えると、型検査と線形性の検査の保証が成り立たない。取り込みの表（`Imports.import_map`）が、取り込む側のモジュールの種類を持つ。`@embed` の式を抽象構文木にする所が、それを見る。組み込みモジュールも、`@embed` を使うので、安全でないモジュールである。
+安全なモジュール（`pragma Unsafe_Module;` のないモジュール）に書けないもののうち、`Zustral.Memory` からの取り込みと `@embed` の式は、この段で拒む。外部の関数の宣言（`Foreign_Import`）と、C へ公開する関数（`Foreign_Export`）は、型検査が拒む（issue #161）。`@embed` は、任意の C の式を任意の型の値にするので、安全なモジュールで使えると、型検査と線形性の検査の保証が成り立たない。取り込みの表（`Imports.import_map`）が、取り込む側のモジュールの種類を持つ。`@embed` の式を抽象構文木にする所が、それを見る。組み込みモジュールも、`@embed` を使うので、安全でないモジュールである。
 
 ## return の検査
 

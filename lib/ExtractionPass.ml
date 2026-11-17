@@ -463,14 +463,14 @@ and reserve_definition (env: env) (mod_id: mod_id) (mn: module_name) (def: combi
              impl = (match external_name with
                      | Some s ->
                         if typarams_size typarams = 0 then
-                          Foreign (s, check_signature place Import value_params rt)
+                          Foreign (s, check_signature place Import name value_params rt)
                         else
                           ForeignGeneric
                      | None -> BodyNotAttached)
            }
          in
          let export: (string * ty foreign_signature) option =
-           Option.map (fun name -> (name, check_signature place Export value_params rt)) export_name
+           Option.map (fun exported_as -> (exported_as, check_signature place Export name value_params rt)) export_name
          in
          let (env, decl_id) = register place env (NewFunction fn_input) in
          let env =

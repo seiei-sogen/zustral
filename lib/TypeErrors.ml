@@ -83,6 +83,8 @@ type t =
   | CantAccessSlotNotRecord of { slot_name: identifier; ty: ty }
   | CantIndexNotSpan of ty
   | ExportDisallowedType of ty
+  | ImportDisallowedType of { function_name: identifier; parameter: identifier option; ty: ty }
+  (** [parameter] is [None] for the return type. *)
   | TyparamRedefinition of { param: type_parameter; was: ty; redef: ty }
   | TyparamBindingWrongUniverse of { param: type_parameter; ty: ty; expected: universe; actual: universe }
   | InstanceArgumentWrongUniverse of { ty: ty; expected: universe; actual: universe }
@@ -434,6 +436,17 @@ let render (error: t): err_text =
        Type ty;
        Text " is not allowed in the signature of an exported function."
      ]
+  | ImportDisallowedType { function_name; parameter; ty } ->
+     (match parameter with
+      | Some parameter ->
+         [Text "The type "; Type ty; Text " of the parameter "; Code (ident_string parameter)]
+      | None ->
+         [Text "The return type "; Type ty])
+     @ [
+         Text " is not allowed in the signature of the imported function ";
+         Code (ident_string function_name);
+         Text "."
+       ]
   | TyparamRedefinition { param; was; redef } ->
      [
        Text "The type parameter ";

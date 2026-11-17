@@ -131,7 +131,7 @@ let register_record (env: Env.env) (mod_id: Id.mod_id) (name: string): Env.env *
     })
 
 let foreign_signature (direction: ForeignType.direction) (params: value_parameter list) (rt: ty): ty ForeignType.foreign_signature =
-  ForeignType.check_signature NoSpan direction params rt
+  ForeignType.check_signature NoSpan direction (make_ident "c_function") params rt
 
 let region: ty = RegionTy Region.static_region
 
@@ -343,7 +343,8 @@ let test_types_across_the_c_boundary _ =
       let params = [ValueParameter (make_ident "x", ty)] in
       let error_in (direction: ForeignType.direction) = error_of (fun () -> foreign_signature direction params Boolean) in
       assert_equal ~msg:("import " ^ type_string ty)
-        (if allowed Import ty then None else Some (Generic ForeignFunctionTypeNotAllowed))
+        (if allowed Import ty then None else
+           Some (Type (ImportDisallowedType { function_name = make_ident "c_function"; parameter = Some (make_ident "x"); ty })))
         (error_in Import);
       assert_equal ~msg:("export " ^ type_string ty)
         (if allowed Export ty then None else Some (Type (ExportDisallowedType ty)))

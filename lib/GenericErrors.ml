@@ -34,7 +34,6 @@ type t =
   | OverlappingInstances
   | DuplicateTypeParameter of type_parameter option
   | TypeWrongArity of { typename: identifier; expected: int; actual: int option }
-  | ForeignFunctionTypeNotAllowed
   | BorrowExpressionNotAllowed
   | BadWhitespaceEscape
   | SymbolImportedTwice
@@ -125,10 +124,6 @@ let render (error: t): err_text =
           Text " arguments."
         ]
       | None -> [Text "."])
-  | ForeignFunctionTypeNotAllowed ->
-     [
-       Text "Not allowed"
-     ]
   | BorrowExpressionNotAllowed ->
      [
        Text "Borrow expressions not allowed in this context."

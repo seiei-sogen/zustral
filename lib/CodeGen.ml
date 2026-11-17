@@ -189,6 +189,14 @@ let rec gen_foreign_type (ty: mono_ty foreign_ty): c_ty =
   | ForeignSpan t ->
      CPointer (gen_type t)
 
+(* The C return type of a function that crosses the C boundary. *)
+let gen_foreign_return_type (rt: mono_ty foreign_return): c_ty =
+  match rt with
+  | ForeignReturnsNothing ->
+     CBuiltinType CVoidType
+  | ForeignReturns ty ->
+     gen_foreign_type ty
+
 (* Expressions *)
 
 (* Given the ID of a union type, returns the name of the
@@ -560,7 +568,7 @@ let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_de
   | MForeignFunction (id, _, params, rt, signature, underlying) ->
      let def_d = Desc "Foreign function" in
      let ff_params = List.map (fun (n, t) -> CValueParam (gen_ident n, gen_foreign_type t)) signature.params
-     and ff_rt = gen_foreign_type signature.rt in
+     and ff_rt = gen_foreign_return_type signature.rt in
      let ff_local_decl = CLocalFunctionDeclaration (CIdent.external_name underlying, ff_params, ff_rt, LinkageExternal) in
      let make_param ((n, t): identifier * mono_ty foreign_ty) =
        match t with
@@ -573,10 +581,15 @@ let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_de
      in
      let args = List.map make_param signature.params in
      let funcall = CFuncall (CIdent.external_name underlying, args) in
-     let body = CBlock [
-                    ff_local_decl;
-                    CReturn funcall
-                  ] in
+     let call: c_stmt list =
+       match signature.rt with
+       | ForeignReturnsNothing ->
+          (* The function returns `nil`. *)
+          [CDiscarding funcall; CReturn (gen_exp mn MNilConstant)]
+       | ForeignReturns _ ->
+          [CReturn funcall]
+     in
+     let body = CBlock (ff_local_decl :: call) in
      let def = CFunctionDefinition (def_d, gen_function_id id, gen_params mn params, gen_type rt, body) in
      ([def], supply)
   | MConcreteInstance (_, _, _, methods) ->

@@ -49,6 +49,7 @@ type known_pragma =
 type t =
   | ForeignInSafeModule
   | EmbedInSafeModule
+  | ExportInSafeModule
   | ForeignTypeParameters
   | FunInvalidPragmas
   | DeclarationKindMismatch of { name: identifier; expected: declaration_kind }
@@ -126,6 +127,15 @@ let render (error: t): err_text =
      [
        Text "Can't use ";
        Code "@embed";
+       Text " in a safe module.";
+       Break;
+       Text "Consider adding ";
+       Code ("pragma " ^ BuiltInNames.unsafe_module_pragma_name ^ ";")
+     ]
+  | ExportInSafeModule ->
+     [
+       Text "Can't use ";
+       Code BuiltInNames.foreign_export_pragma_name;
        Text " in a safe module.";
        Break;
        Text "Consider adding ";

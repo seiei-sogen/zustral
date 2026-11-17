@@ -738,8 +738,14 @@ let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (
             which ForeignGeneric took. *)
          (match pragmas with
           | [ForeignExportPragma _] ->
-             let (body', _, supply) = augment_stmt ctx lexenv supply body in
-             (TFunction (decl_id, vis, name, typarams, params, rt, body', doc), supply)
+             (* C code calls an exported function, and C code is outside what
+                a safe module guarantees, as a foreign function is (#161). *)
+             (match kind with
+              | UnsafeModule ->
+                 let (body', _, supply) = augment_stmt ctx lexenv supply body in
+                 (TFunction (decl_id, vis, name, typarams, params, rt, body', doc), supply)
+              | SafeModule ->
+                 declaration_error place ExportInSafeModule)
           | [] ->
              let (body', _, supply) = augment_stmt ctx lexenv supply body in
              (TFunction (decl_id, vis, name, typarams, params, rt, body', doc), supply)

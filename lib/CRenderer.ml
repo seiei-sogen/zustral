@@ -195,6 +195,7 @@ and render_type = function
      ^ "}"
 
 and render_builtin_type = function
+  | CVoidType -> "void"
   | CUnitType -> "au_unit_t"
   | CBoolType -> "au_bool_t"
   | CNat8Type -> "au_nat8_t"
