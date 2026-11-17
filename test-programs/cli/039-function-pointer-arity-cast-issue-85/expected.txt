@@ -3,15 +3,18 @@ files:
 --- stdout
 --- stderr
 Error:
-  Title: Internal Error
+  Title: Type Error
   Module:
-    [unknown]
+    Arity
   Location:
-    [no span available]
+    Filename: 'Arity.zum'
+    From: line 8, column 8
+    To: line 8, column 56
   Description:
-    Internal compiler error: Invalid_argument("List.map2")
-    
-    This is a bug in the compiler, please open an issue here: `https://github.com/seiei-sogen/zustral/issues`
+    Cannot cast to `Fn[Int32, Int32]` from `Fn[Int32, Int32, Int32]`
   Code:
-    [no span available]
-
+     6 |     function main(): ExitCode is
+     7 |         let f: Fn[Int32, Int32, Int32] := add;
+     8 |         let g: Fn[Int32, Int32] := f : Fn[Int32, Int32];
+     9 |         return ExitSuccess();
+    10 |     end;

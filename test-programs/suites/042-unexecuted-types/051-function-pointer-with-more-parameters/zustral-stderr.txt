@@ -1,12 +1,23 @@
-Error:
-  Title: Internal Error
-  Module:
-    [unknown]
-  Location:
-    [no span available]
-  Description:
-    Internal compiler error: Invalid_argument("List.map2")
-    
-    This is a bug in the compiler, please open an issue here: `https://github.com/seiei-sogen/zustral/issues`
-  Code:
-    [no span available]
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "Fn[Int32]" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "Fn[Int32, Int32]" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/042-unexecuted-types/051-function-pointer-with-more-parameters/Test.zum",
+    "startp": { "line": 19, "column": 8 },
+    "end": { "line": 19, "column": 16 }
+  },
+  "context": [
+    [ 17, "" ],
+    [ 18, "    function pass(f: Fn[Int32, Int32]): Unit is" ],
+    [ 19, "        take(f);" ],
+    [ 20, "        return nil;" ],
+    [ 21, "    end;" ]
+  ]
+}

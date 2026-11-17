@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Cannot cast to " },
+    { "type": "type", "content": "Fn[Int32, Int32]" },
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "Fn[Int32, Int32, Int32]" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/096-function-as-pointer-with-fewer-parameters/Test.zum",
+    "startp": { "line": 7, "column": 8 },
+    "end": { "line": 7, "column": 39 }
+  },
+  "context": [
+    [ 5, "" ],
+    [ 6, "    function main(): ExitCode is" ],
+    [ 7, "        let g: Fn[Int32, Int32] := add;" ],
+    [ 8, "        return ExitSuccess();" ],
+    [ 9, "    end;" ]
+  ]
+}
