@@ -85,6 +85,16 @@ let check_all_type_parameters_appear_in_signature (place: place) (typarams: typa
   in
   List.iter check_typaram (typarams_as_list typarams)
 
+(* A type of the Type universe takes its universe from its type arguments, so
+   it needs type parameters (#144). Checked when the ID of the type is
+   reserved, before any declaration of the module parses a type that names
+   it. *)
+let check_type_universe_has_type_parameters (span: Span.span) (name: identifier) (typarams: typarams) (universe: universe): unit =
+  if universe = TypeUniverse && typarams_size typarams = 0 then
+    declaration_error (AtSpan span) (TypeUniverseWithoutParameters name)
+  else
+    ()
+
 (* What is left of extracting a definition once the IDs of the records and
    unions of its module are reserved: it gets the environment and the type
    signatures of the module, and registers the definition. *)
@@ -251,6 +261,7 @@ and reserve_definition (env: env) (mod_id: mod_id) (mn: module_name) (def: combi
          let decl = LConstant (decl_id, vis, name, ty, def, docstring) in
          (env, decl))))
   | CRecord (span, vis, name, typarams, universe, slots, docstring) ->
+     check_type_universe_has_type_parameters span name typarams universe;
      let (env, id) = reserve_record_id env in
      (env, (Some (TypeSignature (name, typarams, universe, RecordTypeId id)), fun env local_types ->
      let (_, parse_slot, _) = parsers env local_types in
@@ -290,6 +301,7 @@ and reserve_definition (env: env) (mod_id: mod_id) (mn: module_name) (def: combi
          let decl = LRecord (decl_id, vis, name, typarams, universe, slots, docstring) in
          (env, decl))))
   | CUnion (span, vis, name, typarams, universe, cases, docstring) ->
+     check_type_universe_has_type_parameters span name typarams universe;
      let (env, id) = reserve_union_id env in
      (env, (Some (TypeSignature (name, typarams, universe, UnionTypeId id)), fun env local_types ->
      let (_, parse_slot, _) = parsers env local_types in
@@ -319,6 +331,14 @@ and reserve_definition (env: env) (mod_id: mod_id) (mn: module_name) (def: combi
            | RegionUniverse ->
               declaration_error place (TypesAreNotRegions { name; declaration = UnionDeclaration })
            | FreeUniverse | LinearUniverse | TypeUniverse ->
+              ()
+         in
+         (* A union has a case: C has no empty enum (#163, #133). *)
+         let _ =
+           match cases with
+           | [] ->
+              declaration_error place (UnionWithoutCases name)
+           | _ :: _ ->
               ()
          in
          (* Add the union itself to the env *)

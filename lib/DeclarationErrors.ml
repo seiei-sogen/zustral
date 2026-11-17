@@ -81,6 +81,7 @@ type t =
   | TypesAreNotRegions of { name: identifier; declaration: declaration_kind }
   | RegionUsedAsType of identifier
   | TypeUniverseWithoutParameters of identifier
+  | UnionWithoutCases of identifier
   | RegionParameterUsedAsType of identifier
   | UnknownTypeclass of identifier
   | TyparamNotInSignature of type_parameter
@@ -367,6 +368,12 @@ let render (error: t): err_text =
        Text " or the ";
        Code "Linear";
        Text " universe.";
+     ]
+  | UnionWithoutCases name ->
+     [
+       Text "The union ";
+       Code (ident_string name);
+       Text " has no cases. A union needs at least one case."
      ]
   | RegionParameterUsedAsType name ->
      [

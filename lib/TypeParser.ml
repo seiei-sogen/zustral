@@ -114,7 +114,7 @@ let parse_built_in_type (place: place) (name: qident) (args: ty list): ty option
       | None ->
          None
 
-let rec effective_universe (place: place) name (typarams: typarams) declared_universe args =
+let rec effective_universe (place: place) name declared_universe args =
   (* Algorithm:
 
      1. If the declared universe is Free then none of the type parameters can be Linear or Type.
@@ -129,17 +129,16 @@ let rec effective_universe (place: place) name (typarams: typarams) declared_uni
      3. If the declared universe is Region, that's the declaration error
         RegionUsedAsType: a region is not a type.
 
-     4. Finally, if the universe is Type:
-         4.1. First, there has to be at least one type parameter: the universe comes from the
-              arguments. A type declared without any is the declaration error
-              TypeUniverseWithoutParameters.
+     4. Finally, if the universe is Type, the universe comes from the arguments. The type has at
+        least one type parameter: one declared without any is the declaration error
+        TypeUniverseWithoutParameters, raised when its ID is reserved (ExtractionPass).
 
-         4.2. If any argument's universe is Linear, the effective universe is Linear.
+         4.1. If any argument's universe is Linear, the effective universe is Linear.
 
-         4.3. Otherwise, if any argument's universe is Type, the effective universe is Type. The ordering
+         4.2. Otherwise, if any argument's universe is Type, the effective universe is Type. The ordering
               here is because Linear is stronger (i.e. lower in the poset of universes) than Type.
 
-         4.4. Otherwise, the effective universe is Free.
+         4.3. Otherwise, the effective universe is Free.
    *)
   match declared_universe with
   | FreeUniverse ->
@@ -155,11 +154,7 @@ let rec effective_universe (place: place) name (typarams: typarams) declared_uni
         with TypesAreNotRegions (#141). *)
      declaration_error place (RegionUsedAsType (original_name name))
   | TypeUniverse ->
-     if (typarams_size typarams) = 0 then
-       (* Nothing rejects the declaration of such a type, so the mistake is
-          reported where the type is used. *)
-       declaration_error place (TypeUniverseWithoutParameters (original_name name))
-     else if any_arg_is_linear args then
+     if any_arg_is_linear args then
        LinearUniverse
      else if any_arg_is_type args then
        TypeUniverse
@@ -284,7 +279,7 @@ and parse_user_defined_type' (place: place) (ts: type_signature) (name: qident) 
      parameter in the type signature. *)
   check_universes_match place ts_params args;
   (* Construct the named type *)
-  let universe = effective_universe place name ts_params declared_universe args in
+  let universe = effective_universe place name declared_universe args in
   NamedType (name, id, args, universe)
 
 and check_param_arity_matches (place: place) (params: typarams) (args: ty list) (ty_name: qident) : unit =

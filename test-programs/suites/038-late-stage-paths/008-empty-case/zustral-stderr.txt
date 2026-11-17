@@ -1,24 +1,24 @@
 {
   "module": "Test",
-  "kind": "Linearity Error",
+  "kind": "Declaration Error",
   "text": [
-    { "type": "text", "content": "The variable " },
-    { "type": "code", "content": "foo" },
+    { "type": "text", "content": "The union " },
+    { "type": "code", "content": "Never" },
     {
       "type": "text",
-      "content": " is not consumed by the time of the return statement. Did you forget to call a destructor, or destructure the contents?"
+      "content": " has no cases. A union needs at least one case."
     }
   ],
   "span": {
     "filename": "test-programs/suites/038-late-stage-paths/008-empty-case/Test.zum",
-    "startp": { "line": 11, "column": 8 },
-    "end": { "line": 11, "column": 17 }
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 3, "column": 8 }
   },
   "context": [
-    [ 9, "        case n of" ],
-    [ 10, "        end case;" ],
-    [ 11, "        return 1;" ],
-    [ 12, "    end;" ],
-    [ 13, "" ]
+    [ 1, "module body Test is" ],
+    [ 2, "    union Never: Free is" ],
+    [ 3, "    end;" ],
+    [ 4, "" ],
+    [ 5, "    record Foo: Linear is" ]
   ]
 }

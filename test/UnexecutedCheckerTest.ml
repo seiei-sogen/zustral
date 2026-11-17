@@ -301,6 +301,13 @@ let test_assign_temporary _ =
   (* A name not in the table is not a variable whose use is checked. *)
   assert_equal (Ok ()) (check_linearity [] (TAssignTmp (i "elsewhere", TNilConstant)))
 
+(* A case statement without a when clause leaves the table as it was. The type
+   checker makes none, because a union has a case (#163). *)
+let test_case_without_when_clauses _ =
+  let w = Lazy.force world in
+  let case_without_whens: tstmt = TCase (sp, TNilConstant, w.shape_id, [], [], CasePlain) in
+  assert_equal (Ok ()) (check_linearity [] (block [let_t; case_without_whens; use_t]))
+
 (* TypeCheckExpr *)
 
 let ctx_with (vars: (string * ty) list): TypeCheckExpr.expr_ctx =
@@ -519,6 +526,7 @@ let suite =
       "a name declared twice" >:: test_name_declared_twice;
       "a name not declared" >:: test_name_not_declared;
       "assigning a temporary" >:: test_assign_temporary;
+      "a case without when clauses" >:: test_case_without_when_clauses;
       "checked as inferred" >:: test_checked_as_inferred;
       "a pointer slot of a non-reference" >:: test_pointer_slot_of_non_reference;
       "a method of no instance" >:: test_method_of_no_instance;

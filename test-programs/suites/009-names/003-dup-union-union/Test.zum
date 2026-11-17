@@ -1,7 +1,7 @@
 module body Test is
-    union A: Free is end;
+    union A: Free is case X; end;
 
-    union A: Free is end;
+    union A: Free is case Y; end;
 
     function main(): ExitCode is
         return ExitSuccess();
