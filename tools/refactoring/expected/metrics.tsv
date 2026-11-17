@@ -46,7 +46,7 @@ lib/Imports.ml	59	1	0	0	0	0	0	0	0	0	0
 lib/InstanceIdSet.ml	16	0	0	0	0	0	0	0	0	0	0
 lib/InstanceMethodsMatchTypeclass.ml	66	3	0	0	0	0	0	0	0	0	0
 lib/LexEnv.ml	86	2	0	0	0	0	0	1	0	0	0
-lib/Lexer.mll	177	4	0	0	0	0	0	0	0	0	0
+lib/Lexer.mll	179	4	0	0	0	0	0	0	0	0	0
 lib/LiftControlPass.ml	226	0	0	0	0	0	0	0	0	0	0
 lib/LinearityCheck.ml	652	16	0	0	0	0	0	2	0	0	0
 lib/LinearityErrors.ml	198	0	0	0	0	0	0	0	0	0	0
