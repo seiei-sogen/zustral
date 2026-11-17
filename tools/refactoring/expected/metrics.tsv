@@ -15,7 +15,7 @@ lib/CIntegerConstant.ml	16	0	0	0	0	0	0	0	0	0	0
 lib/CRenderer.ml	294	0	0	0	0	1	1	0	0	0	0
 lib/CRepr.ml	108	0	0	0	0	0	5	0	0	0	0
 lib/CliErrors.ml	141	0	1	0	0	0	12	0	0	0	0
-lib/CodeGen.ml	697	0	0	0	0	1	0	0	0	0	0
+lib/CodeGen.ml	692	0	0	0	0	1	0	0	0	0	0
 lib/CombiningPass.ml	380	13	0	0	0	0	0	0	0	0	0
 lib/Common.ml	71	0	0	0	0	0	3	0	0	0	0
 lib/Compiler.ml	152	0	0	0	0	0	0	0	0	0	0
@@ -53,7 +53,7 @@ lib/LiftControlPass.ml	221	0	0	0	0	0	0	0	0	0	0
 lib/LinearityCheck.ml	655	16	0	0	0	0	0	2	0	0	0
 lib/LinearityErrors.ml	198	0	0	0	0	0	0	0	0	0	0
 lib/LiteralTyping.ml	183	2	0	0	0	0	0	0	0	0	0
-lib/MonoType.ml	38	0	0	0	0	0	0	0	0	0	0
+lib/MonoType.ml	37	0	0	0	0	0	0	0	0	0	0
 lib/MonoTypeBindings.ml	45	0	0	0	0	0	0	0	0	0	0
 lib/Monomorphize.ml	795	6	0	0	0	0	0	3	0	0	0
 lib/NegatableType.ml	29	0	0	0	0	0	0	0	0	0	0

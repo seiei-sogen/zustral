@@ -55,8 +55,12 @@ let rec monomorphize_ty (env: env) (ty: stripped_ty): (mono_ty * env) =
      (MonoSingleFloat, env)
   | SDoubleFloat ->
      (MonoDoubleFloat, env)
-  | SRegionTy r ->
-     (MonoRegionTy r, env)
+  | SRegionTy _ | SRegionTyVar _ ->
+     (* A region has no value at run time. The region type arguments of a
+        function or method monomorph are `Static` (make_substs, make_substs2),
+        so every region is `Static` here too: a caller's `Tag[Rho]` and the
+        callee's `Tag[Static]` or `Tag[R]` must be one C type (#142). *)
+     (MonoRegionTy static_region, env)
   | SReadRef (ty, region) ->
      let (ty, env) = monomorphize_ty env ty in
      let (region, env) = monomorphize_ty env region in
@@ -87,8 +91,6 @@ let rec monomorphize_ty (env: env) (ty: stripped_ty): (mono_ty * env) =
      let (args, env) = monomorphize_ty_list env args in
      let (rt, env) = monomorphize_ty env rt in
      (MonoFnPtr (args, rt), env)
-  | SRegionTyVar (name, source) ->
-     (MonoRegionTyVar (name, source), env)
 
 (* The monomorph of a record or a union for the given type arguments,
    registered the first time it is asked for. *)
@@ -775,8 +777,6 @@ and mono_to_ty (env: env) (ty: mono_ty): ty =
      Pointer (r ty)
   | MonoFnPtr (args, rt) ->
      FnPtr (List.map r args, r rt)
-  | MonoRegionTyVar (name, source) ->
-     TyVar (TypeVariable (name, RegionUniverse, source, [], StandsForItself))
 
 let monomorphize_wrappers (env: env): (env * mdecl list * (string * mono_id * mono_ty foreign_signature) list) Outcome.t =
   Outcome.catch (fun () ->

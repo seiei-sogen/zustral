@@ -150,12 +150,7 @@ let rec gen_type (ty: mono_ty): c_ty =
      CBuiltinType CDoubleType
   | MonoNamedType id ->
      CNamedType (gen_mono_id id)
-  | MonoRegionTy _ | MonoRegionTyVar _ ->
-     (* Every region has the same C type, so a region type variable has it too:
-        it stands for a region that this code is not told. No program reaches
-        the second case today. A value's type is a region type variable only in
-        a method of an instance without type parameters, and ExtractionPass
-        rejects those (RegionParameterUsedAsType). *)
+  | MonoRegionTy _ ->
      CBuiltinType CRegionType
   | MonoReadRef (t, _) ->
      CPointer (gen_type t)
@@ -377,7 +372,7 @@ let rec gen_stmt (mn: module_name) (supply: Supply.t) (stmt: mstmt): c_stmt * Su
            true
         | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
         | MonoNamedType _ | MonoRegionTy _ | MonoReadRef _ | MonoWriteRef _
-        | MonoSpan _ | MonoSpanMut _ | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
+        | MonoSpan _ | MonoSpanMut _ | MonoPointer _ | MonoFnPtr _ ->
            false)
      in
      let l =

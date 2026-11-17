@@ -547,22 +547,6 @@ let a_function (env: Env.env): Env.env * Id.function_id =
   let (env, mod_id) = add_example env in
   register_function env mod_id "f" [] Unit BodyNotAttached
 
-let region_variable: mono_ty = MonoRegionTyVar (make_ident "R", named "f")
-
-let test_parameters_of_region_types _ =
-  let (env, id) = a_function Env.empty_env in
-  let params = [
-      MValueParameter (make_ident "r", MonoRegionTy Region.static_region);
-      MValueParameter (make_ident "v", region_variable)
-    ]
-  in
-  match function_definitions (generate env [MFunction (id, make_ident "f", params, MonoUnit, MSkip)]) with
-  | [([CValueParam (_, r); CValueParam (_, v)], _)] ->
-     assert_equal (CRepr.CBuiltinType CRegionType) r;
-     assert_equal (CRepr.CBuiltinType CRegionType) v
-  | _ ->
-     assert_failure "one function with two parameters"
-
 let test_borrows_of_values_that_are_not_addresses _ =
   let (env, id) = a_function Env.empty_env in
   List.iter
@@ -586,7 +570,7 @@ let test_borrows_of_values_that_are_not_addresses _ =
       MonoSpanMut (MonoUnit, MonoRegionTy Region.static_region);
       MonoPointer MonoUnit;
       MonoFnPtr ([], MonoUnit);
-      region_variable
+      MonoRegionTy Region.static_region
     ]
 
 (* The wrapper of an imported function, with the signature of an exported
@@ -692,7 +676,6 @@ let suite =
       "a monomorph with another number of type arguments" >:: test_a_monomorph_with_another_number_of_type_arguments;
       "a method call leaves out an unbound parameter" >:: test_a_method_call_leaves_out_an_unbound_parameter;
       "a method call on a type without an instance" >:: test_a_method_call_on_a_type_without_an_instance;
-      "parameters of region types" >:: test_parameters_of_region_types;
       "borrows of values that are not addresses" >:: test_borrows_of_values_that_are_not_addresses;
       "an imported function of an exported signature" >:: test_an_imported_function_of_an_exported_signature;
       "a struct before other declarations" >:: test_a_struct_before_other_declarations;

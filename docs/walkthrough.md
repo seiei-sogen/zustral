@@ -171,7 +171,7 @@ type extract_bodies = env -> LinearityCheck.checked_module -> env Outcome.t
 type monomorphize = env -> LinearityCheck.checked_module -> (env * Mtast.mono_module) Outcome.t
 ```
 
-`lib/Monomorphize.ml` の `monomorphize` が、汎用の宣言を、使われている型ごとの宣言に展開する。出力は `Mtast` である。単相は環境に登録する。単相の本体の中で、さらに別の単相が見つかれば、それも登録する。新しい単相がなくなるまで繰り返す。汎用の本体の型変数は、型引数の型で置き換える。型引数が名前のある型なら、名前のある型をそのまま入れる。置き換えた後の木は、汎用でないソースを型検査した木と同じ形である。単相化の後の型（`MonoType.mono_ty`）に残る型変数は、領域の型変数（`MonoRegionTyVar`）だけである。
+`lib/Monomorphize.ml` の `monomorphize` が、汎用の宣言を、使われている型ごとの宣言に展開する。出力は `Mtast` である。単相は環境に登録する。単相の本体の中で、さらに別の単相が見つかれば、それも登録する。新しい単相がなくなるまで繰り返す。汎用の本体の型変数は、型引数の型で置き換える。型引数が名前のある型なら、名前のある型をそのまま入れる。置き換えた後の木は、汎用でないソースを型検査した木と同じ形である。単相化の後の型（`MonoType.mono_ty`）には、型変数が残らない。領域は、実行時の値を持たないので、どれも `Static` になる。関数とメソッドの単相の領域の型引数も、レコードと union の単相の領域の型引数も、借用の領域も同じである。そのため、`Tag[Rho]` と `Tag[Static]` は1つの単相になり、領域の型引数を取る関数に、借用の領域のレコードを渡せる（issue #142）。
 
 ## C の生成
 
