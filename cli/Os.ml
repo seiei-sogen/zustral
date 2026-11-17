@@ -45,7 +45,7 @@ let run_command (command: string): command_output =
   let path: string =
     match Sys.getenv_opt "PATH" with
     | Some path -> path
-    | None -> cli_error NoSpan PathVariableNotSet
+    | None -> c_compiler_error NoSpan PathVariableNotSet
   in
   let (stdout_chan, stdin_chan, stderr_chan) = open_process_full command [|"PATH=" ^ path|] in
   let stdout = read_stream_to_string stdout_chan
@@ -63,6 +63,6 @@ let compile_c_code (source_path: string) (output_path: string): command_output =
   let o = run_command cmd in
   let (CommandOutput { command; code; stdout; stderr }) = o in
   if code <> 0 then
-    cli_error NoSpan (CCompilerError { command; exit_code = code; stdout; stderr })
+    c_compiler_error NoSpan (CCompilerFailed { command; exit_code = code; stdout; stderr })
   else
     o

@@ -1,5 +1,5 @@
 BIN := zustral
-SRC := lib/*.ml lib/*.mli lib/*.mll lib/*.mly lib/dune cli/*.ml cli/*.mli cli/dune bin/dune bin/zustral.ml lib/BuiltInModules.ml
+SRC := lib/*.ml lib/*.mli lib/*.mll lib/*.mly lib/dune cli/*.ml cli/*.mli cli/*.c cli/dune bin/dune bin/zustral.ml lib/BuiltInModules.ml
 PREFIX ?= /usr/local
 
 .PHONY: all

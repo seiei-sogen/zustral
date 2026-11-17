@@ -24,10 +24,8 @@ type t =
   | ExpectedBoolFlag of string
   | ExpectedValueFlag of string
   | UnknownFlagType of string
-  | CCompilerError of { command: string; exit_code: int; stdout: string; stderr: string }
   | WriteError of { path: string; reason: string }
   | ReadError of { path: string; reason: string }
-  | PathVariableNotSet
 
 let render (error: t): err_text =
   match error with
@@ -130,22 +128,6 @@ let render (error: t): err_text =
        Text "Invalid flag argument ";
        Code flag
      ]
-  | CCompilerError { command; exit_code; stdout; stderr } ->
-     [
-       Text "Failed to run C compiler.";
-       Break;
-       Text "Command: ";
-       Code command;
-       Break;
-       Text "Exit code: ";
-       Text (string_of_int exit_code);
-       Break;
-       Text "Standard output:\n";
-       Text stdout;
-       Break;
-       Text "Standard error:\n";
-       Text stderr
-     ]
   | WriteError { path; reason } ->
      [
        Text "Failed to write to file ";
@@ -161,12 +143,4 @@ let render (error: t): err_text =
        Text ":";
        Break;
        Text reason
-     ]
-  | PathVariableNotSet ->
-     [
-       Text "The environment variable ";
-       Code "PATH";
-       Text " is not set, so the C compiler ";
-       Code "cc";
-       Text " cannot be found."
      ]
