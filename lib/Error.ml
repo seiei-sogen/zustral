@@ -56,7 +56,7 @@ let error_text (error: error): err_text =
        Text message;
        Break;
        Text "This is a bug in the compiler, please open an issue here: ";
-       Code "https://github.com/austral/austral/issues"
+       Code "https://github.com/seiei-sogen/zustral/issues"
      ]
 
 (* Locations *)

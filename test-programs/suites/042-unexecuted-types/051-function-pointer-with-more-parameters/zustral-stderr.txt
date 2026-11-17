@@ -7,6 +7,6 @@ Error:
   Description:
     Internal compiler error: Invalid_argument("List.map2")
     
-    This is a bug in the compiler, please open an issue here: `https://github.com/austral/austral/issues`
+    This is a bug in the compiler, please open an issue here: `https://github.com/seiei-sogen/zustral/issues`
   Code:
     [no span available]

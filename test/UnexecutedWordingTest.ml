@@ -71,7 +71,7 @@ let test_unexpected_exception_is_an_internal_error _ =
     let (ZustralError { error; _ }) = error in
     error_title error ^ ": " ^ wording error
   in
-  eq "Internal Error: Internal compiler error: Failure(\"boom\")\n\nThis is a bug in the compiler, please open an issue here: `https://github.com/austral/austral/issues`"
+  eq "Internal Error: Internal compiler error: Failure(\"boom\")\n\nThis is a bug in the compiler, please open an issue here: `https://github.com/seiei-sogen/zustral/issues`"
     (title_and_wording (error_of_exception (Failure "boom")));
   let reported = make_error NoSpan (Generic GenericErrors.LeftoverArguments) in
   eq reported (error_of_exception (Zustral_error reported))
