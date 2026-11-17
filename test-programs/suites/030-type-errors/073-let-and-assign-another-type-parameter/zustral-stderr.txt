@@ -2,11 +2,10 @@
   "module": "Test",
   "kind": "Type Error",
   "text": [
-    { "type": "text", "content": "Expected a value of type " },
+    { "type": "text", "content": "Cannot cast to " },
     { "type": "type", "content": "T" },
-    { "type": "text", "content": ", but got a value of type " },
-    { "type": "type", "content": "U" },
-    { "type": "text", "content": "." }
+    { "type": "text", "content": " from " },
+    { "type": "type", "content": "U" }
   ],
   "span": {
     "filename": "test-programs/suites/030-type-errors/073-let-and-assign-another-type-parameter/Test.zum",

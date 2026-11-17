@@ -201,10 +201,10 @@ and augment_let_tmp (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (name: i
   (match get_var lexenv name with
    | Some (ty, _) ->
       (* The temporary holds the right-hand side of an assignment, which
-         has declared it with the type of its lvalue. That type is the
-         expected type of the right-hand side, as the annotation of a
-         `let` is for its value. *)
-      let value = check_expr place module_name env rm typarams lexenv value ty in
+         has declared it with the type of its lvalue. That type annotates the
+         right-hand side, as the type of a `let` does its value: a write
+         reference becomes a read reference here too (#30). *)
+      let value = check_annotated_expr place module_name env rm typarams lexenv value ty in
       (TLetTmp (name, ty, value), lexenv, supply)
    | None ->
       let value = infer_expr place module_name env rm typarams lexenv value in

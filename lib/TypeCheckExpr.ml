@@ -940,24 +940,29 @@ and check_annotated (ctx: expr_ctx) (expr: aexpr) (target_type: ty): texpr =
     TCast (expr', target_type)
   else
     (* Otherwise, if the expression has a mutable reference type and the
-       target type is a read reference, and they point to the same underlying
-       type and underlying region, just convert it to a read ref. This does
-       point 2. *)
+       target type is a reference to the same underlying type and underlying
+       region, a read reference is a conversion of the expression, which does
+       point 2, and a mutable reference is the expression itself (#133). *)
     (match (get_type (ctx_place ctx) expr') with
      | WriteRef (underlying_ty, region) ->
+        let to_same_reference (underlying_ty': ty) (region': ref_region) (converted: texpr): texpr =
+          match (equal_ty underlying_ty underlying_ty', equal_ty (ty_of_ref_region region) (ty_of_ref_region region')) with
+          | (true, true) ->
+             converted
+          | (false, true) ->
+             type_error (ctx_place ctx) (CastDifferentReferences DifferentUnderlyingType)
+          | (true, false) ->
+             type_error (ctx_place ctx) (CastDifferentReferences DifferentUnderlyingRegion)
+          | (false, false) ->
+             type_error (ctx_place ctx) (CastDifferentReferences DifferentTypeAndRegion)
+        in
         (match target_type with
          | ReadRef (underlying_ty', region') ->
-            (match (equal_ty underlying_ty underlying_ty', equal_ty (ty_of_ref_region region) (ty_of_ref_region region')) with
-             | (true, true) ->
-                TCast (expr', target_type)
-             | (false, true) ->
-                type_error (ctx_place ctx) (CastDifferentReferences DifferentUnderlyingType)
-             | (true, false) ->
-                type_error (ctx_place ctx) (CastDifferentReferences DifferentUnderlyingRegion)
-             | (false, false) ->
-                type_error (ctx_place ctx) (CastDifferentReferences DifferentTypeAndRegion))
+            to_same_reference underlying_ty' region' (TCast (expr', target_type))
+         | WriteRef (underlying_ty', region') ->
+            to_same_reference underlying_ty' region' expr'
          | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
-         | RegionTy _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
+         | RegionTy _ | Span _ | SpanMut _ | TyVar _ | Address _
          | Pointer _ | FnPtr _ ->
             type_error (ctx_place ctx) CastWriteRefToNonRef)
      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
