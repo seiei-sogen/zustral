@@ -3,9 +3,9 @@
   "kind": "Type Error",
   "text": [
     { "type": "text", "content": "Cannot cast to " },
-    { "type": "type", "content": "&[Int32, Region<0>]" },
+    { "type": "type", "content": "&[Int32, Static]" },
     { "type": "text", "content": " from " },
-    { "type": "type", "content": "&[Int32, Region<5>]" }
+    { "type": "type", "content": "&[Int32, rho]" }
   ],
   "span": {
     "filename": "test-programs/suites/039-numbering-order/004-region-in-case-branch/Test.zum",

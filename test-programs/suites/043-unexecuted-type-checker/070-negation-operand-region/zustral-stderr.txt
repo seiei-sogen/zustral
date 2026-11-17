@@ -8,7 +8,7 @@
       "type": "text",
       "content": " operator must be a boolean expression, but it has the type "
     },
-    { "type": "type", "content": "Region<0>" }
+    { "type": "type", "content": "Static" }
   ],
   "span": {
     "filename": "test-programs/suites/043-unexecuted-type-checker/070-negation-operand-region/Test.zum",

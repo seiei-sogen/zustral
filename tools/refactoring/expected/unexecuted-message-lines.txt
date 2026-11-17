@@ -1,5 +1,3 @@
-lib/CliErrors.ml	| EmptyArgs ->
-lib/CliErrors.ml	Text "Argument list must have at least one element in it, the path to the binary. Was the compiler invoked through a system call?"
 lib/DeclarationErrors.ml	| InstanceArgumentRegion ->
 lib/DeclarationErrors.ml	Text "Typeclass arguments cannot be regions."
 lib/GenericErrors.ml	| SymbolImportedTwice ->

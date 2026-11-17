@@ -20,7 +20,6 @@ type t =
   | UnknownTarget of string
   | UnknownErrorReportingMode of string
   | DuplicateFlags of string
-  | EmptyArgs
   | ExpectedBoolFlag of string
   | ExpectedValueFlag of string
   | UnknownFlagType of string
@@ -106,10 +105,6 @@ let render (error: t): err_text =
        Text "The argument ";
        Code name;
        Text " was given multiple times"
-     ]
-  | EmptyArgs ->
-     [
-       Text "Argument list must have at least one element in it, the path to the binary. Was the compiler invoked through a system call?"
      ]
   | ExpectedBoolFlag name ->
      [

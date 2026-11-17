@@ -3,7 +3,7 @@
   "kind": "Linearity Error",
   "text": [
     { "type": "text", "content": "Cannot dereference non-free type " },
-    { "type": "type", "content": "Region<0>" }
+    { "type": "type", "content": "Static" }
   ],
   "span": {
     "filename": "test-programs/suites/043-unexecuted-type-checker/043-dereference-read-reference-to-region/Test.zum",

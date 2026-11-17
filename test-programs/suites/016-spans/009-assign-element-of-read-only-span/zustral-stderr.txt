@@ -4,7 +4,7 @@
   "text": [
     {
       "type": "text",
-      "content": "Can't assign: lvalue is not a mutable reference: &[Nat8, Region<2>]"
+      "content": "Can't assign: lvalue is not a mutable reference: &[Nat8, _tmp_region_1]"
     }
   ],
   "span": {

@@ -3,7 +3,7 @@
   "kind": "Type Error",
   "text": [
     { "type": "text", "content": "Values of the type " },
-    { "type": "type", "content": "&[Int32, Region<2>]" },
+    { "type": "type", "content": "&[Int32, R]" },
     { "type": "text", "content": " cannot be compared." },
     { "type": "break" },
     { "type": "text", "content": "Only values of " },

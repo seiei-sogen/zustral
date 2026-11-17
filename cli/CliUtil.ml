@@ -40,11 +40,11 @@ let parse_arg (arg: string): arg =
     PositionalArg arg
 
 let parse_args (args: string list): arglist =
-  (** At least one argument, the name of the binary. *)
-  if ((List.length args) < 1) then
-    cli_error NoSpan EmptyArgs
-  else
-    ArgList (List.map parse_arg (List.tl args))
+  (* The first argument is the name of the binary. A process can be started
+     without it, and then it has no arguments. *)
+  match args with
+  | [] -> ArgList []
+  | _ :: rest -> ArgList (List.map parse_arg rest)
 
 let arglist_size (ArgList l): int =
   List.length l

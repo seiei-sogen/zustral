@@ -3,7 +3,7 @@
   "kind": "Type Error",
   "text": [
     { "type": "text", "content": "Values of the type " },
-    { "type": "type", "content": "Span[Nat8, Region<0>]" },
+    { "type": "type", "content": "Span[Nat8, Static]" },
     { "type": "text", "content": " cannot be compared." },
     { "type": "break" },
     { "type": "text", "content": "Only values of " },

@@ -6,7 +6,7 @@
       "type": "text",
       "content": "Cannot assign to a path that ends in a type, "
     },
-    { "type": "type", "content": "Region<0>" },
+    { "type": "type", "content": "Static" },
     { "type": "text", "content": ", not in the Free universe." }
   ],
   "span": {

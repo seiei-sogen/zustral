@@ -48,6 +48,7 @@ type t =
   | ArithmeticNegationTypeArgumentNotSigned of ty
   | CannotBorrowImmutableVarMutably of identifier
   | CannotBorrowParamMutably of { name: identifier; ty: ty }
+  | CannotBorrowConstant of identifier
   | CallNonCallable of ty
   | CallWrongArity of { name: identifier; expected: int; actual: int }
   | CallArgumentNameUnknown of { name: identifier; parameters: identifier list }
@@ -162,6 +163,12 @@ let render (error: t): err_text =
        Text "\nYou can move it to a mutable local variable: ";
        Code ("var mut_" ^ (ident_string name) ^ ": " ^ (type_string ty) ^ " := " ^ (ident_string name) ^ ";");
      ]
+  | CannotBorrowConstant name ->
+     [
+       Text "Cannot borrow the constant ";
+       Code (ident_string name);
+       Text ": only a variable can be borrowed."
+     ]
   | CallNonCallable ty ->
      [
        Text "The type ";
@@ -228,7 +235,7 @@ let render (error: t): err_text =
           Text "Cannot cast a reference to one with a different underlying region."
         ]
       | DifferentTypeAndRegion -> [
-          Text "Cannot cast to a different region"
+          Text "Cannot cast a reference to one with a different underlying type and region."
         ])
   | CastInvalid { target; source } ->
      [

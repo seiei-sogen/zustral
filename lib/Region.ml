@@ -6,13 +6,16 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 
-type region = Region of int
+open Identifier
+
+(* The number tells regions apart. The name is what an error message shows. *)
+type region = Region of int * identifier
 [@@deriving (eq, show)]
 
-let region_id (Region i) = i
+let region_name (Region (_, name)) = name
 
-let static_region = Region (0)
+let static_region = Region (0, make_ident (BuiltInNames.type_name BuiltInNames.Static))
 
-let fresh_region (supply: Supply.t): region * Supply.t =
+let fresh_region (name: identifier) (supply: Supply.t): region * Supply.t =
   let (i, supply) = Supply.next_region supply in
-  (Region i, supply)
+  (Region (i, name), supply)

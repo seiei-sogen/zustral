@@ -5,7 +5,7 @@
     { "type": "text", "content": "Cannot cast to " },
     { "type": "type", "content": "&[Int32, R]" },
     { "type": "text", "content": " from " },
-    { "type": "type", "content": "&[Int32, Region<2>]" }
+    { "type": "type", "content": "&[Int32, S]" }
   ],
   "span": {
     "filename": "test-programs/suites/030-type-errors/075-let-annotates-reference-to-local-with-region-parameter/Test.zum",

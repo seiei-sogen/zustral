@@ -6,7 +6,7 @@
       "type": "text",
       "content": "Expected the head of an array indexing operator to be a reference, but found the type "
     },
-    { "type": "type", "content": "Region<0>" }
+    { "type": "type", "content": "Static" }
   ],
   "span": {
     "filename": "test-programs/suites/043-unexecuted-type-checker/261-index-non-reference-region/Test.zum",

@@ -128,7 +128,7 @@ let rec type_string = function
   | NamedType (n, _, args, _) ->
      (ident_string (local_name n)) ^ args_string args
   | RegionTy r ->
-     "Region<" ^ (string_of_int (region_id r)) ^ ">"
+     ident_string (region_name r)
   | ReadRef (t, r) ->
      BuiltInNames.read_ref_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string (ty_of_ref_region r)) ^ "]"
   | WriteRef (t, r) ->

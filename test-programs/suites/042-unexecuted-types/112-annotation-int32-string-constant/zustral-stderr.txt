@@ -5,7 +5,7 @@
     { "type": "text", "content": "Cannot cast to " },
     { "type": "type", "content": "Int32" },
     { "type": "text", "content": " from " },
-    { "type": "type", "content": "Span[Nat8, Region<0>]" }
+    { "type": "type", "content": "Span[Nat8, Static]" }
   ],
   "span": {
     "filename": "test-programs/suites/042-unexecuted-types/112-annotation-int32-string-constant/Test.zum",

@@ -5,7 +5,7 @@
     { "type": "text", "content": "Can't access the slot " },
     { "type": "code", "content": "a" },
     { "type": "text", "content": " because the type " },
-    { "type": "type", "content": "Region<0>" },
+    { "type": "type", "content": "Static" },
     { "type": "text", "content": " is not a record." }
   ],
   "span": {

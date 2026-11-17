@@ -10,9 +10,11 @@
 type region
 [@@deriving (eq, show)]
 
-val region_id: region -> int
+(** The name of the region: `Static`, or the name of the borrow that made it. *)
+val region_name : region -> Identifier.identifier
 
 val static_region : region
 
-(** A region no other borrow has, and the supply to take the next one from. *)
-val fresh_region : Supply.t -> region * Supply.t
+(** A region no other borrow has, with the borrow's name for its region, and the
+    supply to take the next one from. *)
+val fresh_region : Identifier.identifier -> Supply.t -> region * Supply.t

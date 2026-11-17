@@ -8,7 +8,7 @@
     },
     { "type": "code", "content": "ExitCode" },
     { "type": "text", "content": " but it is " },
-    { "type": "type", "content": "&[Int32, Region<0>]" }
+    { "type": "type", "content": "&[Int32, Static]" }
   ],
   "span": {
     "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/095-entrypoint-returns-read-reference/Test.zum",

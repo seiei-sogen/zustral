@@ -3,9 +3,9 @@
   "kind": "Type Error",
   "text": [
     { "type": "text", "content": "Cannot cast to " },
-    { "type": "type", "content": "&[Int32, Region<0>]" },
+    { "type": "type", "content": "&[Int32, Static]" },
     { "type": "text", "content": " from " },
-    { "type": "type", "content": "&[Int32, Region<2>]" }
+    { "type": "type", "content": "&[Int32, rho]" }
   ],
   "span": {
     "filename": "test-programs/suites/037-typeclass-and-environment-paths/017-mismatch-region-and-region/Test.zum",

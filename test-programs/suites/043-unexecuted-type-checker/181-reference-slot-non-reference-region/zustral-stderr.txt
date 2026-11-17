@@ -6,7 +6,7 @@
       "type": "text",
       "content": "The head of a reference transform expression must be of a reference type, but I got "
     },
-    { "type": "type", "content": "Region<0>" }
+    { "type": "type", "content": "Static" }
   ],
   "span": {
     "filename": "test-programs/suites/043-unexecuted-type-checker/181-reference-slot-non-reference-region/Test.zum",

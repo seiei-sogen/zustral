@@ -38,10 +38,6 @@ let test_parse_wording _ =
   eq "Character not allowed in string literal: `\\x00`"
     (wording (Parse (ParseErrors.StringInvalidCharacter "\\x00")))
 
-let test_empty_argument_list _ =
-  eq "Command Line Arguments Error: Argument list must have at least one element in it, the path to the binary. Was the compiler invoked through a system call?"
-    (raised_wording (fun () -> Zustral_cli.CliUtil.parse_args []))
-
 let test_popping_flag_of_other_kind _ =
   let open Zustral_cli.CliUtil in
   let arglist = parse_args ["bin"; "pos"; "--a=1"; "--b"] in
@@ -104,7 +100,6 @@ let suite =
       "Generic errors" >:: test_generic_wording;
       "Declaration errors" >:: test_declaration_wording;
       "Parse errors" >:: test_parse_wording;
-      "Empty argument list" >:: test_empty_argument_list;
       "Popping a flag of the other kind" >:: test_popping_flag_of_other_kind;
       "Write error" >:: test_write_error_wording;
       "Write to a full device" >:: test_write_to_full_device;

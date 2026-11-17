@@ -8,7 +8,7 @@
     },
     { "type": "code", "content": "ExitCode" },
     { "type": "text", "content": " but it is " },
-    { "type": "type", "content": "Region<0>" }
+    { "type": "type", "content": "Static" }
   ],
   "span": {
     "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/094-entrypoint-returns-static-region/Test.zum",

@@ -131,9 +131,8 @@ let declare_assigned_temporary (place: place) (lexenv: lexenv) (rvalue: aexpr) (
 (* The supply numbers the regions of the borrow statements, in the order the
    statements are checked. That order is not the order of the source: the
    `else` branch of an `if` is checked before the `then` branch, and an
-   assignment before the statement that computes its value. The numbers are in
-   error messages, and which of two errors is reported depends on the order
-   too, so it stays.
+   assignment before the statement that computes its value. Which of two
+   errors is reported depends on the order, so it stays.
 
    The table of variables goes the same way. A statement is checked with the
    table that the statement checked before it returned, and returns its own. A
@@ -240,7 +239,9 @@ and augment_destructure (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (spa
       (* Check: the value must be a public record type *)
       let rec_ty = get_type place value' in
       (match rec_ty with
-       | (NamedType (name, id, _, u)) ->
+       | NamedType (_, Id.UnionTypeId _, _, _) ->
+          type_error place (DestructureNonRecord rec_ty)
+       | NamedType (name, (Id.RecordTypeId _ as id), _, u) ->
           let (source_module, vis, record_typarams, slots) = TypeCheckExpr.get_record_definition place env id rec_ty in
           let orig_type = NamedType (
                               make_qident (source_module, original_name name, original_name name),
@@ -413,11 +414,13 @@ and augment_for (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span)
 
 and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (original: identifier) (rename: identifier) (declared_reference: (borrowing_mode * qtypespec) option) (region: identifier) (body: astmt) (mode: borrow_stmt_kind): tstmt * lexenv * Supply.t =
   let ctx = stmt_at ctx span in
-  let (StmtCtx (_, env, rm, typarams, _, place)) = ctx in
+  let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
   (let _ = check_var_doesnt_collide_with_decl ctx rename in
    let _ = check_region_name_is_free ctx region in
-      (match get_var lexenv original with
-       | (Some (orig_ty, src)) ->
+      (match get_variable place env lexenv (make_qident (module_name, original, original)) with
+       | Some (_, VarConstant) ->
+          type_error place (CannotBorrowConstant original)
+       | Some (orig_ty, VarLexical src) ->
           (* Check we can borrow the variable. *)
           let _ =
             match (src, mode) with
@@ -445,7 +448,7 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
                (* And anything else is fine. *)
                ()
           in
-          let (region_obj, supply) = fresh_region supply in
+          let (region_obj, supply) = fresh_region region supply in
           let refty =
             (match mode with
              | Read ->

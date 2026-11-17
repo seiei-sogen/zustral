@@ -7,7 +7,7 @@
     { "type": "text", "content": " must be " },
     { "type": "code", "content": "Type" },
     { "type": "text", "content": " but " },
-    { "type": "type", "content": "Region<0>" },
+    { "type": "type", "content": "Static" },
     { "type": "text", "content": " is " },
     { "type": "code", "content": "Region" }
   ],

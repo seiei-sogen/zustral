@@ -6,7 +6,7 @@
       "type": "text",
       "content": "The type for the expression in a case statement must be a union or a reference to a union, but I got "
     },
-    { "type": "type", "content": "Region<0>" }
+    { "type": "type", "content": "Static" }
   ],
   "span": {
     "filename": "test-programs/suites/043-unexecuted-type-checker/099-case-region/Test.zum",
