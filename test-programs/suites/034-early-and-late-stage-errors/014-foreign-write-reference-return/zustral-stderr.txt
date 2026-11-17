@@ -1,7 +1,16 @@
 {
   "module": "Test",
-  "kind": "Generic Error",
-  "text": [ { "type": "text", "content": "Not allowed" } ],
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The return type " },
+    { "type": "type", "content": "&![Int32, Static]" },
+    {
+      "type": "text",
+      "content": " is not allowed in the signature of the imported function "
+    },
+    { "type": "code", "content": "f" },
+    { "type": "text", "content": "." }
+  ],
   "span": {
     "filename": "test-programs/suites/034-early-and-late-stage-errors/014-foreign-write-reference-return/Test.zum",
     "startp": { "line": 4, "column": 48 },

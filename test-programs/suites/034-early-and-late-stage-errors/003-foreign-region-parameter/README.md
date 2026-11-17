@@ -1,1 +1,1 @@
-Pins `Not allowed` (lib/ForeignType.ml, check_ty, the rule for imports, `RegionTy` branch: the region `Static` used as a parameter type).
+Pins `ImportDisallowedType`, which names the function, the parameter or the return type, and the type (lib/ForeignType.ml, check_ty, the rule for imports, `RegionTy` branch: the region `Static` used as a parameter type).

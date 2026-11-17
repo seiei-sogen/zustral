@@ -1,23 +1,4 @@
-exit: 255
+exit: 0
 files: 
 --- stdout
 --- stderr
-{
-  "module": "Test",
-  "kind": "Generic Error",
-  "text": [ { "type": "text", "content": "Not allowed" } ],
-  "span": {
-    "filename": "Test.zum",
-    "startp": { "line": 4, "column": 48 },
-    "end": { "line": 6, "column": 8 }
-  },
-  "context": [
-    [ 2, "" ],
-    [ 3, "module body Test is" ],
-    [ 4, "    pragma Foreign_Import(External_Name => \"f\");" ],
-    [ 5, "    function f(): Unit is" ],
-    [ 6, "    end;" ],
-    [ 7, "" ],
-    [ 8, "    function main(): ExitCode is" ]
-  ]
-}

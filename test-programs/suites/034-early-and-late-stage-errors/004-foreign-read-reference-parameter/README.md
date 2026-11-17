@@ -1,1 +1,1 @@
-Pins `Not allowed` (lib/ForeignType.ml, check_ty, the rule for imports, `ReadRef` branch: a read reference).
+Pins `ImportDisallowedType`, which names the function, the parameter or the return type, and the type (lib/ForeignType.ml, check_ty, the rule for imports, `ReadRef` branch: a read reference).

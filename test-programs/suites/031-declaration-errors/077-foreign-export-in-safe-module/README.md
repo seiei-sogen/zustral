@@ -1,0 +1,1 @@
+Covers a function exported with `Foreign_Export` in a module without `pragma Unsafe_Module;`: a declaration error. The export name is pasted into the C code, so a safe module could run any C code through it. Before, the program compiled and ran (issue #161).

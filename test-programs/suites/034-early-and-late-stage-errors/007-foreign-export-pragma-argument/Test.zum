@@ -1,3 +1,5 @@
+pragma Unsafe_Module;
+
 module body Test is
     pragma Foreign_Export(Name => "f");
     function f(x: Int32): Int32 is

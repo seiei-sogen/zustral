@@ -11,17 +11,17 @@
   ],
   "span": {
     "filename": "test-programs/suites/034-early-and-late-stage-errors/031-export-after-type-error/Test.zum",
-    "startp": { "line": 7, "column": 48 },
-    "end": { "line": 10, "column": 8 }
+    "startp": { "line": 9, "column": 48 },
+    "end": { "line": 12, "column": 8 }
   },
   "context": [
-    [ 5, "    end;" ],
-    [ 6, "" ],
-    [ 7, "    pragma Foreign_Export(External_Name => \"f\");" ],
-    [ 8, "    function f(): Unit is" ],
-    [ 9, "        return nil;" ],
-    [ 10, "    end;" ],
-    [ 11, "" ],
-    [ 12, "    function main(): ExitCode is" ]
+    [ 7, "    end;" ],
+    [ 8, "" ],
+    [ 9, "    pragma Foreign_Export(External_Name => \"f\");" ],
+    [ 10, "    function f(): Unit is" ],
+    [ 11, "        return nil;" ],
+    [ 12, "    end;" ],
+    [ 13, "" ],
+    [ 14, "    function main(): ExitCode is" ]
   ]
 }

@@ -1,3 +1,5 @@
+pragma Unsafe_Module;
+
 module body Test is
     function g(): Int32 is
         let x: Int32 := true;

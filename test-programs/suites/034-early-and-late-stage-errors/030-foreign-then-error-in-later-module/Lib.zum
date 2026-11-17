@@ -2,7 +2,7 @@ pragma Unsafe_Module;
 
 module body Lib is
     pragma Foreign_Import(External_Name => "f");
-    function f(): Unit is
+    function f(): Option[Int32] is
     end;
 
 end module body.

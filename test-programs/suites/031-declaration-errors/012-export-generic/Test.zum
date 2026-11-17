@@ -1,3 +1,5 @@
+pragma Unsafe_Module;
+
 module body Test is
     pragma Foreign_Export(External_Name => "foo");
     generic [T: Free]
