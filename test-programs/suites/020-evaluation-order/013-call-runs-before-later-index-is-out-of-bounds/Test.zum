@@ -1,0 +1,19 @@
+module body Test is
+    function p(x: Int64): Int64 is
+        printLn(x);
+        return x;
+    end;
+
+    function show(number: Int64, byte: Nat8): Unit is
+        printLn(number);
+        printLn(byte);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        let s: Span[Nat8, Static] := "abc";
+        let beyond: Index := 7;
+        show(p(1), s[beyond]);
+        return ExitSuccess();
+    end;
+end module body.

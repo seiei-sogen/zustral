@@ -1,0 +1,17 @@
+module body Test is
+    function p(x: Int64): Int64 is
+        printLn(x);
+        return x;
+    end;
+
+    function less(a: Int64, b: Int64): Bool is
+        return a < b;
+    end;
+
+    function main(): ExitCode is
+        let seven: Int64 := 7;
+        let eight: Int64 := 8;
+        printLn(p(0) + (if less(p(1), p(2)) then seven else eight));
+        return ExitSuccess();
+    end;
+end module body.

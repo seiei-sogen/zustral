@@ -1,0 +1,16 @@
+module body Test is
+    function p(x: Int64): Int64 is
+        printLn(x);
+        return x;
+    end;
+
+    function minus(a: Int64, b: Int64): Int64 is
+        return a - b;
+    end;
+
+    function main(): ExitCode is
+        printLn(minus(minus(p(9), p(4)), p(2)));
+        printLn(minus(p(8), minus(p(6), p(1))));
+        return ExitSuccess();
+    end;
+end module body.

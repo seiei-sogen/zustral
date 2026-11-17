@@ -1,0 +1,21 @@
+module body Test is
+    function p(x: Int64): Int64 is
+        printLn(x);
+        return x;
+    end;
+
+    function minus(a: Int64, b: Int64): Int64 is
+        return a - b;
+    end;
+
+    function choose(condition: Bool): Int64 is
+        let seven: Int64 := 7;
+        return p(0) + (if condition then seven else minus(p(5), p(3)));
+    end;
+
+    function main(): ExitCode is
+        printLn(choose(true));
+        printLn(choose(false));
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,27 @@
+module body Test is
+    union Shape: Free is
+        case Box is
+            width: Int64;
+            height: Int64;
+            depth: Int64;
+        case Point;
+    end;
+
+    function p(x: Int64): Int64 is
+        printLn(x);
+        return x;
+    end;
+
+    function main(): ExitCode is
+        let s: Shape := Box(height => p(1), depth => p(2), width => p(3));
+        case s of
+            when Box(width: Int64, height: Int64, depth: Int64) do
+                printLn(width);
+                printLn(height);
+                printLn(depth);
+            when Point do
+                printLn("point");
+        end case;
+        return ExitSuccess();
+    end;
+end module body.

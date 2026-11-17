@@ -1,0 +1,56 @@
+pragma Unsafe_Module;
+
+import Zustral.Memory (
+    Pointer,
+    Address,
+    allocateBuffer,
+    nullCheck,
+    deallocate,
+    span,
+    spanWrite
+);
+
+module body Test is
+    function allocateOrDie(): Pointer[Int64] is
+        let addr: Address[Int64] := allocateBuffer(2);
+        case nullCheck(addr) of
+            when Some(value: Pointer[Int64]) do
+                return value;
+            when None do
+                abort("Allocation failed.");
+        end case;
+    end;
+
+    function at(i: Index): Index is
+        printLn(i);
+        return i;
+    end;
+
+    function minus(a: Index, b: Index): Index is
+        return a - b;
+    end;
+
+    generic [R: Region]
+    function writeSecond(ref: &![Pointer[Int64], R]): Unit is
+        var sp: Span![Int64, R] := spanWrite(ref, 0, 1);
+        sp[0] := 5;
+        sp[minus(at(3), at(2))] := 9;
+        return nil;
+    end;
+
+    generic [R: Region]
+    function printBoth(ref: &[Pointer[Int64], R]): Unit is
+        let sp: Span[Int64, R] := span(ref, 0, 1);
+        printLn(sp[0]);
+        printLn(sp[1]);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        var ptr: Pointer[Int64] := allocateOrDie();
+        writeSecond(&!ptr);
+        printBoth(&ptr);
+        deallocate(ptr);
+        return ExitSuccess();
+    end;
+end module body.

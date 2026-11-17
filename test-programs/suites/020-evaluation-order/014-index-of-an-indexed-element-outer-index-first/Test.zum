@@ -1,0 +1,45 @@
+pragma Unsafe_Module;
+
+import Zustral.Memory (
+    Pointer,
+    Address,
+    allocateBuffer,
+    nullCheck,
+    deallocate,
+    span,
+    positiveOffset,
+    store
+);
+
+module body Test is
+    function allocateOrDie(): Pointer[Span[Nat8, Static]] is
+        let addr: Address[Span[Nat8, Static]] := allocateBuffer(2);
+        case nullCheck(addr) of
+            when Some(value: Pointer[Span[Nat8, Static]]) do
+                return value;
+            when None do
+                abort("Allocation failed.");
+        end case;
+    end;
+
+    function at(i: Index): Index is
+        printLn(i);
+        return i;
+    end;
+
+    generic [R: Region]
+    function printOneByte(ref: &[Pointer[Span[Nat8, Static]], R]): Unit is
+        let words: Span[Span[Nat8, Static], R] := span(ref, 0, 1);
+        printLn(words[at(1)][at(0)]);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        var ptr: Pointer[Span[Nat8, Static]] := allocateOrDie();
+        store(ptr, "ab");
+        store(positiveOffset(ptr, 1), "cd");
+        printOneByte(&ptr);
+        deallocate(ptr);
+        return ExitSuccess();
+    end;
+end module body.

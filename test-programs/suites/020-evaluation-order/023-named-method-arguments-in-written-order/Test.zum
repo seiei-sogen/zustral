@@ -1,0 +1,34 @@
+module body Test is
+    typeclass Weighed(T: Free) is
+        method weigh(hundreds: T, tens: T, ones: T): T;
+    end;
+
+    instance Weighed(Int64) is
+        method weigh(hundreds: Int64, tens: Int64, ones: Int64): Int64 is
+            return ((hundreds * 100) + (tens * 10)) + ones;
+        end;
+    end;
+
+    generic [T: Free(Printable)]
+    function shown(value: T): T is
+        printLn(value);
+        return value;
+    end;
+
+    generic [T: Free(Printable, Weighed)]
+    function weighShown(a: T, b: T, c: T): T is
+        return weigh(tens => shown(a), ones => shown(b), hundreds => shown(c));
+    end;
+
+    function main(): ExitCode is
+        let one: Int64 := 1;
+        let two: Int64 := 2;
+        let three: Int64 := 3;
+        printLn(weigh(tens => shown(one), ones => shown(two), hundreds => shown(three)));
+        let four: Int64 := 4;
+        let five: Int64 := 5;
+        let six: Int64 := 6;
+        printLn(weighShown(four, five, six));
+        return ExitSuccess();
+    end;
+end module body.

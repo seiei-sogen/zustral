@@ -1,0 +1,59 @@
+module body Test is
+    record Pair: Free is
+        left: Int64;
+        right: Int64;
+    end;
+
+    union Choice: Free is
+        case Chosen is
+            value: Int64;
+        case Nothing;
+    end;
+
+    function p(x: Int64): Int64 is
+        printLn(x);
+        return x;
+    end;
+
+    function minus(a: Int64, b: Int64): Int64 is
+        return a - b;
+    end;
+
+    function less(a: Int64, b: Int64): Bool is
+        return a < b;
+    end;
+
+    function pair(left: Int64, right: Int64): Pair is
+        return Pair(left => left, right => right);
+    end;
+
+    function chosen(a: Int64, b: Int64): Choice is
+        return Chosen(value => a - b);
+    end;
+
+    function returned(): Int64 is
+        return minus(p(13), p(14));
+    end;
+
+    function main(): ExitCode is
+        var total: Int64 := 0;
+        total := minus(p(1), p(2));
+        if less(p(3), p(4)) then
+            printLn("if");
+        end if;
+        var rounds: Int64 := 0;
+        while less(p(rounds), p(1)) do
+            rounds := rounds + 1;
+        end while;
+        case chosen(p(7), p(8)) of
+            when Chosen(value: Int64) do
+                printLn("case");
+            when Nothing do
+                printLn("nothing");
+        end case;
+        let { left: Int64, right: Int64 } := pair(p(9), p(10));
+        minus(p(11), p(12));
+        printLn(returned());
+        return ExitSuccess();
+    end;
+end module body.

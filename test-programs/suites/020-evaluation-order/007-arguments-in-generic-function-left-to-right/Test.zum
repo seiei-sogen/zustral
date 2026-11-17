@@ -1,0 +1,25 @@
+module body Test is
+    generic [T: Free(Printable)]
+    function shown(value: T): T is
+        printLn(value);
+        return value;
+    end;
+
+    generic [T: Free(Printable, TrappingArithmetic)]
+    function difference(a: T, b: T): T is
+        return trappingSubtract(shown(a), shown(b));
+    end;
+
+    generic [T: Free]
+    function firstOf(a: T, b: T): T is
+        return a;
+    end;
+
+    function main(): ExitCode is
+        let five: Int64 := 5;
+        let three: Int64 := 3;
+        printLn(difference(five, three));
+        printLn(firstOf(shown(five), shown(three)));
+        return ExitSuccess();
+    end;
+end module body.

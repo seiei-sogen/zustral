@@ -1,0 +1,65 @@
+module body Test is
+    record Pair: Free is
+        left: Int64;
+        right: Int64;
+    end;
+
+    union Choice: Free is
+        case Chosen is
+            value: Int64;
+        case Nothing;
+    end;
+
+    function increment(x: Int64): Int64 is
+        return x + 1;
+    end;
+
+    function makeUnit(i: Int64): Unit is
+        printLn(i);
+        return nil;
+    end;
+
+    function makeBool(i: Int64): Bool is
+        printLn(i);
+        return true;
+    end;
+
+    function makeFloat(i: Int64): Float64 is
+        printLn(i);
+        return 1.5;
+    end;
+
+    function makePair(i: Int64): Pair is
+        printLn(i);
+        return Pair(left => i, right => i);
+    end;
+
+    function makeChoice(i: Int64): Choice is
+        printLn(i);
+        return Chosen(value => i);
+    end;
+
+    function makeText(i: Int64): Span[Nat8, Static] is
+        printLn(i);
+        return "text";
+    end;
+
+    function makeFunction(i: Int64): Fn[Int64, Int64] is
+        printLn(i);
+        return increment;
+    end;
+
+    function makeNumber(i: Int64): Int64 is
+        printLn(i);
+        return i;
+    end;
+
+    function lastOf(a: Unit, b: Bool, c: Float64, d: Pair, e: Choice, f: Span[Nat8, Static], g: Fn[Int64, Int64], h: Int64): Int64 is
+        return h;
+    end;
+
+    function main(): ExitCode is
+        printLn(lastOf(makeUnit(1), makeBool(2), makeFloat(3), makePair(4), makeChoice(5), makeText(6), makeFunction(7), makeNumber(8)));
+        return ExitSuccess();
+    end;
+end module body.
