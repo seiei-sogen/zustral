@@ -13,6 +13,7 @@ open Type
 open TypeSystem
 open TypeBindings
 open TypeMatch
+open SignatureTypeAtUse
 open TypeParser
 open TypeParameter
 open TypeParameters
@@ -235,7 +236,7 @@ and augment_destructure (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (spa
                               u
                             )
           in
-          let typebindings = match_type (env, module_name, place) orig_type rec_ty in
+          let typebindings = match_type (env, module_name, place) (signature_type_at_use orig_type) rec_ty in
           let public: bool =
             match vis with
             | TypeVisPublic -> true
@@ -550,7 +551,7 @@ and augment_case (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span
          | WriteRefCaseMode _ -> CaseRef)
       in
       let (union_id, tyargs, union_ty, cases) = get_union_type_definition place module_name env ty in
-      let typebindings = match_type (env, module_name, place) union_ty ty in
+      let typebindings = match_type (env, module_name, place) (signature_type_at_use union_ty) ty in
       let case_names = List.map (fun (TypedCase (n, _)) -> n) (List.map union_case_to_typed_case cases) in
       (* A `when` names a case by a name the module has for it: its own name in
          the module of the union, or the nickname it is imported under (#50). *)

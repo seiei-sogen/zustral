@@ -26,6 +26,7 @@ open TypeVarSet
 open LexEnv
 open TypeBindings
 open TypeMatch
+open SignatureTypeAtUse
 open Error
 open Util
 
@@ -263,38 +264,38 @@ and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (args: 
      parameter names are fake, but this is so we can reuse the arity-checking,
      value parameter list-checking infrastructure we use elsewhere. *)
   let params: value_parameter list = List.map (fun paramty -> ValueParameter (make_ident BuiltInNames.fake_parameter_name, paramty)) paramtys in
-  (* Check synthetic parameter list against argument list. *)
+  (* Check synthetic parameter list against argument list. A function pointer
+     has no type parameters of its own: a type variable in its type is a type
+     parameter of the declaration being checked, which stands for itself, so
+     the arguments bind nothing. *)
   let bindings = check_argument_list ctx name params args in
-  (* A function pointer has no type parameters of its own. A type variable in
-     its type is a type parameter of the declaration being checked, and stands
-     for itself: an argument of another type does not bind it. *)
-  let _ =
-    match bindings_list bindings with
-    | [] ->
-       ()
-    | (parameter, argument_ty) :: _ ->
-       type_error (ctx_place ctx) (TypeMismatch { expected = TyVar (typaram_to_tyvar parameter); actual = argument_ty })
-  in
   (* The call has the return type of the pointer's type, wherever the call is:
-     no type variable of that type is bound by the place either. *)
+     the place binds nothing either. *)
   let arguments = cast_arguments bindings params args in
   TFptrCall (name, paramtys, arguments, rt)
 
 and augment_callable (ctx: expr_ctx) (name: qident) (callable: callable) (from_context: context_bindings) (args: typed_arglist) =
+  (* The call uses the signature of the callable: the arguments and the place
+     of the call bind its type parameters. *)
+  let params_at_use: value_parameter list -> value_parameter list =
+    List.map (fun (ValueParameter (n, ty)) -> ValueParameter (n, signature_type_at_use ty))
+  and slots_at_use: typed_slot list -> typed_slot list =
+    List.map (fun (TypedSlot (n, ty)) -> TypedSlot (n, signature_type_at_use ty))
+  in
   match callable with
   | FunctionCallable (id, typarams, params, rt) ->
-     augment_function_call ctx id name typarams params rt from_context args
+     augment_function_call ctx id name typarams (params_at_use params) (signature_type_at_use rt) from_context args
   | RecordConstructor (id, typarams, universe, slots) ->
-     augment_record_constructor ctx id name typarams universe slots from_context args
-  | UnionConstructor { union_id; type_params; universe; case } ->
+     augment_record_constructor ctx id name typarams universe (slots_at_use slots) from_context args
+  | UnionConstructor { union_id; type_params; universe; case = TypedCase (case_name, slots) } ->
      let type_name: qident = (let { name; mod_id; _ }: union_decl = get_union (ctx_place ctx) (ctx_env ctx) union_id in
                                  (* TODO: constructing a fake qident *)
                                  make_qident (module_name_from_id (ctx_place ctx) (ctx_env ctx) mod_id, name, name))
      in
-     augment_union_constructor ctx union_id type_name type_params universe case from_context args
+     augment_union_constructor ctx union_id type_name type_params universe (TypedCase (case_name, slots_at_use slots)) from_context args
   | MethodCallable { typeclass_id; value_parameters; return_type; _ } ->
      let { param; _ }: typeclass_decl = get_typeclass (ctx_place ctx) (ctx_env ctx) typeclass_id in
-     augment_method_call ctx typeclass_id param name value_parameters return_type from_context args
+     augment_method_call ctx typeclass_id param name (params_at_use value_parameters) (signature_type_at_use return_type) from_context args
 
 and augment_function_call (ctx: expr_ctx) (id: function_id) name typarams params rt (from_context: context_bindings) args =
   (* For simplicity, and to reduce duplication of code, we convert the argument
@@ -334,10 +335,10 @@ and augment_record_constructor (ctx: expr_ctx) (id: record_id) (name: qident) (t
     let params = List.map (fun (TypedSlot (n, t)) -> ValueParameter (n, t)) slots in
     let bindings = check_argument_list ctx (original_name name) params arguments in
     (* Use the bindings to get the effective return type *)
-    let rt = NamedType (name,
-                        RecordTypeId id,
-                        List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams),
-                        universe)
+    let rt = signature_type_at_use (NamedType (name,
+                                               RecordTypeId id,
+                                               List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams),
+                                               universe))
     in
     let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) (local_name name) params rt from_context bindings in
     (* Check: the set of bindings equals the set of type parameters *)
@@ -370,16 +371,16 @@ and augment_union_constructor (ctx: expr_ctx) (union_id: union_id) (type_name: q
     let bindings = check_argument_list ctx case_name params arguments in
     (* Use the bindings to get the effective return type *)
     let tyargs = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams) in
-    let rt = NamedType (type_name, UnionTypeId union_id, tyargs, universe) in
+    let rt = signature_type_at_use (NamedType (type_name, UnionTypeId union_id, tyargs, universe)) in
     let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) case_name params rt from_context bindings in
     (* Check: the set of bindings equals the set of type parameters *)
     let bindings'' = merge_bindings (ctx_place ctx) bindings bindings' in
     check_bindings (ctx_place ctx) typarams bindings'';
-    (* The arguments of rt'': the variables of rt replaced with bindings, and
-       then with the bindings the place of the call gave. The universe
-       of rt'' is not the declared one when that is `Type`: each replacement
-       computed it again from the arguments. *)
-    let tyargs = List.map (fun a -> replace_variables bindings' (replace_variables bindings a)) tyargs in
+    (* The arguments of rt'': the type parameters of the union with their
+       bindings in their place. The universe of rt'' is not the declared one
+       when that is `Type`: the replacement computed it again from the
+       arguments. *)
+    let tyargs = List.map (replace_variables bindings'') tyargs in
     (* As for a record, this universe is compatible with the declared one. *)
     TUnionConstructor {
         union_id;
@@ -462,36 +463,33 @@ and cast_arguments (bindings: type_bindings) (params: value_parameter list) (arg
    bindings its arguments gave. A type parameter that no parameter mentions
    has no binding yet: the place of the call gives it one (`from_context`). *)
 and handle_return_type_polymorphism (place: place) (name: identifier) (params: value_parameter list) (declared_rt: ty) (from_context: context_bindings) (bindings: type_bindings): (type_bindings * ty) =
-  (* The bindings replace the variables of the declared type once. The type of
-     an argument can name a variable that has a binding too: a function that
-     calls itself with its parameters in another order. *)
-  let rt: ty = replace_variables bindings declared_rt in
-  (* Asked of the declared type. `rt` can have type variables that came in
-     with the types of the arguments: type parameters of the declaration being
-     checked, which stand for themselves. *)
   if is_return_type_polymorphic params declared_rt then
-    let bindings' = from_context name rt in
-    let _ = List.iter (check_bound_by_context place params declared_rt) (bindings_list bindings') in
-    (merge_bindings place bindings bindings', replace_variables bindings' rt)
+    (* The place says what the whole declared type is, so it binds every type
+       parameter of that type, also those the arguments bound. *)
+    let bindings_of_place: type_bindings = from_context name declared_rt in
+    let _ = List.iter (check_place_agrees_with_arguments place bindings) (bindings_list bindings_of_place) in
+    let all_bindings: type_bindings = merge_bindings place bindings bindings_of_place in
+    (* The bindings replace the type parameters of the declared type once. The
+       types they put in are not searched again: one of them can name a type
+       parameter of the declaration being checked, and where a function calls
+       itself, that is a type parameter that has a binding. *)
+    (all_bindings, replace_variables all_bindings declared_rt)
   else
-    (empty_bindings, rt)
+    (empty_bindings, replace_variables bindings declared_rt)
 
-(* The place of a call binds only a type parameter of what is called that no
-   parameter mentions: one of the declared return type, and of no parameter
-   type. A binding of another variable is of a type parameter of the
-   declaration being checked, which stands for itself. It came in with the
-   type of an argument, or it is a parameter of the declaration itself, when
-   the declaration calls itself: there the arguments gave it no binding,
-   because it already is what the parameter type says. *)
-and check_bound_by_context (place: place) (params: value_parameter list) (declared_rt: ty) ((parameter, expected): type_parameter * ty): unit =
-  let variable: type_var = typaram_to_tyvar parameter in
-  let in_a_parameter_type: bool =
-    List.exists (fun (ValueParameter (_, ty)) -> TypeVarSet.mem variable (type_variables ty)) params
-  in
-  if TypeVarSet.mem variable (type_variables declared_rt) && not in_a_parameter_type then
-    ()
-  else
-    type_error place (TypeMismatch { expected; actual = TyVar variable })
+(* A type parameter that an argument bound has the type the argument gave it,
+   and the place of the call has to expect that type. If the place could give
+   it another one, a value of a type parameter of the declaration being
+   checked would pass as a value of any type the place asks for (#151). *)
+and check_place_agrees_with_arguments (place: place) (bindings_of_arguments: type_bindings) ((parameter, expected): type_parameter * ty): unit =
+  match get_binding bindings_of_arguments parameter with
+  | Some actual ->
+     if equal_ty expected actual then
+       ()
+     else
+       type_error place (TypeMismatch { expected; actual })
+  | None ->
+     ()
 
 (* Given a function's parameter list and return type, check if the return type
    of a function is polymorphic. *)
@@ -639,7 +637,7 @@ and augment_variable (ctx: expr_ctx) (name: qident) (from_context: context_bindi
      if (typarams_size typarams > 0) then
        (* Function is generic, the place it is used in fixes its type
           parameters. *)
-       let bindings: type_bindings = from_context (original_name name) fn_ty in
+       let bindings: type_bindings = from_context (original_name name) (signature_type_at_use fn_ty) in
        let rt: ty = replace_variables bindings rt
        and arg_tys: ty list = List.map (replace_variables bindings) arg_tys in
        let effective_fn_ty: ty = FnPtr (arg_tys, rt) in
@@ -959,19 +957,12 @@ and check_annotated (ctx: expr_ctx) (expr: aexpr) (target_type: ty): texpr =
      | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
      | FnPtr _ ->
         (match try_match_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) target_type (get_type (ctx_place ctx) expr') with
-         | Ok bindings ->
-            (* The two types are of the body being checked: a type variable
-               stands for itself (TypeMatch.expect_same_type). *)
-            (match bindings_list bindings with
-             | [] ->
-                expr'
-             | _ :: _ ->
-                type_error (ctx_place ctx) (CastInvalid { target = target_type; source = get_type (ctx_place ctx) expr' }))
+         | Ok _ ->
+            (* The two types are of the body being checked, where a type
+               variable stands for itself: the match binds nothing
+               (TypeMatch.expect_same_type). *)
+            expr'
          | Error _ ->
-            (* Every failure becomes this error, also a type error from
-               checking a constraint of a type variable in the target type: a
-               constraint that names no typeclass, or several overlapping
-               instances that match. *)
             type_error (ctx_place ctx) (CastInvalid { target = target_type; source = get_type (ctx_place ctx) expr' })))
 
 and augment_arglist (ctx: expr_ctx) (args: abstract_arglist): typed_arglist =

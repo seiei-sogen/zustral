@@ -6,14 +6,14 @@
   ],
   "span": {
     "filename": "test-programs/suites/033-type-checker-errors/007-no-binding-for-parameter/Test.zum",
-    "startp": { "line": 4, "column": 8 },
-    "end": { "line": 4, "column": 22 }
+    "startp": { "line": 13, "column": 8 },
+    "end": { "line": 13, "column": 26 }
   },
   "context": [
-    [ 2, "    generic [T: Free]" ],
-    [ 3, "    function foo(x: T): Unit is" ],
-    [ 4, "        return foo(x);" ],
-    [ 5, "    end;" ],
-    [ 6, "" ]
+    [ 11, "" ],
+    [ 12, "    function main(): ExitCode is" ],
+    [ 13, "        printLn(answer());" ],
+    [ 14, "        return ExitSuccess();" ],
+    [ 15, "    end;" ]
   ]
 }

@@ -13,6 +13,7 @@ open Type
 open TypeBindings
 open TypeParameter
 open TypeParameters
+open SignatureTypeAtUse
 open Stages.Tast
 open TastUtil
 open Env
@@ -184,37 +185,38 @@ let rec try_match_type (ctx: ctx) (a: ty) (b: ty): (type_bindings, error) result
          Error (Type (TypeMismatch { expected = a; actual = b })))
 
 and try_match_type_var (ctx: ctx) (tv: type_var) (ty: ty): (type_bindings, error) result =
-  let (TypeVariable (name, universe, from, constraints, _)) = tv in
-  (* Check if the argument type is a variable. *)
-  match ty with
-  | (TyVar (TypeVariable (i', u', from', constraints', _))) ->
-     (* When the argument type is a type variable, check if the variables have
-        the same name and provenance. *)
-     if (equal_identifier name i') && (universe = u') && (equal_qident from from') then
-       (* If so, do nothing: we don't want circular bindings *)
+  let (TypeVariable (_, _, _, constraints, matching)) = tv in
+  match matching with
+  | StandsForItself ->
+     (* A type parameter of the declaration being checked. A binding would
+        accept a body that is right for one type argument only (#151), and a
+        check of its constraints or its universe would say that the other
+        type could be the type argument (#156). *)
+     if equal_ty (TyVar tv) ty then
        Ok empty_bindings
      else
-       (* The argument's type variable must have every constraint of the
-          parameter's: its constraints are all that is known of the type it
-          stands for (#128, #158). *)
-       (match List.find_opt (fun (c: sident) -> not (List.mem c constraints')) constraints with
-        | Some typeclass ->
-           Error (Type (UnsatisfiedConstraint { tyvar = tv; ty; typeclass }))
-        | None ->
-           (* Otherwise, add a new binding.
-
-              The idea here is: suppose we have a function `f` that accepts an
-              argument of a generic type `T`. Now we're type-checking a function `g`
-              that accepts an argument `x` of generic type `U`. If we encounter a
-              function call `f(x)`, then the parameter type is `T` and the argument
-              type is `U`, so we create a binding `T -> U`.  *)
-           try_add_binding empty_bindings (tyvar_to_typaram tv) ty)
-  | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
-  | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ ->
-     (* Check that the type implements the type variable's constraints, if any. *)
-     let* () = check_type_implements_constraints ctx tv ty constraints in
-     (* If the constraints are satisfied, add a straightforward binding. *)
-     try_add_binding empty_bindings (tyvar_to_typaram tv) ty
+       Error (Type (TypeMismatch { expected = TyVar tv; actual = ty }))
+  | BoundAtUse ->
+     (match ty with
+      | TyVar (TypeVariable (_, _, _, constraints', _)) ->
+         (* The argument's type variable must have every constraint of the
+            parameter's: its constraints are all that is known of the type it
+            stands for (#128, #158). *)
+         (match List.find_opt (fun (c: sident) -> not (List.mem c constraints')) constraints with
+          | Some typeclass ->
+             Error (Type (UnsatisfiedConstraint { tyvar = tv; ty; typeclass }))
+          | None ->
+             (* The function `f` takes an argument of the type `T`. The body of
+                the function `g` calls `f(x)` with `x` of its own type parameter
+                `U`: the call binds `T` to `U`. When `g` is `f`, it binds `T` to
+                the `T` of the caller. *)
+             try_add_binding empty_bindings (tyvar_to_typaram tv) ty)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+      | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ ->
+         (* Check that the type implements the type variable's constraints, if any. *)
+         let* () = check_type_implements_constraints ctx tv ty constraints in
+         (* If the constraints are satisfied, add a straightforward binding. *)
+         try_add_binding empty_bindings (tyvar_to_typaram tv) ty)
 
 and check_type_implements_constraints (ctx: ctx) (tv: type_var) (ty: ty) (constraints: sident list): (unit, error) result =
   (* If there are no constraints, do nothing. *)
@@ -264,7 +266,7 @@ and try_get_instance_among (place: place) (env: env) (source_module_name: module
     match decl with
     | { typeclass_id; argument; _ } ->
        if equal_typeclass_id typeclass_id typeclass then
-         (match try_match_type (env, source_module_name, place) argument dispatch_ty with
+         (match try_match_type (env, source_module_name, place) (signature_type_at_use argument) dispatch_ty with
           | Ok bindings ->
              Some (decl, bindings)
           | Error _ ->
@@ -318,22 +320,19 @@ let get_method_of_instance (place: place) (env: env) (instance: instance_decl) (
   id
 
 let match_typarams (ctx: ctx) (typarams: typarams) (args: ty list): type_bindings =
-  let typarams' = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams) in
+  let typarams' = List.map (fun tp -> signature_type_at_use (TyVar (typaram_to_tyvar tp))) (typarams_as_list typarams) in
   ok_or_raise (ctx_place ctx) (try_match_type_list ctx typarams' args)
 
-(* A type parameter of the declaration being checked stands for itself in the
-   body of the declaration. `match_type` binds a type variable of the expected
-   type to whatever the actual type has in its place, which is right for the
-   signature of a function that is called, and wrong for two types of the
-   body: the body would have to be right for one type argument only. *)
+(* Two types of the body being checked. Their type variables stand for
+   themselves, so the match binds nothing: it only says whether the types are
+   the same. *)
 let expect_same_type (ctx: ctx) (expected: ty) (actual: ty): unit =
-  (* A failure is a mismatch too: the error of a binding that `match_type`
-     tried, a constraint or a universe of a type variable, would say that the
-     variable could stand for the actual type (#156, #163). *)
   match try_match_type ctx expected actual with
-  | Ok bindings when bindings_list bindings = [] ->
+  | Ok _ ->
      ()
-  | Ok _ | Error _ ->
+  | Error _ ->
+     (* The match reports the two parts that differ. The error is about the
+        whole types. *)
      type_error (ctx_place ctx) (TypeMismatch { expected; actual })
 
 let expect_value_of_type (ctx: ctx) (expected: ty) (value: texpr): unit =

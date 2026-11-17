@@ -1,10 +1,16 @@
 module body Test is
-    generic [T: Free]
-    function foo(x: T): Unit is
-        return foo(x);
+    typeclass TC(T: Free) is
+        method answer(): Int32;
+    end;
+
+    instance TC(Int32) is
+        method answer(): Int32 is
+            return 42;
+        end;
     end;
 
     function main(): ExitCode is
+        printLn(answer());
         return ExitSuccess();
     end;
 end module body.

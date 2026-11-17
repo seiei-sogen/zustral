@@ -33,7 +33,9 @@ val get_binding : type_bindings -> type_parameter -> ty option
 
 (* Given a set of bindings, and a type expression, replace every type variable
    in the expression with the value from the bindings. If the variable is not
-   found in the bindings, do nothing. *)
+   found in the bindings, do nothing. A binding is of a type parameter, so it
+   replaces the parameter's variable whether that stands for itself or is
+   bound at use. The types put in are not searched for variables again. *)
 val replace_variables : type_bindings -> ty -> ty
 
 (** The universe of a named type of that universe whose arguments are these,

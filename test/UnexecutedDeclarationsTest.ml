@@ -460,6 +460,20 @@ let test_a_monomorph_with_bindings_for_other_parameters _ =
   let (env, _) = Env.add_or_get_record_monomorph env record_id (MonoTypeBindings.mono_bindings_from_list [(other, MonoUnit)]) in
   assert_equal (Some (Generic ParameterNotFound)) (instantiate env)
 
+(* A monomorph with type arguments, in another number than its declaration has
+   type parameters. No program makes one. A generic function that used itself
+   as a function pointer did, with a type argument for some of its type
+   parameters only, until its type parameters were told apart from the
+   caller's (issue #156). *)
+let test_a_monomorph_with_another_number_of_type_arguments _ =
+  let (env, mod_id) = add_example Env.empty_env in
+  let (env, record_id) = register_record env mod_id "R" in
+  let t = typaram "T" "R"
+  and u = typaram "U" "R" in
+  let (env, _) = Env.add_or_get_record_monomorph env record_id (MonoTypeBindings.mono_bindings_from_list [(t, MonoUnit); (u, MonoBoolean)]) in
+  assert_equal (Some (Generic (ParameterArgumentLengthMismatch { parameters = [t]; arguments = [MonoUnit; MonoBoolean] })))
+    (instantiate env)
+
 (* An instance whose type parameter its argument does not name: extraction
    rejects it (InstanceLeftoverTypeParameters), so no program builds this
    environment. A call of its method on `Unit`, the instance's argument, leaves
@@ -674,6 +688,7 @@ let suite =
       "a function monomorph without a body" >:: test_a_function_monomorph_without_a_body;
       "a method monomorph without a body" >:: test_a_method_monomorph_without_a_body;
       "a monomorph with bindings for other parameters" >:: test_a_monomorph_with_bindings_for_other_parameters;
+      "a monomorph with another number of type arguments" >:: test_a_monomorph_with_another_number_of_type_arguments;
       "a method call leaves out an unbound parameter" >:: test_a_method_call_leaves_out_an_unbound_parameter;
       "a method call on a type without an instance" >:: test_a_method_call_on_a_type_without_an_instance;
       "parameters of region types" >:: test_parameters_of_region_types;

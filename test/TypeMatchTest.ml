@@ -24,9 +24,10 @@ let example: module_name = make_mod_name "Example"
 
 let nope: module_name = make_mod_name "Nope"
 
-(* A type variable of the Free universe with one constraint. *)
+(* A type variable of the Free universe with one constraint, as the use of
+   its declaration has it: matching binds it, and checks the constraint. *)
 let constrained (name: string) (typeclass: sident): type_var =
-  TypeVariable (make_ident name, FreeUniverse, make_qident (example, make_ident "f", make_ident "f"), [typeclass], StandsForItself)
+  TypeVariable (make_ident name, FreeUniverse, make_qident (example, make_ident "f", make_ident "f"), [typeclass], BoundAtUse)
 
 (* An environment with the module Example, and in it a type class C and an
    instance of C for Pointer[U], where U needs an instance of Nope.D. *)
