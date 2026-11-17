@@ -116,9 +116,7 @@ let ok_or_raise (place: place) (result: ('a, error) result): 'a =
   | Error error -> raise_error place error
 
 let place_inside (outer: place) (span: span): place =
-  match outer with
-  | AtSpan _ when span = empty_span -> outer
-  | AtSpan _ | NoSpan -> AtSpan span
+  if span = empty_span then outer else AtSpan span
 
 (* Error context-augmenting functions *)
 

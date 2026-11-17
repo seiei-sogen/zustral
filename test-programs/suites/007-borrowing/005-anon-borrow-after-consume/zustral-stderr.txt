@@ -10,14 +10,14 @@
   ],
   "span": {
     "filename": "test-programs/suites/007-borrowing/005-anon-borrow-after-consume/Test.zum",
-    "startp": { "line": 10, "column": 8 },
-    "end": { "line": 10, "column": 33 }
+    "startp": { "line": 12, "column": 8 },
+    "end": { "line": 12, "column": 13 }
   },
   "context": [
-    [ 8, "        let foo: Foo := Foo(bar => 'a');" ],
-    [ 9, "        -- Consume the record by destructuring." ],
     [ 10, "        let { bar: Nat8 } := foo;" ],
     [ 11, "        -- Try to borrow it." ],
-    [ 12, "        &foo;" ]
+    [ 12, "        &foo;" ],
+    [ 13, "        return ExitSuccess();" ],
+    [ 14, "    end;" ]
   ]
 }

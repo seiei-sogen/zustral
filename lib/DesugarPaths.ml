@@ -114,6 +114,8 @@ and transform_stmt (stmt: AstLC.astmt): AstDP.astmt =
   | AstLC.LetTmp (name, expr) ->
      let expr = transform_expr expr in
      AstDP.LetTmp (name, expr)
+  | AstLC.LetLoopBound (name, bound, expr) ->
+     AstDP.LetLoopBound (name, bound, transform_expr expr)
   | AstLC.AssignTmp (name, expr) ->
      let expr = transform_expr expr in
      AstDP.AssignTmp (name, expr)

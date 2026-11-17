@@ -122,7 +122,7 @@ val ok_or_raise : place -> ('a, error) result -> 'a
 (** The place of a part of the program whose span is [span], inside a part
     whose place is [outer]. A statement the compiler made up has the empty
     span ({!Span.empty_span}): an error in it is reported at the place around
-    it, when that place has a span. *)
+    it. *)
 val place_inside : place -> span -> place
 
 (** Add a source context to an error if it doesn't have one. *)

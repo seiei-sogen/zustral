@@ -90,17 +90,18 @@ let check_region_name_is_free (ctx: stmt_ctx) (region: identifier): unit =
      Option.iter (fun (ModRec { id; _ }) -> name_must_be_free place env id region)
        (get_module_by_name env module_name)
 
-(* The span of `stmt` if it assigns a temporary, which is what
-   `LiftControlPass` turns every assignment into. `DesugarBorrows` wraps such a
-   statement in the anonymous borrows of its lvalue. *)
-let rec lifted_assignment_span (stmt: astmt): span option =
+(* Whether `stmt` assigns a temporary, which is what `LiftControlPass` turns
+   every assignment into. `DesugarBorrows` wraps such a statement in the
+   anonymous borrows of its lvalue. *)
+let rec assigns_lifted_temporary (stmt: astmt): bool =
   match stmt with
-  | AAssign (span, _, Temporary _) | AAssignVar (span, _, Temporary _) ->
-     Some span
+  | AAssign (_, _, Temporary _) | AAssignVar (_, _, Temporary _) ->
+     true
   | ABorrow { body; _ } ->
-     lifted_assignment_span body
+     assigns_lifted_temporary body
   | ASkip _ | ALet _ | ADestructure _ | AInitialAssign _ | AIf _ | AWhen _ | ACase _
-  | AWhile _ | AFor _ | ABlock _ | ADiscarding _ | AReturn _ | LetTmp _ | AssignTmp _
+  | AWhile _ | AFor _ | ABlock _ | ADiscarding _ | AReturn _ | LetTmp _ | LetLoopBound _
+  | AssignTmp _
   | AAssign (_, _, (NilConstant | BoolConstant _ | IntConstant _ | FloatConstant _
       | StringConstant _ | Variable _ | FunctionCall _ | ArithmeticExpression _
       | ArithmeticNegation _ | Comparison _ | Conjunction _ | Disjunction _ | Negation _
@@ -111,7 +112,7 @@ let rec lifted_assignment_span (stmt: astmt): span option =
       | Comparison _ | Conjunction _ | Disjunction _ | Negation _ | IfExpression _ | Embed _ | Deref _
       | Typecast _ | SizeOf _ | SlotAccessor _ | PointerSlotAccessor _
       | ArrayIndex _)) ->
-     None
+     false
 
 (* The table with the temporary on the right-hand side of an assignment,
    declared with the type of the lvalue. The statement that computes the
@@ -153,6 +154,8 @@ let rec augment_stmt (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (stmt: 
      augment_let ctx lexenv supply span mut name ty body
   | LetTmp (name, value) ->
      augment_let_tmp ctx lexenv supply name value
+  | LetLoopBound (name, bound, value) ->
+     augment_let_loop_bound ctx lexenv supply name bound value
   | AssignTmp (name, value) ->
      augment_assign_tmp ctx lexenv supply name value
   | ADestructure (span, mut, bindings, value, body) ->
@@ -209,6 +212,16 @@ and augment_let_tmp (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (name: i
       let ty = get_type place value in
       let lexenv = push_var place lexenv name ty (VarLocal Mutable) in
       (TLetTmp (name, ty, value), lexenv, supply))
+
+(* A bound of a `for` loop has the type Index, which an integer literal takes. *)
+and augment_let_loop_bound (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (name: identifier) (bound: loop_bound) (value: aexpr): tstmt * lexenv * Supply.t =
+  let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
+  let expr_ctx: TypeCheckExpr.expr_ctx = TypeCheckExpr.make_ctx place module_name env rm typarams lexenv in
+  let value = TypeCheckExpr.infer_with_expected expr_ctx value index_type in
+  if LiteralTyping.literal_matches place index_type value || equal_ty (get_type place value) index_type then
+    (TLetTmp (name, index_type, value), push_var place lexenv name index_type (VarLocal Mutable), supply)
+  else
+    type_error place (ForBoundNotIndex { bound; ty = get_type place value })
 
 and augment_assign_tmp (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (name: identifier) (value: aexpr): tstmt * lexenv * Supply.t =
   let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
@@ -391,9 +404,7 @@ and augment_while (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: spa
 and augment_for (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (name: identifier) (initial: aexpr) (final: aexpr) (body: astmt): tstmt * lexenv * Supply.t =
   let ctx = stmt_at ctx span in
   let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
-  (* Both bounds have the type Index: the lifting pass binds each to a
-     temporary whose value is a cast to Index, and the cast reports a bound of
-     another type (issue #124). *)
+  (* Both bounds are temporaries of the type Index (augment_let_loop_bound). *)
   (let i' = infer_expr place module_name env rm typarams lexenv initial
       and f' = infer_expr place module_name env rm typarams lexenv final in
       let lexenv = push_var place lexenv name index_type (VarLocal Immutable) in
@@ -491,19 +502,21 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
           generic_error place (UnknownName { kind = VariableName; name = original })))
 
 and augment_block (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (f: astmt) (r: astmt): tstmt * lexenv * Supply.t =
-  (match lifted_assignment_span r with
-   | Some assign_span ->
-      (* `f` computes the temporary that `r` assigns. `r` is checked
-         first because it gives the temporary its type, and the type of
-         a path is only known inside the borrows around `r`. An error
-         in `f` has no span of its own. *)
-      let (b, lexenv, supply) = augment_stmt ctx lexenv supply r in
-      let (a, lexenv, supply) = augment_stmt (stmt_at ctx assign_span) lexenv supply f in
-      (TBlock (span, a, b), lexenv, supply)
-   | None ->
-      let (a, lexenv, supply) = augment_stmt ctx lexenv supply f in
-      let (b, lexenv, supply) = augment_stmt ctx lexenv supply r in
-      (TBlock (span, a, b), lexenv, supply))
+  (* A block that `LiftControlPass` made has the span of the statement it
+     lifted an expression out of, and the statement that computes the
+     expression has none of its own. *)
+  let ctx = stmt_at ctx span in
+  if assigns_lifted_temporary r then
+    (* `f` computes the temporary that `r` assigns. `r` is checked first
+       because it gives the temporary its type, and the type of a path is
+       only known inside the borrows around `r`. *)
+    let (b, lexenv, supply) = augment_stmt ctx lexenv supply r in
+    let (a, lexenv, supply) = augment_stmt ctx lexenv supply f in
+    (TBlock (span, a, b), lexenv, supply)
+  else
+    let (a, lexenv, supply) = augment_stmt ctx lexenv supply f in
+    let (b, lexenv, supply) = augment_stmt ctx lexenv supply r in
+    (TBlock (span, a, b), lexenv, supply)
 
 and augment_discarding (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (e: aexpr): tstmt * lexenv * Supply.t =
   let ctx = stmt_at ctx span in

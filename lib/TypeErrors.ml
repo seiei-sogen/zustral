@@ -68,6 +68,7 @@ type t =
   | DestructureWrongSlots of ty
   | DiscardLinear of universe
   | ExpressionNotConstant
+  | ForBoundNotIndex of { bound: Common.loop_bound; ty: ty }
   | FunPointerNamedArgs
   | IfInequal of { lhs: ty; rhs: ty }
   | LogicalOperandsNotBoolean of logical_operands
@@ -298,6 +299,22 @@ let render (error: t): err_text =
   | ExpressionNotConstant ->
      [
        Text "The expression is not a valid constant expression."
+     ]
+  | ForBoundNotIndex { bound; ty } ->
+     let word = match bound with
+       | Common.InitialLoopBound -> "initial"
+       | Common.FinalLoopBound -> "final"
+     in
+     [
+       Text "The ";
+       Text word;
+       Text " bound of a ";
+       Code "for";
+       Text " loop has the type ";
+       Type ty;
+       Text ", but it must have the type ";
+       Type index_type;
+       Text "."
      ]
   | FunPointerNamedArgs ->
      [

@@ -541,7 +541,8 @@ let rec check_stmt (place: place) (tbl: state_tbl) (stmt: tstmt): state_tbl =
      (* Remove the rename from the table. *)
      let tbl: state_tbl = remove_entry place tbl rename in
      tbl
-  | TBlock (_, a, b) ->
+  | TBlock (span, a, b) ->
+     let place: place = place_inside place span in
      let tbl: state_tbl = check_stmt place tbl a in
      let tbl: state_tbl = check_stmt place tbl b in
      tbl

@@ -186,6 +186,8 @@ module AstLC = struct
     | ADiscarding of span * aexpr
     | AReturn of span * aexpr
     | LetTmp of identifier * aexpr
+    (* A temporary that holds a bound of a `for` loop. *)
+    | LetLoopBound of identifier * loop_bound * aexpr
     | AssignTmp of identifier * aexpr
 
   and aexpr =
@@ -271,6 +273,8 @@ module AstDP = struct
     | ADiscarding of span * aexpr
     | AReturn of span * aexpr
     | LetTmp of identifier * aexpr
+    (* A temporary that holds a bound of a `for` loop. *)
+    | LetLoopBound of identifier * loop_bound * aexpr
     | AssignTmp of identifier * aexpr
 
   and aexpr =
@@ -352,6 +356,8 @@ module AstDB = struct
     | ADiscarding of span * aexpr
     | AReturn of span * aexpr
     | LetTmp of identifier * aexpr
+    (* A temporary that holds a bound of a `for` loop. *)
+    | LetLoopBound of identifier * loop_bound * aexpr
     | AssignTmp of identifier * aexpr
 
   and aexpr =

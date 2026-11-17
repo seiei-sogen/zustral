@@ -154,7 +154,8 @@ let wrap_stmt_with_borrows_at (span: span) (supply: Supply.t) (stmt: AstDB.astmt
   in
   List.fold_left wrap_with_borrow (stmt, supply) acc
 
-(* The borrows of a statement that has a span of its own. *)
+(* The borrows of a statement that has no span of its own: an error of the
+   borrows is reported at the place around the statement. *)
 let wrap_stmt_with_borrows (supply: Supply.t) (stmt: AstDB.astmt) (acc: acc): AstDB.astmt * Supply.t =
   wrap_stmt_with_borrows_at empty_span supply stmt acc
 
@@ -186,11 +187,11 @@ let rec transform_stmt (supply: Supply.t) (stmt: AstDP.astmt): AstDB.astmt * Sup
      let (path, acc, supply) = lift_borrows supply path [] in
      let (value, acc, supply) = lift_borrows supply value acc in
      let stmt = AstDB.AAssign (span, path, value) in
-     wrap_stmt_with_borrows supply stmt acc
+     wrap_stmt_with_borrows_at span supply stmt acc
   | AstDP.AAssignVar (span, name, value) ->
      let (value, acc, supply) = lift_borrows supply value [] in
      let stmt = AstDB.AAssignVar (span, name, value) in
-     wrap_stmt_with_borrows supply stmt acc
+     wrap_stmt_with_borrows_at span supply stmt acc
   | AstDP.AInitialAssign (name, ty, value) ->
      let (value, acc, supply) = lift_borrows supply value [] in
      let stmt = AstDB.AInitialAssign (name, ty, value) in
@@ -198,6 +199,10 @@ let rec transform_stmt (supply: Supply.t) (stmt: AstDP.astmt): AstDB.astmt * Sup
   | AstDP.LetTmp (name, value) ->
      let (value, acc, supply) = lift_borrows supply value [] in
      let stmt = AstDB.LetTmp (name, value) in
+     wrap_stmt_with_borrows supply stmt acc
+  | AstDP.LetLoopBound (name, bound, value) ->
+     let (value, acc, supply) = lift_borrows supply value [] in
+     let stmt = AstDB.LetLoopBound (name, bound, value) in
      wrap_stmt_with_borrows supply stmt acc
   | AstDP.AssignTmp (name, value) ->
      let (value, acc, supply) = lift_borrows supply value [] in
@@ -208,28 +213,28 @@ let rec transform_stmt (supply: Supply.t) (stmt: AstDP.astmt): AstDB.astmt * Sup
      let (then', supply) = transform_stmt supply then' in
      let (else', supply) = transform_stmt supply else' in
      let stmt = AstDB.AIf (span, cond, then', else') in
-     wrap_stmt_with_borrows supply stmt acc
+     wrap_stmt_with_borrows_at span supply stmt acc
   | AstDP.AWhen (span, cond, body) ->
      let (cond, acc, supply) = lift_borrows supply cond [] in
      let (body, supply) = transform_stmt supply body in
      let stmt = AstDB.AWhen (span, cond, body) in
-     wrap_stmt_with_borrows supply stmt acc
+     wrap_stmt_with_borrows_at span supply stmt acc
   | AstDP.ACase (span, expr, whens) ->
      let (expr, acc, supply) = lift_borrows supply expr [] in
      let (whens, supply) = transform_whens supply whens in
      let stmt = AstDB.ACase (span, expr, whens) in
-     wrap_stmt_with_borrows supply stmt acc
+     wrap_stmt_with_borrows_at span supply stmt acc
   | AstDP.AWhile (span, cond, body) ->
      let (cond, acc, supply) = lift_borrows supply cond [] in
      let (body, supply) = transform_stmt supply body in
      let stmt = AstDB.AWhile (span, cond, body) in
-     wrap_stmt_with_borrows supply stmt acc
+     wrap_stmt_with_borrows_at span supply stmt acc
   | AstDP.AFor { span; name; initial; final; body } ->
      let (initial, acc, supply) = lift_borrows supply initial [] in
      let (final, acc, supply) = lift_borrows supply final acc in
      let (body, supply) = transform_stmt supply body in
      let stmt = AstDB.AFor { span; name; initial; final; body } in
-     wrap_stmt_with_borrows supply stmt acc
+     wrap_stmt_with_borrows_at span supply stmt acc
   | AstDP.ABlock (span, stmt1, stmt2) ->
      let (stmt1, supply) = transform_stmt supply stmt1 in
      let (stmt2, supply) = transform_stmt supply stmt2 in
@@ -237,11 +242,11 @@ let rec transform_stmt (supply: Supply.t) (stmt: AstDP.astmt): AstDB.astmt * Sup
   | AstDP.ADiscarding (span, expr) ->
      let (expr, acc, supply) = lift_borrows supply expr [] in
      let stmt = AstDB.ADiscarding (span, expr) in
-     wrap_stmt_with_borrows supply stmt acc
+     wrap_stmt_with_borrows_at span supply stmt acc
   | AstDP.AReturn (span, expr) ->
      let (expr, acc, supply) = lift_borrows supply expr [] in
      let stmt = AstDB.AReturn (span, expr) in
-     wrap_stmt_with_borrows supply stmt acc
+     wrap_stmt_with_borrows_at span supply stmt acc
   | AstDP.ABorrow { span; original; rename; declared_reference; region; body; mode } ->
      let (body, supply) = transform_stmt supply body in
      (AstDB.ABorrow { span; original; rename; declared_reference = Some declared_reference; region; body; mode }, supply)

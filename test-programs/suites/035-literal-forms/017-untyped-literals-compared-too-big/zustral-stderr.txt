@@ -10,8 +10,8 @@
   ],
   "span": {
     "filename": "test-programs/suites/035-literal-forms/017-untyped-literals-compared-too-big/Test.zum",
-    "startp": { "line": 1, "column": 19 },
-    "end": { "line": 7, "column": 8 }
+    "startp": { "line": 3, "column": 8 },
+    "end": { "line": 5, "column": 15 }
   },
   "context": [
     [ 1, "module body Test is" ],
@@ -20,7 +20,6 @@
     [ 4, "            printLn(\"equal\");" ],
     [ 5, "        end if;" ],
     [ 6, "        return ExitSuccess();" ],
-    [ 7, "    end;" ],
-    [ 8, "end module body." ]
+    [ 7, "    end;" ]
   ]
 }
