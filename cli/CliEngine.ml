@@ -70,8 +70,7 @@ let parse_source_files (mods: mod_source list): (Pipeline.module_source list * s
 
 (* Execution *)
 
-(** Write the error to stderr and to error.html, then exit with a failure
-    status. *)
+(** Write the error to stderr, then exit with a failure status. *)
 let report_and_exit (mode: error_reporting_mode) (error: zustral_error): 'a =
   let text: string =
     match mode with
@@ -81,7 +80,6 @@ let report_and_exit (mode: error_reporting_mode) (error: zustral_error): 'a =
        Yojson.Basic.pretty_to_string (render_error_to_json error)
   in
   Printf.eprintf "%s" text;
-  html_error_dump error;
   exit (-1)
 
 open Outcome.Syntax
@@ -170,12 +168,12 @@ and exec_target (mods: Pipeline.module_source list) (target: target): unit Outco
   | Executable { bin_path; entrypoint; } ->
      let* (code: string) = compile_to_c mods (Some entrypoint) in
      Outcome.catch (fun () ->
-         (* Write the output to a temporary file. *)
+         (* Write the output to a temporary file, which `cc` compiles. *)
          let cfile: string = Filename.temp_file "zustral_" ".c" in
-         write_string_to_file cfile code;
-         (* Invoke `cc`. *)
-         let _ = compile_c_code cfile bin_path in
-         ())
+         Fun.protect ~finally:(fun () -> Sys.remove cfile) (fun () ->
+             write_string_to_file cfile code;
+             let _ = compile_c_code cfile bin_path in
+             ()))
   | CStandalone { output_path; entrypoint; } ->
      let* (code: string) = compile_to_c mods entrypoint in
      Outcome.catch (fun () -> write_string_to_file output_path code)

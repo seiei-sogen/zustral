@@ -12,9 +12,8 @@ once more in type-check mode (--target-type=tc), the standard
 library with its tests (the module list in standard/Makefile), every program
 under examples/ (the command its Makefile runs) and every command-line test
 (test-programs/cli/*, run in a directory holding a copy of its input files). For each program
-the snapshot keeps the exit status, the generated C, stdout, stderr, the
-error.html the compiler writes on failure, and the names of the files it leaves
-in its working directory.
+the snapshot keeps the exit status, the generated C, stdout, stderr, and the
+names of the files it leaves in its working directory.
 
 A refactoring step must leave the snapshot unchanged. `compare` exits 1 when
 any program differs, and prints a diff of the first few.
@@ -47,7 +46,7 @@ EXAMPLES = ROOT / "examples"
 CLI_TESTS = ROOT / "test-programs" / "cli"
 CLI_UNSET_VARIABLES = "unset-environment-variables.txt"
 CLI_NOT_INPUTS = {"args.txt", "expected.txt", "README.md", CLI_UNSET_VARIABLES}
-FILES = ("exit", "out.c", "stdout", "stderr", "error.html", "files")
+FILES = ("exit", "out.c", "stdout", "stderr", "files")
 # Generated names: a fixed prefix or a suffix, then the number.
 GENERATED = re.compile(r"\b(?:(decl_|mono_|meth_|_t|tmp)|([A-Za-z_][A-Za-z0-9_]*?_tmp_ref))(\d+)\b")
 
@@ -127,7 +126,6 @@ def cli_commands() -> list[tuple[str, list[str], pathlib.Path]]:
 def run_one(compiler: str, outdir: pathlib.Path, name: str, words: list[str], inputs: pathlib.Path | None = None) -> str:
     target = outdir / name
     target.mkdir(parents=True, exist_ok=True)
-    # The compiler writes error.html into its working directory.
     with tempfile.TemporaryDirectory() as cwd:
         copied = set()
         if inputs is not None:
@@ -145,13 +143,11 @@ def run_one(compiler: str, outdir: pathlib.Path, name: str, words: list[str], in
         generated = pathlib.Path(c_path).read_bytes() if os.path.exists(c_path) else b""
         # The compiler names its temporary C file at random.
         scrub = lambda data: re.sub(rb"[^\s'\"`]*/zustral_[0-9a-f]+\.c", b"$TMP.c", data.replace(cwd.encode(), b"$CWD").replace(str(ROOT).encode(), b"$ROOT"))
-        error_page = pathlib.Path(cwd, "error.html")
         left_behind = sorted(f.name for f in pathlib.Path(cwd).iterdir() if f.name != "out.c" and f.name not in copied)
         (target / "exit").write_text(f"{done.returncode}\n")
         (target / "out.c").write_bytes(scrub(generated))
         (target / "stdout").write_bytes(scrub(done.stdout))
         (target / "stderr").write_bytes(scrub(done.stderr))
-        (target / "error.html").write_bytes(scrub(error_page.read_bytes()) if error_page.exists() else b"")
         (target / "files").write_text("".join(name + "\n" for name in left_behind))
     return name
 

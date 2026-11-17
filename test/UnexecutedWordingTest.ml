@@ -89,17 +89,6 @@ let test_source_context_is_added_once _ =
 let test_line_numbers_are_right_aligned _ =
   eq " 9 | a\n10 | b" (source_ctx_to_plain_text (SourceContext [(9, "a"); (10, "b")]))
 
-let test_html_of_context_without_span _ =
-  let error = add_source_ctx (make_error NoSpan (Internal "x")) (SourceContext [(3, "let x")]) in
-  let html = HtmlError.render_error_to_html error in
-  let contains (sub: string): bool =
-    let n = String.length sub in
-    let rec from k = k + n <= String.length html && (String.sub html k n = sub || from (k + 1)) in
-    from 0
-  in
-  eq true (contains "<pre>let x<br></pre>");
-  eq false (contains "<span class='error-hl'>")
-
 let suite =
   "Unexecuted wording" >::: [
       "Generic errors" >:: test_generic_wording;
@@ -112,8 +101,7 @@ let suite =
       "Command killed by a signal" >:: test_command_killed_by_signal;
       "Module name is added once" >:: test_module_name_is_added_once;
       "Source context is added once" >:: test_source_context_is_added_once;
-      "Line numbers are right aligned" >:: test_line_numbers_are_right_aligned;
-      "HTML of a context without a span" >:: test_html_of_context_without_span
+      "Line numbers are right aligned" >:: test_line_numbers_are_right_aligned
     ]
 
 let _ = run_test_tt_main suite

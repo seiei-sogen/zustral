@@ -7,8 +7,6 @@
 *)
 (** Everything the compiler asks of the operating system: reading and writing
     files, and running the C compiler. *)
-open Zustral_core
-open Error
 
 (** Read the file at the given path into a string. *)
 val read_file_to_string : string -> string
@@ -31,7 +29,3 @@ val run_command : string -> command_output
 
     The second argument is the output binary file path. *)
 val compile_c_code : string -> string -> command_output
-
-(** Write the HTML page for the error to error.html in the working
-    directory. *)
-val html_error_dump : zustral_error -> unit

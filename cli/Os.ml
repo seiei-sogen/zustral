@@ -8,7 +8,6 @@
 open Zustral_core
 open Unix
 open Error
-open HtmlError
 
 (* The message of [Sys_error] starts with the path when the file cannot be
    opened, and not when it cannot be read or written. The error names the
@@ -67,6 +66,3 @@ let compile_c_code (source_path: string) (output_path: string): command_output =
     cli_error NoSpan (CCompilerError { command; exit_code = code; stdout; stderr })
   else
     o
-
-let html_error_dump (error: zustral_error): unit =
-  write_string_to_file "error.html" (render_error_to_html error)

@@ -8,8 +8,8 @@
 #   2. the end-to-end suite (test-programs/runner.py)
 #   3. the command-line tests (test-programs/cli-runner.py)
 #   4. the equivalence check: every program in the repository compiled by both
-#      compilers, with the generated C, stdout, stderr, exit status, error.html
-#      and the names of the files left behind compared
+#      compilers, with the generated C, stdout, stderr, exit status and the
+#      names of the files left behind compared
 #   5. the metrics: every count equals the one recorded in expected/. A commit
 #      that moves a count, down as well as up, records it again in the same
 #      commit (measure.sh --record) and says why in its message
