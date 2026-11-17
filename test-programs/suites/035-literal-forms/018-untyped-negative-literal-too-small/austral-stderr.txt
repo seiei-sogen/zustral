@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/035-literal-forms/018-untyped-negative-literal-too-small/Test.aum",
+    "filename": "test-programs/suites/035-literal-forms/018-untyped-negative-literal-too-small/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 29 }
   },

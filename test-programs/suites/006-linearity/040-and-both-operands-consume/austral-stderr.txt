@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/006-linearity/040-and-both-operands-consume/Test.aum",
+    "filename": "test-programs/suites/006-linearity/040-and-both-operands-consume/Test.zum",
     "startp": { "line": 13, "column": 8 },
     "end": { "line": 13, "column": 55 }
   },

@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/108-borrow-constant-mutably/Test.aum",
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/108-borrow-constant-mutably/Test.zum",
     "startp": { "line": 5, "column": 8 },
     "end": { "line": 7, "column": 19 }
   },

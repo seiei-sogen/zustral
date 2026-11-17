@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/007-borrowing/027-assign-free-union-while-read-borrowed/Test.aum",
+    "filename": "test-programs/suites/007-borrowing/027-assign-free-union-while-read-borrowed/Test.zum",
     "startp": { "line": 16, "column": 20 },
     "end": { "line": 16, "column": 53 }
   },

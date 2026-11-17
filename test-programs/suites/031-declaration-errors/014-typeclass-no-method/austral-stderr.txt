@@ -8,7 +8,7 @@
     { "type": "code", "content": "Bar" }
   ],
   "span": {
-    "filename": "test-programs/suites/031-declaration-errors/014-typeclass-no-method/Test.aum",
+    "filename": "test-programs/suites/031-declaration-errors/014-typeclass-no-method/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 9, "column": 8 }
   },

@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/001-unknown-callable/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/001-unknown-callable/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 18 }
   },

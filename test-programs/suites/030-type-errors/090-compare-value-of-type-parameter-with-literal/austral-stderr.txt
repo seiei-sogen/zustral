@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/090-compare-value-of-type-parameter-with-literal/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/090-compare-value-of-type-parameter-with-literal/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 23 }
   },

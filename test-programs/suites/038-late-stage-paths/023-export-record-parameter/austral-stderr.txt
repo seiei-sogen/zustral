@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/038-late-stage-paths/023-export-record-parameter/Test.aum",
+    "filename": "test-programs/suites/038-late-stage-paths/023-export-record-parameter/Test.zum",
     "startp": { "line": 6, "column": 48 },
     "end": { "line": 9, "column": 8 }
   },

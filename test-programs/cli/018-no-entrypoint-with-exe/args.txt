@@ -1,1 +1,1 @@
-compile Hello.aum --no-entrypoint --output=hello
+compile Hello.zum --no-entrypoint --output=hello

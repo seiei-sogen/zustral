@@ -3,7 +3,7 @@
   "kind": "Generic Error",
   "text": [ { "type": "text", "content": "Not allowed" } ],
   "span": {
-    "filename": "test-programs/suites/034-early-and-late-stage-errors/028-foreign-in-safe-module-unit-return/Test.aum",
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/028-foreign-in-safe-module-unit-return/Test.zum",
     "startp": { "line": 2, "column": 48 },
     "end": { "line": 4, "column": 8 }
   },

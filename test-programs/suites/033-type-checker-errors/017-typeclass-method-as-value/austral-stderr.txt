@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/033-type-checker-errors/017-typeclass-method-as-value/Test.aum",
+    "filename": "test-programs/suites/033-type-checker-errors/017-typeclass-method-as-value/Test.zum",
     "startp": { "line": 7, "column": 8 },
     "end": { "line": 7, "column": 29 }
   },

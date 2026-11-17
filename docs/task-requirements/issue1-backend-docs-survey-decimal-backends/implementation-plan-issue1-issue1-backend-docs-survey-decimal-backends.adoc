@@ -27,7 +27,7 @@ mpdecimal、IEEE 754-2008 decimal128（GCC `_Decimal128`、libdfp、Intel DFP）
 
 * `docs/research/decimal-backend-survey/run.sh` は bash で、設計文書の依存表とプローブ表を上から処理する1つのループにする。フレームワークは使わない。
 * C のプローブは系統ごとに1ファイルで、`key=value` の行を出す。
-* Zustral の FFI プローブは、`examples/ffi/FFI.aum` の書き方と、`test-programs/runner.py:400-408` の gcc の呼び方に合わせる。
+* Zustral の FFI プローブは、`examples/ffi/FFI.zum` の書き方と、`test-programs/runner.py:400-408` の gcc の呼び方に合わせる。
 * ツールチェーンとライブラリは `NIXPKGS=github:NixOS/nixpkgs/674a2028661e550a97400c1cc992b9cca9a668a1` から取る。libdfp のビルドは、設計文書の実験3で通ったツールの組をそのまま使う。
 
 == 変更対象一覧
@@ -40,7 +40,7 @@ mpdecimal、IEEE 754-2008 decimal128（GCC `_Decimal128`、libdfp、Intel DFP）
 |`docs/research/decimal-backend-survey/run.sh` |再実行スクリプト
 |`docs/research/decimal-backend-survey/probes/{i128,d128,mpd,intel,libdfp}.c` |系統ごとの C プローブ
 |`docs/research/decimal-backend-survey/probes/bid128.h` |BID 形式の16バイトを `<符号><係数>E<指数>` で出す関数（`d128.c`、`libdfp.c`、`ffi/shim.c` が共有。実装で追加）
-|`docs/research/decimal-backend-survey/probes/ffi/{Probe.aum,UnitReturn.aum,shim.c}` |Zustral FFI プローブ
+|`docs/research/decimal-backend-survey/probes/ffi/{Probe.zum,UnitReturn.zum,shim.c}` |Zustral FFI プローブ
 |`docs/research/decimal-backend-survey/expected/*.txt` |記録した出力（`run.sh --record` で作る）
 |`docs/research/decimal-backend-survey/README.md` |調査レポート
 |===
@@ -178,10 +178,10 @@ glibc の `printf` には `_Decimal128` の書式がないので、プローブ�
 * Satisfies: REQ-007
 * Design: 「Zustral FFI プローブ」「手間の上限（REQ-007）」
 * Depends on: T1、T2（既知の値）、T3（`mpdecimal`）
-* 対象: `probes/ffi/Probe.aum`、`probes/ffi/shim.c`、`probes/ffi/UnitReturn.aum`、`expected/ffi.txt`、`expected/ffi-unit-return.txt`、`run.sh` の依存 `zustral`
+* 対象: `probes/ffi/Probe.zum`、`probes/ffi/shim.c`、`probes/ffi/UnitReturn.zum`、`expected/ffi.txt`、`expected/ffi-unit-return.txt`、`run.sh` の依存 `zustral`
 * 変更前後: 前は ffi の行がない。後は `ffi` と `ffi-unit-return` が一致し、`ffi` は一致したときも実際の出力を結果行の下に表示する。
-* `Probe.aum` は、`mpd_qnew` を直接 `Address[Nat8]` で受け、`void` を返す mpdecimal の関数と、16バイトの領域越しの `_Decimal128` と `__int128` の演算を、シム経由で呼ぶ。ポインタの値は出力しない。出すキーは `mpd_qnew_direct`（直接束縛した `mpd_qnew` が NULL でなかったかを `ok` か `null` で出す）、`mpd_add_01_02`、`d128_add_01_02`、`i128_add_01_02` の4つで、値の形は各系統のプローブと同じにする。
-* `UnitReturn.aum` は、`void` の C 関数を戻り値 `Unit` で束縛して呼ぶ。コンパイラの出力と `exit=` 行がそのまま記録になる。
+* `Probe.zum` は、`mpd_qnew` を直接 `Address[Nat8]` で受け、`void` を返す mpdecimal の関数と、16バイトの領域越しの `_Decimal128` と `__int128` の演算を、シム経由で呼ぶ。ポインタの値は出力しない。出すキーは `mpd_qnew_direct`（直接束縛した `mpd_qnew` が NULL でなかったかを `ok` か `null` で出す）、`mpd_add_01_02`、`d128_add_01_02`、`i128_add_01_02` の4つで、値の形は各系統のプローブと同じにする。
+* `UnitReturn.zum` は、`void` の C 関数を戻り値 `Unit` で束縛して呼ぶ。コンパイラの出力と `exit=` 行がそのまま記録になる。
 * 既知の値: `ffi` の演算結果は T1〜T3 と同じ値。`ffi-unit-return` は `lib/CodeGen.ml:587-591`（戻り値の型の変換）と `lib/CodeGen.ml:556-557`（`Unit` を拒む分岐）から、`Not allowed` を含むエラーと 0 でない終了状態。
 * テスト: 既知の値と照らしてから `--record` を実行し、2つの一致を確かめる。続けて「ビルド上限」を実行する。
 * Done when:

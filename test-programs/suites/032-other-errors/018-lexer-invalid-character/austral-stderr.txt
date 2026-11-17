@@ -6,7 +6,7 @@
     { "type": "code", "content": "$" }
   ],
   "span": {
-    "filename": "test-programs/suites/032-other-errors/018-lexer-invalid-character/Test.aum",
+    "filename": "test-programs/suites/032-other-errors/018-lexer-invalid-character/Test.zum",
     "startp": { "line": 3, "column": 26 },
     "end": { "line": 3, "column": 27 }
   },

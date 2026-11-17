@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/018-literal-operands/004-arith-literal-left-too-big/Test.aum",
+    "filename": "test-programs/suites/018-literal-operands/004-arith-literal-left-too-big/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 31 }
   },

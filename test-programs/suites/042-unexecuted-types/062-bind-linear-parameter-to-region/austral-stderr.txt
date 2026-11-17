@@ -12,7 +12,7 @@
     { "type": "code", "content": "Region" }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/062-bind-linear-parameter-to-region/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/062-bind-linear-parameter-to-region/Test.zum",
     "startp": { "line": 20, "column": 8 },
     "end": { "line": 20, "column": 18 }
   },

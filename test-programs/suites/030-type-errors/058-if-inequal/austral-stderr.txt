@@ -10,7 +10,7 @@
     { "type": "type", "content": "Bool" }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/058-if-inequal/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/058-if-inequal/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 51 }
   },

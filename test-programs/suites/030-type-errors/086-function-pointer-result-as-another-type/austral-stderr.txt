@@ -8,7 +8,7 @@
     { "type": "type", "content": "T" }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/086-function-pointer-result-as-another-type/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/086-function-pointer-result-as-another-type/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 39 }
   },

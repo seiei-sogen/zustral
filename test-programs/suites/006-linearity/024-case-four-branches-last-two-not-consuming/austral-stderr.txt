@@ -16,7 +16,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/006-linearity/024-case-four-branches-last-two-not-consuming/Test.aum",
+    "filename": "test-programs/suites/006-linearity/024-case-four-branches-last-two-not-consuming/Test.zum",
     "startp": { "line": 22, "column": 8 },
     "end": { "line": 31, "column": 17 }
   },

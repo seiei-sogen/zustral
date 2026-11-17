@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/019-mismatch-write-reference/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/019-mismatch-write-reference/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 19 }
   },

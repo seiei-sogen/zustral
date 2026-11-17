@@ -14,7 +14,7 @@
     { "type": "text", "content": "given." }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/004-call-wrong-arity/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/004-call-wrong-arity/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 16 }
   },

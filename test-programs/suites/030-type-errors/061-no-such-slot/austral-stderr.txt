@@ -8,7 +8,7 @@
     { "type": "code", "content": "y" }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/061-no-such-slot/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/061-no-such-slot/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 28 }
   },

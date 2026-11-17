@@ -144,7 +144,7 @@ If there are no blank-lines, returns zero and the empty string."
   (setq indent-line-function 'austral-indent-line))
 
 
-(add-to-list 'auto-mode-alist '("\\.aui\\'" . austral-mode))
-(add-to-list 'auto-mode-alist '("\\.aum\\'" . austral-mode))
+(add-to-list 'auto-mode-alist '("\\.zui\\'" . austral-mode))
+(add-to-list 'auto-mode-alist '("\\.zum\\'" . austral-mode))
 
 (provide 'austral-mode)

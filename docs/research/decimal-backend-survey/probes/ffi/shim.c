@@ -1,4 +1,4 @@
-/* C side of Probe.aum. It is a separate translation unit because the library
+/* C side of Probe.zum. It is a separate translation unit because the library
    headers conflict with the declarations in the generated C. Decimal values
    cross the FFI only as pointers to 16-byte slots or to mpd_t. */
 #include <mpdecimal.h>

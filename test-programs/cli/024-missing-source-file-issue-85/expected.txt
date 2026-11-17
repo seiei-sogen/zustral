@@ -2,4 +2,4 @@ exit: 2
 files: 
 --- stdout
 --- stderr
-Fatal error: exception Sys_error("DoesNotExist.aum: No such file or directory")
+Fatal error: exception Sys_error("DoesNotExist.zum: No such file or directory")

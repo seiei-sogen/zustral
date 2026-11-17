@@ -9,7 +9,7 @@
     { "type": "text", "content": " does not end in a return statement." }
   ],
   "span": {
-    "filename": "test-programs/suites/031-declaration-errors/034-missing-return-in-exported-function/Test.aum",
+    "filename": "test-programs/suites/031-declaration-errors/034-missing-return-in-exported-function/Test.zum",
     "startp": { "line": 2, "column": 55 },
     "end": { "line": 5, "column": 8 }
   },

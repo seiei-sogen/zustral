@@ -16,7 +16,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/056-constraints-first-unsatisfied/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/056-constraints-first-unsatisfied/Test.zum",
     "startp": { "line": 16, "column": 8 },
     "end": { "line": 16, "column": 14 }
   },

@@ -8,7 +8,7 @@
     { "type": "type", "content": "&[Int32, Region<2>]" }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/017-mismatch-region-and-region/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/017-mismatch-region-and-region/Test.zum",
     "startp": { "line": 5, "column": 12 },
     "end": { "line": 5, "column": 47 }
   },

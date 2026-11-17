@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/020-match-address-with-type-variable/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/020-match-address-with-type-variable/Test.zum",
     "startp": { "line": 20, "column": 8 },
     "end": { "line": 20, "column": 16 }
   },

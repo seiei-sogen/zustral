@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/018-borrow-unknown-variable/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/018-borrow-unknown-variable/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 5, "column": 19 }
   },

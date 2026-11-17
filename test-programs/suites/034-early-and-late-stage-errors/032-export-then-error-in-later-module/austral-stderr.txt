@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/034-early-and-late-stage-errors/032-export-then-error-in-later-module/Lib.aum",
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/032-export-then-error-in-later-module/Lib.zum",
     "startp": { "line": 2, "column": 48 },
     "end": { "line": 5, "column": 8 }
   },

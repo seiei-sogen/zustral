@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/160-call-non-callable-address/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/160-call-non-callable-address/Test.zum",
     "startp": { "line": 7, "column": 8 },
     "end": { "line": 7, "column": 13 }
   },

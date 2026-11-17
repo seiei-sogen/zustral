@@ -8,7 +8,7 @@
     { "type": "type", "content": "Bool" }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/021-mismatch-address/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/021-mismatch-address/Test.zum",
     "startp": { "line": 7, "column": 8 },
     "end": { "line": 7, "column": 41 }
   },

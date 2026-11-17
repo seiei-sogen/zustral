@@ -9,7 +9,7 @@
     { "type": "type", "content": "Bool" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/256-index-non-reference-bool/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/256-index-non-reference-bool/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 16 }
   },

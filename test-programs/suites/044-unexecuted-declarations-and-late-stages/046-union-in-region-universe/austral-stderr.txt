@@ -22,7 +22,7 @@
     { "type": "text", "content": " instead." }
   ],
   "span": {
-    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/046-union-in-region-universe/Test.aum",
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/046-union-in-region-universe/Test.zum",
     "startp": { "line": 2, "column": 4 },
     "end": { "line": 4, "column": 8 }
   },

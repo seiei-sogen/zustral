@@ -8,7 +8,7 @@
     { "type": "type", "content": "&[Int32, R]" }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/008-annotation-write-reference/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/008-annotation-write-reference/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 50 }
   },

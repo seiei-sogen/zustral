@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/018-literal-operands/002-arith-float-literal-int-operand/Test.aum",
+    "filename": "test-programs/suites/018-literal-operands/002-arith-float-literal-int-operand/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 32 }
   },

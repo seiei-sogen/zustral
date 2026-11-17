@@ -9,7 +9,7 @@
     { "type": "text", "content": " does not end in a return statement." }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/023-missing-return-every-statement-kind/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/023-missing-return-every-statement-kind/Test.zum",
     "startp": { "line": 36, "column": 4 },
     "end": { "line": 99, "column": 8 }
   },

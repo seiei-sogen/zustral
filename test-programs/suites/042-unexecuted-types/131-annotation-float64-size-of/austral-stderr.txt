@@ -8,7 +8,7 @@
     { "type": "type", "content": "ByteSize" }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/131-annotation-float64-size-of/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/131-annotation-float64-size-of/Test.zum",
     "startp": { "line": 30, "column": 8 },
     "end": { "line": 30, "column": 45 }
   },

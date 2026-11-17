@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/059-arithmetic-local-function-pointer-literal-too-big/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/059-arithmetic-local-function-pointer-literal-too-big/Test.zum",
     "startp": { "line": 9, "column": 8 },
     "end": { "line": 9, "column": 32 }
   },

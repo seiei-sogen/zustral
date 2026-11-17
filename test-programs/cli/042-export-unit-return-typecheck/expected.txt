@@ -14,7 +14,7 @@ files: error.html
     }
   ],
   "span": {
-    "filename": "Test.aum",
+    "filename": "Test.zum",
     "startp": { "line": 2, "column": 48 },
     "end": { "line": 5, "column": 8 }
   },

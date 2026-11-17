@@ -12,7 +12,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/006-linearity/035-or-right-operand-consumes/Test.aum",
+    "filename": "test-programs/suites/006-linearity/035-or-right-operand-consumes/Test.zum",
     "startp": { "line": 13, "column": 8 },
     "end": { "line": 13, "column": 45 }
   },

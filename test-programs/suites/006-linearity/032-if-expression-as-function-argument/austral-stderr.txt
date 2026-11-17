@@ -12,7 +12,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/006-linearity/032-if-expression-as-function-argument/Test.aum",
+    "filename": "test-programs/suites/006-linearity/032-if-expression-as-function-argument/Test.zum",
     "startp": { "line": 14, "column": 8 },
     "end": { "line": 14, "column": 74 }
   },

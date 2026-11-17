@@ -10,7 +10,7 @@
     { "type": "code", "content": "Type" }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/071-type-argument-type-for-linear-parameter/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/071-type-argument-type-for-linear-parameter/Test.zum",
     "startp": { "line": 17, "column": 4 },
     "end": { "line": 20, "column": 8 }
   },

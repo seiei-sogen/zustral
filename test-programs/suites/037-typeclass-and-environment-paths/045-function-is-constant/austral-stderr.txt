@@ -8,7 +8,7 @@
     { "type": "text", "content": "function" }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/045-function-is-constant/Test.aui",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/045-function-is-constant/Test.zui",
     "startp": { "line": 1, "column": 14 },
     "end": { "line": 2, "column": 28 }
   },

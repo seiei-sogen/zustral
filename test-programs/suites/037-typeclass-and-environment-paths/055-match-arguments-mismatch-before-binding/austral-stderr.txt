@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/055-match-arguments-mismatch-before-binding/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/055-match-arguments-mismatch-before-binding/Test.zum",
     "startp": { "line": 15, "column": 8 },
     "end": { "line": 15, "column": 13 }
   },

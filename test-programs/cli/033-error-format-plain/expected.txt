@@ -7,7 +7,7 @@ Error:
   Module:
     Bad
   Location:
-    Filename: 'Bad.aum'
+    Filename: 'Bad.zum'
     From: line 3, column 8
     To: line 3, column 29
   Description:

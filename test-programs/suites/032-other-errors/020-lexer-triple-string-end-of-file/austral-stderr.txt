@@ -5,7 +5,7 @@
     { "type": "text", "content": "End of file in triple string literal." }
   ],
   "span": {
-    "filename": "test-programs/suites/032-other-errors/020-lexer-triple-string-end-of-file/Test.aum",
+    "filename": "test-programs/suites/032-other-errors/020-lexer-triple-string-end-of-file/Test.zum",
     "startp": { "line": 6, "column": 16 },
     "end": { "line": 6, "column": 16 }
   },

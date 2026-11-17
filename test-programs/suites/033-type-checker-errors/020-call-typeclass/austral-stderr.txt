@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/033-type-checker-errors/020-call-typeclass/Test.aum",
+    "filename": "test-programs/suites/033-type-checker-errors/020-call-typeclass/Test.zum",
     "startp": { "line": 13, "column": 8 },
     "end": { "line": 13, "column": 31 }
   },

@@ -16,7 +16,7 @@
     { "type": "code", "content": "Free" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/005-instance-argument-not-type-variable-float64/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/005-instance-argument-not-type-variable-float64/Test.zum",
     "startp": { "line": 11, "column": 8 },
     "end": { "line": 14, "column": 8 }
   },

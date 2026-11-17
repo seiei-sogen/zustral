@@ -14,7 +14,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/015-constraint-unknown-typeclass/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/015-constraint-unknown-typeclass/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 19 }
   },

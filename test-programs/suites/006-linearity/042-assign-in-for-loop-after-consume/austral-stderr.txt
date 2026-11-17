@@ -12,7 +12,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/006-linearity/042-assign-in-for-loop-after-consume/Test.aum",
+    "filename": "test-programs/suites/006-linearity/042-assign-in-for-loop-after-consume/Test.zum",
     "startp": { "line": 16, "column": 8 },
     "end": { "line": 18, "column": 16 }
   },

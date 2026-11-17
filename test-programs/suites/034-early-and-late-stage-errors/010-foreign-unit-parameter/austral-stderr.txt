@@ -3,7 +3,7 @@
   "kind": "Generic Error",
   "text": [ { "type": "text", "content": "Not allowed" } ],
   "span": {
-    "filename": "test-programs/suites/034-early-and-late-stage-errors/010-foreign-unit-parameter/Test.aum",
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/010-foreign-unit-parameter/Test.zum",
     "startp": { "line": 4, "column": 48 },
     "end": { "line": 6, "column": 8 }
   },

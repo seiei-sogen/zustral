@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/092-multiply-value-of-type-parameter-by-float-literal/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/092-multiply-value-of-type-parameter-by-float-literal/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 23 }
   },

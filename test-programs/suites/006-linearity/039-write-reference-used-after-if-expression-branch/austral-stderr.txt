@@ -7,7 +7,7 @@
     { "type": "text", "content": " has already been consumed." }
   ],
   "span": {
-    "filename": "test-programs/suites/006-linearity/039-write-reference-used-after-if-expression-branch/Test.aum",
+    "filename": "test-programs/suites/006-linearity/039-write-reference-used-after-if-expression-branch/Test.zum",
     "startp": { "line": 15, "column": 8 },
     "end": { "line": 15, "column": 31 }
   },

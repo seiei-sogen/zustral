@@ -9,7 +9,7 @@
     { "type": "text", "content": " is not a record." }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/227-pointer-slot-non-record-pointer/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/227-pointer-slot-non-record-pointer/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 13 }
   },

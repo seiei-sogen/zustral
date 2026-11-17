@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/018-literal-operands/001-arith-int-literal-too-big/Test.aum",
+    "filename": "test-programs/suites/018-literal-operands/001-arith-int-literal-too-big/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 31 }
   },

@@ -1,1 +1,1 @@
-compile Lit.aum --target-type=tc
+compile Lit.zum --target-type=tc

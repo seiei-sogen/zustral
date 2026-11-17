@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/033-type-checker-errors/021-let-initial-value-names-the-variable/Test.aum",
+    "filename": "test-programs/suites/033-type-checker-errors/021-let-initial-value-names-the-variable/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 26 }
   },

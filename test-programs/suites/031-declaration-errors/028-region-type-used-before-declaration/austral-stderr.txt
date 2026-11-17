@@ -20,7 +20,7 @@
     { "type": "text", "content": " instead." }
   ],
   "span": {
-    "filename": "test-programs/suites/031-declaration-errors/028-region-type-used-before-declaration/Test.aum",
+    "filename": "test-programs/suites/031-declaration-errors/028-region-type-used-before-declaration/Test.zum",
     "startp": { "line": 2, "column": 4 },
     "end": { "line": 4, "column": 8 }
   },

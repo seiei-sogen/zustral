@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/054-case-branches-checked-last-declared-first/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/054-case-branches-checked-last-declared-first/Test.zum",
     "startp": { "line": 13, "column": 16 },
     "end": { "line": 13, "column": 34 }
   },

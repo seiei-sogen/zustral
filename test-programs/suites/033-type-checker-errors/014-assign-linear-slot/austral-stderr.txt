@@ -10,7 +10,7 @@
     { "type": "text", "content": ", not in the Free universe." }
   ],
   "span": {
-    "filename": "test-programs/suites/033-type-checker-errors/014-assign-linear-slot/Test.aum",
+    "filename": "test-programs/suites/033-type-checker-errors/014-assign-linear-slot/Test.zum",
     "startp": { "line": 12, "column": 8 },
     "end": { "line": 12, "column": 25 }
   },

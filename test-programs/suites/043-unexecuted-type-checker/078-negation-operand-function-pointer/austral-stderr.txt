@@ -11,7 +11,7 @@
     { "type": "type", "content": "Fn[Int32, Int32]" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/078-negation-operand-function-pointer/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/078-negation-operand-function-pointer/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 29 }
   },

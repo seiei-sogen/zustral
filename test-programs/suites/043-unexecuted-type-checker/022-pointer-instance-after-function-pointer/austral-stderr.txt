@@ -3,7 +3,7 @@
   "kind": "Generic Error",
   "text": [ { "type": "text", "content": "Instance overlaps." } ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/022-pointer-instance-after-function-pointer/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/022-pointer-instance-after-function-pointer/Test.zum",
     "startp": { "line": 16, "column": 4 },
     "end": { "line": 18, "column": 8 }
   },

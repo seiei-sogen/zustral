@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/038-late-stage-paths/009-consume-in-loop-after-nested-read-borrow-ends/Test.aum",
+    "filename": "test-programs/suites/038-late-stage-paths/009-consume-in-loop-after-nested-read-borrow-ends/Test.zum",
     "startp": { "line": 13, "column": 16 },
     "end": { "line": 13, "column": 40 }
   },

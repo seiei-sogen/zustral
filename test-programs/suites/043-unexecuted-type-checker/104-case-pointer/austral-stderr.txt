@@ -9,7 +9,7 @@
     { "type": "type", "content": "Pointer[Int32]" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/104-case-pointer/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/104-case-pointer/Test.zum",
     "startp": { "line": 7, "column": 8 },
     "end": { "line": 10, "column": 17 }
   },

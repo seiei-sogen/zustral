@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/032-other-errors/008-export-disallowed-type/Test.aum",
+    "filename": "test-programs/suites/032-other-errors/008-export-disallowed-type/Test.zum",
     "startp": { "line": 2, "column": 48 },
     "end": { "line": 5, "column": 8 }
   },

@@ -15,7 +15,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/038-late-stage-paths/017-region-type-variable-parameter/Test.aum",
+    "filename": "test-programs/suites/038-late-stage-paths/017-region-type-variable-parameter/Test.zum",
     "startp": { "line": 5, "column": 8 },
     "end": { "line": 12, "column": 8 }
   },

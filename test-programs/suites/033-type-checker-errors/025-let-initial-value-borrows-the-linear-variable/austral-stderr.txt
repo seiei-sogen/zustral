@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/033-type-checker-errors/025-let-initial-value-borrows-the-linear-variable/Test.aum",
+    "filename": "test-programs/suites/033-type-checker-errors/025-let-initial-value-borrows-the-linear-variable/Test.zum",
     "startp": { "line": 10, "column": 8 },
     "end": { "line": 10, "column": 31 }
   },

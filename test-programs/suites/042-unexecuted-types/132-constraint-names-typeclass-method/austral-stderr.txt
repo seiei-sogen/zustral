@@ -14,7 +14,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/132-constraint-names-typeclass-method/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/132-constraint-names-typeclass-method/Test.zum",
     "startp": { "line": 12, "column": 8 },
     "end": { "line": 12, "column": 13 }
   },

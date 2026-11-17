@@ -15,7 +15,7 @@
     { "type": "code", "content": "var mut_x: Int32 := x;" }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/002-cannot-borrow-param-mutably/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/002-cannot-borrow-param-mutably/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 5, "column": 19 }
   },

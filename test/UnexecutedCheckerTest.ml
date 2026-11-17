@@ -42,7 +42,7 @@ let raised (f: unit -> 'a): error =
 
 (* The stages before the type checker, on a module body. *)
 let front (env: Env.env) (code: string): (Env.env * Linked.linked_module) Outcome.t =
-  let* cb = ParserInterface.parse_module_body code "Test.aum" in
+  let* cb = ParserInterface.parse_module_body code "Test.zum" in
   let (Cst.ConcreteModuleBody (mn, kind, doc, imports, decls)) = cb in
   let cb = Cst.ConcreteModuleBody (mn, kind, doc, BuiltIn.pervasive_imports :: imports, decls) in
   let* combined = CombiningPass.body_as_combined env cb in

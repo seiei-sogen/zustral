@@ -5,8 +5,8 @@ digraph G {
     node[style=filled]
 
     // The two together (or the body alone), each with its file name, are one module_source.
-    aui[shape=rect fillcolor=coral label="interface text (.aui)"]
-    aum[shape=rect fillcolor=coral label="body text (.aum)"]
+    zui[shape=rect fillcolor=coral label="interface text (.zui)"]
+    zum[shape=rect fillcolor=coral label="body text (.zum)"]
     ep[shape=rect fillcolor=coral label="entrypoint option"]
 
     subgraph cluster_module {
@@ -51,8 +51,8 @@ digraph G {
     env[label="env" fillcolor=forestgreen shape=cylinder]
     supply[label="Supply.t (in env)" fillcolor=palegreen shape=cylinder]
 
-    aui -> parse_int -> icst -> pervasive
-    aum -> parse_body -> bcst -> pervasive
+    zui -> parse_int -> icst -> pervasive
+    zum -> parse_body -> bcst -> pervasive
     pervasive -> combine
     combine -> combined -> check_returns -> returning -> desugar -> small -> extract -> linked
     linked -> augment -> typed -> linearity -> checked

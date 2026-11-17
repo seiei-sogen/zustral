@@ -8,7 +8,7 @@
     { "type": "type", "content": "Fn[Int32, Int32, Int32]" }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/036-cast-function-pointer-arity-after-mismatch/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/036-cast-function-pointer-arity-after-mismatch/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 54 }
   },

@@ -6,7 +6,7 @@
     { "type": "code", "content": "Nope" }
   ],
   "span": {
-    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/058-instance-of-unknown-name/Test.aum",
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/058-instance-of-unknown-name/Test.zum",
     "startp": { "line": 1, "column": 19 },
     "end": { "line": 3, "column": 8 }
   },

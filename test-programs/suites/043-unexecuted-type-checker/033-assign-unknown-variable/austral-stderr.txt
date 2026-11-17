@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/033-assign-unknown-variable/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/033-assign-unknown-variable/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 21 }
   },

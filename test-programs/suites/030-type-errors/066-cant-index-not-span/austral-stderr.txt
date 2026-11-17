@@ -10,7 +10,7 @@
     { "type": "text", "content": " is not a span." }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/066-cant-index-not-span/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/066-cant-index-not-span/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 29 }
   },

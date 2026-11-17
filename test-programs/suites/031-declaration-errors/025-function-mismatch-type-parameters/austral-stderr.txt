@@ -8,7 +8,7 @@
     { "type": "text", "content": "have different type parameters." }
   ],
   "span": {
-    "filename": "test-programs/suites/031-declaration-errors/025-function-mismatch-type-parameters/Test.aui",
+    "filename": "test-programs/suites/031-declaration-errors/025-function-mismatch-type-parameters/Test.zui",
     "startp": { "line": 2, "column": 4 },
     "end": { "line": 3, "column": 26 }
   },

@@ -10,7 +10,7 @@
     { "type": "type", "content": "Bool" }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/054-match-arguments-bind-parameter-twice/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/054-match-arguments-bind-parameter-twice/Test.zum",
     "startp": { "line": 14, "column": 8 },
     "end": { "line": 14, "column": 13 }
   },

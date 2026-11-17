@@ -1,1 +1,1 @@
-compile Hello.aum --output=hello
+compile Hello.zum --output=hello

@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/038-late-stage-paths/005-write-borrow-while-read-borrowed/Test.aum",
+    "filename": "test-programs/suites/038-late-stage-paths/005-write-borrow-while-read-borrowed/Test.zum",
     "startp": { "line": 9, "column": 12 },
     "end": { "line": 11, "column": 23 }
   },

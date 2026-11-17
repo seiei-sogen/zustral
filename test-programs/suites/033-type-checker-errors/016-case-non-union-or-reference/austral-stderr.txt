@@ -9,7 +9,7 @@
     { "type": "type", "content": "Bool" }
   ],
   "span": {
-    "filename": "test-programs/suites/033-type-checker-errors/016-case-non-union-or-reference/Test.aum",
+    "filename": "test-programs/suites/033-type-checker-errors/016-case-non-union-or-reference/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 6, "column": 17 }
   },

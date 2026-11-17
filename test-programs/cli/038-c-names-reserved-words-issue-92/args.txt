@@ -1,1 +1,1 @@
-compile forms.aum --entrypoint=forms:main --target-type=c --output=out.c
+compile forms.zum --entrypoint=forms:main --target-type=c --output=out.c

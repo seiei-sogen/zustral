@@ -7,7 +7,7 @@
     { "type": "text", "content": " constructor have the wrong names." }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/014-constructor-wrong-args/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/014-constructor-wrong-args/Test.zum",
     "startp": { "line": 7, "column": 8 },
     "end": { "line": 7, "column": 30 }
   },

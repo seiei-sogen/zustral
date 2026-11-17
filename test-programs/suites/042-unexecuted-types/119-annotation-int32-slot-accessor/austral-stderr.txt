@@ -8,7 +8,7 @@
     { "type": "type", "content": "&[Int32, R]" }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/119-annotation-int32-slot-accessor/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/119-annotation-int32-slot-accessor/Test.zum",
     "startp": { "line": 30, "column": 8 },
     "end": { "line": 30, "column": 34 }
   },

@@ -8,7 +8,7 @@
     { "type": "type", "content": "Int32" }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/093-let-annotates-literal-with-type-parameter/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/093-let-annotates-literal-with-type-parameter/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 24 }
   },

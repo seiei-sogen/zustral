@@ -7,7 +7,7 @@
     { "type": "text", "content": " because it is not a typeclass." }
   ],
   "span": {
-    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/052-instance-of-constant/Test.aum",
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/052-instance-of-constant/Test.zum",
     "startp": { "line": 2, "column": 27 },
     "end": { "line": 5, "column": 8 }
   },

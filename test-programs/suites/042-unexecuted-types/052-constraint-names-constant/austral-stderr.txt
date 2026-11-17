@@ -14,7 +14,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/052-constraint-names-constant/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/052-constraint-names-constant/Test.zum",
     "startp": { "line": 22, "column": 8 },
     "end": { "line": 22, "column": 13 }
   },

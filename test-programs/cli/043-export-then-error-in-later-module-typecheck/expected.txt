@@ -14,7 +14,7 @@ files: error.html
     }
   ],
   "span": {
-    "filename": "Lib.aum",
+    "filename": "Lib.zum",
     "startp": { "line": 2, "column": 48 },
     "end": { "line": 5, "column": 8 }
   },

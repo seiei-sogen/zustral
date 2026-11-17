@@ -88,7 +88,7 @@ end module body.
 ビルドして実行する。
 
 ```bash
-$ austral compile fib.aum --entrypoint=Fib:main --output=fib
+$ austral compile fib.zum --entrypoint=Fib:main --output=fib
 $ ./fib
 fib(10) = 55
 ```
@@ -158,23 +158,23 @@ $ make
 モジュール `A`、`B`、`C` からなるプログラムが、次のファイルにあるとする。
 
 ```
-src/A.aui
-src/A.aum
+src/A.zui
+src/A.zum
 
-src/B.aui
-src/B.aum
+src/B.zui
+src/B.zum
 
-src/C.aui
-src/C.aum
+src/C.zui
+src/C.zum
 ```
 
 これをコンパイルするには、次を実行する。
 
 ```bash
 $ austral compile \
-    src/A.aui,src/A.aum \
-    src/B.aui,src/B.aum \
-    src/C.aui,src/C.aum \
+    src/A.zui,src/A.zum \
+    src/B.zui,src/B.zum \
+    src/C.zui,src/C.zum \
     --entrypoint=C:main \
     --output=program
 ```

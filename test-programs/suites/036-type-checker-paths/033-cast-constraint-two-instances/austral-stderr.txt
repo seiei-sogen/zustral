@@ -8,7 +8,7 @@
     { "type": "type", "content": "Int32" }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/033-cast-constraint-two-instances/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/033-cast-constraint-two-instances/Test.zum",
     "startp": { "line": 13, "column": 8 },
     "end": { "line": 13, "column": 30 }
   },

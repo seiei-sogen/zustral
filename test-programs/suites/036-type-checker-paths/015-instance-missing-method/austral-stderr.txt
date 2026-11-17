@@ -16,7 +16,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/015-instance-missing-method/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/015-instance-missing-method/Test.zum",
     "startp": { "line": 15, "column": 8 },
     "end": { "line": 15, "column": 33 }
   },

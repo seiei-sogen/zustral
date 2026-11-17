@@ -5,7 +5,7 @@
     { "type": "text", "content": "No binding for this parameter: R" }
   ],
   "span": {
-    "filename": "test-programs/suites/040-region-as-value-type/004-generic-function-return-called/Test.aum",
+    "filename": "test-programs/suites/040-region-as-value-type/004-generic-function-return-called/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 20 }
   },

@@ -15,7 +15,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/031-declaration-errors/024-shadowing-typeclass-param/Test.aum",
+    "filename": "test-programs/suites/031-declaration-errors/024-shadowing-typeclass-param/Test.zum",
     "startp": { "line": 5, "column": 4 },
     "end": { "line": 7, "column": 8 }
   },

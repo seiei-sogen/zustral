@@ -10,7 +10,7 @@
     { "type": "text", "content": " is not." }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/031-arithmetic-region/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/031-arithmetic-region/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 14 }
   },

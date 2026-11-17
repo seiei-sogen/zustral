@@ -12,7 +12,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/082-type-named-by-type-class/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/082-type-named-by-type-class/Test.zum",
     "startp": { "line": 15, "column": 8 },
     "end": { "line": 19, "column": 8 }
   },

@@ -10,7 +10,7 @@
     { "type": "text", "content": " is not a span." }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/247-index-write-non-span-record/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/247-index-write-non-span-record/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 18 }
   },

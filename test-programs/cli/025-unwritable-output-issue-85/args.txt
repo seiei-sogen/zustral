@@ -1,1 +1,1 @@
-compile Hello.aum --entrypoint=Hello:main --target-type=c --output=nodir/out.c
+compile Hello.zum --entrypoint=Hello:main --target-type=c --output=nodir/out.c

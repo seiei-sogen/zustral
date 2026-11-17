@@ -8,7 +8,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/009-cast-different-references/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/009-cast-different-references/Test.zum",
     "startp": { "line": 5, "column": 12 },
     "end": { "line": 5, "column": 50 }
   },

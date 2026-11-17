@@ -8,7 +8,7 @@
     { "type": "type", "content": "Lin" }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/034-cast-to-type-variable-wrong-universe/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/034-cast-to-type-variable-wrong-universe/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 28 }
   },

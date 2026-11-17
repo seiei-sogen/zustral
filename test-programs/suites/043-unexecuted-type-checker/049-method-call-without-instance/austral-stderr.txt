@@ -8,7 +8,7 @@
     { "type": "type", "content": "Bool" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/049-method-call-without-instance/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/049-method-call-without-instance/Test.zum",
     "startp": { "line": 13, "column": 8 },
     "end": { "line": 13, "column": 28 }
   },

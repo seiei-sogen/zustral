@@ -8,7 +8,7 @@
     { "type": "type", "content": "Box[Int32]" }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/050-instance-skipped-constraint-not-typeclass/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/050-instance-skipped-constraint-not-typeclass/Test.zum",
     "startp": { "line": 22, "column": 8 },
     "end": { "line": 22, "column": 26 }
   },

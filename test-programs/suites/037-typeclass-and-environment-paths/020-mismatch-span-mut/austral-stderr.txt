@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/020-mismatch-span-mut/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/020-mismatch-span-mut/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 17 }
   },

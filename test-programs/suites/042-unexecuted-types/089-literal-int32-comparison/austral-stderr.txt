@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/089-literal-int32-comparison/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/089-literal-int32-comparison/Test.zum",
     "startp": { "line": 30, "column": 8 },
     "end": { "line": 30, "column": 25 }
   },

@@ -11,7 +11,7 @@
     { "type": "type", "content": "Address[Int32]" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/076-negation-operand-address/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/076-negation-operand-address/Test.zum",
     "startp": { "line": 7, "column": 8 },
     "end": { "line": 7, "column": 29 }
   },

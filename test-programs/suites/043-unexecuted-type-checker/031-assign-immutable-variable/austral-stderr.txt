@@ -7,7 +7,7 @@
     { "type": "text", "content": " because it is immutable." }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/031-assign-immutable-variable/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/031-assign-immutable-variable/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 15 }
   },

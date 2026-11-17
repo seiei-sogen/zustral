@@ -5,7 +5,7 @@
     { "type": "text", "content": "Cannot cast to a different region" }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/018-cast-different-references-type-and-region/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/018-cast-different-references-type-and-region/Test.zum",
     "startp": { "line": 5, "column": 12 },
     "end": { "line": 5, "column": 60 }
   },

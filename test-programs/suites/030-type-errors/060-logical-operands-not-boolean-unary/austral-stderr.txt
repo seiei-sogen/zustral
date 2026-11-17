@@ -11,7 +11,7 @@
     { "type": "type", "content": "Unit" }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/060-logical-operands-not-boolean-unary/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/060-logical-operands-not-boolean-unary/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 31 }
   },

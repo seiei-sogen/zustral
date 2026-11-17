@@ -1054,7 +1054,7 @@ Scenario: clang でコンパイルできない系統は clang 比較を未実行
 <p>コンパイラの CLI には、追加の C ファイルやリンクするライブラリを渡すフラグがない。外部ライブラリとのリンクは <code>--target-type=c</code> の出力を自分で C コンパイラに渡す（<code>lib/CliParser.ml:55</code>、<code>lib/Util.ml:202-203</code>）。</p>
 </li>
 <li>
-<p><code>Foreign_Import</code> の既存例が <code>examples/ffi/FFI.aum:1-14</code> にある。</p>
+<p><code>Foreign_Import</code> の既存例が <code>examples/ffi/FFI.zum:1-14</code> にある。</p>
 </li>
 <li>
 <p>このマシンの gcc 13.3.0 は <code><em>DECIMAL_BID_FORMAT</em>=1</code>、<code><em>DEC128_MANT_DIG</em>=34</code>、<code><em>SIZEOF_INT128</em>=16</code> を定義する（<code>echo | gcc -dM -E -</code> の出力）。</p>

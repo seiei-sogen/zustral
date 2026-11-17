@@ -9,7 +9,7 @@
     { "type": "text", "content": " does not end in a return statement." }
   ],
   "span": {
-    "filename": "test-programs/suites/031-declaration-errors/031-missing-return-after-if-without-else/Test.aum",
+    "filename": "test-programs/suites/031-declaration-errors/031-missing-return-after-if-without-else/Test.zum",
     "startp": { "line": 1, "column": 19 },
     "end": { "line": 6, "column": 8 }
   },

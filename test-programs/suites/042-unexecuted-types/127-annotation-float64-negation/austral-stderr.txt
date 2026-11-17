@@ -8,7 +8,7 @@
     { "type": "type", "content": "Bool" }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/127-annotation-float64-negation/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/127-annotation-float64-negation/Test.zum",
     "startp": { "line": 30, "column": 8 },
     "end": { "line": 30, "column": 39 }
   },

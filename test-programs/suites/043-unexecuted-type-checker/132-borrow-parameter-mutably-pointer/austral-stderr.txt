@@ -15,7 +15,7 @@
     { "type": "code", "content": "var mut_x: Pointer[Int32] := x;" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/132-borrow-parameter-mutably-pointer/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/132-borrow-parameter-mutably-pointer/Test.zum",
     "startp": { "line": 7, "column": 8 },
     "end": { "line": 9, "column": 19 }
   },

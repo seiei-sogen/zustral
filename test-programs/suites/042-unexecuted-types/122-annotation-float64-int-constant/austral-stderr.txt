@@ -8,7 +8,7 @@
     { "type": "type", "content": "Int32" }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/122-annotation-float64-int-constant/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/122-annotation-float64-int-constant/Test.zum",
     "startp": { "line": 30, "column": 8 },
     "end": { "line": 30, "column": 33 }
   },

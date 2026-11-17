@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/047-union-case-name-as-variable/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/047-union-case-name-as-variable/Test.zum",
     "startp": { "line": 7, "column": 8 },
     "end": { "line": 7, "column": 30 }
   },

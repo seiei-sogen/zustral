@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/007-borrowing/033-destructure-borrow-of-consumed-variable/Test.aum",
+    "filename": "test-programs/suites/007-borrowing/033-destructure-borrow-of-consumed-variable/Test.zum",
     "startp": { "line": 15, "column": 8 },
     "end": { "line": 15, "column": 37 }
   },

@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/038-late-stage-paths/028-export-mutable-span-parameter/Test.aum",
+    "filename": "test-programs/suites/038-late-stage-paths/028-export-mutable-span-parameter/Test.zum",
     "startp": { "line": 2, "column": 48 },
     "end": { "line": 5, "column": 8 }
   },

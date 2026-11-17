@@ -12,7 +12,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/032-other-errors/015-type-parser-unresolved-type/Test.aum",
+    "filename": "test-programs/suites/032-other-errors/015-type-parser-unresolved-type/Test.zum",
     "startp": { "line": 1, "column": 19 },
     "end": { "line": 4, "column": 8 }
   },

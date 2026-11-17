@@ -8,7 +8,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/011-cast-write-ref-to-non-ref/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/011-cast-write-ref-to-non-ref/Test.zum",
     "startp": { "line": 5, "column": 12 },
     "end": { "line": 5, "column": 40 }
   },

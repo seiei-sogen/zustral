@@ -224,7 +224,7 @@ REQ-010:: When レポートとプローブがそろったとき、GitHub 上で�
 * Zustral の FFI は128ビット整数を持たない。整数の幅は 8/16/32/64/ByteSize/Index だけである（`lib/Type.ml:22-29`）。
 * Zustral の FFI はレコードの値渡し、`Unit` の戻り値、参照を受け付けない（`lib/CodeGen.ml:554-591`）。
 * コンパイラの CLI には、追加の C ファイルやリンクするライブラリを渡すフラグがない。外部ライブラリとのリンクは `--target-type=c` の出力を自分で C コンパイラに渡す（`lib/CliParser.ml:55`、`lib/Util.ml:202-203`）。
-* `Foreign_Import` の既存例が `examples/ffi/FFI.aum:1-14` にある。
+* `Foreign_Import` の既存例が `examples/ffi/FFI.zum:1-14` にある。
 * このマシンの gcc 13.3.0 は `__DECIMAL_BID_FORMAT__=1`、`__DEC128_MANT_DIG__=34`、`__SIZEOF_INT128__=16` を定義する（`echo | gcc -dM -E -` の出力）。
 * clang は PATH にない。nixpkgs（rev `674a2028661e`）から clang 21.1.8 を取れる。
 * nixpkgs には mpdecimal 4.0.1（BSD-2-Clause）がある。libdfp、Intel DFP、decNumber の名前のパッケージは見つからなかった。

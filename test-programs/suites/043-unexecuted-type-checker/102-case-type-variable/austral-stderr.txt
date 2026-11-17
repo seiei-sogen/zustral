@@ -9,7 +9,7 @@
     { "type": "type", "content": "T" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/102-case-type-variable/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/102-case-type-variable/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 7, "column": 17 }
   },

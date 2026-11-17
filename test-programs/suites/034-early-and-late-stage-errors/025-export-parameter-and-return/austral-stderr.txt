@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/034-early-and-late-stage-errors/025-export-parameter-and-return/Test.aum",
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/025-export-parameter-and-return/Test.zum",
     "startp": { "line": 2, "column": 48 },
     "end": { "line": 5, "column": 8 }
   },

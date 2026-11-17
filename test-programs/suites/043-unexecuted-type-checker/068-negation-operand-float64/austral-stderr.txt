@@ -11,7 +11,7 @@
     { "type": "type", "content": "Float64" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/068-negation-operand-float64/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/068-negation-operand-float64/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 29 }
   },

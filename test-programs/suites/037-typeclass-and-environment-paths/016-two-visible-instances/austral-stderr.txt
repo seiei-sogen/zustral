@@ -19,7 +19,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/016-two-visible-instances/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/016-two-visible-instances/Test.zum",
     "startp": { "line": 12, "column": 8 },
     "end": { "line": 12, "column": 29 }
   },

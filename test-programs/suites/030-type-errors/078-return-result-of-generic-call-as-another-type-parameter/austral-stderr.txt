@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/078-return-result-of-generic-call-as-another-type-parameter/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/078-return-result-of-generic-call-as-another-type-parameter/Test.zum",
     "startp": { "line": 9, "column": 8 },
     "end": { "line": 9, "column": 21 }
   },

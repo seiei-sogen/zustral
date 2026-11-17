@@ -1,1 +1,1 @@
-compile Hello.aum --entrypoint=Hello --target-type=c --output=out.c
+compile Hello.zum --entrypoint=Hello --target-type=c --output=out.c

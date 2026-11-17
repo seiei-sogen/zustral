@@ -7,7 +7,7 @@
     { "type": "text", "content": " which is not a union type." }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/021-case-reference-non-union/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/021-case-reference-non-union/Test.zum",
     "startp": { "line": 5, "column": 12 },
     "end": { "line": 8, "column": 21 }
   },

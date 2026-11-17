@@ -7,7 +7,7 @@
     { "type": "text", "content": " constructor must be named." }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/013-constructor-not-named/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/013-constructor-not-named/Test.zum",
     "startp": { "line": 7, "column": 8 },
     "end": { "line": 7, "column": 25 }
   },

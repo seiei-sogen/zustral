@@ -8,7 +8,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/046-borrow-name-collides/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/046-borrow-name-collides/Test.zum",
     "startp": { "line": 5, "column": 8 },
     "end": { "line": 7, "column": 19 }
   },

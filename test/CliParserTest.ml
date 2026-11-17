@@ -25,11 +25,11 @@ let test_compile_help_cmd _ =
   assert_equal cmd CompileHelp
 
 let test_compile_default _ =
-  let cmd: cmd = parse_cmd ["austral"; "compile"; "foo.aum"; "bar.aui,bar.aum"; "--entrypoint=Foo:main"; "--output=out"]
+  let cmd: cmd = parse_cmd ["austral"; "compile"; "foo.zum"; "bar.zui,bar.zum"; "--entrypoint=Foo:main"; "--output=out"]
   and expected: cmd = WholeProgramCompile {
                           modules = [
-                            ModuleBodySource { body_path = "foo.aum" };
-                            ModuleSource { inter_path = "bar.aui"; body_path = "bar.aum" };
+                            ModuleBodySource { body_path = "foo.zum" };
+                            ModuleSource { inter_path = "bar.zui"; body_path = "bar.zum" };
                           ];
                           target = Executable {
                                        bin_path = "out";

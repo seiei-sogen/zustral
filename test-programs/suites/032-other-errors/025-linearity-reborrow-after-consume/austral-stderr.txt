@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/032-other-errors/025-linearity-reborrow-after-consume/Test.aum",
+    "filename": "test-programs/suites/032-other-errors/025-linearity-reborrow-after-consume/Test.zum",
     "startp": { "line": 10, "column": 8 },
     "end": { "line": 10, "column": 31 }
   },

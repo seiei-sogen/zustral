@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/050-export-generic-function/Test.aum",
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/050-export-generic-function/Test.zum",
     "startp": { "line": 3, "column": 4 },
     "end": { "line": 6, "column": 8 }
   },

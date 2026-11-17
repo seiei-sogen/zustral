@@ -3,7 +3,7 @@
   "kind": "Generic Error",
   "text": [ { "type": "text", "content": "Instance overlaps." } ],
   "span": {
-    "filename": "test-programs/suites/037-typeclass-and-environment-paths/011-overlap-pointer/Test.aum",
+    "filename": "test-programs/suites/037-typeclass-and-environment-paths/011-overlap-pointer/Test.zum",
     "startp": { "line": 17, "column": 4 },
     "end": { "line": 22, "column": 8 }
   },

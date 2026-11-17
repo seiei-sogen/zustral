@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/049-name-not-visible-in-other-branch/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/049-name-not-visible-in-other-branch/Test.zum",
     "startp": { "line": 5, "column": 12 },
     "end": { "line": 5, "column": 23 }
   },

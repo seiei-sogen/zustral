@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/007-borrowing/022-borrow-declares-wrong-referent-type/Test.aum",
+    "filename": "test-programs/suites/007-borrowing/022-borrow-declares-wrong-referent-type/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 6, "column": 19 }
   },

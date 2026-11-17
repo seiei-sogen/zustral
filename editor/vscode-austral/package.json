@@ -25,8 +25,8 @@
           "austral"
         ],
         "extensions": [
-          ".aum",
-          ".aui"
+          ".zum",
+          ".zui"
         ],
         "configuration": "./language-configuration.json"
       }

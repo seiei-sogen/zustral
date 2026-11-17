@@ -151,11 +151,11 @@ Zustral の整数の幅は 8、16、32、64 ビットと `ByteSize`、`Index` �
 `Foreign_Import` の引数と戻り値に使えるのは、真偽値、整数、単精度と倍精度の浮動小数点、`Span`、`Address`、`Pointer`、関数ポインタである 〔src: zustral-codegen〕。
 `Unit`、名前の付いた型（レコードなど）、参照、リージョンは `Not allowed` として拒まれる 〔src: zustral-codegen〕。
 戻り値も同じ規則で変換されるので、`void` の C 関数を戻り値 `Unit` で束縛するとコンパイルが失敗する 〔src: zustral-codegen〕。
-`UnitReturn.aum` のコンパイルは `Not allowed` を出し、終了状態 255 で失敗した 〔probe: ffi-unit-return / exit〕。
+`UnitReturn.zum` のコンパイルは `Not allowed` を出し、終了状態 255 で失敗した 〔probe: ffi-unit-return / exit〕。
 
 ### Zustral プログラムからの呼び出し
 
-このマシンでは Zustral コンパイラをビルドでき、`Foreign_Import` で各系統を呼ぶプログラム `probes/ffi/Probe.aum` を実行できた 〔run: 一致 ffi〕。
+このマシンでは Zustral コンパイラをビルドでき、`Foreign_Import` で各系統を呼ぶプログラム `probes/ffi/Probe.zum` を実行できた 〔run: 一致 ffi〕。
 mpdecimal の `mpd_qnew` は、シムなしで直接 `Address[Nat8]` として受け取れた 〔probe: ffi / mpd_qnew_direct〕。
 `void` を返す `mpd_qadd` などは、`int32_t` を返すシム関数を通して呼び、0.1 + 0.2 = 0.3 を得た 〔probe: ffi / mpd_add_01_02〕。
 GCC の `_Decimal128` は、Zustral 側で確保した16バイトの領域へのポインタをシムに渡して計算し、`+3E-1` を得た 〔probe: ffi / d128_add_01_02〕。

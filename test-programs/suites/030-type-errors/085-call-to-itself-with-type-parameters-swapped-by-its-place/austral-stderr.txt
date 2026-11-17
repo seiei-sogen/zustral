@@ -9,7 +9,7 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/085-call-to-itself-with-type-parameters-swapped-by-its-place/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/085-call-to-itself-with-type-parameters-swapped-by-its-place/Test.zum",
     "startp": { "line": 12, "column": 12 },
     "end": { "line": 12, "column": 53 }
   },

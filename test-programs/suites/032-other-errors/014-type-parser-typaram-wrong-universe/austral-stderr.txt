@@ -10,7 +10,7 @@
     { "type": "code", "content": "Linear" }
   ],
   "span": {
-    "filename": "test-programs/suites/032-other-errors/014-type-parser-typaram-wrong-universe/Test.aum",
+    "filename": "test-programs/suites/032-other-errors/014-type-parser-typaram-wrong-universe/Test.zum",
     "startp": { "line": 6, "column": 8 },
     "end": { "line": 10, "column": 8 }
   },

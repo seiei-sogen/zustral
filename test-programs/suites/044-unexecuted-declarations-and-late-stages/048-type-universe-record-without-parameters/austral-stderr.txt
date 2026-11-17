@@ -16,7 +16,7 @@
     { "type": "text", "content": " universe." }
   ],
   "span": {
-    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/048-type-universe-record-without-parameters/Test.aum",
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/048-type-universe-record-without-parameters/Test.zum",
     "startp": { "line": 6, "column": 4 },
     "end": { "line": 8, "column": 8 }
   },

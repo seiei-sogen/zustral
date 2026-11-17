@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/034-early-and-late-stage-errors/017-export-region-return/Test.aum",
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/017-export-region-return/Test.zum",
     "startp": { "line": 4, "column": 48 },
     "end": { "line": 7, "column": 8 }
   },

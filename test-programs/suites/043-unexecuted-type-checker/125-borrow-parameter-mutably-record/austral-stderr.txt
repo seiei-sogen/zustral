@@ -15,7 +15,7 @@
     { "type": "code", "content": "var mut_x: Foo := x;" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/125-borrow-parameter-mutably-record/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/125-borrow-parameter-mutably-record/Test.zum",
     "startp": { "line": 7, "column": 8 },
     "end": { "line": 9, "column": 19 }
   },

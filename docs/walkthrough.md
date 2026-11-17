@@ -42,7 +42,7 @@ type check = module_source list -> unit Outcome.t
 type 'tree parse = string -> string -> 'tree Outcome.t
 ```
 
-モジュールは、インターフェースのファイル（`.aui`）と本体のファイル（`.aum`）に分かれる。本体だけのモジュールもある。`lib/ParserInterface.ml` の `parse_module_int` と `parse_module_body` が、それぞれを構文木（`Cst`）にする。引数は、ソースの文字列とファイル名である。
+モジュールは、インターフェースのファイル（`.zui`）と本体のファイル（`.zum`）に分かれる。本体だけのモジュールもある。`lib/ParserInterface.ml` の `parse_module_int` と `parse_module_body` が、それぞれを構文木（`Cst`）にする。引数は、ソースの文字列とファイル名である。
 
 構文解析の後、`lib/Compiler.ml` は、インターフェースと本体に、`Austral.Pervasive` の取り込みを足す。`Austral.Pervasive` そのものには足さない。
 

@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/155-call-non-callable-read-ref/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/155-call-non-callable-read-ref/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 13 }
   },

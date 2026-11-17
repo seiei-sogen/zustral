@@ -11,10 +11,10 @@ def read_file_to_string(path: str) -> str:
     with open(path, "r") as stream:
         return stream.read()
 
-pervasive_int: str = read_file_to_string("lib/builtin/Pervasive.aui")
-pervasive_body: str = read_file_to_string("lib/builtin/Pervasive.aum")
-memory_int: str = read_file_to_string("lib/builtin/Memory.aui")
-memory_body: str = read_file_to_string("lib/builtin/Memory.aum")
+pervasive_int: str = read_file_to_string("lib/builtin/Pervasive.zui")
+pervasive_body: str = read_file_to_string("lib/builtin/Pervasive.zum")
+memory_int: str = read_file_to_string("lib/builtin/Memory.zui")
+memory_body: str = read_file_to_string("lib/builtin/Memory.zum")
 prelude_c: str = read_file_to_string("lib/prelude.c")
 
 contents: str = f"""

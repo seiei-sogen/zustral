@@ -10,7 +10,7 @@
     { "type": "type", "content": "Span[Int32, R]" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/059-if-condition-span/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/059-if-condition-span/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 6, "column": 15 }
   },

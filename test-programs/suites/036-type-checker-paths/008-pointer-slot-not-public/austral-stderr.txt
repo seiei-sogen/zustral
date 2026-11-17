@@ -9,7 +9,7 @@
     { "type": "text", "content": " and so cannot be read." }
   ],
   "span": {
-    "filename": "test-programs/suites/036-type-checker-paths/008-pointer-slot-not-public/Test.aum",
+    "filename": "test-programs/suites/036-type-checker-paths/008-pointer-slot-not-public/Test.zum",
     "startp": { "line": 4, "column": 8 },
     "end": { "line": 4, "column": 39 }
   },

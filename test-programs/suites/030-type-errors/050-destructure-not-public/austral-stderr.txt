@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/050-destructure-not-public/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/050-destructure-not-public/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 3, "column": 36 }
   },

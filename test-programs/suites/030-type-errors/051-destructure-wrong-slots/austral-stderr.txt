@@ -9,7 +9,7 @@
     { "type": "type", "content": "R" }
   ],
   "span": {
-    "filename": "test-programs/suites/030-type-errors/051-destructure-wrong-slots/Test.aum",
+    "filename": "test-programs/suites/030-type-errors/051-destructure-wrong-slots/Test.zum",
     "startp": { "line": 8, "column": 8 },
     "end": { "line": 8, "column": 30 }
   },

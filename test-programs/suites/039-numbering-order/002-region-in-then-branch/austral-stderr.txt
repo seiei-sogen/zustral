@@ -8,7 +8,7 @@
     { "type": "type", "content": "&[Int32, Region<4>]" }
   ],
   "span": {
-    "filename": "test-programs/suites/039-numbering-order/002-region-in-then-branch/Test.aum",
+    "filename": "test-programs/suites/039-numbering-order/002-region-in-then-branch/Test.zum",
     "startp": { "line": 6, "column": 16 },
     "end": { "line": 6, "column": 51 }
   },

@@ -15,7 +15,7 @@
     { "type": "code", "content": "var mut_x: Float32 := x;" }
   ],
   "span": {
-    "filename": "test-programs/suites/043-unexecuted-type-checker/123-borrow-parameter-mutably-float32/Test.aum",
+    "filename": "test-programs/suites/043-unexecuted-type-checker/123-borrow-parameter-mutably-float32/Test.zum",
     "startp": { "line": 3, "column": 8 },
     "end": { "line": 5, "column": 19 }
   },

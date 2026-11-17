@@ -73,7 +73,7 @@ def suite_commands() -> list[tuple[str, list[str]]]:
         else:
             words = [
                 "compile",
-                "$DIR/Test.aum",
+                "$DIR/Test.zum",
                 "--entrypoint=Test:main",
                 "--target-type=c",
                 "--output=$C_PATH",

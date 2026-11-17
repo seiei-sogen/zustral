@@ -10,7 +10,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/041-generics-over-named-types/008-linear-record-through-generic-not-consumed/Test.aum",
+    "filename": "test-programs/suites/041-generics-over-named-types/008-linear-record-through-generic-not-consumed/Test.zum",
     "startp": { "line": 13, "column": 8 },
     "end": { "line": 13, "column": 29 }
   },

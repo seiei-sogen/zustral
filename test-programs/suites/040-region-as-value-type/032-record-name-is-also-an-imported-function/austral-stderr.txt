@@ -15,7 +15,7 @@
     }
   ],
   "span": {
-    "filename": "test-programs/suites/040-region-as-value-type/032-record-name-is-also-an-imported-function/Test.aum",
+    "filename": "test-programs/suites/040-region-as-value-type/032-record-name-is-also-an-imported-function/Test.zum",
     "startp": { "line": 7, "column": 8 },
     "end": { "line": 14, "column": 8 }
   },

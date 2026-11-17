@@ -60,7 +60,7 @@ ppx の `deriving` が生成するコードは新しい構成子を自動で扱�
 
 ### 実際に動かした2つの検査
 
-- `mono-c` は、`probes/Mono.aum` を HEAD のコンパイラで C に変換し、gcc でビルドして実行する。汎用の型と関数が、型引数ごとに C でどう出るかを数える。
+- `mono-c` は、`probes/Mono.zum` を HEAD のコンパイラで C に変換し、gcc でビルドして実行する。汎用の型と関数が、型引数ごとに C でどう出るかを数える。
 - `grammar` は、`lib/Parser.mly` の型引数の位置を広げて menhir の LR 構成を走らせ、文法の衝突を数える。`patches/grammar-literal.patch` は整数リテラルだけを許し、`patches/grammar-expression.patch` は式を許す。どちらも `value-parameters.patch` の上に当てる。
 
 ## 結果の数
@@ -127,7 +127,7 @@ ppx の `deriving` が生成するコードは新しい構成子を自動で扱�
 単相化は、宣言と型引数の組ごとに新しい番号を振る 〔src: Env.ml:432-458〕。
 C の名前は `mono_N` で、型引数は名前に入らない 〔src: CodeGen.ml:101-103〕。
 
-`probes/Mono.aum` は、`Int64` の欄を1つだけ持つ汎用のレコード `Tagged[T]` を、`Tagged[Int8]` と `Tagged[Int16]` で使う。
+`probes/Mono.zum` は、`Int64` の欄を1つだけ持つ汎用のレコード `Tagged[T]` を、`Tagged[Int8]` と `Tagged[Int16]` で使う。
 C には中身が同じ struct が2つ出た 〔spike: mono-c / structs-with-only-units 2〕。
 それを受ける汎用関数 `raw` も2つ出た 〔spike: mono-c / function-monomorphs-of-raw 2〕。
 プログラムは終了コード 0 で終わった 〔spike: mono-c / exit 0〕。
@@ -224,5 +224,5 @@ Austral には、戻り値の型にだけ出る型変数を、呼び出し側の
 - `spike.sh` が4つの検査を再実行し、`expected/` と照合する。
 - `patches/primitive-decimal.patch` と `patches/value-parameters.patch` は、型の定義に構成子を足すだけのパッチである。
 - `patches/grammar-literal.patch` と `patches/grammar-expression.patch` は、型引数の文法を広げるパッチである。`value-parameters.patch` の上に当てる。
-- `probes/Mono.aum` は、`mono-c` の検査で C に変換する Zustral のプログラムである。
+- `probes/Mono.zum` は、`mono-c` の検査で C に変換する Zustral のプログラムである。
 - `expected/` に4つの検査の記録がある。

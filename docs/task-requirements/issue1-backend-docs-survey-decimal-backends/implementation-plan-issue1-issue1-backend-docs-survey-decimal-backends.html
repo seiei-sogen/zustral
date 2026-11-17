@@ -674,7 +674,7 @@ body {
 <p>C のプローブは系統ごとに1ファイルで、<code>key=value</code> の行を出す。</p>
 </li>
 <li>
-<p>Zustral の FFI プローブは、<code>examples/ffi/FFI.aum</code> の書き方と、<code>test-programs/runner.py:400-408</code> の gcc の呼び方に合わせる。</p>
+<p>Zustral の FFI プローブは、<code>examples/ffi/FFI.zum</code> の書き方と、<code>test-programs/runner.py:400-408</code> の gcc の呼び方に合わせる。</p>
 </li>
 <li>
 <p>ツールチェーンとライブラリは <code>NIXPKGS=github:NixOS/nixpkgs/674a2028661e550a97400c1cc992b9cca9a668a1</code> から取る。libdfp のビルドは、設計文書の実験3で通ったツールの組をそのまま使う。</p>
@@ -714,7 +714,7 @@ body {
 <td class="tableblock halign-left valign-top"><p class="tableblock">BID 形式の16バイトを <code>&lt;符号&gt;&lt;係数&gt;E&lt;指数&gt;</code> で出す関数（<code>d128.c</code>、<code>libdfp.c</code>、<code>ffi/shim.c</code> が共有。実装で追加）</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docs/research/decimal-backend-survey/probes/ffi/{Probe.aum,UnitReturn.aum,shim.c}</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>docs/research/decimal-backend-survey/probes/ffi/{Probe.zum,UnitReturn.zum,shim.c}</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Zustral FFI プローブ</p></td>
 </tr>
 <tr>
@@ -1055,16 +1055,16 @@ glibc の <code>printf</code> には <code>_Decimal128</code> の書式がない
 <p>Depends on: T1、T2（既知の値）、T3（<code>mpdecimal</code>）</p>
 </li>
 <li>
-<p>対象: <code>probes/ffi/Probe.aum</code>、<code>probes/ffi/shim.c</code>、<code>probes/ffi/UnitReturn.aum</code>、<code>expected/ffi.txt</code>、<code>expected/ffi-unit-return.txt</code>、<code>run.sh</code> の依存 <code>zustral</code></p>
+<p>対象: <code>probes/ffi/Probe.zum</code>、<code>probes/ffi/shim.c</code>、<code>probes/ffi/UnitReturn.zum</code>、<code>expected/ffi.txt</code>、<code>expected/ffi-unit-return.txt</code>、<code>run.sh</code> の依存 <code>zustral</code></p>
 </li>
 <li>
 <p>変更前後: 前は ffi の行がない。後は <code>ffi</code> と <code>ffi-unit-return</code> が一致し、<code>ffi</code> は一致したときも実際の出力を結果行の下に表示する。</p>
 </li>
 <li>
-<p><code>Probe.aum</code> は、<code>mpd_qnew</code> を直接 <code>Address[Nat8]</code> で受け、<code>void</code> を返す mpdecimal の関数と、16バイトの領域越しの <code>_Decimal128</code> と <code>__int128</code> の演算を、シム経由で呼ぶ。ポインタの値は出力しない。出すキーは <code>mpd_qnew_direct</code>（直接束縛した <code>mpd_qnew</code> が NULL でなかったかを <code>ok</code> か <code>null</code> で出す）、<code>mpd_add_01_02</code>、<code>d128_add_01_02</code>、<code>i128_add_01_02</code> の4つで、値の形は各系統のプローブと同じにする。</p>
+<p><code>Probe.zum</code> は、<code>mpd_qnew</code> を直接 <code>Address[Nat8]</code> で受け、<code>void</code> を返す mpdecimal の関数と、16バイトの領域越しの <code>_Decimal128</code> と <code>__int128</code> の演算を、シム経由で呼ぶ。ポインタの値は出力しない。出すキーは <code>mpd_qnew_direct</code>（直接束縛した <code>mpd_qnew</code> が NULL でなかったかを <code>ok</code> か <code>null</code> で出す）、<code>mpd_add_01_02</code>、<code>d128_add_01_02</code>、<code>i128_add_01_02</code> の4つで、値の形は各系統のプローブと同じにする。</p>
 </li>
 <li>
-<p><code>UnitReturn.aum</code> は、<code>void</code> の C 関数を戻り値 <code>Unit</code> で束縛して呼ぶ。コンパイラの出力と <code>exit=</code> 行がそのまま記録になる。</p>
+<p><code>UnitReturn.zum</code> は、<code>void</code> の C 関数を戻り値 <code>Unit</code> で束縛して呼ぶ。コンパイラの出力と <code>exit=</code> 行がそのまま記録になる。</p>
 </li>
 <li>
 <p>既知の値: <code>ffi</code> の演算結果は T1〜T3 と同じ値。<code>ffi-unit-return</code> は <code>lib/CodeGen.ml:587-591</code>（戻り値の型の変換）と <code>lib/CodeGen.ml:556-557</code>（<code>Unit</code> を拒む分岐）から、<code>Not allowed</code> を含むエラーと 0 でない終了状態。</p>

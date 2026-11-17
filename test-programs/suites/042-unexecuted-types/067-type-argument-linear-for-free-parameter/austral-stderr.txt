@@ -10,7 +10,7 @@
     { "type": "code", "content": "Linear" }
   ],
   "span": {
-    "filename": "test-programs/suites/042-unexecuted-types/067-type-argument-linear-for-free-parameter/Test.aum",
+    "filename": "test-programs/suites/042-unexecuted-types/067-type-argument-linear-for-free-parameter/Test.zum",
     "startp": { "line": 17, "column": 4 },
     "end": { "line": 20, "column": 8 }
   },

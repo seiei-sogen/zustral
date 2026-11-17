@@ -1,1 +1,1 @@
-compile DoesNotExist.aum --target-type=tc
+compile DoesNotExist.zum --target-type=tc
