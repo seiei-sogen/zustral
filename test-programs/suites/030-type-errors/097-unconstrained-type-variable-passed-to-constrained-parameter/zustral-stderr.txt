@@ -1,0 +1,30 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Type constraint not satisfied: the type " },
+    { "type": "type", "content": "U" },
+    { "type": "text", "content": " does not implement the typeclass " },
+    { "type": "code", "content": "Printable" },
+    { "type": "text", "content": "." },
+    { "type": "break" },
+    {
+      "type": "text",
+      "content": "This constraint is for the type variable "
+    },
+    { "type": "code", "content": "T" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/097-unconstrained-type-variable-passed-to-constrained-parameter/Test.zum",
+    "startp": { "line": 10, "column": 8 },
+    "end": { "line": 10, "column": 23 }
+  },
+  "context": [
+    [ 8, "    generic [U: Free]" ],
+    [ 9, "    function pass(x: U): Unit is" ],
+    [ 10, "        return show(x);" ],
+    [ 11, "    end;" ],
+    [ 12, "" ]
+  ]
+}

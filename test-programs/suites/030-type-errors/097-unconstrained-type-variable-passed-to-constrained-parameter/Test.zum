@@ -1,0 +1,16 @@
+module body Test is
+    generic [T: Free(Printable)]
+    function show(x: T): Unit is
+        printLn(x);
+        return nil;
+    end;
+
+    generic [U: Free]
+    function pass(x: U): Unit is
+        return show(x);
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

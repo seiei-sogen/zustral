@@ -1,0 +1,14 @@
+module body Test is
+    typeclass Bump(T: Free) is
+        method bump(x: T): T;
+    end;
+
+    generic [T: Free(Bump)]
+    function isBig(x: T): Bool is
+        return x = 300;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.
