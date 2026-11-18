@@ -2,21 +2,32 @@
   "module": "Test",
   "kind": "Type Error",
   "text": [
-    { "type": "text", "content": "The typeclass " },
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "U" },
+    { "type": "text", "content": " of " },
     { "type": "code", "content": "Outer" },
-    { "type": "text", "content": " has no instance which matches for " },
-    { "type": "type", "content": "Box[Int32]" }
+    { "type": "text", "content": " is constrained by " },
+    { "type": "code", "content": "Foo" },
+    {
+      "type": "text",
+      "content": ", which is not a typeclass. A constraint must name a typeclass."
+    }
   ],
   "span": {
     "filename": "test-programs/suites/037-typeclass-and-environment-paths/050-instance-skipped-constraint-not-typeclass/Test.zum",
-    "startp": { "line": 22, "column": 8 },
-    "end": { "line": 22, "column": 26 }
+    "startp": { "line": 13, "column": 4 },
+    "end": { "line": 18, "column": 8 }
   },
   "context": [
-    [ 20, "    function main(): ExitCode is" ],
-    [ 21, "        let b: Box[Int32] := Box(value => 10);" ],
-    [ 22, "        printLn(outer(b));" ],
-    [ 23, "        return ExitSuccess();" ],
-    [ 24, "    end;" ]
+    [ 11, "    end;" ],
+    [ 12, "" ],
+    [ 13, "    generic [U: Free(Foo)]" ],
+    [ 14, "    instance Outer(Box[U]) is" ],
+    [ 15, "        method outer(value: Box[U]): Int32 is" ],
+    [ 16, "            return 2;" ],
+    [ 17, "        end;" ],
+    [ 18, "    end;" ],
+    [ 19, "" ],
+    [ 20, "    function main(): ExitCode is" ]
   ]
 }

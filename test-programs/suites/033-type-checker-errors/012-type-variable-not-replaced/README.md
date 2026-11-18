@@ -1,1 +1,1 @@
-Pins `strip_type': Variable not replaced: ` (lib/TypeStripping.ml, `strip_type'`): an instance method has a type parameter of its own that is not a region.
+A typeclass method with a type parameter of its own that is not a region fails where the typeclass is declared (issues #128, #157). Before, the instance's method was compiled with the type parameter left in it, and the compiler stopped with the internal `strip_type': Variable not replaced` (lib/TypeStripping.ml, `strip_type'`) and no position.

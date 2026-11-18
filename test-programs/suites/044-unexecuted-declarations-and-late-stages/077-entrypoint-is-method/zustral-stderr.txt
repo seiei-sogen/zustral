@@ -1,5 +1,5 @@
 {
-  "module": null,
+  "module": "Test",
   "kind": "Entrypoint Definition Error",
   "text": [
     { "type": "text", "content": "The entrypoint must be a function." }

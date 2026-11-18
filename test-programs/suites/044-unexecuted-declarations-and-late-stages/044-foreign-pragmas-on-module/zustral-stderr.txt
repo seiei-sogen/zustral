@@ -1,0 +1,23 @@
+{
+  "module": null,
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The pragma " },
+    { "type": "code", "content": "Foreign_Import" },
+    {
+      "type": "text",
+      "content": " can only be written before a function definition in a module body."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/044-foreign-pragmas-on-module/Test.zum",
+    "startp": { "line": 1, "column": 0 },
+    "end": { "line": 2, "column": 44 }
+  },
+  "context": [
+    [ 1, "pragma Foreign_Import(External_Name => \"a\");" ],
+    [ 2, "pragma Foreign_Export(External_Name => \"b\");" ],
+    [ 3, "" ],
+    [ 4, "module body Test is" ]
+  ]
+}

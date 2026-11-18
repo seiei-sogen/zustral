@@ -1,0 +1,17 @@
+module body Test is
+    function f(): Int64 is
+        printLn("f");
+        return 1;
+    end;
+
+    function g(): Int64 is
+        printLn("g");
+        return 2;
+    end;
+
+    function main(): ExitCode is
+        let x: Int64 := f() + g();
+        printLn(x);
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,36 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The union " },
+    { "type": "type", "content": "Mode" },
+    { "type": "text", "content": " has a case named " },
+    { "type": "code", "content": "Up" },
+    {
+      "type": "text",
+      "content": ", but the module does not import that case under that name. A "
+    },
+    { "type": "code", "content": "when" },
+    {
+      "type": "text",
+      "content": " names a case by the name the module imports it under."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/009-names/014-case-matched-by-a-name-that-is-not-imported/Test.zum",
+    "startp": { "line": 5, "column": 8 },
+    "end": { "line": 10, "column": 17 }
+  },
+  "context": [
+    [ 3, "module body Test is" ],
+    [ 4, "    function show(m: Mode): Unit is" ],
+    [ 5, "        case m of" ],
+    [ 6, "            when Up do" ],
+    [ 7, "                printLn(1);" ],
+    [ 8, "            when Down do" ],
+    [ 9, "                printLn(2);" ],
+    [ 10, "        end case;" ],
+    [ 11, "        return nil;" ],
+    [ 12, "    end;" ]
+  ]
+}

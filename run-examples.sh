@@ -7,7 +7,7 @@
 
 set -euxo pipefail
 
-dune build
+dune build --root .
 
 function compile() {
     ./zustral compile \

@@ -21,7 +21,7 @@ let type_universe = function
   | WriteRef _ -> LinearUniverse
   | Span _ -> FreeUniverse
   | SpanMut _ -> LinearUniverse
-  | TyVar (TypeVariable (_, u, _, _)) -> u
+  | TyVar (TypeVariable (_, u, _, _, _)) -> u
   | Address _ -> FreeUniverse
   | Pointer _ -> FreeUniverse
   | FnPtr _ -> FreeUniverse
@@ -42,6 +42,13 @@ let is_numeric = function
   | Address _ -> false
   | Pointer _ -> false
   | FnPtr _ -> false
+
+(* A type variable stays comparable until issue #125 decides on it. *)
+let is_comparable = function
+  | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | Address _ | Pointer _ | FnPtr _ | TyVar _ ->
+     true
+  | NamedType _ | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ ->
+     false
 
 let rec type_variables = function
   | Unit ->

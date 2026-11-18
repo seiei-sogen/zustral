@@ -1,0 +1,1 @@
+Test that the literal operand of an arithmetic expression has to fit the type of the other operand, not a parameter of a local variable that has the name of the arithmetic method (issue #138). 300 fits the Int64 of `x`. Before, the expression called the local function pointer, and 300 was rejected because it does not fit its Nat8 parameter.

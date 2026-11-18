@@ -7,8 +7,9 @@
 *)
 open Unix
 
+external system_signal_number : int -> int = "zustral_system_signal_number" [@@noalloc]
+
 let exit_code (status: process_status): int =
   match status with
   | WEXITED i -> i
-  | WSIGNALED i -> i
-  | WSTOPPED i -> i
+  | WSIGNALED signal | WSTOPPED signal -> 128 + system_signal_number signal

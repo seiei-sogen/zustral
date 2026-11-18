@@ -1,20 +1,33 @@
 {
-  "module": "Test",
-  "kind": "Type Error",
+  "module": "Lib",
+  "kind": "Declaration Error",
   "text": [
     { "type": "text", "content": "The instance of the typeclass " },
     { "type": "code", "content": "Foo" },
     { "type": "text", "content": " for " },
     { "type": "type", "content": "Int32" },
-    { "type": "text", "content": ", declared in the module " },
-    { "type": "code", "content": "Lib" },
-    { "type": "text", "content": ", does not define the method " },
+    { "type": "text", "content": " does not define the method " },
     { "type": "code", "content": "bar" },
     {
       "type": "text",
       "content": ". An instance must define every method of its typeclass."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/038-late-stage-paths/038-instance-method-missing-other-module/Lib.zum",
+    "startp": { "line": 5, "column": 8 },
+    "end": { "line": 10, "column": 8 }
+  },
+  "context": [
+    [ 3, "        method foo(value: T): Int32;" ],
+    [ 4, "        method bar(value: T): Int32;" ],
+    [ 5, "    end;" ],
+    [ 6, "    instance Foo(Int32) is" ],
+    [ 7, "        method foo(value: Int32): Int32 is" ],
+    [ 8, "            return 1;" ],
+    [ 9, "        end;" ],
+    [ 10, "    end;" ],
+    [ 11, "    generic [K: Free]" ],
+    [ 12, "    instance Foo(Option[K]) is" ]
+  ]
 }

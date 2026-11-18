@@ -1,0 +1,13 @@
+module body Test is
+    function main(): ExitCode is
+        let m: Int64 := -9223372036854775808;
+        printLn(m);
+        let n: Nat64 := #xFFFF'FFFF'FFFF'FFFF;
+        printLn(n);
+        let x: Int64 := 0;
+        if -9223372036854775808 < x then
+            printLn("less");
+        end if;
+        return ExitSuccess();
+    end;
+end module body.

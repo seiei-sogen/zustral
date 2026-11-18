@@ -1,5 +1,20 @@
-exit: 2
+exit: 255
 files: 
 --- stdout
 --- stderr
-Fatal error: exception Division_by_zero
+Error:
+  Title: Type Error
+  Module:
+    Zero
+  Location:
+    Filename: 'Zero.zum'
+    From: line 3, column 24
+    To: line 3, column 29
+  Description:
+    The divisor of this division is zero.
+  Code:
+    1 | module body Zero is
+    2 |     function main(): ExitCode is
+    3 |         let y: Int64 := 7 / 0;
+    4 |         return ExitSuccess();
+    5 |     end;

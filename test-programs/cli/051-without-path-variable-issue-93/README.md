@@ -1,0 +1,1 @@
+Shows that the compiler, run without the environment variable `PATH`, reports that it cannot find the C compiler (issue #93), not an OCaml exception. The runner removes the variables named in `unset-environment-variables.txt`.

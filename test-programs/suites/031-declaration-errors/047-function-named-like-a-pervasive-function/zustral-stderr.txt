@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The module imports the name " },
+    { "type": "code", "content": "printLn" },
+    { "type": "text", "content": " from the module " },
+    { "type": "code", "content": "Zustral.Pervasive" },
+    { "type": "text", "content": ", so it cannot declare that name." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/047-function-named-like-a-pervasive-function/Test.zum",
+    "startp": { "line": 1, "column": 19 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function printLn(x: Int64): Unit is" ],
+    [ 3, "        print(\"mine \");" ],
+    [ 4, "        return nil;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    function main(): ExitCode is" ]
+  ]
+}

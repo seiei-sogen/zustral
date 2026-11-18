@@ -44,8 +44,8 @@ let raised (f: unit -> 'a): error =
 (* The stages before the type checker, on a module body. *)
 let front (env: Env.env) (code: string): (Env.env * Linked.linked_module) Outcome.t =
   let* cb = ParserInterface.parse_module_body code "Test.zum" in
-  let (Cst.ConcreteModuleBody (mn, kind, doc, imports, decls)) = cb in
-  let cb = Cst.ConcreteModuleBody (mn, kind, doc, BuiltIn.pervasive_imports :: imports, decls) in
+  let (Cst.ConcreteModuleBody (mn, name_span, kind, doc, imports, decls)) = cb in
+  let cb = Cst.ConcreteModuleBody (mn, name_span, kind, doc, BuiltIn.pervasive_imports :: imports, decls) in
   let* combined = CombiningPass.body_as_combined env cb in
   let* returning = ReturnCheck.check_ends_in_return combined in
   let* (env, small) = Env.with_supply env (fun supply -> DesugaringPass.desugar supply returning) in
@@ -125,13 +125,13 @@ let world: world Lazy.t =
   lazy (
     let (env, linked) = get (front (Lazy.force pervasive) source) in
     let (Linked.LinkedModule { decls; mod_id; _ }) = linked in
-    let pick f = match List.find_map f decls with Some x -> x | None -> assert_failure "missing declaration" in
+    let pick f = match List.find_map (fun (_, decl) -> f decl) decls with Some x -> x | None -> assert_failure "missing declaration" in
     let f_id = pick (function Linked.LFunction (id, _, _, _, _, _, _, _, _) -> Some id | _ -> None)
     and box_id = pick (function Linked.LRecord (id, _, _, _, _, _, _) -> Some id | _ -> None)
     and shape_id = pick (function Linked.LUnion (id, _, _, _, _, _, _) -> Some id | _ -> None)
     and describe_id = pick (function Linked.LTypeclass (id, _, n, _, _, _) when n = i "Describe" -> Some id | _ -> None)
     and meth_id = pick (function Linked.LInstance (_, _, _, _, _, [Linked.LMethodDef (id, _, _, _, _, _)], _) -> Some id | _ -> None) in
-    let tyvar: ty = TyVar (TypeVariable (i "T", FreeUniverse, q "f", [make_sident test_mod (i "Describe")])) in
+    let tyvar: ty = TyVar (TypeVariable (i "T", FreeUniverse, q "f", [make_sident test_mod (i "Describe")], StandsForItself)) in
     (* Constants of types no constant of a program has. *)
     let constant env name ty =
       fst (Env.register NoSpan env (EnvTypes.NewConstant { mod_id; vis = VisPublic; name = i name; ty; docstring = Docstring "" }))
@@ -154,7 +154,7 @@ let every_aexpr: A.aexpr list =
   let x = A.Variable (q "x") in
   [A.NilConstant; A.BoolConstant true; A.IntConstant one; A.FloatConstant half;
    A.StringConstant (Escape.escape_string NoSpan "s"); x; A.Temporary (i "t");
-   A.FunctionCall (q "f", A.Positional []); A.ArithmeticExpression (Add, x, x);
+   A.FunctionCall (q "f", A.Positional []); A.ArithmeticExpression (Add, x, x); A.ArithmeticNegation x;
    A.Comparison (Equal, x, x); A.Conjunction (x, x); A.Disjunction (x, x); A.Negation x;
    A.IfExpression (x, x, x); A.Embed (int32_spec, "1", []); A.Deref x; A.Typecast (x, int32_spec);
    A.SizeOf int32_spec; A.SlotAccessor (x, i "value"); A.PointerSlotAccessor (x, i "value");
@@ -173,13 +173,13 @@ let every_texpr (): texpr list =
   [TNilConstant; TBoolConstant true; TIntConstant one; TFloatConstant half;
    TStringConstant (Escape.escape_string NoSpan "s"); TConstVar (q "c", int32);
    TParamVar (i "p", int32); x; TFunVar (w.f_id, FnPtr ([], int32), TypeBindings.empty_bindings);
-   TTemporary (i "t", int32); TFuncall (w.f_id, q "f", [], int32, TypeBindings.empty_bindings);
-   TMethodCall (w.meth_id, q "describe", TypeParameters.empty_typarams, [x], int32, TypeBindings.empty_bindings);
-   TVarMethodCall { source_module_name = test_mod; typeclass_id = w.describe_id; params = [];
-                    method_name = q "describe"; args = []; dispatch_ty = w.tyvar; rt = int32;
+   TTemporary (i "t", int32); TFuncall (w.f_id, q "f", [], int32, TypeBindings.empty_bindings, []);
+   TMethodCall (w.meth_id, q "describe", TypeParameters.empty_typarams, [x], int32, TypeBindings.empty_bindings, [0]);
+   TVarMethodCall { typeclass_id = w.describe_id; params = [];
+                    method_name = q "describe"; args = []; written_order = []; dispatch_ty = w.tyvar; rt = int32;
                     bindings = TypeBindings.empty_bindings };
-   TFptrCall (i "fp", [], int32); TCast (x, int32); TImplicitCast (x, int32);
-   TComparison (Equal, x, x); TConjunction (x, x); TDisjunction (x, x); TNegation x;
+   TFptrCall (i "fp", [], [], int32); TCast (x, int32); TImplicitCast (x, int32);
+   TComparison (Equal, x, x); TConjunction (x, x); TDisjunction (x, x); TNegation x; TArithmeticNegation x;
    TIfExpression (x, x, x); TRecordConstructor (box (), [(i "value", x)]);
    TUnionConstructor { union_id = w.shape_id; type_name = q "Shape"; tyargs = []; universe = FreeUniverse;
                        case_name = i "Dot"; args = [] };
@@ -188,32 +188,34 @@ let every_texpr (): texpr list =
    TEmbed (int32, "1", []); TDeref (x, int32); TSizeOf int32]
 
 let int_literals: texpr list =
-  [TIntConstant one; TCast (TIntConstant one, int32); TImplicitCast (TIntConstant one, int32)]
+  [TIntConstant one; TImplicitCast (TIntConstant one, int32)]
 
 let float_literals: texpr list =
-  [TFloatConstant half; TCast (TFloatConstant half, DoubleFloat); TImplicitCast (TFloatConstant half, DoubleFloat)]
+  [TFloatConstant half; TImplicitCast (TFloatConstant half, DoubleFloat)]
+
+let annotated_literals: texpr list =
+  [TCast (TIntConstant one, int32); TCast (TFloatConstant half, DoubleFloat)]
 
 (* In a place that expects a number type, a literal of that kind is typed by
-   the place, also under a cast, and nothing else is. *)
+   the place, also under a cast the type checker added, and nothing else is.
+   An annotated literal has the type of its annotation, which has to be the
+   type of the place, as for any other value (issue #163). *)
 let test_literal_matches _ =
   List.iter (fun e ->
       assert_equal (List.mem e int_literals) (LiteralTyping.literal_matches NoSpan int32 e);
       assert_equal (List.mem e float_literals) (LiteralTyping.literal_matches NoSpan DoubleFloat e))
-    (every_texpr () @ int_literals @ float_literals)
+    (every_texpr () @ int_literals @ float_literals @ annotated_literals)
 
 (* An annotation types a bare literal only. *)
 let test_annotation_types_literal _ =
   List.iter (fun e ->
       assert_equal (e = TIntConstant one) (LiteralTyping.annotation_types_literal NoSpan int32 e);
       assert_equal (e = TFloatConstant half) (LiteralTyping.annotation_types_literal NoSpan SingleFloat e))
-    (every_texpr () @ int_literals @ float_literals)
+    (every_texpr () @ int_literals @ float_literals @ annotated_literals)
 
 (* The signed widths of sizes and indices: the type parser makes both
-   unsigned, the bounds are there all the same. The bounds of a byte size fix
-   what the code does today, not what it should do: they are those of 8 bits,
-   and a byte size is a `size_t`. The unsigned bound (0 to 255) is the same
-   mistake, and a program reaches it (issue #144). When that is fixed, these
-   expectations change with it. *)
+   unsigned, the bounds are there all the same. A byte size is a `size_t`,
+   so its bounds are those of an index (issue #144). *)
 let test_signed_size_widths _ =
   let fits ty n = LiteralTyping.literal_matches NoSpan ty (TIntConstant (NumberLiteral.of_decimal n)) in
   let does_not_fit ty n =
@@ -222,8 +224,8 @@ let test_signed_size_widths _ =
       (raised (fun () -> LiteralTyping.literal_matches NoSpan ty (TIntConstant literal)))
   in
   let byte = Integer (Signed, WidthByteSize) and index = Integer (Signed, WidthIndex) in
-  assert_bool "-128 is a signed byte size" (fits byte "-128");
-  does_not_fit byte "128";
+  assert_bool "-2^63 is a signed byte size" (fits byte "-9223372036854775808");
+  does_not_fit byte "9223372036854775808";
   assert_bool "2^63-1 is a signed index" (fits index "9223372036854775807");
   does_not_fit index "9223372036854775808"
 
@@ -250,7 +252,7 @@ let test_undeclared_temporary _ =
 
 let sp: Span.span = Span.empty_span
 
-let linear: ty = TyVar (TypeVariable (i "L", LinearUniverse, q "f", []))
+let linear: ty = TyVar (TypeVariable (i "L", LinearUniverse, q "f", [], StandsForItself))
 
 let check_linearity (params: value_parameter list) (body: tstmt): unit Outcome.t =
   let w = Lazy.force world in
@@ -263,6 +265,13 @@ let test_name_declared_twice _ =
   assert_equal (Internal "An entry exists in the state table with this name: x")
     (the_error (check_linearity [ValueParameter (i "x", int32)] (TLet (sp, Immutable, i "x", int32, TSkip sp))))
 
+(* An assignment to a variable that no statement declared: the type checker
+   finds a variable by the name the program wrote, as this pass does. Before
+   issue #163, an assignment to the nickname of an imported name reached this. *)
+let test_name_not_declared _ =
+  assert_equal (Internal "variable `y` not in state table. Table contents: \n\nEntries:\nx\tLinearityCheck.Unconsumed")
+    (the_error (check_linearity [ValueParameter (i "x", int32)] (TAssignVar (sp, q "y", TNilConstant))))
+
 let t: identifier = i "t"
 let let_t: tstmt = TLetTmp (t, linear, TNilConstant)
 let use_t: tstmt = TDiscarding (sp, TTemporary (t, linear))
@@ -270,7 +279,7 @@ let assign_t: tstmt = TAssignTmp (t, TNilConstant)
 
 let borrow_t (mode: borrow_stmt_kind) (body: tstmt): tstmt =
   TBorrow { span = sp; original = t; rename = i "r"; region = i "R"; orig_type = linear;
-            ref_type = ReadRef (linear, static); body; mode }
+            ref_type = ReadRef (linear, static); body; mode; origin = AnonymousBorrow }
 
 let rec block (stmts: tstmt list): tstmt =
   match stmts with
@@ -291,6 +300,13 @@ let test_assign_temporary _ =
   assert_equal (Linearity (AlreadyConsumed t)) (the_error (check_linearity [] (block [let_t; use_t; use_t])));
   (* A name not in the table is not a variable whose use is checked. *)
   assert_equal (Ok ()) (check_linearity [] (TAssignTmp (i "elsewhere", TNilConstant)))
+
+(* A case statement without a when clause leaves the table as it was. The type
+   checker makes none, because a union has a case (#163). *)
+let test_case_without_when_clauses _ =
+  let w = Lazy.force world in
+  let case_without_whens: tstmt = TCase (sp, TNilConstant, w.shape_id, [], [], CasePlain) in
+  assert_equal (Ok ()) (check_linearity [] (block [let_t; case_without_whens; use_t]))
 
 (* TypeCheckExpr *)
 
@@ -364,7 +380,7 @@ let typing ?(env: Env.env option) ?(pragmas: pragma list = []) (params: value_pa
   let w = Lazy.force world in
   let env = Option.value env ~default:w.env in
   let (Linked.LinkedModule m) = w.linked in
-  let linked = Linked.LinkedModule { m with decls = [Linked.LFunction (w.f_id, VisPublic, i "f", TypeParameters.empty_typarams, params, int32, body, Docstring "", pragmas)] } in
+  let linked = Linked.LinkedModule { m with decls = [(sp, Linked.LFunction (w.f_id, VisPublic, i "f", TypeParameters.empty_typarams, params, int32, body, Docstring "", pragmas))] } in
   let* (_, TypedModule (_, decls)) = Env.with_supply env (fun supply -> TypingPass.augment_module env supply linked) in
   match decls with
   | [d] -> Ok d
@@ -465,10 +481,10 @@ let test_invalid_pragmas _ =
 let typing_constant (ty: ty) (value: A.aexpr): typed_decl Outcome.t =
   let w = Lazy.force world in
   let (Linked.LinkedModule m) = w.linked in
-  let id = match List.find_map (function Linked.LConstant (id, _, _, _, _, _) -> Some id | _ -> None) m.decls with
+  let id = match List.find_map (function (_, Linked.LConstant (id, _, _, _, _, _)) -> Some id | _ -> None) m.decls with
     | Some id -> id
     | None -> assert_failure "no constant" in
-  let linked = Linked.LinkedModule { m with decls = [Linked.LConstant (id, VisPublic, i "c", ty, value, Docstring "")] } in
+  let linked = Linked.LinkedModule { m with decls = [(sp, Linked.LConstant (id, VisPublic, i "c", ty, value, Docstring ""))] } in
   let* (_, TypedModule (_, decls)) = Env.with_supply w.env (fun supply -> TypingPass.augment_module w.env supply linked) in
   match decls with
   | [d] -> Ok d
@@ -495,7 +511,7 @@ let test_constant_expression_of_every_expression _ =
   assert_equal false (TastUtil.is_constant_expression (TParamVar (x, int32)));
   assert_equal false (TastUtil.is_constant_expression (TLocalVar (x, int32)));
   assert_equal false (TastUtil.is_constant_expression (TTemporary (x, int32)));
-  assert_equal false (TastUtil.is_constant_expression (TFptrCall (x, [], int32)));
+  assert_equal false (TastUtil.is_constant_expression (TFptrCall (x, [], [], int32)));
   assert_equal true (TastUtil.is_constant_expression (TImplicitCast (TNilConstant, int32)));
   assert_equal true (TastUtil.is_constant_expression (TCast (TNilConstant, int32)))
 
@@ -508,7 +524,9 @@ let suite =
       "pragma arguments" >:: test_pragma_arguments;
       "an undeclared temporary" >:: test_undeclared_temporary;
       "a name declared twice" >:: test_name_declared_twice;
+      "a name not declared" >:: test_name_not_declared;
       "assigning a temporary" >:: test_assign_temporary;
+      "a case without when clauses" >:: test_case_without_when_clauses;
       "checked as inferred" >:: test_checked_as_inferred;
       "a pointer slot of a non-reference" >:: test_pointer_slot_of_non_reference;
       "a method of no instance" >:: test_method_of_no_instance;

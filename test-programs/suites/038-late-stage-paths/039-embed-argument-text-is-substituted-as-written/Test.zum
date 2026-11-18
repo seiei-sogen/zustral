@@ -1,0 +1,16 @@
+pragma Unsafe_Module;
+
+module body Test is
+    function main(): ExitCode is
+        let one: Nat8 := @embed(Nat8, "$1", @embed(Nat8, "'\1'"));
+        printLn(one);
+        let backslash: Nat8 := @embed(Nat8, "$1", @embed(Nat8, "'\\'"));
+        printLn(backslash);
+        let seven: Nat8 := 7;
+        let size: Index := @embed(Index, "$1", @embed(Index, "sizeof(\"$2\")"), seven);
+        printLn(size);
+        let kept: Index := @embed(Index, "sizeof(\"$2\")", @embed(Nat8, "7"));
+        printLn(kept);
+        return ExitSuccess();
+    end;
+end module body.

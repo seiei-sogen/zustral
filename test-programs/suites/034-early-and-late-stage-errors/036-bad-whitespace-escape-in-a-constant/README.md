@@ -1,0 +1,1 @@
+Test that a bad escape in a string of the value of a constant that only the body declares is reported at the constant (issue #87). Before, the combining pass read the value with no position, and the error had none.

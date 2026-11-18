@@ -7,7 +7,7 @@ module body Test is
     end;
 
     pragma Foreign_Import(External_Name => "f");
-    function f(): Unit is
+    function f(): Option[Int32] is
     end;
 
     function main(): ExitCode is

@@ -29,8 +29,8 @@ let typaram_constraints (TypeParameter (_, _, _, cs)) =
 
 let typaram_to_tyvar (typaram: type_parameter): type_var =
   let (TypeParameter (n, u, f, cs)) = typaram in
-  TypeVariable (n, u, f, cs)
+  TypeVariable (n, u, f, cs, StandsForItself)
 
 let tyvar_to_typaram (tyvar: type_var): type_parameter =
-  let (TypeVariable (name, universe, source, constraints)) = tyvar in
+  let (TypeVariable (name, universe, source, constraints, _)) = tyvar in
   TypeParameter (name, universe, source, constraints)

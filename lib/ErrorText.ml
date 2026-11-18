@@ -29,20 +29,6 @@ and text_elem_to_plain (elem: text_elem): string =
   | Break ->
      "\n\n"
 
-let rec error_text_to_html (txt: err_text): string =
-    String.concat "" (List.map text_elem_to_html txt)
-
-and text_elem_to_html (elem: text_elem): string =
-  match elem with
-  | Text s ->
-      s
-  | Code c ->
-      "<code>" ^ c ^ "</code>"
-  | Type ty ->
-      "<code>" ^ (type_string ty) ^ "</code>"
-  | Break ->
-      "<br><br>"
-
 let rec error_text_to_json (txt: err_text): Yojson.Basic.t =
   `List (List.map text_elem_to_json txt)
 

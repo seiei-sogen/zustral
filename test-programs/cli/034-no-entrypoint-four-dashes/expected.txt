@@ -1,5 +1,5 @@
 exit: 255
-files: error.html
+files: 
 --- stdout
 --- stderr
 Error:
@@ -9,7 +9,7 @@ Error:
   Location:
     [no span available]
   Description:
-    `--no-entrypoint` requires `--target-type=c`, because otherwise the compiler will try to build the generated C code, and will fail because there is no entrypoint function.
+    `--entrypoint` argument not provided.
   Code:
     [no span available]
 

@@ -1,0 +1,9 @@
+module body Test is
+    typeclass C(T: Linear) is
+        method other(x: T): Bool;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

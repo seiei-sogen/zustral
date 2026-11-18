@@ -1,0 +1,23 @@
+module body Test is
+    function yes(x: Int64): Bool is
+        printLn(x);
+        return true;
+    end;
+
+    function no(x: Int64): Bool is
+        printLn(x);
+        return false;
+    end;
+
+    function both(a: Bool, b: Bool): Bool is
+        return a and b;
+    end;
+
+    function main(): ExitCode is
+        printLn(yes(1) and both(yes(2), yes(3)));
+        printLn(no(4) and both(yes(5), yes(6)));
+        printLn(no(7) or both(yes(8), no(9)));
+        printLn(yes(10) or both(yes(11), yes(12)));
+        return ExitSuccess();
+    end;
+end module body.

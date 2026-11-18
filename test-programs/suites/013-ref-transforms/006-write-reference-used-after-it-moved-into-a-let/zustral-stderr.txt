@@ -1,0 +1,21 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "The variable " },
+    { "type": "code", "content": "r" },
+    { "type": "text", "content": " has already been consumed." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/013-ref-transforms/006-write-reference-used-after-it-moved-into-a-let/Test.zum",
+    "startp": { "line": 6, "column": 12 },
+    "end": { "line": 6, "column": 24 }
+  },
+  "context": [
+    [ 4, "        borrow r: &![Int32, R] := &!x do" ],
+    [ 5, "            let r2: &![Int32, R] := r;" ],
+    [ 6, "            printLn(!r);" ],
+    [ 7, "        end borrow;" ],
+    [ 8, "        return ExitSuccess();" ]
+  ]
+}

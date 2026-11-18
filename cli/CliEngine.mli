@@ -14,6 +14,5 @@ open Error
     reports compile errors and exits. *)
 val exec : cmd -> unit
 
-(** Write the error to stderr and to error.html, then exit with a failure
-    status. *)
+(** Write the error to stderr, then exit with a failure status. *)
 val report_and_exit : error_reporting_mode -> zustral_error -> 'a

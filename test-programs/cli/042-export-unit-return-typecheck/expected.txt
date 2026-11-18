@@ -1,5 +1,5 @@
 exit: 255
-files: error.html
+files: 
 --- stdout
 --- stderr
 {
@@ -15,16 +15,17 @@ files: error.html
   ],
   "span": {
     "filename": "Test.zum",
-    "startp": { "line": 2, "column": 48 },
-    "end": { "line": 5, "column": 8 }
+    "startp": { "line": 4, "column": 48 },
+    "end": { "line": 7, "column": 8 }
   },
   "context": [
-    [ 1, "module body Test is" ],
-    [ 2, "    pragma Foreign_Export(External_Name => \"f\");" ],
-    [ 3, "    function f(): Unit is" ],
-    [ 4, "        return nil;" ],
-    [ 5, "    end;" ],
-    [ 6, "" ],
-    [ 7, "    function main(): ExitCode is" ]
+    [ 2, "" ],
+    [ 3, "module body Test is" ],
+    [ 4, "    pragma Foreign_Export(External_Name => \"f\");" ],
+    [ 5, "    function f(): Unit is" ],
+    [ 6, "        return nil;" ],
+    [ 7, "    end;" ],
+    [ 8, "" ],
+    [ 9, "    function main(): ExitCode is" ]
   ]
 }

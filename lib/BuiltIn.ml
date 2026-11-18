@@ -12,8 +12,10 @@ open Cst
 
 let pervasive_module_name = make_mod_name BuiltInNames.pervasive_module
 
+(* No source has this import, so it has the empty span. *)
 let pervasive_imports =
   ConcreteImportList (
+      Span.empty_span,
       pervasive_module_name,
       List.map (fun name -> ConcreteImport (make_ident name, None)) BuiltInNames.pervasive_import_names
     )

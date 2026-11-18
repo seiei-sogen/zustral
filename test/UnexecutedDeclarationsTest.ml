@@ -50,14 +50,15 @@ let typarams (params: TypeParameter.type_parameter list): TypeParameters.typaram
   TypeParameters.typarams_from_list NoSpan params
 
 let tyvar (name: string) (universe: universe): ty =
-  TyVar (TypeVariable (make_ident name, universe, named "f", []))
+  TyVar (TypeVariable (make_ident name, universe, named "f", [], StandsForItself))
 
 let add_example (env: Env.env): Env.env * Id.mod_id =
-  Env.add_module env { name = example; imported_instances = InstanceIdSet.empty }
+  Env.add_module env { name = example; imported_instances = InstanceIdSet.empty; imported_symbols = [] }
 
 let register_function (env: Env.env) (mod_id: Id.mod_id) (name: string) (params: value_parameter list) (rt: ty) (impl: function_impl): Env.env * Id.function_id =
   Env.register NoSpan env (NewFunction {
       mod_id;
+      span = Zustral_core.Span.empty_span;
       vis = VisPublic;
       name = make_ident name;
       docstring;
@@ -130,7 +131,7 @@ let register_record (env: Env.env) (mod_id: Id.mod_id) (name: string): Env.env *
     })
 
 let foreign_signature (direction: ForeignType.direction) (params: value_parameter list) (rt: ty): ty ForeignType.foreign_signature =
-  ForeignType.check_signature NoSpan direction params rt
+  ForeignType.check_signature NoSpan direction (make_ident "c_function") params rt
 
 let region: ty = RegionTy Region.static_region
 
@@ -195,12 +196,71 @@ let test_lookups_by_an_id_from_a_later_environment _ =
     (error_of (fun () -> Env.get_instance_decl NoSpan before instance_id));
   assert_equal (no ("instance method with ID `" ^ (Id.show_ins_meth_id ins_meth_id) ^ "`"))
     (error_of (fun () -> Env.get_instance_method before ins_meth_id));
+  (* A program cannot ask for a method its instance leaves out: the declaration
+     of the instance is checked against its typeclass (#91). *)
+  assert_equal (no ("method `m` of the instance with ID `" ^ (Id.show_instance_id instance_id) ^ "`"))
+    (error_of (fun () -> Env.get_instance_method_from_instance_id_and_method_name NoSpan before instance_id (make_ident "m")));
   assert_equal (no ("monomorph with ID `" ^ (Id.show_mono_id mono_id) ^ "`"))
     (error_of (fun () -> Env.get_monomorph before mono_id));
   assert_equal (no ("record or union monomorph with ID `" ^ (Id.show_mono_id mono_id) ^ "`"))
     (error_of (fun () -> Env.get_type_monomorph before mono_id));
   assert_equal (no ("monomorph with ID `" ^ (Id.show_mono_id mono_id) ^ "`"))
     (error_of (fun () -> Env.store_record_monomorph_definition before record_mono_id []))
+
+(* Env: `MonoNamedType` holds the ID of a record's or a union's monomorph, and
+   no program puts there the ID of a function's or a method's. *)
+let test_the_monomorph_of_a_function_or_a_method_is_no_type _ =
+  let (env, mod_id) = add_example Env.empty_env in
+  let (env, function_id) = register_function env mod_id "f" [] Unit BodyNotAttached in
+  let (env, typeclass_id, method_id) = register_typeclass_with_method env mod_id in
+  let (env, instance_id) = register_instance env mod_id typeclass_id TypeParameters.empty_typarams Unit in
+  let (env, ins_meth_id) = register_instance_method env instance_id method_id None in
+  let (env, function_mono) = Env.add_or_get_function_monomorph env function_id MonoTypeBindings.empty_mono_bindings in
+  let (env, method_mono) = Env.add_or_get_instance_method_monomorph env ins_meth_id MonoTypeBindings.empty_mono_bindings in
+  List.iter
+    (fun (mono_id: Id.mono_id) ->
+      assert_equal (internal ("No record or union monomorph with ID `" ^ (Id.show_mono_id mono_id) ^ "` in this environment."))
+        (error_of (fun () -> Env.get_type_monomorph env mono_id)))
+    [Id.mono_id_of_function function_mono; Id.mono_id_of_method method_mono]
+
+(* Env: a limit, as in EnvTest. Two lineages of environments give out the same
+   numbers, so an ID of one can find a monomorph of another kind in the other.
+   Storing a definition under it is then the error of storing it under an ID
+   that nothing has. Here four lineages have one monomorph each, of the four
+   kinds, under one number. *)
+let test_a_definition_stored_under_the_id_of_another_kind _ =
+  let (env, mod_id) = add_example Env.empty_env in
+  let (env, record_id) = register_record env mod_id "R" in
+  let (env, union_id) = Env.reserve_union_id env in
+  let (env, function_id) = register_function env mod_id "f" [] Unit BodyNotAttached in
+  let (env, typeclass_id, method_id) = register_typeclass_with_method env mod_id in
+  let (env, instance_id) = register_instance env mod_id typeclass_id TypeParameters.empty_typarams Unit in
+  let (env, ins_meth_id) = register_instance_method env instance_id method_id None in
+  let none = MonoTypeBindings.empty_mono_bindings in
+  let (with_record, record_mono) = Env.add_or_get_record_monomorph env record_id none in
+  let (with_union, union_mono) = Env.add_or_get_union_monomorph env union_id none in
+  let (with_function, function_mono) = Env.add_or_get_function_monomorph env function_id none in
+  let (with_method, method_mono) = Env.add_or_get_instance_method_monomorph env ins_meth_id none in
+  let stores: (Id.mono_id * (Env.env -> Env.env)) list = [
+      (Id.mono_id_of_record record_mono, fun env -> Env.store_record_monomorph_definition env record_mono []);
+      (Id.mono_id_of_union union_mono, fun env -> Env.store_union_monomorph_definition env union_mono []);
+      (Id.mono_id_of_function function_mono, fun env -> Env.store_function_monomorph_definition env function_mono MSkip);
+      (Id.mono_id_of_method method_mono, fun env -> Env.store_instance_method_monomorph_definition env method_mono MSkip)
+    ]
+  in
+  List.iteri
+    (fun (lineage: int) (env: Env.env) ->
+      List.iteri
+        (fun (kind: int) ((mono_id, store): Id.mono_id * (Env.env -> Env.env)) ->
+          let expected: error option =
+            if lineage = kind then
+              None
+            else
+              internal ("No monomorph with ID `" ^ (Id.show_mono_id mono_id) ^ "` in this environment.")
+          in
+          assert_equal expected (error_of (fun () -> store env)))
+        stores)
+    [with_record; with_union; with_function; with_method]
 
 let test_a_reserved_id_registered_twice _ =
   let (env, mod_id) = add_example Env.empty_env in
@@ -299,19 +359,19 @@ let test_universes_of_arguments _ =
       assert_equal ~printer:show_universe universe (TypeBindings.replaced_universe universe [Unit]))
     [FreeUniverse; LinearUniverse; RegionUniverse]
 
-let test_the_type_of_a_pointer_slot _ =
-  let value = MPointerSlotAccessor (MLocalVar (make_ident "p", MonoPointer MonoUnit), make_ident "x", MonoBoolean) in
-  assert_equal ~printer:show_mono_ty MonoBoolean (MtastUtil.get_type value)
-
-(* A literal and a `sizeof` have these types when nothing converts them. No
-   program asks for them: a call through a function pointer, the one place
-   that asks for the type of an argument, gets every argument converted to the
-   type of its parameter. *)
-let test_the_type_of_an_unconverted_literal _ =
-  assert_equal ~printer:show_mono_ty (MonoInteger (Signed, Width32))
-    (MtastUtil.get_type (MIntConstant (NumberLiteral.of_value Z.zero)));
-  assert_equal ~printer:show_mono_ty (MonoInteger (Unsigned, Width64))
-    (MtastUtil.get_type (MSizeOf MonoUnit))
+(* Only a region or a region variable is the region of a reference (#90). The
+   type parser rejects every other type, and a program reaches one kind of type
+   at a time. The later stages convert types they know to be regions, so any
+   other type is an internal error there. *)
+let test_only_a_region_is_the_region_of_a_reference _ =
+  let (_, record_id) = Env.reserve_record_id Env.empty_env in
+  let not_regions: ty list =
+    List.filter (fun ty -> ty <> region) (one_of_each_kind (RecordTypeId record_id))
+    @ [tyvar "T" LinearUniverse; tyvar "T" TypeUniverse]
+  in
+  List.iter (fun ty -> assert_bool (type_string ty) (Option.is_none (ref_region_of_ty ty))) not_regions;
+  assert_equal (Some (RefRegion Region.static_region)) (ref_region_of_ty region);
+  assert_equal (internal "Not a region: Unit") (error_of (fun () -> TypeBindings.ref_region_of_region_type Unit))
 
 (* Every kind of type, in both directions. Only a generic signature has a type
    variable, and a generic signature is not checked. *)
@@ -338,7 +398,8 @@ let test_types_across_the_c_boundary _ =
       let params = [ValueParameter (make_ident "x", ty)] in
       let error_in (direction: ForeignType.direction) = error_of (fun () -> foreign_signature direction params Boolean) in
       assert_equal ~msg:("import " ^ type_string ty)
-        (if allowed Import ty then None else Some (Generic ForeignFunctionTypeNotAllowed))
+        (if allowed Import ty then None else
+           Some (Type (ImportDisallowedType { function_name = make_ident "c_function"; parameter = Some (make_ident "x"); ty })))
         (error_in Import);
       assert_equal ~msg:("export " ^ type_string ty)
         (if allowed Export ty then None else Some (Type (ExportDisallowedType ty)))
@@ -368,13 +429,8 @@ let test_overlap_of_every_pair_of_kinds _ =
             match a with
             | RegionTy _ | TyVar _ ->
                Some (Generic InstanceOverlapTypeNotAllowed)
-            | Pointer _ ->
-               (* This fixes what the code does today, which issue #122 reports
-                  as a bug: a pointer overlaps an instance for any type. When
-                  #122 is fixed, a pointer belongs to the last arm. *)
-               Some (Generic OverlappingInstances)
             | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
-            | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | FnPtr _ ->
+            | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ ->
                if i = j then Some (Generic OverlappingInstances) else None
           in
           assert_equal ~msg expected
@@ -384,20 +440,22 @@ let test_overlap_of_every_pair_of_kinds _ =
 
 let test_a_region_or_type_variable_is_local_to_no_module _ =
   let (env, mod_id) = add_example Env.empty_env in
-  let (env, other_id) = Env.add_module env { name = make_mod_name "Other"; imported_instances = InstanceIdSet.empty } in
+  let (env, other_id) = Env.add_module env { name = make_mod_name "Other"; imported_instances = InstanceIdSet.empty; imported_symbols = [] } in
   List.iter
     (fun (ty: ty) ->
       assert_equal ~msg:(type_string ty) (Some (Generic BrokenOrphanRule))
         (error_of (fun () -> TypeClasses.check_instance_orphan_rules NoSpan NoSpan env mod_id other_id ty)))
     [region; tyvar "T" FreeUniverse]
 
+(* No program has two instances that match one type: the overlap check of a
+   module and the orphan rule reject the second where it is declared. *)
 let test_two_matching_instances_of_one_module _ =
   let (env, mod_id) = add_example Env.empty_env in
   let (env, typeclass_id) = register_typeclass env mod_id in
   let (env, _) = register_instance env mod_id typeclass_id TypeParameters.empty_typarams Unit in
   let (env, _) = register_instance env mod_id typeclass_id TypeParameters.empty_typarams Unit in
   assert_equal
-    (Some (Type (OverlappingInstancesMatch { typeclass = make_ident "C"; ty = Unit; modules = [example] })))
+    (Some (Internal "More than one instance matches the type Unit"))
     (error_of (fun () -> TypeMatch.get_instance NoSpan env example Unit typeclass_id))
 
 (* Entrypoint: signatures whose types the type parser never makes. *)
@@ -458,6 +516,20 @@ let test_a_monomorph_with_bindings_for_other_parameters _ =
   let (env, _) = Env.add_or_get_record_monomorph env record_id (MonoTypeBindings.mono_bindings_from_list [(other, MonoUnit)]) in
   assert_equal (Some (Generic ParameterNotFound)) (instantiate env)
 
+(* A monomorph with type arguments, in another number than its declaration has
+   type parameters. No program makes one. A generic function that used itself
+   as a function pointer did, with a type argument for some of its type
+   parameters only, until its type parameters were told apart from the
+   caller's (issue #156). *)
+let test_a_monomorph_with_another_number_of_type_arguments _ =
+  let (env, mod_id) = add_example Env.empty_env in
+  let (env, record_id) = register_record env mod_id "R" in
+  let t = typaram "T" "R"
+  and u = typaram "U" "R" in
+  let (env, _) = Env.add_or_get_record_monomorph env record_id (MonoTypeBindings.mono_bindings_from_list [(t, MonoUnit); (u, MonoBoolean)]) in
+  assert_equal (Some (Generic (ParameterArgumentLengthMismatch { parameters = [t]; arguments = [MonoUnit; MonoBoolean] })))
+    (instantiate env)
+
 (* An instance whose type parameter its argument does not name: extraction
    rejects it (InstanceLeftoverTypeParameters), so no program builds this
    environment. A call of its method on `Unit`, the instance's argument, leaves
@@ -472,11 +544,11 @@ let test_a_method_call_leaves_out_an_unbound_parameter _ =
   let (env, _) = register_instance_method env instance_id method_id (Some (Stages.Tast.TSkip span)) in
   let call: Stages.Tast.texpr =
     TVarMethodCall {
-        source_module_name = example;
         typeclass_id;
         params = [];
         method_name = named "m";
         args = [];
+        written_order = [];
         dispatch_ty = Unit;
         rt = Unit;
         bindings = TypeBindings.empty_bindings
@@ -487,6 +559,29 @@ let test_a_method_call_leaves_out_an_unbound_parameter _ =
   let (env, _) = Env.add_or_get_function_monomorph env function_id MonoTypeBindings.empty_mono_bindings in
   assert_equal (Some (Generic (ParameterArgumentLengthMismatch { parameters = [u]; arguments = [] })))
     (instantiate env)
+
+(* A method call on a type parameter whose type argument has no instance: the
+   type checker checks the constraints wherever it binds a type parameter (#128,
+   #158), so no program gets this call past it. *)
+let test_a_method_call_on_a_type_without_an_instance _ =
+  let (env, mod_id) = add_example Env.empty_env in
+  let (env, typeclass_id, _) = register_typeclass_with_method env mod_id in
+  let call: Stages.Tast.texpr =
+    TVarMethodCall {
+        typeclass_id;
+        params = [];
+        method_name = named "m";
+        args = [];
+        written_order = [];
+        dispatch_ty = Boolean;
+        rt = Unit;
+        bindings = TypeBindings.empty_bindings
+      }
+  in
+  let (env, function_id) = register_function env mod_id "g" [] Unit BodyNotAttached in
+  let env = Env.store_function_body env function_id (TDiscarding (span, call)) in
+  let (env, _) = Env.add_or_get_function_monomorph env function_id MonoTypeBindings.empty_mono_bindings in
+  assert_equal (internal "Typeclass resolution failed. Dispatch type: Bool") (instantiate env)
 
 (* CodeGen: monomorphic declarations the monomorphizer never makes. *)
 
@@ -508,22 +603,6 @@ let a_function (env: Env.env): Env.env * Id.function_id =
   let (env, mod_id) = add_example env in
   register_function env mod_id "f" [] Unit BodyNotAttached
 
-let region_variable: mono_ty = MonoRegionTyVar (make_ident "R", named "f")
-
-let test_parameters_of_region_types _ =
-  let (env, id) = a_function Env.empty_env in
-  let params = [
-      MValueParameter (make_ident "r", MonoRegionTy Region.static_region);
-      MValueParameter (make_ident "v", region_variable)
-    ]
-  in
-  match function_definitions (generate env [MFunction (id, make_ident "f", params, MonoUnit, MSkip)]) with
-  | [([CValueParam (_, r); CValueParam (_, v)], _)] ->
-     assert_equal (CRepr.CBuiltinType CRegionType) r;
-     assert_equal (CRepr.CBuiltinType CRegionType) v
-  | _ ->
-     assert_failure "one function with two parameters"
-
 let test_borrows_of_values_that_are_not_addresses _ =
   let (env, id) = a_function Env.empty_env in
   List.iter
@@ -535,7 +614,8 @@ let test_borrows_of_values_that_are_not_addresses _ =
                        orig_type;
                        ref_type = MonoReadRef (orig_type, MonoRegionTy Region.static_region);
                        body = MSkip;
-                       mode = Read
+                       mode = Read;
+                       origin = AnonymousBorrow
                      }
       in
       match function_definitions (generate env [MFunction (id, make_ident "f", [], MonoUnit, borrow)]) with
@@ -546,7 +626,7 @@ let test_borrows_of_values_that_are_not_addresses _ =
       MonoSpanMut (MonoUnit, MonoRegionTy Region.static_region);
       MonoPointer MonoUnit;
       MonoFnPtr ([], MonoUnit);
-      region_variable
+      MonoRegionTy Region.static_region
     ]
 
 (* The wrapper of an imported function, with the signature of an exported
@@ -619,9 +699,21 @@ let test_a_struct_before_other_declarations _ =
   assert_equal ~printer:(String.concat " ") ["forward"; "struct"; "declaration"; "definition"]
     (struct_then (MFunction (function_id, make_ident "f", [], MonoUnit, MSkip)))
 
+(* TypeStripping: a method is compiled with the type arguments of its instance,
+   and its own type parameters are regions (#157), so the code generator never
+   strips a type variable of another universe. *)
+let test_a_type_variable_left_for_the_code_generator _ =
+  List.iter
+    (fun (universe: universe) ->
+      assert_equal (internal "strip_type': Variable not replaced: 'T'")
+        (error_of (fun () -> TypeStripping.strip_type (tyvar "T" universe))))
+    [FreeUniverse; LinearUniverse; TypeUniverse]
+
 let suite =
   "Unexecuted declarations" >::: [
       "lookups by an ID from a later environment" >:: test_lookups_by_an_id_from_a_later_environment;
+      "the monomorph of a function or a method is no type" >:: test_the_monomorph_of_a_function_or_a_method_is_no_type;
+      "a definition stored under the ID of another kind" >:: test_a_definition_stored_under_the_id_of_another_kind;
       "a reserved ID registered twice" >:: test_a_reserved_id_registered_twice;
       "a function body stored twice" >:: test_a_function_body_stored_twice;
       "a method body stored twice" >:: test_a_method_body_stored_twice;
@@ -629,7 +721,7 @@ let suite =
       "a symbol imported twice" >:: test_a_symbol_imported_twice;
       "signed ByteSize and Index" >:: test_signed_byte_size_and_index;
       "universes of arguments" >:: test_universes_of_arguments;
-      "the type of a pointer slot" >:: test_the_type_of_a_pointer_slot;
+      "only a region is the region of a reference" >:: test_only_a_region_is_the_region_of_a_reference;
             "a region instance argument" >:: test_a_region_instance_argument;
       "overlap of every pair of kinds" >:: test_overlap_of_every_pair_of_kinds;
       "types across the C boundary" >:: test_types_across_the_c_boundary;
@@ -639,12 +731,13 @@ let suite =
       "a function monomorph without a body" >:: test_a_function_monomorph_without_a_body;
       "a method monomorph without a body" >:: test_a_method_monomorph_without_a_body;
       "a monomorph with bindings for other parameters" >:: test_a_monomorph_with_bindings_for_other_parameters;
+      "a monomorph with another number of type arguments" >:: test_a_monomorph_with_another_number_of_type_arguments;
       "a method call leaves out an unbound parameter" >:: test_a_method_call_leaves_out_an_unbound_parameter;
-      "parameters of region types" >:: test_parameters_of_region_types;
+      "a method call on a type without an instance" >:: test_a_method_call_on_a_type_without_an_instance;
       "borrows of values that are not addresses" >:: test_borrows_of_values_that_are_not_addresses;
       "an imported function of an exported signature" >:: test_an_imported_function_of_an_exported_signature;
-      "the type of an unconverted literal" >:: test_the_type_of_an_unconverted_literal;
-      "a struct before other declarations" >:: test_a_struct_before_other_declarations
+      "a struct before other declarations" >:: test_a_struct_before_other_declarations;
+      "a type variable left for the code generator" >:: test_a_type_variable_left_for_the_code_generator
     ]
 
 let _ = run_test_tt_main suite

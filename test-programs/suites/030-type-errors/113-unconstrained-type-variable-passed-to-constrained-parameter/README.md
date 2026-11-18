@@ -1,0 +1,1 @@
+Test that a value of an unconstrained type parameter `U` cannot be passed where the type parameter `T: Free(Printable)` is expected: `U` does not have the constraint. Before, the call was accepted, and a call of `pass` with a type that has no `Printable` instance failed only in monomorphization, with "Typeclass resolution failed" and no position (issues #128, #158).

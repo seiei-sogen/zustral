@@ -49,7 +49,7 @@ DEFINITION = re.compile(r"^(?:let|and)(?: rec)? (?:\(?)([A-Za-z_][A-Za-z0-9_']*)
 # cli/CliEngine.mli), and `exit`.
 NEVER_RETURNS = {
     "parse_error", "cli_error", "type_error", "linearity_error", "declaration_error",
-    "entrypoint_error", "generic_error", "internal_err", "report_and_exit", "exit",
+    "entrypoint_error", "generic_error", "c_compiler_error", "internal_err", "report_and_exit", "exit",
 }
 NAME_AT_END = re.compile(r"[A-Za-z_][A-Za-z0-9_']*$")
 HERE = pathlib.Path(__file__).resolve().parent

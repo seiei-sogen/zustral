@@ -7,6 +7,17 @@
       "content": "Can't declare a foreign function in a safe module."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/054-foreign-in-safe-module/Test.zum",
+    "startp": { "line": 2, "column": 54 },
+    "end": { "line": 4, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    pragma Foreign_Import(External_Name => \"putchar\");" ],
+    [ 3, "    function putCharacter(character: Nat8): Int32 is" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    function main(): ExitCode is" ]
+  ]
 }

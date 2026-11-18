@@ -62,7 +62,7 @@ let rec strip_type (ty: ty): stripped_ty =
      let ty = strip_type ty in
      let r = strip_type (ty_of_ref_region r) in
      SSpanMut (ty, r)
-  | TyVar (TypeVariable (name, u, source, _)) ->
+  | TyVar (TypeVariable (name, u, source, _, _)) ->
      (match u with
       | RegionUniverse ->
          SRegionTyVar (name, source)
@@ -72,7 +72,7 @@ let rec strip_type (ty: ty): stripped_ty =
             left over by stripping time, that's an error. Anyways, the
             search-and-replace step should *also* have signalled an error if a
             type variable has no replacement. *)
-         generic_error NoSpan (TypeVariableNotReplaced name))
+         internal_err NoSpan ("strip_type': Variable not replaced: '" ^ (ident_string name) ^ "'"))
   | Address ty ->
      SAddress (strip_type ty)
   | Pointer ty ->

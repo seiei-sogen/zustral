@@ -1,1 +1,1 @@
-Covers a generic function whose return type is a region type parameter, called: the call inside its own body has no binding for the region (lib/Monomorphize.ml).
+Covers a generic function whose return type is a region type parameter, called from `main` and from inside its own body: accepted, as a value of a region type is (003). The call inside the body binds the function's `R` to the caller's `R`. Before, that call stopped with `No binding for this parameter: R` (issue #142).

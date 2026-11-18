@@ -1,0 +1,11 @@
+module body Test is
+    pragma Foreign_Export(External_Name => "my_exported");
+    function f(x: Int32): Int32 is
+        return x;
+    end;
+
+    function main(): ExitCode is
+        printLn(f(3));
+        return ExitSuccess();
+    end;
+end module body.

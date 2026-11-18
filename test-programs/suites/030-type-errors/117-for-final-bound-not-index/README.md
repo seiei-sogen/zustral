@@ -1,0 +1,1 @@
+Test that a `for` loop whose final bound is not an `Index` is rejected with an error about the bound, at the `for` statement (issue #124). The final bound is a variable of the type `Int32`: an integer literal takes the type `Index`, but a value of another integer type does not.

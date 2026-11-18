@@ -1,1 +1,1 @@
-Pins what the compiler does with a string literal that the file ends inside: it reports the lexer error, then dies with an OCaml exception while it gathers the source lines to show (issue #133).
+Shows that the compiler reports the lexer error for a string literal that the file ends inside (issue #133). It used to die afterwards with an OCaml exception, while it wrote the source lines into `error.html`, which it no longer writes (issue #33).

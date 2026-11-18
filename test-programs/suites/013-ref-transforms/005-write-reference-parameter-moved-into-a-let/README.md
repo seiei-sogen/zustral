@@ -1,0 +1,1 @@
+Covers a `var` that moves a write reference parameter of a generic function into a variable of the same type, then writes through the variable: accepted, and the caller sees the new value. The variable is a `var` because a write through a path borrows the variable mutably. Before, the compiler stopped with `Write references can only be casted to a read reference.` (issue #157).

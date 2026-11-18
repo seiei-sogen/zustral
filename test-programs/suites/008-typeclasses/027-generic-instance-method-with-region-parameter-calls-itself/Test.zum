@@ -1,0 +1,27 @@
+module body Test is
+    typeclass Shape(T: Free) is
+        generic [R: Region]
+        method area(x: &[T, R], remaining: Int32): Int32;
+    end;
+
+    record Wrap[U: Free]: Free is
+        v: U;
+    end;
+
+    generic [U: Free]
+    instance Shape(Wrap[U]) is
+        generic [R: Region]
+        method area(x: &[Wrap[U], R], remaining: Int32): Int32 is
+            if remaining = 0 then
+                return 7;
+            end if;
+            return area(x, remaining - 1) + 1;
+        end;
+    end;
+
+    function main(): ExitCode is
+        let w: Wrap[Int32] := Wrap(v => 1);
+        printLn(area(&w, 2));
+        return ExitSuccess();
+    end;
+end module body.

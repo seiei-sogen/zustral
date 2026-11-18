@@ -1,0 +1,29 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "The region of a reference or a span must be a region, such as "
+    },
+    { "type": "code", "content": "Static" },
+    { "type": "text", "content": " or a type parameter of the " },
+    { "type": "code", "content": "Region" },
+    { "type": "text", "content": " universe, but " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": " is not a region." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/114-type-in-region-position-of-reference/Test.zum",
+    "startp": { "line": 1, "column": 19 },
+    "end": { "line": 4, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function f(x: &[Int32, Int32]): Int64 is" ],
+    [ 3, "        return 1;" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    function main(): ExitCode is" ]
+  ]
+}

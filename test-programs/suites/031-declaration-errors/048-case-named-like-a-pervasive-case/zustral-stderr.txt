@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The module imports the name " },
+    { "type": "code", "content": "None" },
+    { "type": "text", "content": " from the module " },
+    { "type": "code", "content": "Zustral.Pervasive" },
+    { "type": "text", "content": ", so it cannot declare that name." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/048-case-named-like-a-pervasive-case/Test.zum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    union Mine: Free is" ],
+    [ 3, "        case None;" ],
+    [ 4, "        case Other;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    function main(): ExitCode is" ]
+  ]
+}

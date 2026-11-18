@@ -1,0 +1,1 @@
+Test that the value of a constant cannot name the constant itself (issue #142). Before, the program passed type checking, and the C compiler failed: the constant is a macro, and a macro that names itself is not expanded. The error is at the constant (issue #87).

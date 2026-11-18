@@ -1,0 +1,1 @@
+Covers a function imported with `Foreign_Import` whose return type is `Unit`: accepted, and called. C sees a function that returns `void` (here `srand`). Before, the compiler stopped with `Not allowed` (issue #54).

@@ -1,0 +1,14 @@
+module body Test is
+    function answer(): Int32 is
+        return 1;
+    end;
+
+    function answer(): Int32 is
+        return 2;
+    end;
+
+    function main(): ExitCode is
+        printLn(answer());
+        return ExitSuccess();
+    end;
+end module body.

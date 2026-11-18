@@ -3,7 +3,7 @@
   "kind": "Type Error",
   "text": [
     { "type": "text", "content": "The type " },
-    { "type": "type", "content": "Region<0>" },
+    { "type": "type", "content": "Static" },
     {
       "type": "text",
       "content": " is neither a function, method or function pointer, and cannot be called."

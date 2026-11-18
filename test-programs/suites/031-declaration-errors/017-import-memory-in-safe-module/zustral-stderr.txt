@@ -9,6 +9,14 @@
     { "type": "text", "content": "Consider using a safe wrapper or adding " },
     { "type": "code", "content": "pragma Unsafe_Module;" }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/017-import-memory-in-safe-module/Test.zum",
+    "startp": { "line": 1, "column": 0 },
+    "end": { "line": 1, "column": 32 }
+  },
+  "context": [
+    [ 1, "import Zustral.Memory (Pointer);" ],
+    [ 2, "" ],
+    [ 3, "module body Test is" ]
+  ]
 }

@@ -1,0 +1,1 @@
+compile Hello.zum --entrypoint=Zustral.Pervasive:spanLength --output=hello

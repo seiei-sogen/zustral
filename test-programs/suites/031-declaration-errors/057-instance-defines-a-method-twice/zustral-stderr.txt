@@ -1,0 +1,35 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The instance of the typeclass " },
+    { "type": "code", "content": "One" },
+    { "type": "text", "content": " for " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": " defines the method " },
+    { "type": "code", "content": "one" },
+    { "type": "text", "content": " more than once." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/057-instance-defines-a-method-twice/Test.zum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 14, "column": 8 }
+  },
+  "context": [
+    [ 2, "    typeclass One(T: Free) is" ],
+    [ 3, "        method one(x: T): Int64;" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    instance One(Int32) is" ],
+    [ 7, "        method one(x: Int32): Int64 is" ],
+    [ 8, "            return 1;" ],
+    [ 9, "        end;" ],
+    [ 10, "" ],
+    [ 11, "        method one(x: Int32): Int64 is" ],
+    [ 12, "            return 2;" ],
+    [ 13, "        end;" ],
+    [ 14, "    end;" ],
+    [ 15, "" ],
+    [ 16, "    function main(): ExitCode is" ]
+  ]
+}

@@ -8,10 +8,14 @@ A test is a directory with `args.txt` (the arguments, on one line) and
 the inputs into an empty directory, runs the compiler there with the arguments,
 and compares the exit status, the names of the files the compiler left behind,
 stdout and stderr with `expected.txt`. `--record` writes `expected.txt` instead.
+A test can also have `unset-environment-variables.txt`, the names of the
+environment variables the compiler runs without. `TMPDIR` is the directory, so
+a temporary file the compiler leaves is among the files it left behind.
 
 Some tests fix behaviour that an issue calls a bug. Their names end in the issue
 number. The fix for the issue rewrites their `expected.txt`.
 """
+import os
 import pathlib
 import re
 import shutil
@@ -21,7 +25,8 @@ import tempfile
 
 HERE = pathlib.Path(__file__).resolve().parent
 TESTS = HERE / "cli"
-NOT_INPUTS = {"args.txt", "expected.txt", "README.md"}
+UNSET_VARIABLES = "unset-environment-variables.txt"
+NOT_INPUTS = {"args.txt", "expected.txt", "README.md", UNSET_VARIABLES}
 
 
 def tests() -> list[pathlib.Path]:
@@ -30,6 +35,12 @@ def tests() -> list[pathlib.Path]:
 
 def arguments(test: pathlib.Path) -> list[str]:
     return (test / "args.txt").read_text().split()
+
+
+def environment(test: pathlib.Path) -> dict[str, str]:
+    unset = test / UNSET_VARIABLES
+    names = unset.read_text().split() if unset.exists() else []
+    return {name: value for name, value in os.environ.items() if name not in names}
 
 
 def scrub(text: str, cwd: str) -> str:
@@ -45,7 +56,7 @@ def run(compiler: str, test: pathlib.Path) -> str:
         inputs = [f for f in test.iterdir() if f.name not in NOT_INPUTS]
         for f in inputs:
             shutil.copy(f, cwd)
-        done = subprocess.run([compiler, *arguments(test)], cwd=cwd, capture_output=True, timeout=600)
+        done = subprocess.run([compiler, *arguments(test)], cwd=cwd, env={**environment(test), "TMPDIR": cwd}, capture_output=True, timeout=600)
         left = sorted(f.name for f in pathlib.Path(cwd).iterdir() if f.name not in {i.name for i in inputs})
         return (
             f"exit: {done.returncode}\n"

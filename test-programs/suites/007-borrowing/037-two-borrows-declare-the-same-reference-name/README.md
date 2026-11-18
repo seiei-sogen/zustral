@@ -1,0 +1,1 @@
+Test that two `borrow` statements in a row can name their references the same (issue #137). The reference is declared in the body of the borrow, so it ends there. Before, both references were declared in the same C scope, and the C compile failed with `redefinition of 'rr'`.

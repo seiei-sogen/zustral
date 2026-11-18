@@ -34,7 +34,8 @@ let ctx: TypeCheckExpr.expr_ctx =
   let (env, mod_id) =
     Env.add_module Env.empty_env {
         name = example;
-        imported_instances = InstanceIdSet.InstanceIdSet.empty
+        imported_instances = InstanceIdSet.InstanceIdSet.empty;
+        imported_symbols = []
       }
   in
   let t: TypeParameter.type_parameter =
@@ -43,6 +44,7 @@ let ctx: TypeCheckExpr.expr_ctx =
   let (env, _) =
     Env.register NoSpan env (EnvTypes.NewFunction {
         mod_id;
+        span = Zustral_core.Span.empty_span;
         vis = VisPublic;
         name = make_ident "make";
         docstring = Docstring "";
@@ -93,7 +95,7 @@ let test_variable _ =
 
 let test_function_pointer_call _ =
   let call: aexpr = FunctionCall (named "isZero", Positional [Variable (named "x")]) in
-  let expected: texpr = TFptrCall (make_ident "isZero", [TImplicitCast (TLocalVar (make_ident "x", int32), int32)], Boolean) in
+  let expected: texpr = TFptrCall (make_ident "isZero", [int32], [TImplicitCast (TLocalVar (make_ident "x", int32), int32)], Boolean) in
   assert_equal expected (TypeCheckExpr.infer ctx call);
   assert_equal expected (TypeCheckExpr.check ctx call Boolean)
 
@@ -104,7 +106,7 @@ let test_call_that_needs_the_expected_type _ =
     (Some (Type (UnconstrainedGenericFunction (make_ident "make"))))
     (error_of (fun () -> TypeCheckExpr.infer ctx call_make));
   (match TypeCheckExpr.check ctx call_make int32 with
-   | TFuncall (_, name, [], rt, _) ->
+   | TFuncall (_, name, [], rt, _, _) ->
       assert_bool "the callable is make" (equal_qident name (named "make"));
       assert_equal int32 rt
    | _ ->

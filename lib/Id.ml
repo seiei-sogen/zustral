@@ -44,21 +44,17 @@ type ins_meth_id = InsMethId of int
 [@@deriving (eq, show)]
 
 type mono_id = MonoId of int
-[@@deriving (eq, show)]
+[@@deriving show]
 
 (* As with the kinds of declaration ID: one sequence, types that differ only
    outside this module. *)
 type record_mono_id = mono_id
-[@@deriving eq]
 
 type union_mono_id = mono_id
-[@@deriving eq]
 
 type function_mono_id = mono_id
-[@@deriving eq]
 
 type method_mono_id = mono_id
-[@@deriving eq]
 
 (* ID utilities *)
 

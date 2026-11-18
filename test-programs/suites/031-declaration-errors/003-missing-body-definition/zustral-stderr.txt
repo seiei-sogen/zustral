@@ -8,6 +8,15 @@
       "content": " has no corresponding body implementation."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/003-missing-body-definition/Test.zui",
+    "startp": { "line": 1, "column": 14 },
+    "end": { "line": 2, "column": 26 }
+  },
+  "context": [
+    [ 1, "module Test is" ],
+    [ 2, "    function Foo(): Int32;" ],
+    [ 3, "" ],
+    [ 4, "    function main(): ExitCode;" ]
+  ]
 }

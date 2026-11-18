@@ -1,0 +1,1 @@
+Pins that a float literal has at most one leading sign: `+-1.5` does not parse. The compiler used to accept it as -1.5 (issue #47). A `+` is a sign only right before a number literal, so the parser stops at the `-` after it (issue #48).

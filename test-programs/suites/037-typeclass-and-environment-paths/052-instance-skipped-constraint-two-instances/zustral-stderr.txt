@@ -1,22 +1,27 @@
 {
   "module": "Test",
-  "kind": "Type Error",
+  "kind": "Generic Error",
   "text": [
-    { "type": "text", "content": "The typeclass " },
-    { "type": "code", "content": "Outer" },
-    { "type": "text", "content": " has no instance which matches for " },
-    { "type": "type", "content": "Box[Int32]" }
+    {
+      "type": "text",
+      "content": "Orphan rule broken: typeclass and type are both foreign."
+    }
   ],
   "span": {
     "filename": "test-programs/suites/037-typeclass-and-environment-paths/052-instance-skipped-constraint-two-instances/Test.zum",
-    "startp": { "line": 27, "column": 8 },
-    "end": { "line": 27, "column": 26 }
+    "startp": { "line": 3, "column": 19 },
+    "end": { "line": 8, "column": 8 }
   },
   "context": [
-    [ 25, "    function main(): ExitCode is" ],
-    [ 26, "        let b: Box[Int32] := Box(value => 10);" ],
-    [ 27, "        printLn(outer(b));" ],
-    [ 28, "        return ExitSuccess();" ],
-    [ 29, "    end;" ]
+    [ 1, "import Test_TC (Describe, describe);" ],
+    [ 2, "" ],
+    [ 3, "module body Test is" ],
+    [ 4, "    instance Describe(Int32) is" ],
+    [ 5, "        method describe(value: Int32): Int32 is" ],
+    [ 6, "            return 2;" ],
+    [ 7, "        end;" ],
+    [ 8, "    end;" ],
+    [ 9, "" ],
+    [ 10, "    record Box[T: Free]: Free is" ]
   ]
 }

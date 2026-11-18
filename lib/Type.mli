@@ -30,7 +30,23 @@ type signedness =
   | Signed
 [@@deriving (eq, show)]
 
-type type_var = TypeVariable of identifier * universe * qident * sident list
+(** What the matching of two types does with a type variable ({!TypeMatch}).
+    Either way the variable is a type parameter of a declaration. *)
+type type_var_matching =
+  | StandsForItself
+  (** In the types of a declaration as it is declared, its signature and its
+      body: the type parameter is the same type as itself and as no other. *)
+  | BoundAtUse
+  (** In the types of the signature of a declaration where it is used: a
+      function or a method that is called, a record or a union that is
+      constructed or taken apart, an instance that is looked up. Matching
+      binds the type parameter to the type the use has in its place. *)
+[@@deriving eq]
+
+(** A type parameter in a type: its name, its universe, the name of the
+    declaration it is a parameter of, its constraints, and what matching does
+    with it. *)
+type type_var = TypeVariable of identifier * universe * qident * sident list * type_var_matching
 [@@deriving eq]
 
 type ty =
@@ -56,9 +72,6 @@ and ref_region =
   | RefRegion of region
   | RefRegionVar of type_var
   (** A type variable of the Region universe. *)
-  | NotARegion of ty
-  (** Whatever else the program wrote in the region position: the type parser
-      does not check it, so [&\[Int32, Int32\]] is accepted (#90). *)
 
 type typed_slot = TypedSlot of identifier * ty
 
@@ -69,9 +82,9 @@ type value_parameter = ValueParameter of identifier * ty
 (** The region field as a type. *)
 val ty_of_ref_region : ref_region -> ty
 
-(** A type in the region position: a region, a region variable, or anything
-    else as it was written (#90). *)
-val ref_region_of_ty : ty -> ref_region
+(** A region or a type variable of the Region universe as the region of a
+    reference or a span; [None] for any other type. *)
+val ref_region_of_ty : ty -> ref_region option
 
 val universe_string : universe -> string
 

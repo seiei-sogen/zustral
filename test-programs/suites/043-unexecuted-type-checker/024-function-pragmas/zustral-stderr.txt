@@ -7,6 +7,19 @@
       "content": "Only import and export pragmas are allowed inside functions."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/024-function-pragmas/Test.zum",
+    "startp": { "line": 13, "column": 25 },
+    "end": { "line": 16, "column": 8 }
+  },
+  "context": [
+    [ 11, "    end;" ],
+    [ 12, "" ],
+    [ 13, "    pragma Unsafe_Module;" ],
+    [ 14, "    function marked(x: Int32): Int32 is" ],
+    [ 15, "        return x;" ],
+    [ 16, "    end;" ],
+    [ 17, "" ],
+    [ 18, "    pragma Foreign_Export(External_Name => \"first_name\");" ]
+  ]
 }

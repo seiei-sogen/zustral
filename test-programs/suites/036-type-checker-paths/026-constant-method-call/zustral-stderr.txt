@@ -7,6 +7,15 @@
       "content": "The expression is not a valid constant expression."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/036-type-checker-paths/026-constant-method-call/Test.zum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 2, "column": 39 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    constant Sum: Float64 := 1.5 + 2.5;" ],
+    [ 3, "" ],
+    [ 4, "    function main(): ExitCode is" ]
+  ]
 }

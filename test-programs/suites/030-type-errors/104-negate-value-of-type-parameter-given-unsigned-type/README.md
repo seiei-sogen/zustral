@@ -1,0 +1,1 @@
+Pins that a generic function which negates a value of its type parameter cannot be instantiated with an unsigned integer type, although the type implements `TrappingArithmetic` (issue #162). The check happens when the instance is made, after type checking, and the error has no position.

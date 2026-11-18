@@ -1,5 +1,17 @@
-exit: 2
+exit: 255
 files: 
 --- stdout
 --- stderr
-Fatal error: exception Sys_error("DoesNotExist.zum: No such file or directory")
+Error:
+  Title: Command Line Arguments Error
+  Module:
+    [unknown]
+  Location:
+    [no span available]
+  Description:
+    Failed to read file `DoesNotExist.zum`:
+    
+    No such file or directory
+  Code:
+    [no span available]
+

@@ -1,0 +1,15 @@
+exit: 255
+files: 
+--- stdout
+--- stderr
+Error:
+  Title: C Compiler Error
+  Module:
+    [unknown]
+  Location:
+    [no span available]
+  Description:
+    The environment variable `PATH` is not set, so the C compiler `cc` cannot be found.
+  Code:
+    [no span available]
+

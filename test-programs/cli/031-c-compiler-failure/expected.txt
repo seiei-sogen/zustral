@@ -1,0 +1,22 @@
+exit: 255
+files: 
+--- stdout
+--- stderr
+Error:
+  Title: C Compiler Error
+  Module:
+    [unknown]
+  Location:
+    [no span available]
+  Description:
+    Failed to run C compiler.
+    
+    Command: `cc $TMP.c -fwrapv -lm -o broken`
+    
+    Exit code: 1
+    
+    Standard output:
+    
+    
+    Standard error:
+$CC_STDERR

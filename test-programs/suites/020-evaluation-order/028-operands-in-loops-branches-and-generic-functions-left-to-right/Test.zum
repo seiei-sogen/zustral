@@ -1,0 +1,90 @@
+module body Test is
+    record Pair: Free is
+        left: Int64;
+        right: Int64;
+    end;
+
+    union Choice: Free is
+        case Chosen is
+            value: Int64;
+        case Nothing;
+    end;
+
+    function p(x: Int64): Int64 is
+        printLn(x);
+        return x;
+    end;
+
+    function yes(x: Int64): Bool is
+        printLn(x);
+        return true;
+    end;
+
+    function both(a: Bool, b: Bool): Bool is
+        return a and b;
+    end;
+
+    function minus(a: Int64, b: Int64): Int64 is
+        return a - b;
+    end;
+
+    function pair(left: Int64, right: Int64): Pair is
+        return Pair(left => left, right => right);
+    end;
+
+    function chosen(a: Int64, b: Int64): Choice is
+        return Chosen(value => a + b);
+    end;
+
+    generic [T: Free(Printable)]
+    function shown(value: T): T is
+        printLn(value);
+        return value;
+    end;
+
+    generic [T: Free]
+    function firstOf(a: T, b: T): T is
+        return a;
+    end;
+
+    -- The value of the `if` expression has the type of a type parameter.
+    generic [T: Free(Printable)]
+    function firstShownOrSecond(showBoth: Bool, a: T, b: T): T is
+        return if showBoth then firstOf(shown(a), shown(b)) else b;
+    end;
+
+    function returnedFromBranch(taken: Bool): Int64 is
+        let zero: Int64 := 0;
+        if taken then
+            return if taken then minus(p(40), p(41)) else zero;
+        end if;
+        return zero;
+    end;
+
+    function main(): ExitCode is
+        let zero: Int64 := 0;
+        -- The condition of the loop evaluates its right operand on one path.
+        var n: Int64 := 0;
+        while (n < 2) and both(yes(n), yes(n + 10)) do
+            n := n + 1;
+        end while;
+        let twenty: Int64 := 20;
+        let twentyOne: Int64 := 21;
+        printLn(firstShownOrSecond(true, twenty, twentyOne));
+        printLn(firstShownOrSecond(false, twenty, twentyOne));
+        let { left: Int64, right: Int64 } := if n = 2 then pair(p(30), p(31)) else pair(p(32), p(33));
+        printLn(left + right);
+        printLn(returnedFromBranch(true));
+        printLn(minus((if n = 2 then minus(p(50), p(51)) else zero), p(52)));
+        case chosen(p(60), p(61)) of
+            when Chosen(value: Int64) do
+                printLn(minus(p(value), p(62)));
+            when Nothing do
+                skip;
+        end case;
+        for i from 0 to 1 do
+            printLn(minus(p(70), p(71)));
+        end for;
+        return ExitSuccess();
+    end;
+end module body.

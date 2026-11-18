@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "T" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "Rec" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/098-return-record-where-constrained-type-parameter-is-expected/Test.zum",
+    "startp": { "line": 8, "column": 8 },
+    "end": { "line": 8, "column": 17 }
+  },
+  "context": [
+    [ 6, "    generic [T: Free(Printable)]" ],
+    [ 7, "    function pick(x: T, r: Rec): T is" ],
+    [ 8, "        return r;" ],
+    [ 9, "    end;" ],
+    [ 10, "" ]
+  ]
+}

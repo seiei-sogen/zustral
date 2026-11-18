@@ -10,6 +10,7 @@ open Id
 open Identifier
 open IdentifierSet
 open Type
+open TypeParameter
 open TypeParameters
 open TypeParser
 open TypeSystem
@@ -37,7 +38,7 @@ let check_instance_argument_has_right_shape (place: place) (typarams: typarams) 
     | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ ->
        declaration_error place (InstanceArgumentNotATyvar { ty; universe = type_universe ty })
   and all_distinct (tyvars: type_var list): unit =
-    let names: identifier list = List.map (fun (TypeVariable (name, _, _, _)) -> name) tyvars in
+    let names: identifier list = List.map (fun (TypeVariable (name, _, _, _, _)) -> name) tyvars in
     let set: IdentifierSet.t = IdentifierSet.of_list names in
     if List.length tyvars = IdentifierSet.cardinal set then
       ()
@@ -171,15 +172,14 @@ let overlapping_instances (place: place) (a: ty) (b: ty): bool =
   | Pointer _ ->
      (match b with
       | Pointer _ -> true
-      (* Issue #122: a Pointer instance overlaps an instance for any other
-         type. These should be false; they stay true until the issue is fixed
-         (pinned by 037-typeclass-and-environment-paths/013). *)
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
-      | FnPtr _ -> true)
-  | FnPtr _ ->
+      | FnPtr _ -> false)
+  | FnPtr (args, _) ->
+     (* The argument of an instance has distinct type variables for arguments,
+        so two function pointer types overlap when they have as many. *)
      (match b with
-      | FnPtr _ -> true
+      | FnPtr (args', _) -> List.length args = List.length args'
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
       | Pointer _ -> false)
@@ -204,16 +204,6 @@ let rec check_instance_orphan_rules (place: place) (decl_place: place) (env: env
 
 and is_type_local (place: place) (decl_place: place) (env: env) (mod_id: mod_id) (ty: ty): bool =
   match ty with
-  | Unit ->
-     true
-  | Boolean ->
-     true
-  | Integer _ ->
-     true
-  | SingleFloat ->
-     true
-  | DoubleFloat ->
-     true
   | NamedType (name, _, _, _) ->
      (match get_decl_by_name place env (qident_to_sident name) with
       | Some decl ->
@@ -224,26 +214,13 @@ and is_type_local (place: place) (decl_place: place) (env: env) (mod_id: mod_id)
             after the instance's. The interface's declarations come first, in
             its order, so the error is where the instance is declared. *)
          declaration_error decl_place (InstanceBeforeType (original_name name)))
-  | RegionTy _ ->
-     (* Not applicable. *)
+  | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | RegionTy _ | ReadRef _
+  | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _ | FnPtr _ ->
+     (* A built-in type belongs to no module, so its instances are in the
+        modules of their typeclasses, and two modules cannot both have one
+        (issue #72). A region or a type variable is never the argument of an
+        instance. *)
      false
-  | ReadRef _ ->
-     true
-  | WriteRef _ ->
-     true
-  | Span _ ->
-     true
-  | SpanMut _ ->
-     true
-  | TyVar _ ->
-     (* Not applicable. *)
-     false
-  | Address _ ->
-     true
-  | Pointer _ ->
-     true
-  | FnPtr _ ->
-     true
 
 let check_disjoint_typarams (place: place) (name: identifier) (typarams: typarams): unit =
   match get_typaram typarams name with
@@ -251,4 +228,14 @@ let check_disjoint_typarams (place: place) (name: identifier) (typarams: typaram
      declaration_error place (InstanceShadowsTypeclassParam name)
   | None ->
      (* No collision *)
+     ()
+
+let check_method_type_parameters_are_regions (place: place) (method_name: identifier) (method_typarams: typarams): unit =
+  let is_not_region (typaram: type_parameter): bool =
+    not (equal_universe (typaram_universe typaram) RegionUniverse)
+  in
+  match List.find_opt is_not_region (typarams_as_list method_typarams) with
+  | Some typaram ->
+     declaration_error place (MethodTypeParameterNotRegion { method_name; typaram })
+  | None ->
      ()

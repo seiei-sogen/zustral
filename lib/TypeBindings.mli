@@ -33,7 +33,9 @@ val get_binding : type_bindings -> type_parameter -> ty option
 
 (* Given a set of bindings, and a type expression, replace every type variable
    in the expression with the value from the bindings. If the variable is not
-   found in the bindings, do nothing. *)
+   found in the bindings, do nothing. A binding is of a type parameter, so it
+   replaces the parameter's variable whether that stands for itself or is
+   bound at use. The types put in are not searched for variables again. *)
 val replace_variables : type_bindings -> ty -> ty
 
 (** The universe of a named type of that universe whose arguments are these,
@@ -43,3 +45,6 @@ val replaced_universe : universe -> ty list -> universe
 
 val replace_region_variables : type_bindings -> ref_region -> ref_region
 
+(** A type of the Region universe as the region of a reference or a span. An
+    internal error for any other type. *)
+val ref_region_of_region_type : ty -> ref_region

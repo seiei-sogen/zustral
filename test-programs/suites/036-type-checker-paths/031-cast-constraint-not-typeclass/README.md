@@ -1,1 +1,1 @@
-Pins what a cast does when the constraint of the target type variable names a record: the internal error of 037-typeclass-and-environment-paths/014 is discarded, and the error is that the cast is invalid (lib/TypeCheckExpr.ml, check_annotated).
+A generic function whose type parameter has a constraint that names a record, and a cast to that type parameter in its body. The constraint is reported where the function is declared (issue #128). Before, the cast discarded the error of the constraint, and the error was that the cast is invalid (lib/TypeCheckExpr.ml, check_annotated).

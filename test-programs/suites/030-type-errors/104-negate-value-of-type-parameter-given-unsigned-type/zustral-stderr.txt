@@ -1,0 +1,17 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "A generic function negates a value of a type parameter, and the type given for that parameter is "
+    },
+    { "type": "type", "content": "Nat8" },
+    {
+      "type": "text",
+      "content": ". Only a value of a signed integer type or of a float type can be negated."
+    }
+  ],
+  "span": null,
+  "context": null
+}

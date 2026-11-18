@@ -30,7 +30,17 @@ type signedness =
   | Signed
 [@@deriving (eq, show)]
 
-type type_var = TypeVariable of identifier * universe * qident * sident list
+(* What the matching of two types does with a type variable (TypeMatch). *)
+type type_var_matching =
+  | StandsForItself
+  (* In the types of a declaration as it is declared, its signature and its
+     body: the type parameter is the same type as itself and as no other. *)
+  | BoundAtUse
+  (* In the types of the signature of a declaration where it is used: matching
+     binds the type parameter to the type the use has in its place. *)
+[@@deriving eq]
+
+type type_var = TypeVariable of identifier * universe * qident * sident list * type_var_matching
 [@@deriving eq]
 
 type ty =
@@ -56,9 +66,6 @@ and ref_region =
   | RefRegion of region
   | RefRegionVar of type_var
   (* A type variable of the Region universe. *)
-  | NotARegion of ty
-  (* Whatever else the program wrote in the region position: the type parser
-     does not check it, so `&[Int32, Int32]` is accepted (#90). *)
 
 type typed_slot = TypedSlot of identifier * ty
 
@@ -67,26 +74,25 @@ type typed_case = TypedCase of identifier * typed_slot list
 type value_parameter = ValueParameter of identifier * ty
 
 (* Matching, equality, substitution and printing see the region field as a
-   type, so that a NotARegion behaves as the type it holds (#90). *)
+   type. *)
 let ty_of_ref_region (r: ref_region): ty =
   match r with
   | RefRegion r -> RegionTy r
   | RefRegionVar tv -> TyVar tv
-  | NotARegion ty -> ty
 
-let ref_region_of_ty (ty: ty): ref_region =
+let ref_region_of_ty (ty: ty): ref_region option =
   match ty with
   | RegionTy r ->
-     RefRegion r
-  | TyVar (TypeVariable (_, universe, _, _) as tv) ->
+     Some (RefRegion r)
+  | TyVar (TypeVariable (_, universe, _, _, _) as tv) ->
      (match universe with
       | RegionUniverse ->
-         RefRegionVar tv
+         Some (RefRegionVar tv)
       | FreeUniverse | LinearUniverse | TypeUniverse ->
-         NotARegion ty)
+         None)
   | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | ReadRef _
   | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ ->
-     NotARegion ty
+     None
 
 let universe_string = function
   | FreeUniverse -> "Free"
@@ -122,7 +128,7 @@ let rec type_string = function
   | NamedType (n, _, args, _) ->
      (ident_string (local_name n)) ^ args_string args
   | RegionTy r ->
-     "Region<" ^ (string_of_int (region_id r)) ^ ">"
+     ident_string (region_name r)
   | ReadRef (t, r) ->
      BuiltInNames.read_ref_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string (ty_of_ref_region r)) ^ "]"
   | WriteRef (t, r) ->
@@ -131,7 +137,7 @@ let rec type_string = function
      BuiltInNames.span_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string (ty_of_ref_region r)) ^ "]"
   | SpanMut (t, r) ->
      BuiltInNames.span_mut_name ^ "[" ^ (type_string t) ^ ", " ^ (type_string (ty_of_ref_region r)) ^ "]"
-  | TyVar (TypeVariable (n, _, _, _)) ->
+  | TyVar (TypeVariable (n, _, _, _, _)) ->
      ident_string n
   | Address ty ->
      BuiltInNames.address_name ^ "[" ^ (type_string ty) ^ "]"
@@ -198,9 +204,9 @@ let rec equal_ty a b =
   | NamedType (n, _, args, u) ->
      (match b with
       | NamedType (n', _, args', u') ->
-         (* By the name, as before the type held an ID: a name stands for one
-            declaration, but the same declaration under two names (#50) stays
-            two types. *)
+         (* By the module and the original name, which stand for one
+            declaration. The name the program wrote is not compared: an
+            import can rename a type (#50). *)
          (equal_qident n n')
          && (List.for_all (fun (a', b') -> equal_ty a' b') (List.map2 (fun a' b' -> (a',b')) args args'))
          && (equal_universe u u')

@@ -1,0 +1,1 @@
+Test that a function with the `Foreign_Import` pragma cannot have a body (issue #93). Before, the body was dropped without being checked, so its type error and its call of an unknown function went unreported, and the program called the C function `abs` and printed 3.

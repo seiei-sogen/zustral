@@ -1,0 +1,1 @@
+Pins that the four arithmetic operators work on `Float32`, and that a negated float literal takes the type `Float32` from the other operand (issue #27). `Pervasive` had a `TrappingArithmetic` instance for `Float64` only.

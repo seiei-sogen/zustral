@@ -1,11 +1,13 @@
 module body Test is
-    function foo(s: Span[Nat8, Static]): Unit is
-        return nil;
+    function foo(s: Span[Nat8, Static]): Index is
+        printLn(s);
+        return spanLength(s);
     end;
 
     function main(): ExitCode is
-        let f: Fn[Span[Nat8, Static], Unit] := foo;
-        f("a");
+        let f: Fn[Span[Nat8, Static], Index] := foo;
+        let n: Index := f("abc");
+        printLn(n);
         return ExitSuccess();
     end;
 end module body.

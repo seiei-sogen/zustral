@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "Cannot borrow (immutably) the variable " },
+    { "type": "code", "content": "b" },
+    { "type": "text", "content": " because it is already " },
+    { "type": "text", "content": "consumed" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/033-type-checker-errors/031-linearity-error-in-an-if-condition-points-at-the-if/Test.zum",
+    "startp": { "line": 18, "column": 8 },
+    "end": { "line": 20, "column": 15 }
+  },
+  "context": [
+    [ 16, "    function f(b: Box): Unit is" ],
+    [ 17, "        consume(b);" ],
+    [ 18, "        if peek(&b) = 1 then" ],
+    [ 19, "            skip;" ],
+    [ 20, "        end if;" ],
+    [ 21, "        return nil;" ],
+    [ 22, "    end;" ]
+  ]
+}

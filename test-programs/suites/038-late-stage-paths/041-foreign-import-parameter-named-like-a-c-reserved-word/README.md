@@ -1,0 +1,1 @@
+Test that a parameter of a foreign function can be named like a C reserved word (issue #92). The parameter `double` gets the reserved-word escape in the `extern` declaration too. Before, the declaration had `double` as written, and the C compile failed.

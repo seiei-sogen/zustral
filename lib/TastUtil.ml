@@ -9,7 +9,6 @@
 open Type
 open Stages.Tast
 open Identifier
-open StringSet
 open Error
 
 let arglist_size = function
@@ -21,20 +20,27 @@ let rec arglist_to_positional (place: place) (args, names): texpr list =
   and actual = arglist_size args
   in
   if expected = actual then
-    let _ = assert (names_match args names) in
     match args with
     | (TPositionalArglist l) -> l
-    | (TNamedArglist l) -> reorder_arglist l names
+    | (TNamedArglist l) ->
+       check_argument_names place (List.map fst l) names;
+       reorder_arglist l names
   else
     generic_error place (WrongNumberOfArguments { expected; actual })
 
-and names_match arglist names =
-  match arglist with
-  | (TPositionalArglist _) -> true
-  | (TNamedArglist l) -> names_match_inner (List.map (fun (n, _) -> ident_string n) l) (List.map ident_string names)
-
-and names_match_inner a b =
-  StringSet.equal (StringSet.of_list a) (StringSet.of_list b)
+(* As many names as parameters, each the name of a parameter and none given
+   twice: the arguments are the parameters in some order. *)
+and check_argument_names (place: place) (given: identifier list) (parameters: identifier list): unit =
+  let check (earlier: identifier list) (name: identifier): identifier list =
+    if not (List.mem name parameters) then
+      type_error place (CallArgumentNameUnknown { name; parameters })
+    else if List.mem name earlier then
+      type_error place (CallArgumentNameRepeated name)
+    else
+      name :: earlier
+  in
+  let _ = List.fold_left check [] given in
+  ()
 
 and reorder_arglist l names =
   List.map (fun n -> find_arg_with_name l n) names
@@ -42,6 +48,14 @@ and reorder_arglist l names =
 and find_arg_with_name l name =
   let (_, value) = List.find (fun (n, _) -> name = n) l in
   value
+
+let written_order_of_arguments ((args, parameter_names): typed_arglist * identifier list): written_argument_order =
+  match args with
+  | TPositionalArglist arguments ->
+     List.mapi (fun index _ -> index) arguments
+  | TNamedArglist arguments ->
+     let index_of_parameter: (identifier * int) list = List.mapi (fun index name -> (name, index)) parameter_names in
+     List.map (fun (name, _) -> List.assoc name index_of_parameter) arguments
 
 let reference_type (elem_ty: ty) (region: ref_region): Common.borrowing_mode -> ty = function
   | ReadBorrow -> ReadRef (elem_ty, region)
@@ -68,13 +82,13 @@ let rec get_type (place: place) = function
      ty
   | TTemporary (_, ty) ->
      ty
-  | TFuncall (_, _, _, ty, _) ->
+  | TFuncall (_, _, _, ty, _, _) ->
      ty
-  | TMethodCall (_, _, _, _, ty, _) ->
+  | TMethodCall (_, _, _, _, ty, _, _) ->
      ty
   | TVarMethodCall { rt; _ } ->
      rt
-  | TFptrCall (_, _, rt) ->
+  | TFptrCall (_, _, _, rt) ->
      rt
   | TCast (_, ty) | TImplicitCast (_, ty) ->
      ty
@@ -86,6 +100,8 @@ let rec get_type (place: place) = function
      Boolean
   | TNegation _ ->
      Boolean
+  | TArithmeticNegation operand ->
+     get_type place operand
   | TIfExpression (_, t, _) ->
      get_type place t
   | TRecordConstructor (ty, _) ->
@@ -143,6 +159,10 @@ let rec is_constant_expression (expr: texpr): bool =
      (is_constant_expression lhs) && (is_constant_expression rhs)
   | TNegation e ->
      is_constant_expression e
+  | TArithmeticNegation _ ->
+     (* Not constant, as the binary operators, which are method calls. The
+        negation of a literal is a literal (TIntConstant, TFloatConstant). *)
+     false
   | TIfExpression (c, t, f) ->
      (is_constant_expression c) && (is_constant_expression t) && (is_constant_expression f)
   | TRecordConstructor (_, values) ->

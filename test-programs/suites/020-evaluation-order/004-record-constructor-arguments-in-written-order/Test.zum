@@ -1,0 +1,20 @@
+module body Test is
+    record Triple: Free is
+        first: Int64;
+        second: Int64;
+        third: Int64;
+    end;
+
+    function p(x: Int64): Int64 is
+        printLn(x);
+        return x;
+    end;
+
+    function main(): ExitCode is
+        let t: Triple := Triple(second => p(1), third => p(2), first => p(3));
+        printLn(t.first);
+        printLn(t.second);
+        printLn(t.third);
+        return ExitSuccess();
+    end;
+end module body.

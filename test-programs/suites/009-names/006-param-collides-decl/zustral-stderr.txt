@@ -9,6 +9,19 @@
       "content": " collides with the name of a declaration."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/009-names/006-param-collides-decl/Test.zum",
+    "startp": { "line": 2, "column": 31 },
+    "end": { "line": 6, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    constant foo: Bool := true;" ],
+    [ 3, "" ],
+    [ 4, "    function test(foo: Int32): Int32 is" ],
+    [ 5, "        return foo;" ],
+    [ 6, "    end;" ],
+    [ 7, "" ],
+    [ 8, "    function main(): ExitCode is" ]
+  ]
 }

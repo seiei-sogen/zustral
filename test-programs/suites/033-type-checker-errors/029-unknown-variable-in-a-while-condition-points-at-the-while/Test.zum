@@ -1,0 +1,10 @@
+module body Test is
+    function main(): ExitCode is
+        var a: Int32 := 1;
+        printLn(a);
+        while nope do
+            a := 2;
+        end while;
+        return ExitSuccess();
+    end;
+end module body.

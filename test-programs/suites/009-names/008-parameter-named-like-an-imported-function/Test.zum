@@ -1,0 +1,18 @@
+module body Test is
+    function other(message: Span[Nat8, Static]): Unit is
+        printLn("other called");
+        return nil;
+    end;
+
+    function pick(abort: Fn[Span[Nat8, Static], Unit]): Fn[Span[Nat8, Static], Unit] is
+        return abort;
+    end;
+
+    function main(): ExitCode is
+        let f: Fn[Span[Nat8, Static], Unit] := pick(other);
+        let m: Span[Nat8, Static] := "x";
+        f(m);
+        printLn("after");
+        return ExitSuccess();
+    end;
+end module body.

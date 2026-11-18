@@ -1,0 +1,1 @@
+Test that a constraint of a type parameter of a record that names nothing is rejected where the record is declared (issues #90 and #128). Before, nothing looked the name up, and this program compiled.

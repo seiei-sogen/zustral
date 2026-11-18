@@ -1,0 +1,10 @@
+module body Test is
+    typeclass Show(T: Free) is
+        generic [R: Region(Missing)]
+        method show(x: T, r: &[Int32, R]): Int32;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

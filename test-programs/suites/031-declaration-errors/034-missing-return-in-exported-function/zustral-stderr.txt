@@ -10,16 +10,17 @@
   ],
   "span": {
     "filename": "test-programs/suites/031-declaration-errors/034-missing-return-in-exported-function/Test.zum",
-    "startp": { "line": 2, "column": 55 },
-    "end": { "line": 5, "column": 8 }
+    "startp": { "line": 4, "column": 55 },
+    "end": { "line": 7, "column": 8 }
   },
   "context": [
-    [ 1, "module body Test is" ],
-    [ 2, "    pragma Foreign_Export(External_Name => \"exported\");" ],
-    [ 3, "    function exported(x: Int32): Int32 is" ],
-    [ 4, "        let y: Int32 := x;" ],
-    [ 5, "    end;" ],
-    [ 6, "" ],
-    [ 7, "    function main(): ExitCode is" ]
+    [ 2, "" ],
+    [ 3, "module body Test is" ],
+    [ 4, "    pragma Foreign_Export(External_Name => \"exported\");" ],
+    [ 5, "    function exported(x: Int32): Int32 is" ],
+    [ 6, "        let y: Int32 := x;" ],
+    [ 7, "    end;" ],
+    [ 8, "" ],
+    [ 9, "    function main(): ExitCode is" ]
   ]
 }

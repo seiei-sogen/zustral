@@ -1,0 +1,17 @@
+exit: 255
+files: 
+--- stdout
+--- stderr
+Error:
+  Title: Command Line Arguments Error
+  Module:
+    [unknown]
+  Location:
+    [no span available]
+  Description:
+    Failed to write to file `.`: 
+    
+    Is a directory
+  Code:
+    [no span available]
+

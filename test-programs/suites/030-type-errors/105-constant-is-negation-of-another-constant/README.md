@@ -1,0 +1,1 @@
+Pins that the value of a constant cannot be the negation of another constant, as it cannot be a sum: arithmetic on values is not a constant expression. A negated literal is a literal, and can be the value of a constant (`d`).

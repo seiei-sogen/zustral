@@ -29,6 +29,8 @@ type error =
   (** An error with the definition of the program entrypoint. *)
   | Generic of GenericErrors.t
   (** A generic error. This should be gradually phased out. *)
+  | CCompiler of CCompilerErrors.t
+  (** An error in running the C compiler on the generated code. *)
   | Internal of string
   (** A state the compiler believes cannot happen. The string says which. *)
 
@@ -102,8 +104,15 @@ val entrypoint_error : place -> EntrypointErrors.t -> 'a
 (** Raise a generic error. *)
 val generic_error : place -> GenericErrors.t -> 'a
 
+(** Raise an error in running the C compiler. *)
+val c_compiler_error : place -> CCompilerErrors.t -> 'a
+
 (** Raise an internal error. *)
 val internal_err : place -> string -> 'a
+
+(** The error to report for an exception that ends the compiler: the error
+    it carries, or an internal error that names any other exception. *)
+val error_of_exception : exn -> zustral_error
 
 (** The value of a successful result. Raises the error of a failed one, at
     the given place. A caller that cannot go on after the failure uses this
@@ -113,7 +122,7 @@ val ok_or_raise : place -> ('a, error) result -> 'a
 (** The place of a part of the program whose span is [span], inside a part
     whose place is [outer]. A statement the compiler made up has the empty
     span ({!Span.empty_span}): an error in it is reported at the place around
-    it, when that place has a span. *)
+    it. *)
 val place_inside : place -> span -> place
 
 (** Add a source context to an error if it doesn't have one. *)

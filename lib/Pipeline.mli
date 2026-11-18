@@ -9,11 +9,11 @@
 (** The type of every stage of a compilation, and of the whole.
 
     Each stage module gives its entry point one of these types, so the type of
-    a stage is written here. The two checks are the exception: see
-    {!check_returns}. {!Compiler} runs the stages in
-    the order they are listed, once per module ({!combine_body} takes the place
-    of {!combine} for a module that has only a body), and {!finish} once after
-    all modules.
+    a stage is written here. The two checks and the stage that fixes the order
+    of evaluation are the exception: see {!check_returns}. {!Compiler} runs
+    the stages in the order they are listed, once per module ({!combine_body}
+    takes the place of {!combine} for a module that has only a body), and
+    {!finish} once after all modules.
 
     A stage that returns [Outcome.t] can fail. A stage that returns an [env]
     changes the environment. A stage that takes a [Supply.t] makes
@@ -81,9 +81,15 @@ type check_types = env -> Supply.t -> Linked.linked_module -> (Tast.typed_module
     {!LinearityCheck.checked_module}, and {!Compiler} gives it this type. *)
 type check_linearity = Tast.typed_module -> LinearityCheck.checked_module Outcome.t
 
-type extract_bodies = env -> LinearityCheck.checked_module -> env Outcome.t
+(** The stage that makes every body evaluate its operands in the order the
+    program wrote them. As with the two checks, only this stage makes an
+    {!EvaluationOrderOfModule.ordered_module}, and {!Compiler} gives it this
+    type. It cannot fail. *)
+type fix_evaluation_order = LinearityCheck.checked_module -> EvaluationOrderOfModule.ordered_module
 
-type monomorphize = env -> LinearityCheck.checked_module -> (env * Mtast.mono_module) Outcome.t
+type extract_bodies = env -> EvaluationOrderOfModule.ordered_module -> env Outcome.t
+
+type monomorphize = env -> EvaluationOrderOfModule.ordered_module -> (env * Mtast.mono_module) Outcome.t
 
 type generate = env -> Supply.t -> Mtast.mono_module -> (c_unit * Supply.t) Outcome.t
 

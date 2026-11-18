@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The union " },
+    { "type": "code", "content": "Never" },
+    {
+      "type": "text",
+      "content": " has no cases. A union needs at least one case."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/087-union-without-cases/Test.zum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 3, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    union Never: Free is" ],
+    [ 3, "    end;" ],
+    [ 4, "" ],
+    [ 5, "    function consume(n: Never): Unit is" ]
+  ]
+}

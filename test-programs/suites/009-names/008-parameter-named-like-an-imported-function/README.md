@@ -1,0 +1,1 @@
+Test that a parameter read as a value is the parameter, also when a function of the same name is imported, as it is in a call (issue #163). Before, `return abort;` returned the imported `abort`, and the program stopped at `f(m)`.

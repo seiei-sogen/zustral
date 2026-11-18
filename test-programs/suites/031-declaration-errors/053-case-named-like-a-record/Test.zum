@@ -1,0 +1,15 @@
+module body Test is
+    record Foo: Free is
+        v: Int64;
+    end;
+
+    union U: Free is
+        case Foo;
+        case Bar;
+    end;
+
+    function main(): ExitCode is
+        let r: Foo := Foo(v => 1);
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,26 @@
+{
+  "module": null,
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The pragma " },
+    { "type": "code", "content": "Foreign_Import" },
+    {
+      "type": "text",
+      "content": " can only be written before a function definition in a module body."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/066-foreign-import-pragma-on-a-record/Test.zum",
+    "startp": { "line": 3, "column": 4 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    pragma Foreign_Import(External_Name => \"nothing\");" ],
+    [ 3, "    record R: Free is" ],
+    [ 4, "        x: Int32;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    function main(): ExitCode is" ]
+  ]
+}

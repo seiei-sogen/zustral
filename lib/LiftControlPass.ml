@@ -6,6 +6,7 @@
    SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 *)
 open Identifier
+open Common
 open Stages
 open Span
 
@@ -30,7 +31,7 @@ let rec lift (supply: Supply.t) (stmt: Ast.astmt): AstLC.astmt * Supply.t =
      let e = transform e in
      let lv = transform_lvalue lv in
      (AstLC.ABlock (
-         empty_span,
+         span,
          AstLC.LetTmp (
              tmp,
              e
@@ -43,7 +44,7 @@ let rec lift (supply: Supply.t) (stmt: Ast.astmt): AstLC.astmt * Supply.t =
      let (s2, supply) = lift supply s2 in
      let (s1, supply) = lift supply s1 in
      (AstLC.ABlock (
-         empty_span,
+         span,
          AstLC.LetTmp (
              tmp,
              e
@@ -60,7 +61,7 @@ let rec lift (supply: Supply.t) (stmt: Ast.astmt): AstLC.astmt * Supply.t =
      let e = transform e in
      let (s, supply) = lift supply s in
      (AstLC.ABlock (
-         empty_span,
+         span,
          AstLC.LetTmp (
              tmp,
              e
@@ -76,7 +77,7 @@ let rec lift (supply: Supply.t) (stmt: Ast.astmt): AstLC.astmt * Supply.t =
      let e = transform e in
      let (awl, supply) = Supply.map transform_abstract_when supply awl in
      (AstLC.ABlock (
-         empty_span,
+         span,
          AstLC.LetTmp (
              tmp,
              e
@@ -92,7 +93,7 @@ let rec lift (supply: Supply.t) (stmt: Ast.astmt): AstLC.astmt * Supply.t =
      let e = transform e in
      let (s, supply) = lift supply s in
      (AstLC.ABlock (
-         empty_span,
+         span,
          AstLC.LetTmp (
              tmp,
              e
@@ -110,37 +111,29 @@ let rec lift (supply: Supply.t) (stmt: Ast.astmt): AstLC.astmt * Supply.t =
   | Ast.AFor {span; name; initial; final; body} ->
      let (tmp_initial, supply): identifier * Supply.t = fresh_ident supply in
      let (tmp_final, supply): identifier * Supply.t = fresh_ident supply in
-     let idx =
-       Ast.QTypeSpecifier (
-           make_qident (
-               BuiltIn.pervasive_module_name,
-               make_ident (BuiltInNames.type_name BuiltInNames.Index),
-               make_ident (BuiltInNames.type_name BuiltInNames.Index)
-             ),
-           []
-         )
-     in
      let (body, supply) = lift supply body in
      (AstLC.ABlock (
-         empty_span,
-         AstLC.LetTmp (
-             tmp_initial,
-             Typecast (transform initial, idx)
-           ),
+         span,
          AstLC.ABlock (
-             empty_span,
-             AstLC.LetTmp (
-                 tmp_final,
-                 Typecast (transform final, idx)
+             span,
+             AstLC.LetLoopBound (
+                 tmp_initial,
+                 InitialLoopBound,
+                 transform initial
                ),
-             AstLC.AFor {
-                 span;
-                 name;
-                 initial=Temporary tmp_initial;
-                 final=Temporary tmp_final;
-                 body
-               }
-           )
+             AstLC.LetLoopBound (
+                 tmp_final,
+                 FinalLoopBound,
+                 transform final
+               )
+           ),
+         AstLC.AFor {
+             span;
+             name;
+             initial=Temporary tmp_initial;
+             final=Temporary tmp_final;
+             body
+           }
        ), supply)
   | Ast.ABorrow {span; original; rename; declared_reference; region; body; mode} ->
      let (body, supply) = lift supply body in
@@ -172,6 +165,8 @@ and transform (expr: Ast.aexpr): AstLC.aexpr =
     AstLC.FunctionCall (q, transform_arglist al)
   | Ast.ArithmeticExpression (ao, e1, e2) ->
     AstLC.ArithmeticExpression (ao, transform e1, transform e2)
+  | Ast.ArithmeticNegation e ->
+    AstLC.ArithmeticNegation (transform e)
   | Ast.Comparison (co, e1, e2) ->
     AstLC.Comparison (co, transform e1, transform e2)
   | Ast.Conjunction (e1, e2) ->

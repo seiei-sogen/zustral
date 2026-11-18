@@ -1,5 +1,7 @@
+pragma Unsafe_Module;
+
 module body Test is
-    constant c: Static := c;
+    constant c: Static := @embed(Static, "0");
 
     function main(): ExitCode is
         printLn("ok");

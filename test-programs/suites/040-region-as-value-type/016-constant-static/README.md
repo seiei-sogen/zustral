@@ -1,1 +1,1 @@
-Covers a constant whose type is the region `Static`: accepted (lib/CodeGen.ml, gen_type, MonoRegionTy).
+Covers a constant whose type is the region `Static`: accepted (lib/CodeGen.ml, gen_type, MonoRegionTy). The value is an `@embed`, so the module is unsafe: no other constant expression has the type `Static`. Before, the value was the constant itself, which a constant cannot name (issue #142).

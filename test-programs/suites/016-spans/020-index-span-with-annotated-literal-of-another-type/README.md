@@ -1,0 +1,1 @@
+Test that a span index annotated with another integer type, `s[(1 : Int32)]`, is not an `Index`: an annotated literal has the type of its annotation, as in `let x: Index := (1 : Int32);`. The compiler used to accept it like a bare literal (issue #163).

@@ -1,0 +1,15 @@
+module body Test is
+    function g(): Int32 is
+        return 1;
+    end;
+
+    union Maybe[T: Free(g)]: Free is
+        case Nothing;
+        case Just is
+            value: T;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

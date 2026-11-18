@@ -1,0 +1,1 @@
+Test that the `External_Name` of a `Foreign_Import` must not be a C reserved word (issue #92). The name is pasted into the C as written, so it gets no reserved-word escape. Before, `double` passed, and the C compile failed.

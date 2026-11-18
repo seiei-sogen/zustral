@@ -9,6 +9,8 @@
 open ErrorText
 
 type t =
+  | UnknownCommand of string
+  | UnknownOption of string
   | InvalidEntrypoint of string
   | InvalidModuleSource of string
   | MissingEntrypoint
@@ -18,15 +20,30 @@ type t =
   | UnknownTarget of string
   | UnknownErrorReportingMode of string
   | DuplicateFlags of string
-  | EmptyArgs
   | ExpectedBoolFlag of string
   | ExpectedValueFlag of string
   | UnknownFlagType of string
-  | CCompilerError of { command: string; exit_code: int; stdout: string; stderr: string }
   | WriteError of { path: string; reason: string }
+  | ReadError of { path: string; reason: string }
 
 let render (error: t): err_text =
   match error with
+  | UnknownCommand command ->
+     [
+       Text "Unknown command ";
+       Code command;
+       Text ". Run ";
+       Code "zustral --help";
+       Text " to see the commands."
+     ]
+  | UnknownOption option ->
+     [
+       Text "Unknown option ";
+       Code option;
+       Text ". Run ";
+       Code "zustral --help";
+       Text " to see the options."
+     ]
   | InvalidEntrypoint entry ->
      [
        Text "Invalid entrypoint format ";
@@ -89,10 +106,6 @@ let render (error: t): err_text =
        Code name;
        Text " was given multiple times"
      ]
-  | EmptyArgs ->
-     [
-       Text "Argument list must have at least one element in it, the path to the binary. Was the compiler invoked through a system call?"
-     ]
   | ExpectedBoolFlag name ->
      [
        Text "Expected ";
@@ -110,27 +123,19 @@ let render (error: t): err_text =
        Text "Invalid flag argument ";
        Code flag
      ]
-  | CCompilerError { command; exit_code; stdout; stderr } ->
-     [
-       Text "Failed to run C compiler.";
-       Break;
-       Text "Command: ";
-       Code command;
-       Break;
-       Text "Exit code: ";
-       Text (string_of_int exit_code);
-       Break;
-       Text "Standard output:\n";
-       Text stdout;
-       Break;
-       Text "Standard error:\n";
-       Text stderr
-     ]
   | WriteError { path; reason } ->
      [
        Text "Failed to write to file ";
        Code path;
        Text ": ";
+       Break;
+       Text reason
+     ]
+  | ReadError { path; reason } ->
+     [
+       Text "Failed to read file ";
+       Code path;
+       Text ":";
        Break;
        Text reason
      ]

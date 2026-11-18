@@ -1,0 +1,9 @@
+import Lib (Mode as Md, Up, Down, pick);
+
+module body Test is
+    function main(): ExitCode is
+        let m: Md := Up();
+        printLn(pick(m));
+        return ExitSuccess();
+    end;
+end module body.

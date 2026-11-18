@@ -1,0 +1,23 @@
+{
+  "module": "Test",
+  "kind": "Linearity Error",
+  "text": [
+    { "type": "text", "content": "Cannot borrow (immutably) the variable " },
+    { "type": "code", "content": "b" },
+    { "type": "text", "content": " because it is already " },
+    { "type": "text", "content": "consumed" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/112-linearity-error-in-an-anonymous-borrow-statement/Test.zum",
+    "startp": { "line": 18, "column": 8 },
+    "end": { "line": 18, "column": 17 }
+  },
+  "context": [
+    [ 16, "    function f(b: Box): Unit is" ],
+    [ 17, "        consume(b);" ],
+    [ 18, "        peek(&b);" ],
+    [ 19, "        return nil;" ],
+    [ 20, "    end;" ]
+  ]
+}

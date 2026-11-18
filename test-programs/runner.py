@@ -394,11 +394,15 @@ def _test_cmd(test: Test) -> list[str]:
         cli: str = test.cli
         cli: str = cli.replace("$DIR", test.directory)
         cli: str = cli.replace("$C_PATH", test.c_path)
-        return cli.split(" ")
+        words: list[str] = cli.split(" ")
+        # A cli.txt names the compiler as ./zustral. The environment can name another one.
+        if words[0] == "./zustral":
+            words[0] = os.environ.get("ZUSTRAL", "./zustral")
+        return words
     else:
         body_path: str = os.path.join(test.directory, "Test.zum")
         return [
-            "./zustral",
+            os.environ.get("ZUSTRAL", "./zustral"),
             "compile",
             f"{body_path}",
             "--entrypoint=Test:main",
@@ -560,9 +564,12 @@ def _run_failure_test(test: TestFailure, replace_stderr: bool) -> TestResult:
     # Compilation failed. Does the actual stderr match expected?
     if replace_stderr:
         # If replace_stderr is true, just take the actual stderr and overwrite the expected stderr.
+        # Only a test whose expected stderr differs is rewritten, so that a run leaves
+        # the files of the other tests as they are (issue #40).
         stderr: str = trim_lines(result.stderr.decode("utf-8"))
-        with open(test.directory + "/zustral-stderr.txt", "w") as stream:
-            stream.write(stderr)
+        if stderr != trim_lines(test.expected_compiler_error):
+            with open(test.directory + "/zustral-stderr.txt", "w") as stream:
+                stream.write(stderr + "\n")
     else:
         stderr: str = trim_lines(result.stderr.decode("utf-8"))
         if stderr != trim_lines(test.expected_compiler_error):

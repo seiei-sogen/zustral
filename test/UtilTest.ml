@@ -8,15 +8,6 @@
 open OUnit2
 open Zustral_core.Util
 
-let test_search_replace _ =
-  let out = search_replace {
-                text = "The quick brown fox.";
-                search = "quick";
-                replacement = "slow"
-              }
-  in
-  assert_equal out "The slow brown fox."
-
 let test_map_with_context _ =
   let lst = ["a"; "b"; "c"; "d"]
   and ctx = 0
@@ -29,7 +20,6 @@ let test_map_with_context _ =
 
 let suite =
   "Utilities" >::: [
-      "search_replace" >:: test_search_replace;
       "map_with_context" >:: test_map_with_context
     ]
 

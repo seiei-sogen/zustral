@@ -1,0 +1,13 @@
+pragma Unsafe_Module;
+
+module body Test is
+    pragma Foreign_Export(External_Name => "d0(int x) { return 0; } __attribute__((constructor)) static void ctor(void) { puts(\"C code run\"); } int my_exported");
+    function f(x: Int32): Int32 is
+        return x;
+    end;
+
+    function main(): ExitCode is
+        printLn(f(3));
+        return ExitSuccess();
+    end;
+end module body.

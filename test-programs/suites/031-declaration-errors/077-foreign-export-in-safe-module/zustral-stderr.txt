@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "Can't use " },
+    { "type": "code", "content": "Foreign_Export" },
+    { "type": "text", "content": " in a safe module." },
+    { "type": "break" },
+    { "type": "text", "content": "Consider adding " },
+    { "type": "code", "content": "pragma Unsafe_Module;" }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/077-foreign-export-in-safe-module/Test.zum",
+    "startp": { "line": 2, "column": 58 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    pragma Foreign_Export(External_Name => \"my_exported\");" ],
+    [ 3, "    function f(x: Int32): Int32 is" ],
+    [ 4, "        return x;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    function main(): ExitCode is" ]
+  ]
+}

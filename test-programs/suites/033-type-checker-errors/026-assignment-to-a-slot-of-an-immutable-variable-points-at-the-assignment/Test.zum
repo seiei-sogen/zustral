@@ -1,0 +1,13 @@
+module body Test is
+    record Rec: Free is
+        x: Int64;
+    end;
+
+    function main(): ExitCode is
+        let r: Rec := Rec(x => 1);
+        printLn(1);
+        r.x := 5;
+        printLn(r.x);
+        return ExitSuccess();
+    end;
+end module body.

@@ -2,7 +2,10 @@
   "module": "Test",
   "kind": "Type Error",
   "text": [
-    { "type": "text", "content": "Cannot cast to a different region" }
+    {
+      "type": "text",
+      "content": "Cannot cast a reference to one with a different underlying type and region."
+    }
   ],
   "span": {
     "filename": "test-programs/suites/030-type-errors/018-cast-different-references-type-and-region/Test.zum",

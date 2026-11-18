@@ -13,6 +13,7 @@ open Type
 open TypeSystem
 open TypeBindings
 open TypeMatch
+open SignatureTypeAtUse
 open TypeParser
 open TypeParameter
 open TypeParameters
@@ -75,28 +76,43 @@ let check_var_doesnt_collide_with_decl (ctx: stmt_ctx) (name: identifier) =
   | None ->
      ()
 
-(* The span of `stmt` if it assigns a temporary, which is what
-   `LiftControlPass` turns every assignment into. `DesugarBorrows` wraps such a
-   statement in the anonymous borrows of its lvalue. *)
-let rec lifted_assignment_span (stmt: astmt): span option =
+(* In the body of a borrow, a built-in type of the region's name hides the
+   region, and the region hides a type parameter or a declared type of that
+   name (TypeParser.parse_type, #153). So the region cannot have a name that a
+   declaration cannot have, nor the name of a type parameter. The module being
+   checked is in the environment. *)
+let check_region_name_is_free (ctx: stmt_ctx) (region: identifier): unit =
+  let (StmtCtx (module_name, env, _, typarams, _, place)) = ctx in
+  match get_typaram typarams region with
+  | Some _ ->
+     declaration_error place (RegionNameIsTypeParameter region)
+  | None ->
+     Option.iter (fun (ModRec { id; _ }) -> name_must_be_free place env id region)
+       (get_module_by_name env module_name)
+
+(* Whether `stmt` assigns a temporary, which is what `LiftControlPass` turns
+   every assignment into. `DesugarBorrows` wraps such a statement in the
+   anonymous borrows of its lvalue. *)
+let rec assigns_lifted_temporary (stmt: astmt): bool =
   match stmt with
-  | AAssign (span, _, Temporary _) | AAssignVar (span, _, Temporary _) ->
-     Some span
+  | AAssign (_, _, Temporary _) | AAssignVar (_, _, Temporary _) ->
+     true
   | ABorrow { body; _ } ->
-     lifted_assignment_span body
+     assigns_lifted_temporary body
   | ASkip _ | ALet _ | ADestructure _ | AInitialAssign _ | AIf _ | AWhen _ | ACase _
-  | AWhile _ | AFor _ | ABlock _ | ADiscarding _ | AReturn _ | LetTmp _ | AssignTmp _
+  | AWhile _ | AFor _ | ABlock _ | ADiscarding _ | AReturn _ | LetTmp _ | LetLoopBound _
+  | AssignTmp _
   | AAssign (_, _, (NilConstant | BoolConstant _ | IntConstant _ | FloatConstant _
       | StringConstant _ | Variable _ | FunctionCall _ | ArithmeticExpression _
-      | Comparison _ | Conjunction _ | Disjunction _ | Negation _ | IfExpression _
-      | Embed _ | Deref _ | Typecast _ | SizeOf _ | SlotAccessor _
+      | ArithmeticNegation _ | Comparison _ | Conjunction _ | Disjunction _ | Negation _
+      | IfExpression _ | Embed _ | Deref _ | Typecast _ | SizeOf _ | SlotAccessor _
       | PointerSlotAccessor _ | ArrayIndex _)) | AAssignVar (_, _, (NilConstant
       | BoolConstant _ | IntConstant _ | FloatConstant _ | StringConstant _
-      | Variable _ | FunctionCall _ | ArithmeticExpression _ | Comparison _
-      | Conjunction _ | Disjunction _ | Negation _ | IfExpression _ | Embed _ | Deref _
+      | Variable _ | FunctionCall _ | ArithmeticExpression _ | ArithmeticNegation _
+      | Comparison _ | Conjunction _ | Disjunction _ | Negation _ | IfExpression _ | Embed _ | Deref _
       | Typecast _ | SizeOf _ | SlotAccessor _ | PointerSlotAccessor _
       | ArrayIndex _)) ->
-     None
+     false
 
 (* The table with the temporary on the right-hand side of an assignment,
    declared with the type of the lvalue. The statement that computes the
@@ -107,17 +123,16 @@ let declare_assigned_temporary (place: place) (lexenv: lexenv) (rvalue: aexpr) (
   | Temporary name ->
      push_var place lexenv name ty (VarLocal Mutable)
   | NilConstant | BoolConstant _ | IntConstant _ | FloatConstant _ | StringConstant _
-  | Variable _ | FunctionCall _ | ArithmeticExpression _ | Comparison _ | Conjunction _
-  | Disjunction _ | Negation _ | IfExpression _ | Embed _ | Deref _ | Typecast _
+  | Variable _ | FunctionCall _ | ArithmeticExpression _ | ArithmeticNegation _ | Comparison _
+  | Conjunction _ | Disjunction _ | Negation _ | IfExpression _ | Embed _ | Deref _ | Typecast _
   | SizeOf _ | SlotAccessor _ | PointerSlotAccessor _ | ArrayIndex _ ->
      lexenv
 
 (* The supply numbers the regions of the borrow statements, in the order the
    statements are checked. That order is not the order of the source: the
    `else` branch of an `if` is checked before the `then` branch, and an
-   assignment before the statement that computes its value. The numbers are in
-   error messages, and which of two errors is reported depends on the order
-   too, so it stays.
+   assignment before the statement that computes its value. Which of two
+   errors is reported depends on the order, so it stays.
 
    The table of variables goes the same way. A statement is checked with the
    table that the statement checked before it returned, and returns its own. A
@@ -138,6 +153,8 @@ let rec augment_stmt (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (stmt: 
      augment_let ctx lexenv supply span mut name ty body
   | LetTmp (name, value) ->
      augment_let_tmp ctx lexenv supply name value
+  | LetLoopBound (name, bound, value) ->
+     augment_let_loop_bound ctx lexenv supply name bound value
   | AssignTmp (name, value) ->
      augment_assign_tmp ctx lexenv supply name value
   | ADestructure (span, mut, bindings, value, body) ->
@@ -184,16 +201,26 @@ and augment_let_tmp (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (name: i
   (match get_var lexenv name with
    | Some (ty, _) ->
       (* The temporary holds the right-hand side of an assignment, which
-         has declared it with the type of its lvalue. That type is the
-         expected type of the right-hand side, as the annotation of a
-         `let` is for its value. *)
-      let value = check_expr place module_name env rm typarams lexenv value ty in
+         has declared it with the type of its lvalue. That type annotates the
+         right-hand side, as the type of a `let` does its value: a write
+         reference becomes a read reference here too (#30). *)
+      let value = check_annotated_expr place module_name env rm typarams lexenv value ty in
       (TLetTmp (name, ty, value), lexenv, supply)
    | None ->
       let value = infer_expr place module_name env rm typarams lexenv value in
       let ty = get_type place value in
       let lexenv = push_var place lexenv name ty (VarLocal Mutable) in
       (TLetTmp (name, ty, value), lexenv, supply))
+
+(* A bound of a `for` loop has the type Index, which an integer literal takes. *)
+and augment_let_loop_bound (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (name: identifier) (bound: loop_bound) (value: aexpr): tstmt * lexenv * Supply.t =
+  let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
+  let expr_ctx: TypeCheckExpr.expr_ctx = TypeCheckExpr.make_ctx place module_name env rm typarams lexenv in
+  let value = TypeCheckExpr.infer_with_expected expr_ctx value index_type in
+  if LiteralTyping.literal_matches place index_type value || equal_ty (get_type place value) index_type then
+    (TLetTmp (name, index_type, value), push_var place lexenv name index_type (VarLocal Mutable), supply)
+  else
+    type_error place (ForBoundNotIndex { bound; ty = get_type place value })
 
 and augment_assign_tmp (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (name: identifier) (value: aexpr): tstmt * lexenv * Supply.t =
   let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
@@ -212,7 +239,9 @@ and augment_destructure (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (spa
       (* Check: the value must be a public record type *)
       let rec_ty = get_type place value' in
       (match rec_ty with
-       | (NamedType (name, id, _, u)) ->
+       | NamedType (_, Id.UnionTypeId _, _, _) ->
+          type_error place (DestructureNonRecord rec_ty)
+       | NamedType (name, (Id.RecordTypeId _ as id), _, u) ->
           let (source_module, vis, record_typarams, slots) = TypeCheckExpr.get_record_definition place env id rec_ty in
           let orig_type = NamedType (
                               make_qident (source_module, original_name name, original_name name),
@@ -221,7 +250,7 @@ and augment_destructure (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (spa
                               u
                             )
           in
-          let typebindings = match_type (env, module_name, place) orig_type rec_ty in
+          let typebindings = match_type (env, module_name, place) (signature_type_at_use orig_type) rec_ty in
           let public: bool =
             match vis with
             | TypeVisPublic -> true
@@ -304,7 +333,7 @@ and augment_assign_var (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span
              an expression looks a name up, so that assigning to one is said
              to be that, and not an unknown name. *)
           let variable: (ty * variable_source) option = get_variable place env lexenv name in
-          let name: identifier = original_name name in
+          let name: identifier = local_name name in
         match variable with
         | (Some (orig_ty, src)) -> begin
             let _ =
@@ -376,9 +405,7 @@ and augment_while (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: spa
 and augment_for (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (name: identifier) (initial: aexpr) (final: aexpr) (body: astmt): tstmt * lexenv * Supply.t =
   let ctx = stmt_at ctx span in
   let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
-  (* Both bounds have the type Index: the lifting pass binds each to a
-     temporary whose value is a cast to Index, and the cast reports a bound of
-     another type (issue #124). *)
+  (* Both bounds are temporaries of the type Index (augment_let_loop_bound). *)
   (let i' = infer_expr place module_name env rm typarams lexenv initial
       and f' = infer_expr place module_name env rm typarams lexenv final in
       let lexenv = push_var place lexenv name index_type (VarLocal Immutable) in
@@ -387,10 +414,13 @@ and augment_for (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span)
 
 and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (original: identifier) (rename: identifier) (declared_reference: (borrowing_mode * qtypespec) option) (region: identifier) (body: astmt) (mode: borrow_stmt_kind): tstmt * lexenv * Supply.t =
   let ctx = stmt_at ctx span in
-  let (StmtCtx (_, env, rm, typarams, _, place)) = ctx in
+  let (StmtCtx (module_name, env, rm, typarams, _, place)) = ctx in
   (let _ = check_var_doesnt_collide_with_decl ctx rename in
-      (match get_var lexenv original with
-       | (Some (orig_ty, src)) ->
+   let _ = check_region_name_is_free ctx region in
+      (match get_variable place env lexenv (make_qident (module_name, original, original)) with
+       | Some (_, VarConstant) ->
+          type_error place (CannotBorrowConstant original)
+       | Some (orig_ty, VarLexical src) ->
           (* Check we can borrow the variable. *)
           let _ =
             match (src, mode) with
@@ -418,7 +448,7 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
                (* And anything else is fine. *)
                ()
           in
-          let (region_obj, supply) = fresh_region supply in
+          let (region_obj, supply) = fresh_region region supply in
           let refty =
             (match mode with
              | Read ->
@@ -438,8 +468,9 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
                 in
                 WriteRef (pointed_ty, RefRegion region_obj))
           in
-          (* The reference has the type the statement declares for it. *)
-          let _ =
+          (* The reference has the type the statement declares for it. Only a
+             borrow the user wrote declares one. *)
+          let origin: borrow_origin =
             match declared_reference with
             | Some (declared_mode, declared_referent) ->
                let declared_referent: ty = parse_typespec place env rm typarams declared_referent in
@@ -449,11 +480,11 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
                  | WriteBorrow -> WriteRef (declared_referent, RefRegion region_obj)
                in
                if equal_ty declared_refty refty then
-                 ()
+                 WrittenBorrow
                else
                  type_error place (TypeMismatch { expected = declared_refty; actual = refty })
             | None ->
-               ()
+               AnonymousBorrow
           in
           let lexenv = push_var place lexenv rename refty (VarLocal Immutable) in
           let rm' = add_region place rm region region_obj in
@@ -467,25 +498,28 @@ and augment_borrow (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: sp
               orig_type=orig_ty;
               ref_type=refty;
               body=body;
-              mode=mode
+              mode=mode;
+              origin=origin
             }, remove_var lexenv rename, supply)
        | None ->
           generic_error place (UnknownName { kind = VariableName; name = original })))
 
 and augment_block (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (f: astmt) (r: astmt): tstmt * lexenv * Supply.t =
-  (match lifted_assignment_span r with
-   | Some assign_span ->
-      (* `f` computes the temporary that `r` assigns. `r` is checked
-         first because it gives the temporary its type, and the type of
-         a path is only known inside the borrows around `r`. An error
-         in `f` has no span of its own. *)
-      let (b, lexenv, supply) = augment_stmt ctx lexenv supply r in
-      let (a, lexenv, supply) = augment_stmt (stmt_at ctx assign_span) lexenv supply f in
-      (TBlock (span, a, b), lexenv, supply)
-   | None ->
-      let (a, lexenv, supply) = augment_stmt ctx lexenv supply f in
-      let (b, lexenv, supply) = augment_stmt ctx lexenv supply r in
-      (TBlock (span, a, b), lexenv, supply))
+  (* A block that `LiftControlPass` made has the span of the statement it
+     lifted an expression out of, and the statement that computes the
+     expression has none of its own. *)
+  let ctx = stmt_at ctx span in
+  if assigns_lifted_temporary r then
+    (* `f` computes the temporary that `r` assigns. `r` is checked first
+       because it gives the temporary its type, and the type of a path is
+       only known inside the borrows around `r`. *)
+    let (b, lexenv, supply) = augment_stmt ctx lexenv supply r in
+    let (a, lexenv, supply) = augment_stmt ctx lexenv supply f in
+    (TBlock (span, a, b), lexenv, supply)
+  else
+    let (a, lexenv, supply) = augment_stmt ctx lexenv supply f in
+    let (b, lexenv, supply) = augment_stmt ctx lexenv supply r in
+    (TBlock (span, a, b), lexenv, supply)
 
 and augment_discarding (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span) (e: aexpr): tstmt * lexenv * Supply.t =
   let ctx = stmt_at ctx span in
@@ -535,10 +569,27 @@ and augment_case (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (span: span
          | WriteRefCaseMode _ -> CaseRef)
       in
       let (union_id, tyargs, union_ty, cases) = get_union_type_definition place module_name env ty in
-      let typebindings = match_type (env, module_name, place) union_ty ty in
+      let typebindings = match_type (env, module_name, place) (signature_type_at_use union_ty) ty in
       let case_names = List.map (fun (TypedCase (n, _)) -> n) (List.map union_case_to_typed_case cases) in
-      let when_names = List.map (fun (AbstractWhen (n, _, _)) -> n) whens in
-      if ident_set_eq case_names when_names then
+      (* A `when` names a case by a name the module has for it: its own name in
+         the module of the union, or the nickname it is imported under (#50). *)
+      let case_qnames: qident list =
+        List.map (fun (case: union_case_decl) -> make_qident (module_name_from_id place env case.mod_id, case.name, case.name)) cases
+      in
+      let names_a_case_of_the_union (AbstractWhen (n, _, _)): bool =
+        List.exists (equal_qident n) case_qnames
+      in
+      let when_names = List.map (fun (AbstractWhen (n, _, _)) -> original_name n) whens in
+      (* A `when` that writes the name of a case the module does not have under
+         that name is not a missing case: the error names the case. *)
+      let _ =
+        List.iter (fun (AbstractWhen (n, _, _) as abstract_when) ->
+            let case_name: identifier = original_name n in
+            if List.exists (equal_identifier case_name) case_names && not (names_a_case_of_the_union abstract_when) then
+              type_error place (CaseNotImportedUnderThatName { union_type = ty; case_name }))
+          whens
+      in
+      if List.for_all names_a_case_of_the_union whens && ident_set_eq case_names when_names then
         (* Group the cases and whens *)
         let whens' = group_cases_whens cases whens in
         let (whens'', lexenv, supply) = augment_whens ctx lexenv supply typebindings whens' mode in
@@ -576,7 +627,7 @@ and get_union_type_definition (place: place) (importing_module: module_name) (en
      type_error place (CaseNonUnion ty)
 
 and group_cases_whens (cases: union_case_decl list) (whens: abstract_when list): (typed_case * abstract_when) list =
-  List.map (fun (TypedCase (n, s)) -> (TypedCase (n, s), List.find (fun (AbstractWhen (n', _, _)) -> n = n') whens))
+  List.map (fun (TypedCase (n, s)) -> (TypedCase (n, s), List.find (fun (AbstractWhen (n', _, _)) -> equal_identifier n (original_name n')) whens))
     (List.map union_case_to_typed_case cases)
 
 and group_bindings_slots (bindings: qbinding list) (slots: typed_slot list): (identifier * qtypespec * ty * identifier) list =
@@ -641,30 +692,40 @@ and augment_when (ctx: stmt_ctx) (lexenv: lexenv) (supply: Supply.t) (typebindin
                     bindings'' in
     let lexenv = push_vars place lexenv newvars in
     let (body', lexenv, supply) = augment_stmt ctx lexenv supply body in
-    (TypedWhen (name, List.map (fun (name, _, ty, rename) -> TypedBinding { name; ty; rename}) bindings'', body'), remove_vars lexenv (List.map (fun (n, _, _) -> n) newvars), supply)
+    (TypedWhen (original_name name, List.map (fun (name, _, ty, rename) -> TypedBinding { name; ty; rename}) bindings'', body'), remove_vars lexenv (List.map (fun (n, _, _) -> n) newvars), supply)
   else
     type_error place (CaseWrongSlots { binding_names; slot_names })
 
-let validate_constant_expression (expr: texpr): unit =
+let validate_constant_expression (place: place) (expr: texpr): unit =
   if TastUtil.is_constant_expression expr then
     ()
   else
-    type_error NoSpan ExpressionNotConstant
+    type_error place ExpressionNotConstant
 
-let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (supply: Supply.t) (decl: linked_definition): typed_decl * Supply.t =
+(* [place] is the span of the definition. *)
+let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (module_constants: identifier list) (supply: Supply.t) (place: place) (decl: linked_definition): typed_decl * Supply.t =
   let rm = empty_region_map in
   match decl with
   | LConstant (decl_id, vis, name, ty, expr, doc) ->
-     let expr' = check_expr NoSpan module_name env rm empty_typarams empty_lexenv expr ty in
-     let _ = validate_constant_expression expr' in
+     (* The value names only the constants defined before this one (#142),
+        which rules out cycles: a constant is a C macro, and C does not expand
+        a macro inside itself. *)
+     let rec this_constant_and_the_later_ones (constants: identifier list): identifier list =
+       match constants with
+       | first :: later when not (equal_identifier first name) -> this_constant_and_the_later_ones later
+       | _ -> constants
+     in
+     let not_yet_defined: identifier list = this_constant_and_the_later_ones module_constants in
+     let expr' = TypeCheckExpr.check (TypeCheckExpr.make_constant_value_ctx module_name env place not_yet_defined) expr ty in
+     let _ = validate_constant_expression place expr' in
      (TConstant (decl_id, vis, name, ty, expr', doc), supply)
   | LRecord (decl_id, vis, name, typarams, universe, slots, doc) ->
      (TRecord (decl_id, vis, name, typarams, universe, slots, doc), supply)
   | LUnion (decl_id, vis, name, typarams, universe, cases, doc) ->
      (TUnion (decl_id, vis, name, typarams, universe, cases, doc), supply)
   | LFunction (decl_id, vis, name, typarams, params, rt, body, doc, pragmas) ->
-     let lexenv = lexenv_from_params params in
-     let ctx = StmtCtx (module_name, env, rm, typarams, rt, NoSpan) in
+     let lexenv = lexenv_from_params place params in
+     let ctx = StmtCtx (module_name, env, rm, typarams, rt, place) in
      let _ =
        List.map (fun (ValueParameter (name, _)) -> check_var_doesnt_collide_with_decl ctx name) params
      in
@@ -677,48 +738,55 @@ let rec augment_decl (module_name: module_name) (kind: module_kind) (env: env) (
           | UnsafeModule ->
              (TForeignFunction (decl_id, vis, name, params, rt, s, signature, doc), supply)
           | SafeModule ->
-             declaration_error NoSpan ForeignInSafeModule)
+             declaration_error place ForeignInSafeModule)
       | ForeignGeneric ->
-         declaration_error NoSpan ForeignTypeParameters
+         declaration_error place ForeignTypeParameters
       | BodyNotAttached | Body _ ->
          (* One Foreign_Import pragma made the function foreign, so here
             [ForeignImportPragma _] stands alone only with type parameters,
             which ForeignGeneric took. *)
          (match pragmas with
           | [ForeignExportPragma _] ->
-             let (body', _, supply) = augment_stmt ctx lexenv supply body in
-             (TFunction (decl_id, vis, name, typarams, params, rt, body', doc), supply)
+             (* C code calls an exported function, and C code is outside what
+                a safe module guarantees, as a foreign function is (#161). *)
+             (match kind with
+              | UnsafeModule ->
+                 let (body', _, supply) = augment_stmt ctx lexenv supply body in
+                 (TFunction (decl_id, vis, name, typarams, params, rt, body', doc), supply)
+              | SafeModule ->
+                 declaration_error place ExportInSafeModule)
           | [] ->
              let (body', _, supply) = augment_stmt ctx lexenv supply body in
              (TFunction (decl_id, vis, name, typarams, params, rt, body', doc), supply)
           | [ForeignImportPragma _] | [UnsafeModulePragma] | _ :: _ :: _ ->
-             declaration_error NoSpan FunInvalidPragmas))
+             declaration_error place FunInvalidPragmas))
   | LTypeclass (decl_id, vis, name, typaram, methods, doc) ->
      (TTypeClass (decl_id, vis, name, typaram, List.map (augment_method_decl env rm typaram) methods, doc), supply)
   | LInstance (decl_id, vis, name, typarams, arg, methods, doc) ->
      (* TODO: the universe of the type parameter matches the universe of the type argument *)
      (* TODO: Check the methods in the instance match the methods in the class *)
-     let (methods, supply) = Supply.map (augment_method_def module_name env rm typarams) supply methods in
+     let (methods, supply) = Supply.map (augment_method_def module_name env rm place typarams) supply methods in
      (TInstance (decl_id, vis, name, typarams, arg, methods, doc), supply)
 
-and lexenv_from_params (params: value_parameter list): lexenv =
+and lexenv_from_params (place: place) (params: value_parameter list): lexenv =
   match params with
   | (ValueParameter (n, t))::rest ->
-     push_var NoSpan (lexenv_from_params rest) n t VarParam
+     push_var place (lexenv_from_params place rest) n t VarParam
   | [] ->
      empty_lexenv
 
 and augment_method_decl _ _ _ (LMethodDecl (decl_id, name, params, rt, _)) =
   TypedMethodDecl (decl_id, name, params, rt)
 
-and augment_method_def module_name menv rm instance_typarams supply (LMethodDef (ins_meth_id, name, params, rt, _, body)) =
+(* [place] is the span of the instance. *)
+and augment_method_def module_name menv rm place instance_typarams supply (LMethodDef (ins_meth_id, name, params, rt, _, body)) =
   (* The body can name the type parameters of the instance and those of the
      method itself, as the signature can (ExtractionPass). The environment
      keeps the method's own. *)
   let (InsMethRec { typarams = method_typarams; _ }) = get_instance_method menv ins_meth_id in
-  let typarams = merge_typarams NoSpan instance_typarams method_typarams in
-  let lexenv = lexenv_from_params params in
-  let ctx = StmtCtx (module_name, menv, rm, typarams, rt, NoSpan) in
+  let typarams = merge_typarams place instance_typarams method_typarams in
+  let lexenv = lexenv_from_params place params in
+  let ctx = StmtCtx (module_name, menv, rm, typarams, rt, place) in
   let _ =
     List.map (fun (ValueParameter (name, _)) -> check_var_doesnt_collide_with_decl ctx name) params
   in
@@ -726,8 +794,23 @@ and augment_method_def module_name menv rm instance_typarams supply (LMethodDef 
   (TypedMethodDef (ins_meth_id, name, params, rt, body'), supply)
 
 let augment_module menv (supply: Supply.t) (LinkedModule { name; decls; kind; _ }): (typed_module * Supply.t) Outcome.t =
+  (* In the order the body defines them. The span of a constant is that of its
+     definition in the body, also for one the interface declares
+     (CombiningPass), and a span is plain data: OCaml's order puts the earlier
+     one of a file first. The declarations are not in that order: those of the
+     interface come before the private ones. *)
+  let module_constants: identifier list =
+    List.map snd
+      (List.stable_sort (fun (span, _) (span', _) -> compare span span')
+         (List.filter_map
+            (fun (span, decl) ->
+              match decl with
+              | LConstant (_, _, name, _, _, _) -> Some (span, name)
+              | LRecord _ | LUnion _ | LFunction _ | LTypeclass _ | LInstance _ -> None)
+            decls))
+  in
   Outcome.map (fun (supply, decls') -> (TypedModule (name, decls'), supply))
     (Outcome.traverse_with_context
-       (fun (supply, decl) -> Outcome.catch (fun () -> let (decl, supply) = augment_decl name kind menv supply decl in (supply, decl)))
+       (fun (supply, (span, decl)) -> Outcome.catch (fun () -> let (decl, supply) = augment_decl name kind menv module_constants supply (AtSpan span) decl in (supply, decl)))
        supply
        decls)

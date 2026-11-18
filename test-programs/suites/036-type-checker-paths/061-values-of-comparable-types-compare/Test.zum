@@ -1,0 +1,35 @@
+pragma Unsafe_Module;
+
+import Zustral.Memory (
+    Address,
+    Pointer,
+    nullPointer,
+    refToPointer
+);
+
+module body Test is
+    function inc(x: Int32): Int32 is
+        return x + 1;
+    end;
+
+    generic [T: Free]
+    function same(a: T, b: T): Bool is
+        return a = b;
+    end;
+
+    function main(): ExitCode is
+        let half: Float32 := 0.5;
+        printLn(half < 1.0);
+        let none: Address[Int32] := nullPointer();
+        printLn(none = none);
+        let x: Int32 := 1;
+        borrow r: &[Int32, R] := &x do
+            let p: Pointer[Int32] := refToPointer(r);
+            printLn(p /= p);
+        end borrow;
+        let f: Fn[Int32, Int32] := inc;
+        printLn(f = f);
+        printLn(same(x, x));
+        return ExitSuccess();
+    end;
+end module body.

@@ -43,13 +43,20 @@ type reference_difference =
 type t =
   | ArithmeticIncompatibleTypes of { lhs: ty; rhs: ty }
   | ArithmeticNotNumeric of ty
+  | ComparisonOperandNotComparable of ty
+  | ArithmeticNegationOperandNotSigned of ty
+  | ArithmeticNegationTypeArgumentNotSigned of ty
   | CannotBorrowImmutableVarMutably of identifier
   | CannotBorrowParamMutably of { name: identifier; ty: ty }
+  | CannotBorrowConstant of identifier
   | CallNonCallable of ty
   | CallWrongArity of { name: identifier; expected: int; actual: int }
+  | CallArgumentNameUnknown of { name: identifier; parameters: identifier list }
+  | CallArgumentNameRepeated of identifier
   | CaseNonExhaustive
   | CaseNonPublic
   | CaseNonUnion of ty
+  | CaseNotImportedUnderThatName of { union_type: ty; case_name: identifier }
   | CaseWrongSlots of { binding_names: identifier list; slot_names: identifier list }
   | CastDifferentReferences of reference_difference
   | CastInvalid of { target: ty; source: ty }
@@ -63,13 +70,12 @@ type t =
   | DestructureWrongSlots of ty
   | DiscardLinear of universe
   | ExpressionNotConstant
+  | ForBoundNotIndex of { bound: Common.loop_bound; ty: ty }
   | FunPointerNamedArgs
   | IfInequal of { lhs: ty; rhs: ty }
   | LogicalOperandsNotBoolean of logical_operands
   | NoSuchSlot of { type_name: identifier; slot_name: identifier }
   | NoSuitableInstance of { typeclass: identifier; ty: ty }
-  | InstanceMissingMethod of { typeclass: identifier; ty: ty; module_name: module_name; method_name: identifier }
-  | OverlappingInstancesMatch of { typeclass: identifier; ty: ty; modules: module_name list }
   | PathNotPublic of { type_name: identifier; slot_name: identifier }
   | PathNotRecord of ty
   | SlotWrongType of { name: identifier; expected: ty; actual: ty }
@@ -78,6 +84,8 @@ type t =
   | CantAccessSlotNotRecord of { slot_name: identifier; ty: ty }
   | CantIndexNotSpan of ty
   | ExportDisallowedType of ty
+  | ImportDisallowedType of { function_name: identifier; parameter: identifier option; ty: ty }
+  (** [parameter] is [None] for the return type. *)
   | TyparamRedefinition of { param: type_parameter; was: ty; redef: ty }
   | TyparamBindingWrongUniverse of { param: type_parameter; ty: ty; expected: universe; actual: universe }
   | InstanceArgumentWrongUniverse of { ty: ty; expected: universe; actual: universe }
@@ -88,9 +96,11 @@ type t =
   | TypeArgumentWrongUniverse of { param: type_parameter; expected: universe; actual: universe }
   | UnresolvedType of identifier
   | IntegerDoesNotFit of { literal: NumberLiteral.int_literal; ty: ty }
+  | DivisorIsZero
   | PointerAccessNotReference of ty
   | ArrayIndexNotReference of ty
   | CaseNotUnionOrReference of ty
+  | ReferenceRegionNotARegion of ty
 
 (* Names in code, separated by commas. *)
 let code_list (names: string list): err_text =
@@ -112,6 +122,36 @@ let render (error: t): err_text =
        Type ty;
        Text " is not."
      ]
+  | ComparisonOperandNotComparable ty ->
+     [
+       Text "Values of the type ";
+       Type ty;
+       Text " cannot be compared.";
+       Break;
+       Text "Only values of ";
+       Code "Unit";
+       Text ", ";
+       Code "Bool";
+       Text ", an integer type, a float type, ";
+       Code "Address";
+       Text ", ";
+       Code "Pointer";
+       Text ", or a function pointer type can be compared."
+     ]
+  | ArithmeticNegationOperandNotSigned ty ->
+     [
+       Text "Only a value of a signed integer type, of a float type, or of a type parameter with the constraint ";
+       Code BuiltInNames.trapping_arithmetic_name;
+       Text " can be negated, but this value has the type ";
+       Type ty;
+       Text "."
+     ]
+  | ArithmeticNegationTypeArgumentNotSigned ty ->
+     [
+       Text "A generic function negates a value of a type parameter, and the type given for that parameter is ";
+       Type ty;
+       Text ". Only a value of a signed integer type or of a float type can be negated."
+     ]
   | CannotBorrowImmutableVarMutably name ->
      [
        Text "Cannot borrow the variable ";
@@ -125,6 +165,12 @@ let render (error: t): err_text =
        Text " mutably because it is a function parameter, and therefore immutable.";
        Text "\nYou can move it to a mutable local variable: ";
        Code ("var mut_" ^ (ident_string name) ^ ": " ^ (type_string ty) ^ " := " ^ (ident_string name) ^ ";");
+     ]
+  | CannotBorrowConstant name ->
+     [
+       Text "Cannot borrow the constant ";
+       Code (ident_string name);
+       Text ": only a variable can be borrowed."
      ]
   | CallNonCallable ty ->
      [
@@ -145,6 +191,22 @@ let render (error: t): err_text =
        Text (if actual = 1 then " was " else " were ");
        Text "given."
      ]
+  | CallArgumentNameUnknown { name; parameters } ->
+     [
+       Text "There is no parameter named ";
+       Code (ident_string name);
+       Text ". The parameters are ";
+     ]
+     @ code_list (List.map ident_string parameters)
+     @ [
+       Text "."
+     ]
+  | CallArgumentNameRepeated name ->
+     [
+       Text "The argument ";
+       Code (ident_string name);
+       Text " is given more than once."
+     ]
   | CaseNonExhaustive ->
      [
        Text "Non-exhaustive case statement."
@@ -158,6 +220,16 @@ let render (error: t): err_text =
        Text "The case expression has type ";
        Type ty;
        Text " which is not a union type."
+     ]
+  | CaseNotImportedUnderThatName { union_type; case_name } ->
+     [
+       Text "The union ";
+       Type union_type;
+       Text " has a case named ";
+       Code (ident_string case_name);
+       Text ", but the module does not import that case under that name. A ";
+       Code "when";
+       Text " names a case by the name the module imports it under."
      ]
   | CaseWrongSlots { binding_names; slot_names } ->
      [
@@ -176,7 +248,7 @@ let render (error: t): err_text =
           Text "Cannot cast a reference to one with a different underlying region."
         ]
       | DifferentTypeAndRegion -> [
-          Text "Cannot cast to a different region"
+          Text "Cannot cast a reference to one with a different underlying type and region."
         ])
   | CastInvalid { target; source } ->
      [
@@ -248,6 +320,22 @@ let render (error: t): err_text =
      [
        Text "The expression is not a valid constant expression."
      ]
+  | ForBoundNotIndex { bound; ty } ->
+     let word = match bound with
+       | Common.InitialLoopBound -> "initial"
+       | Common.FinalLoopBound -> "final"
+     in
+     [
+       Text "The ";
+       Text word;
+       Text " bound of a ";
+       Code "for";
+       Text " loop has the type ";
+       Type ty;
+       Text ", but it must have the type ";
+       Type index_type;
+       Text "."
+     ]
   | FunPointerNamedArgs ->
      [
        Text "You can't call a function pointer with a named argument list, because function pointers don't preserve parameter names, so we wouldn't know how to assign arguments to parameters."
@@ -299,30 +387,6 @@ let render (error: t): err_text =
        Code (ident_string typeclass);
        Text " has no instance which matches for ";
        Type ty
-     ]
-  | OverlappingInstancesMatch { typeclass; ty; modules } ->
-     [
-       Text "More than one instance of the typeclass ";
-       Code (ident_string typeclass);
-       Text " matches the type ";
-       Type ty;
-       Text ". The instances are declared in the modules ";
-     ]
-     @ code_list (List.map mod_name_string modules)
-     @ [
-       Text ". Instances of a typeclass must not overlap: remove all but one of them."
-     ]
-  | InstanceMissingMethod { typeclass; ty; module_name; method_name } ->
-     [
-       Text "The instance of the typeclass ";
-       Code (ident_string typeclass);
-       Text " for ";
-       Type ty;
-       Text ", declared in the module ";
-       Code (mod_name_string module_name);
-       Text ", does not define the method ";
-       Code (ident_string method_name);
-       Text ". An instance must define every method of its typeclass."
      ]
   | PathNotPublic { type_name; slot_name } ->
      [
@@ -383,6 +447,17 @@ let render (error: t): err_text =
        Type ty;
        Text " is not allowed in the signature of an exported function."
      ]
+  | ImportDisallowedType { function_name; parameter; ty } ->
+     (match parameter with
+      | Some parameter ->
+         [Text "The type "; Type ty; Text " of the parameter "; Code (ident_string parameter)]
+      | None ->
+         [Text "The return type "; Type ty])
+     @ [
+         Text " is not allowed in the signature of the imported function ";
+         Code (ident_string function_name);
+         Text "."
+       ]
   | TyparamRedefinition { param; was; redef } ->
      [
        Text "The type parameter ";
@@ -422,7 +497,7 @@ let render (error: t): err_text =
        Text "."
      ]
   | UnsatisfiedConstraint { tyvar; ty; typeclass } ->
-     let (TypeVariable (tyvar_name, _, _, _)) = tyvar in
+     let (TypeVariable (tyvar_name, _, _, _, _)) = tyvar in
      [
        Text "Type constraint not satisfied: the type ";
        Type ty;
@@ -435,7 +510,7 @@ let render (error: t): err_text =
        Text "."
      ]
   | ConstraintNotTypeclass { tyvar; typeclass } ->
-     let (TypeVariable (tyvar_name, _, source, _)) = tyvar in
+     let (TypeVariable (tyvar_name, _, source, _, _)) = tyvar in
      [
        Text "The type parameter ";
        Code (ident_string tyvar_name);
@@ -446,7 +521,7 @@ let render (error: t): err_text =
        Text ", which is not a typeclass. A constraint must name a typeclass."
      ]
   | ConstraintUnknownTypeclass { tyvar; typeclass } ->
-     let (TypeVariable (tyvar_name, _, source, _)) = tyvar in
+     let (TypeVariable (tyvar_name, _, source, _, _)) = tyvar in
      [
        Text "The type parameter ";
        Code (ident_string tyvar_name);
@@ -483,6 +558,10 @@ let render (error: t): err_text =
        Type ty;
        Text "."
      ]
+  | DivisorIsZero ->
+     [
+       Text "The divisor of this division is zero."
+     ]
   | PointerAccessNotReference ty ->
      [
        Text "The type ";
@@ -498,4 +577,14 @@ let render (error: t): err_text =
      [
        Text "The type for the expression in a case statement must be a union or a reference to a union, but I got ";
        Type ty
+     ]
+  | ReferenceRegionNotARegion ty ->
+     [
+       Text "The region of a reference or a span must be a region, such as ";
+       Code "Static";
+       Text " or a type parameter of the ";
+       Code "Region";
+       Text " universe, but ";
+       Type ty;
+       Text " is not a region."
      ]

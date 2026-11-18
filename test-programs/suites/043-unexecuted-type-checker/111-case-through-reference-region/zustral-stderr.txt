@@ -3,7 +3,7 @@
   "kind": "Type Error",
   "text": [
     { "type": "text", "content": "The case expression has type " },
-    { "type": "type", "content": "Region<0>" },
+    { "type": "type", "content": "Static" },
     { "type": "text", "content": " which is not a union type." }
   ],
   "span": {

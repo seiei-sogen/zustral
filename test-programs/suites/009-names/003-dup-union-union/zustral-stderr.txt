@@ -11,12 +11,12 @@
   "span": {
     "filename": "test-programs/suites/009-names/003-dup-union-union/Test.zum",
     "startp": { "line": 4, "column": 4 },
-    "end": { "line": 4, "column": 25 }
+    "end": { "line": 4, "column": 33 }
   },
   "context": [
-    [ 2, "    union A: Free is end;" ],
+    [ 2, "    union A: Free is case X; end;" ],
     [ 3, "" ],
-    [ 4, "    union A: Free is end;" ],
+    [ 4, "    union A: Free is case Y; end;" ],
     [ 5, "" ],
     [ 6, "    function main(): ExitCode is" ]
   ]

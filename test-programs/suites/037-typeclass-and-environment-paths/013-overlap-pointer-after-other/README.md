@@ -1,1 +1,1 @@
-Covers a `Pointer` instance being rejected as overlapping an earlier instance for a different type, the behaviour of issue #122 (lib/TypeClasses.ml, overlapping_instances).
+Covers a `Pointer` instance after an instance for another type: they do not overlap (lib/TypeClasses.ml, overlapping_instances; issue #122). The compiler rejected the `Pointer` instance as overlapping an instance for any type.

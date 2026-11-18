@@ -1,0 +1,30 @@
+module body Test is
+    record Cell: Free is
+        n: Int64;
+    end;
+
+    generic [R: Region]
+    function bump(cell: &![Cell, R]): Int64 is
+        cell->n := cell->n + 10;
+        return 100;
+    end;
+
+    function showCellThenNumber(cell: Cell, number: Int64): Unit is
+        printLn(cell.n);
+        printLn(number);
+        return nil;
+    end;
+
+    function showNumberThenCell(number: Int64, cell: Cell): Unit is
+        printLn(number);
+        printLn(cell.n);
+        return nil;
+    end;
+
+    function main(): ExitCode is
+        var x: Cell := Cell(n => 1);
+        showCellThenNumber(x, bump(&!x));
+        showNumberThenCell(bump(&!x), x);
+        return ExitSuccess();
+    end;
+end module body.

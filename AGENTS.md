@@ -10,6 +10,7 @@ Zustral は Austral のフォークで、業務バッチ処理と10進計算に�
 ## ビルドとテスト
 
 ツールチェーンは Nix で揃える。コマンドは `nix-shell --command '...'` の中で実行する。
+Claude Code のクラウド環境では、先に `tools/coding-agent-setup/fetch-pinned-nixpkgs-with-git.sh` を1回実行する。nixpkgs の tarball を取得できないので、同じタグを git で取得する（issue #42）。
 
 - ビルド: `make`
 - OCaml の単体テスト（`test/`）: `make test`

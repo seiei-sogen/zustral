@@ -1,0 +1,1 @@
+Test that a constraint of a type parameter of a generic instance that names nothing is rejected where the instance is declared (issues #90 and #128). The message names the typeclass, which is what the type parameter of an instance belongs to. Before, the name was looked up only when a call needed the instance, and this program compiled.

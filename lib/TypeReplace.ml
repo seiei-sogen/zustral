@@ -37,27 +37,28 @@ let rec replace_tyvars_expr (bindings: type_bindings) (expr: texpr): texpr =
   | TTemporary (name, ty) ->
      let ty = replace_variables bindings ty in
      TTemporary (name, ty)
-  | TFuncall (id, name, args, rt, substs) ->
+  | TFuncall (id, name, args, rt, substs, written_order) ->
      let args = List.map (replace_tyvars_expr bindings) args
      and rt = replace_variables bindings rt
      and substs = bindings_from_list Error.NoSpan (List.map (fun (n, t) -> (n, replace_variables bindings t)) (bindings_list substs)) in
-     TFuncall (id, name, args, rt, substs)
-  | TMethodCall (meth_id, name, instance, args, rt, substs) ->
+     TFuncall (id, name, args, rt, substs, written_order)
+  | TMethodCall (meth_id, name, instance, args, rt, substs, written_order) ->
      let args = List.map (replace_tyvars_expr bindings) args
      and rt = replace_variables bindings rt
      and substs = bindings_from_list Error.NoSpan (List.map (fun (n, t) -> (n, replace_variables bindings t)) (bindings_list substs)) in
-     TMethodCall (meth_id, name, instance, args, rt, substs)
-  | TVarMethodCall { source_module_name; typeclass_id; params; method_name; args; dispatch_ty; rt; bindings=bindings'; } ->
+     TMethodCall (meth_id, name, instance, args, rt, substs, written_order)
+  | TVarMethodCall { typeclass_id; params; method_name; args; written_order; dispatch_ty; rt; bindings=bindings'; } ->
      (* FIXME: Do we have to replace the params and the bindings? *)
      let args = List.map (replace_tyvars_expr bindings) args
      and dispatch_ty = replace_variables bindings dispatch_ty
      and rt = replace_variables bindings rt
      in
-     TVarMethodCall { source_module_name; typeclass_id; params; method_name; args; dispatch_ty; rt; bindings=bindings'; }
-  | TFptrCall (name, args, rt) ->
-     let args = List.map (replace_tyvars_expr bindings) args
+     TVarMethodCall { typeclass_id; params; method_name; args; written_order; dispatch_ty; rt; bindings=bindings'; }
+  | TFptrCall (name, paramtys, args, rt) ->
+     let paramtys = List.map (replace_variables bindings) paramtys
+     and args = List.map (replace_tyvars_expr bindings) args
      and rt = replace_variables bindings rt in
-     TFptrCall (name, args, rt)
+     TFptrCall (name, paramtys, args, rt)
   | TCast (expr, ty) ->
      let expr = replace_tyvars_expr bindings expr
      and ty = replace_variables bindings ty in
@@ -78,6 +79,8 @@ let rec replace_tyvars_expr (bindings: type_bindings) (expr: texpr): texpr =
      let lhs = replace_tyvars_expr bindings lhs
      and rhs = replace_tyvars_expr bindings rhs in
      TDisjunction (lhs, rhs)
+  | TArithmeticNegation operand ->
+     TArithmeticNegation (replace_tyvars_expr bindings operand)
   | TNegation expr ->
      let expr = replace_tyvars_expr bindings expr in
      TNegation expr
@@ -169,7 +172,7 @@ let rec replace_tyvars_stmt (bindings: type_bindings) (stmt: tstmt): tstmt =
      and final = replace_tyvars_expr bindings final
      and body = replace_tyvars_stmt bindings body in
      TFor (span, name, initial, final, body)
-  | TBorrow { span; original; rename; region; orig_type; ref_type; body; mode } ->
+  | TBorrow { span; original; rename; region; orig_type; ref_type; body; mode; origin } ->
      let orig_type = replace_variables bindings orig_type
      and ref_type = replace_variables bindings ref_type
      and body = replace_tyvars_stmt bindings body in
@@ -181,7 +184,8 @@ let rec replace_tyvars_stmt (bindings: type_bindings) (stmt: tstmt): tstmt =
          orig_type = orig_type;
          ref_type = ref_type;
          body = body;
-         mode = mode
+         mode = mode;
+         origin = origin
        }
   | TBlock (span, a, b) ->
      let a = replace_tyvars_stmt bindings a

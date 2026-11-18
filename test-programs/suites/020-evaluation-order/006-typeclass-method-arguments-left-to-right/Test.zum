@@ -1,0 +1,38 @@
+module body Test is
+    typeclass Joined(T: Free) is
+        method join(a: T, b: T): Int64;
+    end;
+
+    instance Joined(Int64) is
+        method join(a: Int64, b: Int64): Int64 is
+            return (a * 10) + b;
+        end;
+    end;
+
+    record Wrapped[T: Free]: Free is
+        value: T;
+    end;
+
+    generic [U: Free]
+    instance Joined(Wrapped[U]) is
+        method join(a: Wrapped[U], b: Wrapped[U]): Int64 is
+            return 0;
+        end;
+    end;
+
+    function p(x: Int64): Int64 is
+        printLn(x);
+        return x;
+    end;
+
+    function wrap(x: Int64): Wrapped[Int64] is
+        printLn(x);
+        return Wrapped(value => x);
+    end;
+
+    function main(): ExitCode is
+        printLn(join(p(1), p(2)));
+        printLn(join(wrap(3), wrap(4)));
+        return ExitSuccess();
+    end;
+end module body.

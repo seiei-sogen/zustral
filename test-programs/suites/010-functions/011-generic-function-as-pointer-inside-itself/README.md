@@ -1,0 +1,1 @@
+Test that a generic function can take itself as a function pointer, with its own type parameter `T` as the type argument, and call the pointer. Before, the pointer had no type argument: the compiler wrote C that named a function it never declared (`'decl_281' undeclared`; issues #128, #133).

@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The name " },
+    { "type": "code", "content": "R" },
+    {
+      "type": "text",
+      "content": " is the name of a type parameter, so a borrow cannot name its region with it."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/007-borrowing/035-borrow-region-named-like-a-type-parameter/Test.zum",
+    "startp": { "line": 5, "column": 8 },
+    "end": { "line": 7, "column": 19 }
+  },
+  "context": [
+    [ 3, "    function f(x: &[Int32, R]): Int32 is" ],
+    [ 4, "        let n: Int32 := 5;" ],
+    [ 5, "        borrow r: &[Int32, R] := &n do" ],
+    [ 6, "            printLn(!r);" ],
+    [ 7, "        end borrow;" ],
+    [ 8, "        return !x;" ],
+    [ 9, "    end;" ]
+  ]
+}

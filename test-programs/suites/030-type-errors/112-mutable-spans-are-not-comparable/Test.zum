@@ -1,0 +1,9 @@
+module body Test is
+    function sameSpan(s: Span![Nat8, Static]): Bool is
+        return s = s;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

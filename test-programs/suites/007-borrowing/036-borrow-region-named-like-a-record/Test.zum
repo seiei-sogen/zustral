@@ -1,0 +1,13 @@
+module body Test is
+    record Foo: Free is
+        v: Int32;
+    end;
+
+    function main(): ExitCode is
+        let foo: Foo := Foo(v => 3);
+        borrow r: &[Foo, Foo] := &foo do
+            printLn(r->v);
+        end borrow;
+        return ExitSuccess();
+    end;
+end module body.

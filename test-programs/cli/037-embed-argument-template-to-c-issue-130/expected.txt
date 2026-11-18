@@ -1,5 +1,4 @@
-exit: 2
-files: 
+exit: 0
+files: out.c
 --- stdout
 --- stderr
-Fatal error: exception Failure("Str.replace: reference to unmatched group")

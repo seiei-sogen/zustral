@@ -7,6 +7,18 @@
       "content": "Foreign functions can't have type parameters."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/055-foreign-type-parameters/Test.zum",
+    "startp": { "line": 5, "column": 4 },
+    "end": { "line": 7, "column": 8 }
+  },
+  "context": [
+    [ 3, "module body Test is" ],
+    [ 4, "    pragma Foreign_Import(External_Name => \"putchar\");" ],
+    [ 5, "    generic [T: Free]" ],
+    [ 6, "    function put(value: T): Int32 is" ],
+    [ 7, "    end;" ],
+    [ 8, "" ],
+    [ 9, "    function main(): ExitCode is" ]
+  ]
 }

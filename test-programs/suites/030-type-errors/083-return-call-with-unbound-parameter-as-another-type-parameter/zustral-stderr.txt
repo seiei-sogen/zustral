@@ -15,7 +15,7 @@
   },
   "context": [
     [ 14, "    generic [T: Free, U: Free, V: Free]" ],
-    [ 15, "    function confused(x: T, y: U, z: V): Either[T, V] is" ],
+    [ 15, "    function confused(x: T, y: U, z: V): Choice[T, V] is" ],
     [ 16, "        return leftOnly(y);" ],
     [ 17, "    end;" ],
     [ 18, "" ]

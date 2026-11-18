@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "I can't find a " },
+    { "type": "text", "content": "variable" },
+    { "type": "text", "content": " named " },
+    { "type": "code", "content": "nope" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/033-type-checker-errors/030-unknown-variable-in-a-case-expression-points-at-the-case/Test.zum",
+    "startp": { "line": 9, "column": 8 },
+    "end": { "line": 12, "column": 17 }
+  },
+  "context": [
+    [ 7, "        let a: Int32 := 1;" ],
+    [ 8, "        printLn(a);" ],
+    [ 9, "        case nope of" ],
+    [ 10, "            when Dot do" ],
+    [ 11, "                skip;" ],
+    [ 12, "        end case;" ],
+    [ 13, "        return ExitSuccess();" ],
+    [ 14, "    end;" ]
+  ]
+}

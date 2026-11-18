@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "A declaration with the name " },
+    { "type": "code", "content": "Foo" },
+    { "type": "text", "content": " already exists in the module " },
+    { "type": "code", "content": "Test" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/052-case-named-like-a-case-of-another-union/Test.zum",
+    "startp": { "line": 7, "column": 4 },
+    "end": { "line": 10, "column": 8 }
+  },
+  "context": [
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    union V: Free is" ],
+    [ 8, "        case Foo;" ],
+    [ 9, "        case Baz;" ],
+    [ 10, "    end;" ],
+    [ 11, "" ],
+    [ 12, "    function main(): ExitCode is" ]
+  ]
+}

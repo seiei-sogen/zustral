@@ -7,7 +7,6 @@
 *)
 (** The status of a finished process, as a code. *)
 
-(** The exit code of a process that exited, or the number of the signal that
-    killed or stopped it (OCaml's number, which is negative for the signals
-    it knows). *)
+(** The exit code of a process that exited, or, as a shell reports it, 128
+    and the system's number of the signal that killed or stopped it. *)
 val exit_code : Unix.process_status -> int

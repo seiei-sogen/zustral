@@ -34,7 +34,7 @@ and consume_whitespace place lst =
   | ('\n' :: rest) -> consume_whitespace place rest
   | ('\r' :: rest) -> consume_whitespace place rest
   | ('\t' :: rest) -> consume_whitespace place rest
-  | ('\\' :: rest) -> rest
+  | ('\\' :: rest) -> escape_list place rest
   | _ -> generic_error place BadWhitespaceEscape
 
 let escaped_to_string (EscapedString s) =

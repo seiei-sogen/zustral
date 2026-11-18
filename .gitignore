@@ -11,5 +11,5 @@ result
 .serena/.gitignore
 .serena/project.yml
 .claude/worktrees/
-_build_coverage
+_build_*
 __pycache__/

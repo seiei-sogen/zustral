@@ -5,6 +5,18 @@
     { "type": "text", "content": "Duplicate type parameter " },
     { "type": "code", "content": "T" }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/033-type-checker-errors/010-duplicate-type-parameter/Test.zum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    generic [T: Free, T: Free]" ],
+    [ 3, "    function foo(x: T): Unit is" ],
+    [ 4, "        return nil;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    function main(): ExitCode is" ]
+  ]
 }

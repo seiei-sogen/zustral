@@ -1,5 +1,20 @@
-exit: 2
+exit: 255
 files: 
 --- stdout
 --- stderr
-Fatal error: exception Invalid_argument("List.map2")
+Error:
+  Title: Type Error
+  Module:
+    Arity
+  Location:
+    Filename: 'Arity.zum'
+    From: line 19, column 8
+    To: line 19, column 25
+  Description:
+    The typeclass `Kind` has no instance which matches for `Fn[Int32, Int32, Int32]`
+  Code:
+    17 |     function main(): ExitCode is
+    18 |         let f: Fn[Int32, Int32, Int32] := add;
+    19 |         printLn(kind(f));
+    20 |         return ExitSuccess();
+    21 |     end;

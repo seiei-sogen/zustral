@@ -1,0 +1,1 @@
+Test that a function of two parameters, used as a value of a function pointer type of one parameter, is a type mismatch (issue #85). The compiler stopped on `Invalid_argument("List.map2")`: the type matcher walked the two parameter lists in pairs without comparing their lengths (lib/TypeMatch.ml).

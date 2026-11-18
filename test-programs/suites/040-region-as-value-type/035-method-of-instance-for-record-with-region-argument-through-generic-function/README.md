@@ -1,0 +1,1 @@
+Covers the method of 034 called from a generic function whose type parameter has the typeclass as its constraint, given the record over the region of a `borrow` block: accepted. Before, the C compiler stopped with `incompatible type for argument 1` (issue #142).

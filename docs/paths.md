@@ -106,14 +106,14 @@ L-values are the expressions left-hand side of an assignment. The "L" is for
 
 ### Syntax
 
-An L-value is either:
+An L-value is a variable called the _head_, followed by zero or more _l-value elements_,
+which are one of:
 
-1.  A variable called the _head_, (this is the "simple lvalue" case)
-    1. Followed by zero or more _l-value elements_, which are one of:
-       1. A _slot accessor_, `.name`, where `name` is slot name.
-       1. A _reference-slot accessor_, `->name`, where `name` is a slot name.
-1. The dereference operator applied to an expression of write-reference type
-   (the "reference lvalue" case).
+1. A _slot accessor_, `.name`, where `name` is slot name.
+1. A _reference-slot accessor_, `->name`, where `name` is a slot name.
+
+A dereference is not an L-value: the parser does not accept `!(ref) := x;` (issue #34).
+To write through a write reference to a record, use a reference-slot accessor.
 
 ### Semantics
 
@@ -131,13 +131,10 @@ An L-value is either:
       consume(l);
       ```
       If we're allowed to overwrite linear values, their original contents leak.
-1. **Rule L3:** the write reference is consumed.
 
 ### Examples
 
 ```
 a := 10;
 a.b.c := 10;
-!(ref) := x;
-!(&(x->y->z)) := 20;
 ```

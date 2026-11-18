@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "A declaration with the name " },
+    { "type": "code", "content": "Foo" },
+    { "type": "text", "content": " already exists in the module " },
+    { "type": "code", "content": "Test" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/007-borrowing/036-borrow-region-named-like-a-record/Test.zum",
+    "startp": { "line": 8, "column": 8 },
+    "end": { "line": 10, "column": 19 }
+  },
+  "context": [
+    [ 6, "    function main(): ExitCode is" ],
+    [ 7, "        let foo: Foo := Foo(v => 3);" ],
+    [ 8, "        borrow r: &[Foo, Foo] := &foo do" ],
+    [ 9, "            printLn(r->v);" ],
+    [ 10, "        end borrow;" ],
+    [ 11, "        return ExitSuccess();" ],
+    [ 12, "    end;" ]
+  ]
+}

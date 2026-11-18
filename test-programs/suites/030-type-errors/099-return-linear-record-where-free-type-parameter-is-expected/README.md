@@ -1,0 +1,1 @@
+Test that returning a linear record where the type parameter `T: Free` is expected is a type mismatch. Before, the error said that `T` must be `Free` but `Lin` is `Linear`, as if `T` could be bound to `Lin` (issue #156).

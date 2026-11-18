@@ -1,0 +1,32 @@
+{
+  "module": null,
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The external name " },
+    {
+      "type": "code",
+      "content": "d0(int x) { return 0; } __attribute__((constructor)) static void ctor(void) { puts(\"C code run\"); } int my_exported"
+    },
+    { "type": "text", "content": " is not a C identifier." },
+    { "type": "break" },
+    {
+      "type": "text",
+      "content": "A C identifier starts with a letter or an underscore, and has only letters, digits, and underscores."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/064-foreign-export-external-name-is-not-a-c-identifier/Test.zum",
+    "startp": { "line": 4, "column": 43 },
+    "end": { "line": 4, "column": 162 }
+  },
+  "context": [
+    [ 2, "" ],
+    [ 3, "module body Test is" ],
+    [
+      4,
+      "    pragma Foreign_Export(External_Name => \"d0(int x) { return 0; } __attribute__((constructor)) static void ctor(void) { puts(\\\"C code run\\\"); } int my_exported\");"
+    ],
+    [ 5, "    function f(x: Int32): Int32 is" ],
+    [ 6, "        return x;" ]
+  ]
+}

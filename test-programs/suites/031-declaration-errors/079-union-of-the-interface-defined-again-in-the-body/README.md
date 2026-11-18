@@ -1,0 +1,1 @@
+Test that the body of a module cannot define again a union that its interface declares in full (issue #126). Before, the body's union, with another universe and other cases, was dropped without a word.

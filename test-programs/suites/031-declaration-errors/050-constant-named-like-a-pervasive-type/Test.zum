@@ -1,0 +1,8 @@
+module body Test is
+    constant Either: Bool := true;
+
+    function main(): ExitCode is
+        printLn(Either);
+        return ExitSuccess();
+    end;
+end module body.

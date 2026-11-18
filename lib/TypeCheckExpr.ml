@@ -26,6 +26,7 @@ open TypeVarSet
 open LexEnv
 open TypeBindings
 open TypeMatch
+open SignatureTypeAtUse
 open Error
 open Util
 
@@ -46,10 +47,30 @@ type expr_ctx =
       (** The lexical environment. *)
       place: place;
       (** Where an error in the expression is reported. *)
+      constants_not_yet_defined: identifier list;
+      (** In the value of a constant, that constant and the constants after it
+          in the module, which the value cannot name (#142). Empty elsewhere. *)
     }
 
 let make_ctx (place: place) (module_name: module_name) (env: env) (rm: region_map) (typarams: typarams) (lexenv: lexenv): expr_ctx =
-  ExpressionContext { module_name; env; rm; typarams; lexenv; place }
+  ExpressionContext { module_name; env; rm; typarams; lexenv; place; constants_not_yet_defined = [] }
+
+let make_constant_value_ctx (module_name: module_name) (env: env) (place: place) (constants_not_yet_defined: identifier list): expr_ctx =
+  ExpressionContext {
+      module_name;
+      env;
+      rm = empty_region_map;
+      typarams = empty_typarams;
+      lexenv = empty_lexenv;
+      place;
+      constants_not_yet_defined;
+    }
+
+(* Whether the constant is one that the expression cannot name. *)
+let is_constant_not_yet_defined (ctx: expr_ctx) (constant: qident): bool =
+  let (ExpressionContext { module_name; constants_not_yet_defined; _ }) = ctx in
+  (equal_module_name (source_module_name constant) module_name)
+  && (List.exists (equal_identifier (original_name constant)) constants_not_yet_defined)
 
 let ctx_module_name (ctx: expr_ctx): module_name =
   let (ExpressionContext { module_name; _ }) = ctx in
@@ -210,12 +231,16 @@ let rec augment_call (ctx: expr_ctx) (name: qident) (args: typed_arglist) (from_
   | Some (ty, _) ->
      augment_fptr_call ctx (local_name name) ty args
   | None ->
-     (* Otherwise, find a callable from the environment. *)
-     (match get_callable (ctx_place ctx) (ctx_env ctx) (ctx_module_name ctx) (qident_to_sident name) with
-      | Some callable ->
-         augment_callable ctx name callable from_context args
-      | None ->
-         generic_error (ctx_place ctx) (UnknownName { kind = CallableName; name = original_name name }))
+     augment_call_of_declaration ctx name args from_context
+
+(* A call of the callable that the environment has under the name, whatever
+   variable has that name. *)
+and augment_call_of_declaration (ctx: expr_ctx) (name: qident) (args: typed_arglist) (from_context: context_bindings): texpr =
+  match get_callable (ctx_place ctx) (ctx_env ctx) (ctx_module_name ctx) (qident_to_sident name) with
+  | Some callable ->
+     augment_callable ctx name callable from_context args
+  | None ->
+     generic_error (ctx_place ctx) (UnknownName { kind = CallableName; name = original_name name })
 
 and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (args: typed_arglist): texpr =
   (* Because function pointers don't preserve value parameter names, we can't
@@ -239,38 +264,38 @@ and augment_fptr_call (ctx: expr_ctx) (name: identifier) (fn_ptr_ty: ty) (args: 
      parameter names are fake, but this is so we can reuse the arity-checking,
      value parameter list-checking infrastructure we use elsewhere. *)
   let params: value_parameter list = List.map (fun paramty -> ValueParameter (make_ident BuiltInNames.fake_parameter_name, paramty)) paramtys in
-  (* Check synthetic parameter list against argument list. *)
+  (* Check synthetic parameter list against argument list. A function pointer
+     has no type parameters of its own: a type variable in its type is a type
+     parameter of the declaration being checked, which stands for itself, so
+     the arguments bind nothing. *)
   let bindings = check_argument_list ctx name params args in
-  (* A function pointer has no type parameters of its own. A type variable in
-     its type is a type parameter of the declaration being checked, and stands
-     for itself: an argument of another type does not bind it. *)
-  let _ =
-    match bindings_list bindings with
-    | [] ->
-       ()
-    | (parameter, argument_ty) :: _ ->
-       type_error (ctx_place ctx) (TypeMismatch { expected = TyVar (typaram_to_tyvar parameter); actual = argument_ty })
-  in
   (* The call has the return type of the pointer's type, wherever the call is:
-     no type variable of that type is bound by the place either. *)
+     the place binds nothing either. *)
   let arguments = cast_arguments bindings params args in
-  TFptrCall (name, arguments, rt)
+  TFptrCall (name, paramtys, arguments, rt)
 
 and augment_callable (ctx: expr_ctx) (name: qident) (callable: callable) (from_context: context_bindings) (args: typed_arglist) =
+  (* The call uses the signature of the callable: the arguments and the place
+     of the call bind its type parameters. *)
+  let params_at_use: value_parameter list -> value_parameter list =
+    List.map (fun (ValueParameter (n, ty)) -> ValueParameter (n, signature_type_at_use ty))
+  and slots_at_use: typed_slot list -> typed_slot list =
+    List.map (fun (TypedSlot (n, ty)) -> TypedSlot (n, signature_type_at_use ty))
+  in
   match callable with
   | FunctionCallable (id, typarams, params, rt) ->
-     augment_function_call ctx id name typarams params rt from_context args
+     augment_function_call ctx id name typarams (params_at_use params) (signature_type_at_use rt) from_context args
   | RecordConstructor (id, typarams, universe, slots) ->
-     augment_record_constructor ctx id name typarams universe slots from_context args
-  | UnionConstructor { union_id; type_params; universe; case } ->
+     augment_record_constructor ctx id name typarams universe (slots_at_use slots) from_context args
+  | UnionConstructor { union_id; type_params; universe; case = TypedCase (case_name, slots) } ->
      let type_name: qident = (let { name; mod_id; _ }: union_decl = get_union (ctx_place ctx) (ctx_env ctx) union_id in
                                  (* TODO: constructing a fake qident *)
                                  make_qident (module_name_from_id (ctx_place ctx) (ctx_env ctx) mod_id, name, name))
      in
-     augment_union_constructor ctx union_id type_name type_params universe case from_context args
+     augment_union_constructor ctx union_id type_name type_params universe (TypedCase (case_name, slots_at_use slots)) from_context args
   | MethodCallable { typeclass_id; value_parameters; return_type; _ } ->
      let { param; _ }: typeclass_decl = get_typeclass (ctx_place ctx) (ctx_env ctx) typeclass_id in
-     augment_method_call ctx typeclass_id param name value_parameters return_type from_context args
+     augment_method_call ctx typeclass_id param name (params_at_use value_parameters) (signature_type_at_use return_type) from_context args
 
 and augment_function_call (ctx: expr_ctx) (id: function_id) name typarams params rt (from_context: context_bindings) args =
   (* For simplicity, and to reduce duplication of code, we convert the argument
@@ -286,7 +311,7 @@ and augment_function_call (ctx: expr_ctx) (id: function_id) name typarams params
   check_bindings (ctx_place ctx) typarams bindings'';
   let arguments' = cast_arguments bindings'' params arguments in
   let substs = make_substs (ctx_place ctx) bindings'' typarams in
-  TFuncall (id, name, arguments', rt'', substs)
+  TFuncall (id, name, arguments', rt'', substs, written_order_of_arguments (args, param_names))
 
 and augment_record_constructor (ctx: expr_ctx) (id: record_id) (name: qident) (typarams: typarams) (universe: universe) (slots: typed_slot list) (from_context: context_bindings) (args: typed_arglist) =
   (* Check: the argument list must be named *)
@@ -310,18 +335,19 @@ and augment_record_constructor (ctx: expr_ctx) (id: record_id) (name: qident) (t
     let params = List.map (fun (TypedSlot (n, t)) -> ValueParameter (n, t)) slots in
     let bindings = check_argument_list ctx (original_name name) params arguments in
     (* Use the bindings to get the effective return type *)
-    let rt = NamedType (name,
-                        RecordTypeId id,
-                        List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams),
-                        universe)
+    let rt = signature_type_at_use (NamedType (name,
+                                               RecordTypeId id,
+                                               List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams),
+                                               universe))
     in
     let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) (local_name name) params rt from_context bindings in
     (* Check: the set of bindings equals the set of type parameters *)
     check_bindings (ctx_place ctx) typarams (merge_bindings (ctx_place ctx) bindings bindings');
     (* The universe of rt'' is compatible with the declared one: it is that
        one, or, when that is `Type`, `Free`, `Linear` or `Type`
-       (`replaced_universe`). *)
-    TRecordConstructor (rt'', List.map2 (fun a b -> (a, b)) slot_names arguments)
+       (`replaced_universe`). The values are in the order the constructor
+       wrote them, which is the order they are evaluated in (#53). *)
+    TRecordConstructor (rt'', args')
 
 and augment_union_constructor (ctx: expr_ctx) (union_id: union_id) (type_name: qident) (typarams: typarams) (universe: universe) (case: typed_case) (from_context: context_bindings) (args: typed_arglist) =
   let args' = (match args with
@@ -346,24 +372,25 @@ and augment_union_constructor (ctx: expr_ctx) (union_id: union_id) (type_name: q
     let bindings = check_argument_list ctx case_name params arguments in
     (* Use the bindings to get the effective return type *)
     let tyargs = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams) in
-    let rt = NamedType (type_name, UnionTypeId union_id, tyargs, universe) in
+    let rt = signature_type_at_use (NamedType (type_name, UnionTypeId union_id, tyargs, universe)) in
     let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) case_name params rt from_context bindings in
     (* Check: the set of bindings equals the set of type parameters *)
     let bindings'' = merge_bindings (ctx_place ctx) bindings bindings' in
     check_bindings (ctx_place ctx) typarams bindings'';
-    (* The arguments of rt'': the variables of rt replaced with bindings, and
-       then with the bindings the place of the call gave. The universe
-       of rt'' is not the declared one when that is `Type`: each replacement
-       computed it again from the arguments. *)
-    let tyargs = List.map (fun a -> replace_variables bindings' (replace_variables bindings a)) tyargs in
-    (* As for a record, this universe is compatible with the declared one. *)
+    (* The arguments of rt'': the type parameters of the union with their
+       bindings in their place. The universe of rt'' is not the declared one
+       when that is `Type`: the replacement computed it again from the
+       arguments. *)
+    let tyargs = List.map (replace_variables bindings'') tyargs in
+    (* As for a record, this universe is compatible with the declared one, and
+       the values are in the order the constructor wrote them. *)
     TUnionConstructor {
         union_id;
         type_name;
         tyargs;
         universe = type_universe rt'';
         case_name;
-        args = List.map2 (fun a b -> (a, b)) slot_names arguments;
+        args = args';
       }
 
 and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: type_parameter) (callable_name: qident) (params: value_parameter list) (rt: ty) (from_context: context_bindings) (args: typed_arglist): texpr =
@@ -379,10 +406,11 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
   (* Use the bindings to get the effective return type *)
   let (bindings', rt'') = handle_return_type_polymorphism (ctx_place ctx) (local_name callable_name) params rt from_context bindings in
   let bindings'' = merge_bindings (ctx_place ctx) bindings bindings' in
+  let written_order: written_argument_order = written_order_of_arguments (args, param_names) in
   let dispatch_ty: ty = bound_type (ctx_place ctx) bindings'' typaram in
      (* Is the dispatch type a type variable? *)
      (match dispatch_ty with
-      | TyVar (TypeVariable (typaram, _, _, constraints)) ->
+      | TyVar (TypeVariable (typaram, _, _, constraints, _)) ->
          (* If so, check if the constraints say that it implements the typeclass. *)
          let tc_name: sident = get_decl_sident_or_die (ctx_place ctx) (ctx_env ctx) typeclass_id in
          if List.exists (fun c -> equal_sident tc_name c) constraints then
@@ -391,11 +419,11 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
               resolution, because we don't have a type to resolve an
               instance for. So we have to freeze the process. *)
            TVarMethodCall {
-               source_module_name = (ctx_module_name ctx);
                typeclass_id = typeclass_id;
                params = params;
                method_name = callable_name;
                args = arguments;
+               written_order = written_order;
                dispatch_ty = dispatch_ty;
                rt = rt'';
                bindings = bindings'';
@@ -419,7 +447,7 @@ and augment_method_call (ctx: expr_ctx) (typeclass_id: typeclass_id) (typaram: t
          let { typarams; _ }: instance_decl = instance in
          let meth_id: ins_meth_id = get_method_of_instance (ctx_place ctx) (ctx_env ctx) instance (original_name callable_name) in
          let substs = make_substs (ctx_place ctx) instance_bindings typarams in
-         TMethodCall (meth_id, callable_name, typarams, arguments', rt'', substs))
+         TMethodCall (meth_id, callable_name, typarams, arguments', rt'', substs, written_order))
 
 and cast_arguments (bindings: type_bindings) (params: value_parameter list) (arguments: texpr list): texpr list =
   let f (ValueParameter (_, expected)) value =
@@ -438,36 +466,33 @@ and cast_arguments (bindings: type_bindings) (params: value_parameter list) (arg
    bindings its arguments gave. A type parameter that no parameter mentions
    has no binding yet: the place of the call gives it one (`from_context`). *)
 and handle_return_type_polymorphism (place: place) (name: identifier) (params: value_parameter list) (declared_rt: ty) (from_context: context_bindings) (bindings: type_bindings): (type_bindings * ty) =
-  (* The bindings replace the variables of the declared type once. The type of
-     an argument can name a variable that has a binding too: a function that
-     calls itself with its parameters in another order. *)
-  let rt: ty = replace_variables bindings declared_rt in
-  (* Asked of the declared type. `rt` can have type variables that came in
-     with the types of the arguments: type parameters of the declaration being
-     checked, which stand for themselves. *)
   if is_return_type_polymorphic params declared_rt then
-    let bindings' = from_context name rt in
-    let _ = List.iter (check_bound_by_context place params declared_rt) (bindings_list bindings') in
-    (merge_bindings place bindings bindings', replace_variables bindings' rt)
+    (* The place says what the whole declared type is, so it binds every type
+       parameter of that type, also those the arguments bound. *)
+    let bindings_of_place: type_bindings = from_context name declared_rt in
+    let _ = List.iter (check_place_agrees_with_arguments place bindings) (bindings_list bindings_of_place) in
+    let all_bindings: type_bindings = merge_bindings place bindings bindings_of_place in
+    (* The bindings replace the type parameters of the declared type once. The
+       types they put in are not searched again: one of them can name a type
+       parameter of the declaration being checked, and where a function calls
+       itself, that is a type parameter that has a binding. *)
+    (all_bindings, replace_variables all_bindings declared_rt)
   else
-    (empty_bindings, rt)
+    (empty_bindings, replace_variables bindings declared_rt)
 
-(* The place of a call binds only a type parameter of what is called that no
-   parameter mentions: one of the declared return type, and of no parameter
-   type. A binding of another variable is of a type parameter of the
-   declaration being checked, which stands for itself. It came in with the
-   type of an argument, or it is a parameter of the declaration itself, when
-   the declaration calls itself: there the arguments gave it no binding,
-   because it already is what the parameter type says. *)
-and check_bound_by_context (place: place) (params: value_parameter list) (declared_rt: ty) ((parameter, expected): type_parameter * ty): unit =
-  let variable: type_var = typaram_to_tyvar parameter in
-  let in_a_parameter_type: bool =
-    List.exists (fun (ValueParameter (_, ty)) -> TypeVarSet.mem variable (type_variables ty)) params
-  in
-  if TypeVarSet.mem variable (type_variables declared_rt) && not in_a_parameter_type then
-    ()
-  else
-    type_error place (TypeMismatch { expected; actual = TyVar variable })
+(* A type parameter that an argument bound has the type the argument gave it,
+   and the place of the call has to expect that type. If the place could give
+   it another one, a value of a type parameter of the declaration being
+   checked would pass as a value of any type the place asks for (#151). *)
+and check_place_agrees_with_arguments (place: place) (bindings_of_arguments: type_bindings) ((parameter, expected): type_parameter * ty): unit =
+  match get_binding bindings_of_arguments parameter with
+  | Some actual ->
+     if equal_ty expected actual then
+       ()
+     else
+       type_error place (TypeMismatch { expected; actual })
+  | None ->
+     ()
 
 (* Given a function's parameter list and return type, check if the return type
    of a function is polymorphic. *)
@@ -485,9 +510,9 @@ and is_return_type_polymorphic (params: value_parameter list) (rt: ty): bool =
     let param_ty_vars: type_var list = TypeVarSet.elements param_type_vars
     in
     let var_name_in_typarams (n: identifier): bool =
-      List.exists (fun (TypeVariable (n', _, _, _)) -> equal_identifier n n') param_ty_vars
+      List.exists (fun (TypeVariable (n', _, _, _, _)) -> equal_identifier n n') param_ty_vars
     in
-    TypeVarSet.of_list (List.filter (fun (TypeVariable (n, _, _, _)) -> not (var_name_in_typarams n)) (TypeVarSet.elements rt_type_vars))
+    TypeVarSet.of_list (List.filter (fun (TypeVariable (n, _, _, _, _)) -> not (var_name_in_typarams n)) (TypeVarSet.elements rt_type_vars))
   in
   (TypeVarSet.cardinal vars_not_params) > 0
 
@@ -531,6 +556,8 @@ and infer_before_place_types_literal (ctx: expr_ctx) (expr: aexpr): texpr =
      augment_call ctx name arglist (no_expected_type (ctx_place ctx))
   | ArithmeticExpression (op, lhs, rhs) ->
      augment_arithmetic ctx op lhs rhs (no_expected_type (ctx_place ctx))
+  | ArithmeticNegation operand ->
+     augment_arithmetic_negation ctx operand
   | Comparison (op, lhs, rhs) ->
      augment_comparison ctx op lhs rhs
   | Conjunction (lhs, rhs) ->
@@ -581,8 +608,8 @@ and infer_with_expected (ctx: expr_ctx) (expr: aexpr) (expected: ty): texpr =
      augment_arithmetic ctx op lhs rhs (expected_type ctx expected)
   | NilConstant | BoolConstant _ | IntConstant _ | FloatConstant _ | StringConstant _
   | Temporary _ | Comparison _ | Conjunction _ | Disjunction _ | Negation _
-  | IfExpression _ | Embed _ | Deref _ | Typecast _ | SizeOf _ | SlotAccessor _
-  | PointerSlotAccessor _ | ArrayIndex _ ->
+  | ArithmeticNegation _ | IfExpression _ | Embed _ | Deref _ | Typecast _ | SizeOf _
+  | SlotAccessor _ | PointerSlotAccessor _ | ArrayIndex _ ->
      infer_before_place_types_literal ctx expr
 
 (* An operand of a comparison or of an arithmetic expression. A lone literal
@@ -598,15 +625,22 @@ and infer_operand (ctx: expr_ctx) (operand: aexpr) (other_operand: aexpr): texpr
 
 and augment_variable (ctx: expr_ctx) (name: qident) (from_context: context_bindings): texpr =
   let env = ctx_env ctx in
-  (* Does this name a declaration? *)
-  match get_decl_by_name (ctx_place ctx) env (qident_to_sident name) with
+  (* A variable hides a function the module imports under its name, as it
+     does in a call (augment_call). A variable cannot have the name of a
+     declaration of the module (check_var_doesnt_collide_with_decl). *)
+  let declaration: decl option =
+    match get_var (ctx_lexenv ctx) (local_name name) with
+    | Some _ -> None
+    | None -> get_decl_by_name (ctx_place ctx) env (qident_to_sident name)
+  in
+  match declaration with
   | Some (Function { id; typarams; value_params; rt; _ }) ->
      let arg_tys: ty list = List.map (fun (ValueParameter (_, ty)) -> ty) value_params in
      let fn_ty: ty = FnPtr (arg_tys, rt) in
      if (typarams_size typarams > 0) then
        (* Function is generic, the place it is used in fixes its type
           parameters. *)
-       let bindings: type_bindings = from_context (original_name name) fn_ty in
+       let bindings: type_bindings = from_context (original_name name) (signature_type_at_use fn_ty) in
        let rt: ty = replace_variables bindings rt
        and arg_tys: ty list = List.map (replace_variables bindings) arg_tys in
        let effective_fn_ty: ty = FnPtr (arg_tys, rt) in
@@ -620,11 +654,14 @@ and augment_variable (ctx: expr_ctx) (name: qident) (from_context: context_bindi
       | Some (ty, src) ->
          (match src with
           | VarConstant ->
-             TConstVar (name, ty)
+             if is_constant_not_yet_defined ctx name then
+               declaration_error (ctx_place ctx) (ConstantNotYetDefined (original_name name))
+             else
+               TConstVar (name, ty)
           | VarLexical VarParam ->
-             TParamVar ((original_name name), ty)
+             TParamVar ((local_name name), ty)
           | VarLexical (VarLocal _) ->
-             TLocalVar ((original_name name), ty))
+             TLocalVar ((local_name name), ty))
       | None ->
          generic_error (ctx_place ctx) (UnknownName { kind = VariableName; name = original_name name }))
 
@@ -634,17 +671,24 @@ and augment_temporary (ctx: expr_ctx) (name: identifier): texpr =
 and augment_comparison ctx op lhs rhs =
   let lhs' = infer_operand ctx lhs rhs
   and rhs' = infer_operand ctx rhs lhs in
-  let _ =
+  let operand_type: ty =
     (* Two types of the body being checked: a type variable stands for itself
        (TypeMatch.expect_same_type), and no literal has its type. *)
     match (LiteralTyping.is_numeric_literal lhs, LiteralTyping.is_numeric_literal rhs) with
     | (true, false) ->
        (* A lone literal on the left takes the type of the right operand. *)
-       expect_value_of_type_ctx ctx (get_type (ctx_place ctx) rhs') lhs'
+       let ty: ty = get_type (ctx_place ctx) rhs' in
+       expect_value_of_type_ctx ctx ty lhs';
+       ty
     | (false, true) | (false, false) | (true, true) ->
-       expect_value_of_type_ctx ctx (get_type (ctx_place ctx) lhs') rhs'
+       let ty: ty = get_type (ctx_place ctx) lhs' in
+       expect_value_of_type_ctx ctx ty rhs';
+       ty
   in
-  TComparison (op, lhs', rhs')
+  if is_comparable operand_type then
+    TComparison (op, lhs', rhs')
+  else
+    type_error (ctx_place ctx) (ComparisonOperandNotComparable operand_type)
 
 and augment_conjunction ctx lhs rhs =
   let lhs': texpr = infer ctx lhs
@@ -668,6 +712,27 @@ and augment_negation ctx e =
     TNegation e'
   else
     type_error (ctx_place ctx) (LogicalOperandsNotBoolean (NegationOperand (get_type (ctx_place ctx) e')))
+
+(* `-x` negates in the type of `x`. A literal operand was negated before type
+   checking (LiteralTyping.negation_of_operand). *)
+and augment_arithmetic_negation (ctx: expr_ctx) (operand: aexpr): texpr =
+  let operand': texpr = infer ctx operand in
+  let ty: ty = get_type (ctx_place ctx) operand' in
+  let trapping_arithmetic: sident =
+    make_sident pervasive_module_name (make_ident BuiltInNames.trapping_arithmetic_name)
+  in
+  (* A type parameter of the declaration being checked, with the constraint
+     the arithmetic operators need. Each instance has to give it a negatable
+     type (Monomorphize). *)
+  let is_parameter_with_trapping_arithmetic (typaram: type_parameter): bool =
+    equal_ty ty (TyVar (typaram_to_tyvar typaram))
+    && List.exists (equal_sident trapping_arithmetic) (typaram_constraints typaram)
+  in
+  if Option.is_some (NegatableType.of_type ty)
+     || List.exists is_parameter_with_trapping_arithmetic (typarams_as_list (ctx_typarams ctx)) then
+    TArithmeticNegation operand'
+  else
+    type_error (ctx_place ctx) (ArithmeticNegationOperandNotSigned ty)
 
 and augment_if_expr ctx c t f =
   let c' = infer ctx c
@@ -878,43 +943,41 @@ and check_annotated (ctx: expr_ctx) (expr: aexpr) (target_type: ty): texpr =
     TCast (expr', target_type)
   else
     (* Otherwise, if the expression has a mutable reference type and the
-       target type is a read reference, and they point to the same underlying
-       type and underlying region, just convert it to a read ref. This does
-       point 2. *)
+       target type is a reference to the same underlying type and underlying
+       region, a read reference is a conversion of the expression, which does
+       point 2, and a mutable reference is the expression itself (#133). *)
     (match (get_type (ctx_place ctx) expr') with
      | WriteRef (underlying_ty, region) ->
+        let to_same_reference (underlying_ty': ty) (region': ref_region) (converted: texpr): texpr =
+          match (equal_ty underlying_ty underlying_ty', equal_ty (ty_of_ref_region region) (ty_of_ref_region region')) with
+          | (true, true) ->
+             converted
+          | (false, true) ->
+             type_error (ctx_place ctx) (CastDifferentReferences DifferentUnderlyingType)
+          | (true, false) ->
+             type_error (ctx_place ctx) (CastDifferentReferences DifferentUnderlyingRegion)
+          | (false, false) ->
+             type_error (ctx_place ctx) (CastDifferentReferences DifferentTypeAndRegion)
+        in
         (match target_type with
          | ReadRef (underlying_ty', region') ->
-            (match (equal_ty underlying_ty underlying_ty', equal_ty (ty_of_ref_region region) (ty_of_ref_region region')) with
-             | (true, true) ->
-                TCast (expr', target_type)
-             | (false, true) ->
-                type_error (ctx_place ctx) (CastDifferentReferences DifferentUnderlyingType)
-             | (true, false) ->
-                type_error (ctx_place ctx) (CastDifferentReferences DifferentUnderlyingRegion)
-             | (false, false) ->
-                type_error (ctx_place ctx) (CastDifferentReferences DifferentTypeAndRegion))
+            to_same_reference underlying_ty' region' (TCast (expr', target_type))
+         | WriteRef (underlying_ty', region') ->
+            to_same_reference underlying_ty' region' expr'
          | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
-         | RegionTy _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
+         | RegionTy _ | Span _ | SpanMut _ | TyVar _ | Address _
          | Pointer _ | FnPtr _ ->
             type_error (ctx_place ctx) CastWriteRefToNonRef)
      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
      | RegionTy _ | ReadRef _ | Span _ | SpanMut _ | TyVar _ | Address _ | Pointer _
      | FnPtr _ ->
         (match try_match_type (ctx_env ctx, ctx_module_name ctx, ctx_place ctx) target_type (get_type (ctx_place ctx) expr') with
-         | Ok bindings ->
-            (* The two types are of the body being checked: a type variable
-               stands for itself (TypeMatch.expect_same_type). *)
-            (match bindings_list bindings with
-             | [] ->
-                expr'
-             | _ :: _ ->
-                type_error (ctx_place ctx) (CastInvalid { target = target_type; source = get_type (ctx_place ctx) expr' }))
+         | Ok _ ->
+            (* The two types are of the body being checked, where a type
+               variable stands for itself: the match binds nothing
+               (TypeMatch.expect_same_type). *)
+            expr'
          | Error _ ->
-            (* Every failure becomes this error, also a type error from
-               checking a constraint of a type variable in the target type: a
-               constraint that names no typeclass, or several overlapping
-               instances that match. *)
             type_error (ctx_place ctx) (CastInvalid { target = target_type; source = get_type (ctx_place ctx) expr' })))
 
 and augment_arglist (ctx: expr_ctx) (args: abstract_arglist): typed_arglist =
@@ -960,10 +1023,12 @@ and augment_arithmetic (ctx: expr_ctx) (op: arithmetic_operator) (lhs: aexpr) (r
                                   TImplicitCast (rhs', operand_ty);
                                 ]
     in
-    augment_call ctx op_qname args from_context
+    (* The operator names the method of Pervasive, not a local variable of
+       the method's name (#138). *)
+    augment_call_of_declaration ctx op_qname args from_context
   in
   (* Are the types the same? *)
-  if lhs_ty = rhs_ty then
+  if equal_ty lhs_ty rhs_ty then
     (* If the types are the same type, check it is a numeric type. *)
     if (is_numeric lhs_ty) then
       augment_arithmetic_call ()

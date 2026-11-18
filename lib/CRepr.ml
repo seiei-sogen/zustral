@@ -16,6 +16,7 @@ type c_function_linkage =
 
 (** The types that C or the prelude defines. *)
 type c_builtin_ty =
+  | CVoidType
   | CUnitType
   | CBoolType
   | CNat8Type

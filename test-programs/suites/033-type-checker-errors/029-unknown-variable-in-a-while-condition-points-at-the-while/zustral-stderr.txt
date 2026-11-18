@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "I can't find a " },
+    { "type": "text", "content": "variable" },
+    { "type": "text", "content": " named " },
+    { "type": "code", "content": "nope" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/033-type-checker-errors/029-unknown-variable-in-a-while-condition-points-at-the-while/Test.zum",
+    "startp": { "line": 5, "column": 8 },
+    "end": { "line": 7, "column": 18 }
+  },
+  "context": [
+    [ 3, "        var a: Int32 := 1;" ],
+    [ 4, "        printLn(a);" ],
+    [ 5, "        while nope do" ],
+    [ 6, "            a := 2;" ],
+    [ 7, "        end while;" ],
+    [ 8, "        return ExitSuccess();" ],
+    [ 9, "    end;" ]
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The name " },
+    { "type": "code", "content": "Int32" },
+    {
+      "type": "text",
+      "content": " is the name of a built-in type, so a declaration cannot have it."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/051-record-named-like-a-built-in-type/Test.zum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 4, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    record Int32: Free is" ],
+    [ 3, "        v: Int64;" ],
+    [ 4, "    end;" ],
+    [ 5, "" ],
+    [ 6, "    function main(): ExitCode is" ]
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Values of the type " },
+    { "type": "type", "content": "U" },
+    { "type": "text", "content": " cannot be compared." },
+    { "type": "break" },
+    { "type": "text", "content": "Only values of " },
+    { "type": "code", "content": "Unit" },
+    { "type": "text", "content": ", " },
+    { "type": "code", "content": "Bool" },
+    { "type": "text", "content": ", an integer type, a float type, " },
+    { "type": "code", "content": "Address" },
+    { "type": "text", "content": ", " },
+    { "type": "code", "content": "Pointer" },
+    {
+      "type": "text",
+      "content": ", or a function pointer type can be compared."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/118-unions-are-not-comparable/Test.zum",
+    "startp": { "line": 8, "column": 8 },
+    "end": { "line": 8, "column": 37 }
+  },
+  "context": [
+    [ 6, "" ],
+    [ 7, "    function main(): ExitCode is" ],
+    [ 8, "        let same: Bool := A() /= B();" ],
+    [ 9, "        return ExitSuccess();" ],
+    [ 10, "    end;" ]
+  ]
+}

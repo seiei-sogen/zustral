@@ -1,0 +1,1 @@
+Test that an instance method whose parameters differ from the typeclass's method, with the instance's type in place of the typeclass parameter, fails where it is declared. Before, the call was checked against the typeclass and the C code against the instance, and the C compiler failed (issue #91).

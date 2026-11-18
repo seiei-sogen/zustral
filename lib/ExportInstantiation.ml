@@ -14,10 +14,9 @@ open ForeignType
 let make_wrapper ((export_name, mono_id, { params; rt }): string * mono_id * mono_ty foreign_signature): c_decl =
   CFunctionDefinition (
       Desc "Wrapper function",
-      (* The name the user asked for gets the reserved-word escape (issue #92). *)
-      CIdent.external_escaped export_name,
+      CIdent.external_name export_name,
       List.map (fun (name, ty) -> CValueParam (gen_ident name, gen_foreign_type ty)) params,
-      gen_foreign_type rt,
+      gen_foreign_return_type rt,
       CBlock [
           CReturn (CFuncall (gen_mono_id mono_id, List.map (fun (n, _) -> CVar (gen_ident n)) params))
       ]

@@ -7,6 +7,18 @@
       "content": "Foreign functions can't have type parameters."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/029-foreign-generic-unit-return/Test.zum",
+    "startp": { "line": 5, "column": 4 },
+    "end": { "line": 7, "column": 8 }
+  },
+  "context": [
+    [ 3, "module body Test is" ],
+    [ 4, "    pragma Foreign_Import(External_Name => \"f\");" ],
+    [ 5, "    generic [T: Free]" ],
+    [ 6, "    function f(x: T): Unit is" ],
+    [ 7, "    end;" ],
+    [ 8, "" ],
+    [ 9, "    function main(): ExitCode is" ]
+  ]
 }

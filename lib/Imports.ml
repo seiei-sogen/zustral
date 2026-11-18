@@ -50,6 +50,10 @@ let importing_module_kind (im: import_map): Common.module_kind =
   let (ImportMap { import_into_kind; _ }) = im in
   import_into_kind
 
+let imported_symbols (im: import_map): qident list =
+  let (ImportMap { symbols; _ }) = im in
+  List.map snd (IdentifierMap.bindings symbols)
+
 let imported_instances (im: import_map): instance_id list =
   let (ImportMap { instances; _ }) = im in
   instances

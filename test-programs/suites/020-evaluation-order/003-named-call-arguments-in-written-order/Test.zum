@@ -1,0 +1,15 @@
+module body Test is
+    function p(x: Int64): Int64 is
+        printLn(x);
+        return x;
+    end;
+
+    function weigh(hundreds: Int64, tens: Int64, ones: Int64): Int64 is
+        return ((hundreds * 100) + (tens * 10)) + ones;
+    end;
+
+    function main(): ExitCode is
+        printLn(weigh(tens => p(1), ones => p(2), hundreds => p(3)));
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,1 @@
+Test that a record slot and a union case can be named like a C reserved word (issue #92). The slot `double`, the case `long` and its slot `static` get the reserved-word escape in C, as variables and parameters do. Before, they reached C as written, and the C compile failed.

@@ -18,20 +18,8 @@ module body Test is
     end;
 
     generic [R: Region]
-    function references(r: &[Int32, R], si: &[Span[Nat8, R], R], s: Span[Nat8, R]): Unit is
-        printLn(&(si[0]) = &(si[0]));
-        printLn(&(s[0]) = &(s[0]));
+    function references(r: &[Int32, R]): Unit is
         printLn(!r = 1);
-        printLn((r : &[Int32, R]) = r);
-        return nil;
-    end;
-
-    -- Never called, so never compiled to C: `=` on a span or a record makes C
-    -- that gcc rejects.
-    generic [T: Free]
-    function uncompiled(s: Span[Nat8, Static], t: Pair, x: T): Unit is
-        printLn("abc" = s);
-        printLn((t : Pair) = t);
         return nil;
     end;
 

@@ -13,11 +13,16 @@ val gen_function_id : function_id -> CIdent.t
 
 val gen_mono_id : mono_id -> CIdent.t
 
-(** The C name of a variable or a parameter. *)
+(** The C name of a name the user wrote: a variable, a parameter, a record
+    slot, a union case. *)
 val gen_ident : identifier -> CIdent.t
 
 (** The C type of a type that crosses the C boundary. *)
 val gen_foreign_type : MonoType.mono_ty ForeignType.foreign_ty -> c_ty
+
+(** The C return type of a function that crosses the C boundary: [void] for an
+    imported function that returns [Unit]. *)
+val gen_foreign_return_type : MonoType.mono_ty ForeignType.foreign_return -> c_ty
 
 (** Generate the C for a module.
 

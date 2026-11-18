@@ -1,0 +1,1 @@
+Covers a `let` of a write reference annotated with the write reference's own type: accepted, and the new variable reads the value. The annotation leaves the reference as it is. Before, the compiler stopped with `Write references can only be casted to a read reference.` (issue #133).

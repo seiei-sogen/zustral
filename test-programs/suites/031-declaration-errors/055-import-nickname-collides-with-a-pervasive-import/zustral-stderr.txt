@@ -1,0 +1,29 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "Colliding imports: a declaration with name "
+    },
+    { "type": "code", "content": "abort" },
+    { "type": "text", "content": " has already been imported." },
+    { "type": "break" },
+    {
+      "type": "text",
+      "content": "Consider giving it a different nickname using "
+    },
+    { "type": "code", "content": "as" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/055-import-nickname-collides-with-a-pervasive-import/Test.zum",
+    "startp": { "line": 1, "column": 0 },
+    "end": { "line": 1, "column": 26 }
+  },
+  "context": [
+    [ 1, "import M (quiet as abort);" ],
+    [ 2, "" ],
+    [ 3, "module body Test is" ]
+  ]
+}

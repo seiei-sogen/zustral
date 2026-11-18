@@ -1,0 +1,1 @@
+Test that the value of a constant cannot name a constant declared after it (issue #142). Here the two constants name each other: before, the program passed type checking, and the C compiler failed. The rule that a constant names only the constants before it rules out every such cycle. The error is at the constant (issue #87).

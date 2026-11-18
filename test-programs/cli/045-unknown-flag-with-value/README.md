@@ -1,1 +1,1 @@
-For cli/CliParser.ml, parse: the alternative `ValueFlag _ :: _` of the last arm, a first argument that is a flag with a value. Shows that the compiler prints its usage. That an unknown flag ends with exit code 0 looks wrong; the test pins today's behaviour.
+For cli/CliParser.ml, parse: the arm for a first argument that is a flag with a value (issue #144). Shows that the compiler names the unknown option, with its value, on stderr and ends with a non-zero exit code.

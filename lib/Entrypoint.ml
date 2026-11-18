@@ -32,7 +32,8 @@ let rec check_entrypoint_validity (env: env) (name: qident): function_id * entry
   match get_decl_by_name NoSpan env (qident_to_sident name) with
   | Some decl ->
      (match decl with
-      | Function { id; vis; typarams; value_params; rt; _ } ->
+      | Function { id; span; vis; typarams; value_params; rt; _ } ->
+         let place: place = AtSpan span in
          let public: bool =
            match vis with
            | VisPublic -> true
@@ -47,7 +48,7 @@ let rec check_entrypoint_validity (env: env) (name: qident): function_id * entry
                  | Some exit_code ->
                     (id, EmptyEntrypoint exit_code)
                  | None ->
-                    entrypoint_error NoSpan (WrongReturnType rt))
+                    entrypoint_error place (WrongReturnType rt))
              | [ValueParameter (_, pt)] ->
                 (* Single parameter case: the `root` parameter. *)
                 (match root_cap_type_id pt with
@@ -56,15 +57,15 @@ let rec check_entrypoint_validity (env: env) (name: qident): function_id * entry
                      | Some exit_code ->
                         (id, RootCapEntrypoint (root_cap, exit_code))
                      | None ->
-                        entrypoint_error NoSpan (WrongReturnType rt))
+                        entrypoint_error place (WrongReturnType rt))
                  | None ->
-                    entrypoint_error NoSpan (WrongParameterType pt))
+                    entrypoint_error place (WrongParameterType pt))
              | _ :: _ :: _ ->
-                entrypoint_error NoSpan MultipleParameters
+                entrypoint_error place MultipleParameters
            else
-             entrypoint_error NoSpan NotMonomorphic
+             entrypoint_error place NotMonomorphic
          else
-           entrypoint_error NoSpan NotPublic
+           entrypoint_error place NotPublic
       | Constant _ | Record _ | Union _ | UnionCase _ | TypeClass _ | TypeClassMethod _ ->
          entrypoint_error NoSpan NotFunction)
   | None ->

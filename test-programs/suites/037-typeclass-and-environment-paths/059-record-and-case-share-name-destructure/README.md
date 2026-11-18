@@ -1,1 +1,1 @@
-The program of 058 with a destructuring of the record instead of a path (lib/TypingPass.ml, augment_destructure, which takes the slots through the same lookup).
+The program of 058 with a destructuring of the record instead of a path. The case is a declaration error at the union (issue #86), before the destructuring is checked (lib/TypingPass.ml, augment_destructure).

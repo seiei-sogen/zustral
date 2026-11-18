@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "Expected a value of type " },
+    { "type": "type", "content": "Int32" },
+    { "type": "text", "content": ", but got a value of type " },
+    { "type": "type", "content": "Bool" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/034-early-and-late-stage-errors/035-type-error-in-a-constant-value/Test.zum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 2, "column": 30 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    constant c: Int32 := true;" ],
+    [ 3, "" ],
+    [ 4, "    function main(): ExitCode is" ]
+  ]
+}

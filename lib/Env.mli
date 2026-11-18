@@ -80,9 +80,10 @@ val module_name_from_id : Error.place -> env -> mod_id -> module_name
 (** Register a declaration or an instance method. Returns the environment that
     has it, and its ID. This is the only way either enters the environment.
 
-    Raises a declaration error if a constant, record, union, function or
-    typeclass takes a name that a declaration of its module already has. Union
-    cases, typeclass methods, instances and instance methods are not checked. *)
+    Raises a declaration error if a constant, record, union, union case,
+    function, typeclass or typeclass method takes a name that is taken
+    ({!name_must_be_free}). Instances and instance methods have no name of
+    their own, and are not checked. *)
 val register : Error.place -> env -> 'id registration -> (env * 'id)
 
 (** The ID of a record that the module being extracted declares, before the
@@ -98,9 +99,10 @@ val reserve_record_id : env -> (env * record_id)
 (** {!reserve_record_id} for a union. *)
 val reserve_union_id : env -> (env * union_id)
 
-(** Raise the error [register] raises when a declaration of the module already
-    has the name. For a check that must report a taken name before its own
-    errors, as the extraction of a foreign function does. *)
+(** Raise the error [register] raises when the name is taken: it names a
+    built-in type, the module imports it, or a declaration of the module already
+    has it. For a check that must report a taken name before its own errors, as
+    the extraction of a foreign function does. *)
 val name_must_be_free : Error.place -> env -> mod_id -> identifier -> unit
 
 (** Given a function ID, the export name of that function and its checked
@@ -129,9 +131,8 @@ val get_instance_decl : Error.place -> env -> instance_id -> instance_decl
     If a module with the given name doesn't exist, raises an error. *)
 val get_decl_by_name : Error.place -> env -> sident -> decl option
 
-(** Find a typeclass method from its typeclass ID and name, returning {!None} if
-    the typeclass has no method of that name. *)
-val get_method_from_typeclass_id_and_name : env -> typeclass_id -> identifier -> typeclass_method_decl option
+(** The methods of a typeclass, in the order of their declaration. *)
+val get_typeclass_methods : env -> typeclass_id -> typeclass_method_decl list
 
 (** Return all typeclass instances defined in a module. *)
 val module_instances: env -> mod_id -> instance_decl list
@@ -142,9 +143,8 @@ val module_public_instances: env -> mod_id -> instance_decl list
 (** Return the list of cases of a union. *)
 val get_union_cases : env -> union_id -> union_case_decl list
 
-(** Get method from the instance ID and name, returning {!None} if the instance
-    does not define a method of that name. *)
-val get_instance_method_from_instance_id_and_method_name : env -> instance_id -> identifier -> ins_meth_rec option
+(** Get method from the instance ID and the name of a method of its typeclass. *)
+val get_instance_method_from_instance_id_and_method_name : Error.place -> env -> instance_id -> identifier -> ins_meth_rec
 
 (** Get an instance method by ID. *)
 val get_instance_method : env -> ins_meth_id -> ins_meth_rec
@@ -213,3 +213,6 @@ val get_variable : Error.place -> env -> lexenv -> qident -> (ty * variable_sour
     instances that are defined in the module itself, but the instances imported
     by the module. *)
 val visible_instances : Error.place -> env -> mod_id -> instance_decl list
+
+(** Return the typeclass instances of every module. *)
+val all_instances : env -> instance_decl list

@@ -1,0 +1,15 @@
+module body Lib is
+    generic [U: Free(Show)]
+    instance Show(Box[U]) is
+        method show(x: Box[U]): Unit is
+            show(x.inner);
+            return nil;
+        end;
+    end;
+
+    generic [T: Free(Show)]
+    function showIt(x: T): Unit is
+        show(x);
+        return nil;
+    end;
+end module body.

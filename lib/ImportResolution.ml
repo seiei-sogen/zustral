@@ -22,9 +22,11 @@ open EnvUtils
 
     The first symbol would correspond to this {ImportDecl}:
 
-    {ImportDecl ("Foo.Bar", "A", "D")}
+    {ImportDecl (span, "Foo.Bar", "A", "D")}
+
+    where [span] is the span of the import statement.
  *)
-type import_decl = ImportDecl of module_name * identifier * identifier
+type import_decl = ImportDecl of Span.span * module_name * identifier * identifier
 
 (** Return the nickname if non-{None}, otherwise return the name. *)
 let nickname_or_real_name (name: identifier) (nickname: identifier option): identifier =
@@ -35,21 +37,22 @@ let nickname_or_real_name (name: identifier) (nickname: identifier option): iden
 (** Take a list of import lists, and flatten it to a list of import decls *)
 let flatten_imports (list: concrete_import_list list): import_decl list =
   let ll = List.map
-             (fun (ConcreteImportList (mn, imports)) ->
+             (fun (ConcreteImportList (span, mn, imports)) ->
                List.map (fun (ConcreteImport (name, nickname)) ->
-                   ImportDecl (mn, name, nickname_or_real_name name nickname))
+                   ImportDecl (span, mn, name, nickname_or_real_name name nickname))
                  imports)
              list in
   List.concat ll
 
 let resolve_import (env: env) (imports: import_map) (idecl: import_decl): import_map =
-  let (ImportDecl (module_name, name, nickname)) = idecl in
+  let (ImportDecl (span, module_name, name, nickname)) = idecl in
+  let place: place = AtSpan span in
   let sname = make_sident module_name name in
-  match get_decl_by_name NoSpan env sname with
+  match get_decl_by_name place env sname with
   | Some decl ->
      if is_importable decl then
        match get_symbol imports nickname with
-       | Some _ -> declaration_error NoSpan (DoubleImport name)
+       | Some _ -> declaration_error place (DoubleImport nickname)
        | None ->
           let safe: bool =
             match importing_module_kind imports with
@@ -57,13 +60,13 @@ let resolve_import (env: env) (imports: import_map) (idecl: import_decl): import
             | UnsafeModule -> false
           in
           if (equal_module_name module_name memory_module_name) && safe then
-            declaration_error NoSpan ImportMemoryInSafeModule
+            declaration_error place ImportMemoryInSafeModule
           else
             add_symbol imports (make_qident (module_name, name, nickname))
      else
-       declaration_error NoSpan (ImportPrivate name)
+       declaration_error place (ImportPrivate name)
   | None ->
-     declaration_error NoSpan (ImportUnresolved { name; module_name })
+     declaration_error place (ImportUnresolved { name; module_name })
 
 let rec resolve' (env: env) (imports: import_map) (list: import_decl list): import_map =
   match list with
@@ -79,21 +82,18 @@ let rec add_instances (im: import_map) (is: instance_id list): import_map =
   | [] ->
      im
 
-let module_names (cil: concrete_import_list list): module_name list =
-  List.map (fun (ConcreteImportList (mn, _)) -> mn) cil
-
-let module_defined_instances (env: env) (mn: module_name): instance_id list =
+let module_defined_instances (env: env) (ConcreteImportList (span, mn, _): concrete_import_list): instance_id list =
   match (get_module_by_name env mn) with
   | Some mod_rec ->
      let ModRec { id; _ } = mod_rec in
      List.map (fun (instance: instance_decl) -> instance.id) (module_public_instances env id)
   | None ->
-     []
+     (* Only a list that imports no names gets here: resolve_import fails
+        earlier on a list that names a declaration (#144). *)
+     declaration_error (AtSpan span) (UnknownModule mn)
 
 let import_instances (env: env) (list: concrete_import_list list): instance_id list =
-  let mns = module_names list in
-  let instances = List.map (module_defined_instances env) mns in
-  List.flatten instances
+  List.flatten (List.map (module_defined_instances env) list)
 
 let resolve (importing_module: module_name) (kind: module_kind) (env: env) (list: concrete_import_list list): import_map =
   let im: import_map = resolve' env (empty_map importing_module kind) (flatten_imports list) in

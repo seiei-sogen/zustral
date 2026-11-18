@@ -1,0 +1,11 @@
+module body Test is
+    function p(x: Int64): Int64 is
+        printLn(x);
+        return x;
+    end;
+
+    function main(): ExitCode is
+        printLn((-p(1)) + (-p(2)));
+        return ExitSuccess();
+    end;
+end module body.

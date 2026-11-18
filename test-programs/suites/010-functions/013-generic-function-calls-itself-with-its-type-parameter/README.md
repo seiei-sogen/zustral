@@ -1,0 +1,1 @@
+Test that a generic function can call itself with a value of its own type parameter `T`: the call's type argument is the caller's `T`. Before, the call stopped with `No binding for this parameter: T`, because the caller's `T` and the `T` of the function that is called were one type variable (issues #156, #128, #133).

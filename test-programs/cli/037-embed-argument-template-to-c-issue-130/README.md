@@ -1,1 +1,1 @@
-Pins a bug: an `@embed` argument that contains `\1` is used as a replacement template, and the compiler dies with an OCaml exception when it renders the C (issue #130).
+Pins that the compiler writes the C for an `@embed` argument that contains `\1`. The argument used to be read as a replacement template, and the compiler stopped with an OCaml exception when it rendered the C, which it reported as an internal error (issue #130). `test-programs/suites/038-late-stage-paths/039-embed-argument-text-is-substituted-as-written` checks the C text.

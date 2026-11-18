@@ -1,0 +1,11 @@
+module body Test is
+    union Mine: Free is
+        case None;
+        case Other;
+    end;
+
+    function main(): ExitCode is
+        let m: Mine := None();
+        return ExitSuccess();
+    end;
+end module body.

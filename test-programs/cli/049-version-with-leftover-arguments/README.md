@@ -1,0 +1,1 @@
+For cli/CliParser.ml, parse: the arm for `--help` or `--version` followed by more arguments, with `--version` (issue #32). Shows that the compiler reports the leftover arguments instead of printing its version with exit code 0. 048-help-with-leftover-arguments has `--help`.

@@ -34,20 +34,16 @@ type t =
   | OverlappingInstances
   | DuplicateTypeParameter of type_parameter option
   | TypeWrongArity of { typename: identifier; expected: int; actual: int option }
-  | ForeignFunctionTypeNotAllowed
   | BorrowExpressionNotAllowed
   | BadWhitespaceEscape
   | SymbolImportedTwice
   | VariableAlreadyExists of identifier
-  | TypeclassResolutionFailed of ty
   | ParameterNotFound
   | ParameterArgumentLengthMismatch of { parameters: type_parameter list; arguments: mono_ty list }
-  | TypeOfStringConstant
   | RegionAlreadyExists
   | NoBindingForParameter of identifier
   | InstanceOverlapTypeNotAllowed
   | FreeTypeWithNonFreeArgument of qident
-  | TypeVariableNotReplaced of identifier
   | AssignToNonMutableReference of ty
   | ReborrowOfNonMutableReference of ty
   | LeftoverArguments
@@ -128,10 +124,6 @@ let render (error: t): err_text =
           Text " arguments."
         ]
       | None -> [Text "."])
-  | ForeignFunctionTypeNotAllowed ->
-     [
-       Text "Not allowed"
-     ]
   | BorrowExpressionNotAllowed ->
      [
        Text "Borrow expressions not allowed in this context."
@@ -148,11 +140,6 @@ let render (error: t): err_text =
      [
        Text ("push_var: var with the name " ^ (ident_string name) ^ " already exists")
      ]
-  | TypeclassResolutionFailed dispatch_ty ->
-     [
-       Text ("Typeclass resolution failed. Dispatch type: "
-             ^ (type_string dispatch_ty))
-     ]
   | ParameterNotFound ->
      [
        Text "Parameter not found."
@@ -163,10 +150,6 @@ let render (error: t): err_text =
              ^ (String.concat ", " (List.map show_type_parameter parameters))
              ^ "\narguments:\n"
              ^ (String.concat ", " (List.map show_mono_ty arguments)))
-     ]
-  | TypeOfStringConstant ->
-     [
-       Text "Type of the string constant"
      ]
   | RegionAlreadyExists ->
      [
@@ -183,10 +166,6 @@ let render (error: t): err_text =
   | FreeTypeWithNonFreeArgument name ->
      [
        Text ("Free type called with non-free argument: " ^ (qident_debug_name name))
-     ]
-  | TypeVariableNotReplaced name ->
-     [
-       Text ("strip_type': Variable not replaced: '" ^ (ident_string name) ^ "'")
      ]
   | AssignToNonMutableReference ty ->
      [

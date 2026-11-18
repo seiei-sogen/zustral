@@ -1,0 +1,13 @@
+pragma Unsafe_Module;
+
+module body Test is
+    pragma Foreign_Import(External_Name => "srand");
+    function seedRandom(seed: Nat32): Unit is
+    end;
+
+    function main(): ExitCode is
+        seedRandom(7);
+        printLn("seeded");
+        return ExitSuccess();
+    end;
+end module body.

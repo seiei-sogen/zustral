@@ -1,0 +1,22 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    {
+      "type": "text",
+      "content": "Cannot cast a reference to one with a different underlying type."
+    }
+  ],
+  "span": {
+    "filename": "test-programs/suites/043-unexecuted-type-checker/273-cast-write-reference-to-write-ref-of-another-type/Test.zum",
+    "startp": { "line": 4, "column": 8 },
+    "end": { "line": 4, "column": 50 }
+  },
+  "context": [
+    [ 2, "    generic [R: Region]" ],
+    [ 3, "    function probe(x: &![Int32, R]): Unit is" ],
+    [ 4, "        let y: &![Int64, R] := (x : &![Int64, R]);" ],
+    [ 5, "        return nil;" ],
+    [ 6, "    end;" ]
+  ]
+}

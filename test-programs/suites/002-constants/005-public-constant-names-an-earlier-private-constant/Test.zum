@@ -1,0 +1,9 @@
+module body Test is
+    constant Priv: Int32 := 5;
+    constant Pub: Int32 := Priv;
+
+    function main(): ExitCode is
+        printLn(Pub);
+        return ExitSuccess();
+    end;
+end module body.

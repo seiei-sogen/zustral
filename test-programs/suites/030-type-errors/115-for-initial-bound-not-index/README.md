@@ -1,0 +1,1 @@
+Test that a `for` loop whose initial bound is not an `Index` is rejected with an error about the bound, at the `for` statement (issue #124). The compiler used to cast the bound to `Index` before it checked the bound's type, so the error was `Cannot cast to Index from Bool`, with the position of the function.

@@ -1,0 +1,8 @@
+module Lib is
+    union Mode: Free is
+        case Up;
+        case Down;
+    end;
+
+    function pick(m: Mode): Int64;
+end module.

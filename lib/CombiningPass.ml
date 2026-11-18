@@ -45,10 +45,10 @@ let name_typaram (im: import_map) (name: qident) (ConcreteTypeParam (n, u, cs): 
 let name_typarams (place: place) (im: import_map) (params: concrete_type_param list) (name: qident): typarams =
   typarams_from_list place (List.map (name_typaram im name) params)
 
-let parse_method_decls (module_name: module_name) (imports: import_map) (methods: concrete_method_decl list): combined_method_decl list =
+let parse_method_decls (place: place) (module_name: module_name) (imports: import_map) (methods: concrete_method_decl list): combined_method_decl list =
   List.map (fun (ConcreteMethodDecl (n, typarams, params, rt, method_docstring)) ->
       CMethodDecl (n,
-                   name_typarams NoSpan imports typarams (make_qident (module_name, n, n)),
+                   name_typarams place imports typarams (make_qident (module_name, n, n)),
                    parse_params imports params,
                    qualify_typespec imports rt,
                    method_docstring))
@@ -163,6 +163,16 @@ let match_instance (module_name: module_name) (ii: import_map) (bi: import_map) 
              parse_method_defs (AtSpan span) module_name bi methods,
              docstring)
 
+(* The interface declares the record, union or typeclass in full, so a
+   definition of its name in the body would be another declaration of the name,
+   which nothing else sees (#126). *)
+let body_must_not_define (module_name: module_name) (cmb: concrete_module_body) (name: identifier): unit =
+  match get_concrete_def cmb name with
+  | Some def ->
+     declaration_error (AtSpan (def_span def)) (DeclarationAlreadyExists { name; module_name })
+  | None ->
+     ()
+
 let private_def module_name im def =
   let make_qname n =
     make_qident (module_name, n, n)
@@ -173,14 +183,14 @@ let private_def module_name im def =
                 VisPrivate,
                 name,
                 qualify_typespec im ty,
-                abs_expr NoSpan im value,
+                abs_expr (AtSpan span) im value,
                 docstring)
   | ConcreteNamedDef (ConcreteRecordDef (ConcreteRecord (span, name, typarams, universe, slots, docstring))) ->
      let qname = make_qname name in
      CRecord (span,
               TypeVisPrivate,
               name,
-              name_typarams NoSpan im typarams qname,
+              name_typarams (AtSpan span) im typarams qname,
               universe,
               parse_slots im slots,
               docstring)
@@ -189,7 +199,7 @@ let private_def module_name im def =
      CUnion (span,
              TypeVisPrivate,
              name,
-             name_typarams NoSpan im typarams qname,
+             name_typarams (AtSpan span) im typarams qname,
              universe,
              parse_cases im cases,
              docstring)
@@ -198,10 +208,10 @@ let private_def module_name im def =
      CFunction (span,
                 VisPrivate,
                 name,
-                name_typarams NoSpan im typarams qname,
+                name_typarams (AtSpan span) im typarams qname,
                 parse_params im params,
                 qualify_typespec im rt,
-                abs_stmt NoSpan im body,
+                abs_stmt (AtSpan span) im body,
                 docstring,
                 pragmas)
   | ConcreteNamedDef (ConcreteTypeClassDef (ConcreteTypeClass (span, name, typaram, methods, docstring))) ->
@@ -210,7 +220,7 @@ let private_def module_name im def =
                  VisPrivate,
                  name,
                  name_typaram im qname typaram,
-                 parse_method_decls module_name im methods,
+                 parse_method_decls (AtSpan span) module_name im methods,
                  docstring)
   | ConcreteInstanceDef (ConcreteInstance (span, name, typarams, argument, methods, docstring)) ->
      (* Instance names might refer to an imported typeclass, so we have to
@@ -222,21 +232,21 @@ let private_def module_name im def =
                 span,
                 VisPrivate,
                 qname,
-                name_typarams NoSpan im typarams qname,
+                name_typarams (AtSpan span) im typarams qname,
                 qualify_typespec im argument,
-                parse_method_defs NoSpan module_name im methods,
+                parse_method_defs (AtSpan span) module_name im methods,
                 docstring)
 
 open Outcome.Syntax
 
 let rec combine (env: env) (cmi: concrete_module_interface) (cmb: concrete_module_body): combined_module Outcome.t =
   let (ConcreteModuleInterface (mn, interface_docstring, interface_imports, decls)) = cmi
-  and (ConcreteModuleBody (mn', kind, body_docstring, body_imports, defs)) = cmb
+  and (ConcreteModuleBody (mn', name_span, kind, body_docstring, body_imports, defs)) = cmb
   in
   let* (im, bm) =
     Outcome.catch (fun () ->
         if mn <> mn' then
-          declaration_error NoSpan (ModuleNameMismatch { interface = mn; body = mn' })
+          declaration_error (AtSpan name_span) (ModuleNameMismatch { interface = mn; body = mn' })
         else
           let im = resolve mn kind env interface_imports
           and bm = resolve mn kind env body_imports
@@ -244,7 +254,7 @@ let rec combine (env: env) (cmi: concrete_module_interface) (cmb: concrete_modul
           (im, bm))
   in
   let* public_decls = Outcome.traverse (fun decl -> Outcome.catch (fun () -> parse_decl mn im bm cmb decl)) decls in
-  let* private_decls = parse_defs mn cmi bm defs in
+  let* private_decls = parse_defs mn cmi cmb bm defs in
   Ok (CombinedModule {
           name = mn;
           kind = kind;
@@ -260,12 +270,12 @@ and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb
     make_qident (module_name, n, n)
   in
   (* Some declarations need a matching definition in the body. *)
-  let definition (name: identifier): concrete_named_def =
+  let definition (span: Span.span) (name: identifier): concrete_named_def =
     match get_concrete_def cmb name with
     | (Some def) ->
        def
     | None ->
-       declaration_error NoSpan (MissingBodyDefinition name)
+       declaration_error (AtSpan span) (MissingBodyDefinition name)
   in
   match decl with
   | ConcreteInstanceDecl (span, name, typarams, argument, docstring) ->
@@ -274,52 +284,66 @@ and parse_decl (module_name: module_name) (im: import_map) (bm: import_map) (cmb
       | (Some def) ->
          match_instance module_name im bm span name typarams argument docstring def
       | None ->
-         declaration_error NoSpan (MissingInstanceBodyDefinition { name; ty = WrittenType (typespec_string argument) }))
+         declaration_error (AtSpan span) (MissingInstanceBodyDefinition { name; ty = WrittenType (typespec_string argument) }))
   | ConcreteConstantDecl (span, name, ty, docstring) ->
-     match_constant im bm span name ty docstring (definition name)
+     match_constant im bm span name ty docstring (definition span name)
   | ConcreteOpaqueTypeDecl (span, name, typarams, universe, docstring) ->
-     match_opaque_type module_name bm span name typarams universe docstring (definition name)
+     match_opaque_type module_name bm span name typarams universe docstring (definition span name)
   | ConcreteFunctionDecl (span, name, typarams, params, rt, docstring) ->
-     match_function module_name im bm span name typarams params rt docstring (definition name)
-  (* Some declarations don't need to have a matching body *)
+     match_function module_name im bm span name typarams params rt docstring (definition span name)
+  (* Some declarations don't need to have a matching body, and cannot have
+     one. *)
   | ConcreteRecordDecl (ConcreteRecord (span, name, typarams, universe, slots, docstring)) ->
+     body_must_not_define module_name cmb name;
      let qname = make_qname name in
      CRecord (span,
               TypeVisPublic,
               name,
-              name_typarams NoSpan im typarams qname,
+              name_typarams (AtSpan span) im typarams qname,
               universe,
               parse_slots im slots,
               docstring)
   | ConcreteUnionDecl (ConcreteUnion (span, name, typarams, universe, cases, docstring)) ->
+     body_must_not_define module_name cmb name;
      let qname = make_qname name in
      CUnion (span,
              TypeVisPublic,
              name,
-             name_typarams NoSpan im typarams qname,
+             name_typarams (AtSpan span) im typarams qname,
              universe,
              parse_cases im cases,
              docstring)
   | ConcreteTypeClassDecl (ConcreteTypeClass (span, name, typaram, methods, docstring)) ->
+     body_must_not_define module_name cmb name;
      let qname = make_qname name in
      CTypeclass (span,
                  VisPublic,
                  name,
                  name_typaram im qname typaram,
-                 parse_method_decls module_name im methods,
+                 parse_method_decls (AtSpan span) module_name im methods,
                  docstring)
 
-and parse_defs (mn: module_name) (cmi: concrete_module_interface) (im: import_map) (defs: concrete_def list): combined_definition list Outcome.t =
+and parse_defs (mn: module_name) (cmi: concrete_module_interface) (cmb: concrete_module_body) (im: import_map) (defs: concrete_def list): combined_definition list Outcome.t =
   Outcome.map (List.filter_map (fun def -> def))
-    (Outcome.traverse (fun def -> Outcome.catch (fun () -> parse_def mn cmi im def)) defs)
+    (Outcome.traverse (fun def -> Outcome.catch (fun () -> parse_def mn cmi cmb im def)) defs)
 
-and parse_def (module_name: module_name) (cmi: concrete_module_interface) (im: import_map) (def: concrete_def): combined_definition option =
+and parse_def (module_name: module_name) (cmi: concrete_module_interface) (cmb: concrete_module_body) (im: import_map) (def: concrete_def): combined_definition option =
   match def with
   | ConcreteNamedDef named ->
-     (* If this def exists in the interface, skip it *)
-     (match get_concrete_decl cmi (def_name named) with
+     (* If this def exists in the interface, skip it: parse_decl took the first
+        definition of the name in the body, or rejected it
+        (body_must_not_define). A later definition of the name would be
+        another declaration of it, which nothing else sees (#126). *)
+     let name: identifier = def_name named in
+     (match get_concrete_decl cmi name with
       | (Some _) ->
-         None
+         let is_a_later_definition: bool =
+           Option.fold ~none:false ~some:(fun first_definition -> first_definition != named) (get_concrete_def cmb name)
+         in
+         if is_a_later_definition then
+           declaration_error (AtSpan (def_span named)) (DeclarationAlreadyExists { name; module_name })
+         else
+           None
       | None ->
          Some (private_def module_name im def))
   | ConcreteInstanceDef (ConcreteInstance (_, name, typarams, argument, _, _)) ->
@@ -347,11 +371,11 @@ let as_public (def: combined_definition): combined_definition =
      CInstance (span, decl_span, VisPublic, name, typarams, argument, methods, docstring)
 
 let body_as_combined (env: env) (body: concrete_module_body): combined_module Outcome.t =
-  let (ConcreteModuleBody (mn, kind, body_docstring, body_imports, defs)) = body in
+  let (ConcreteModuleBody (mn, _, kind, body_docstring, body_imports, defs)) = body in
   (* We fake an empty module interface. *)
   let cmi: concrete_module_interface = ConcreteModuleInterface (mn, Docstring "", [], []) in
   let* imports = Outcome.catch (fun () -> resolve mn kind env body_imports) in
-  let* decls = parse_defs mn cmi imports defs in
+  let* decls = parse_defs mn cmi body imports defs in
   (* Go through the declarations and make them public. *)
   let decls = List.map as_public decls in
   Ok (CombinedModule {

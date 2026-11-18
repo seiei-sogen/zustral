@@ -23,16 +23,21 @@ type ctx = env * module_name * Error.place
 
 val match_type_with_value : ctx -> ty -> texpr -> type_bindings
 
-(** The two types are the same, with no type variable bound to anything. For
-    two types of the body being checked, where a type parameter of the
-    enclosing declaration stands for itself. {!match_type} is for the
-    signature of a function that is called: it binds its type variables. *)
+(** The two types are the same. For two types of the body being checked: a
+    type parameter of the enclosing declaration stands for itself there, so
+    nothing is bound. The error names the two whole types. *)
 val expect_same_type : ctx -> ty -> ty -> unit
 
 (** {!expect_same_type} for a value and the type its place declares. A literal
     that the rules for literals accept does not have to have the type. *)
 val expect_value_of_type : ctx -> ty -> texpr -> unit
 
+(** The bindings that make the first type the second. The first is a type of
+    the signature of a declaration that is used
+    ({!SignatureTypeAtUse.signature_type_at_use}): its type variables are
+    bound to what the second type has in their place. A type variable that
+    stands for itself ({!Type.StandsForItself}) is never bound: it matches
+    itself and no other type. *)
 val match_type : ctx -> ty -> ty -> type_bindings
 
 (** [match_type] with a failure returned as a value, the error that reports
@@ -46,6 +51,13 @@ val match_typarams : ctx -> typarams -> ty list -> type_bindings
 Parameters are: environment, source module name, dispatch type, and ID of the
 typeclass. *)
 val get_instance : Error.place -> env -> module_name -> ty -> typeclass_id -> (instance_decl * type_bindings) option
+
+(** {!get_instance} among the instances of every module, whatever module sees
+    them. For a method call in a generic function, whose instance can be in the
+    module that instantiates it (issue #128). A constraint of the instance's
+    type parameters is looked up among the instances of every module too. The
+    orphan rule leaves at most one instance that matches. *)
+val get_instance_from_every_module : Error.place -> env -> ty -> typeclass_id -> (instance_decl * type_bindings) option
 
 (** The method of the given name of an instance found by {!get_instance}: a
     type error if the instance does not define it. *)

@@ -39,8 +39,8 @@ let value_in_radix (zarith_prefix: string) (written: string): Z.t =
   Z.of_string (zarith_prefix ^ digits)
 
 let of_decimal (written: string): int_literal =
-  (* The lexer admits a sign, digits and separators, all of which `Z.of_string`
-     reads once the separators are gone, so this cannot fail. *)
+  (* The lexer admits digits and separators, all of which `Z.of_string` reads
+     once the separators are gone, so this cannot fail. *)
   { written; radix = Decimal; value = Z.of_string (without_separators written) }
 
 let of_hexadecimal (written: string): int_literal =
@@ -73,9 +73,14 @@ let of_float (written: string): float_literal =
 let of_value (value: Z.t): int_literal =
   { written = Z.to_string value; radix = Decimal; value }
 
-(* The value in decimal, whatever the literal looked like. C reads a literal
-   that starts with a zero as octal, so the text as written cannot go into the
-   C. *)
+let negated_float (literal: float_literal): float_literal =
+  let length: int = String.length literal.written in
+  if String.starts_with ~prefix:"-" literal.written then
+    { literal with written = String.sub literal.written 1 (length - 1) }
+  else
+    { literal with written = "-" ^ literal.written }
+
+(* The value in decimal, whatever the literal looked like. *)
 let int_text (literal: int_literal): string =
   Z.to_string literal.value
 

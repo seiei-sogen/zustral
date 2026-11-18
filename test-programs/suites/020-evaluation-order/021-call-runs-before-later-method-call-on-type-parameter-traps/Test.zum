@@ -1,0 +1,24 @@
+module body Test is
+    generic [T: Free(Printable)]
+    function shown(value: T): T is
+        printLn(value);
+        return value;
+    end;
+
+    generic [T: Free]
+    function firstOf(a: T, b: T): T is
+        return a;
+    end;
+
+    generic [T: Free(Printable, TrappingArithmetic)]
+    function dividendThenQuotient(a: T, b: T): T is
+        return firstOf(shown(a), trappingDivide(a, b));
+    end;
+
+    function main(): ExitCode is
+        let one: Int64 := 1;
+        let zero: Int64 := 0;
+        printLn(dividendThenQuotient(one, zero));
+        return ExitSuccess();
+    end;
+end module body.

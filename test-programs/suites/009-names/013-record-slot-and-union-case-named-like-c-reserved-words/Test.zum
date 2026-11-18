@@ -1,0 +1,21 @@
+module body Test is
+    record R: Free is
+        double: Int64;
+    end;
+
+    union U: Free is
+        case long is
+            static: Int64;
+    end;
+
+    function main(): ExitCode is
+        let r: R := R(double => 3);
+        printLn(r.double);
+        let u: U := long(static => 5);
+        case u of
+            when long(static: Int64) do
+                printLn(static);
+        end case;
+        return ExitSuccess();
+    end;
+end module body.

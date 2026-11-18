@@ -149,7 +149,7 @@ let render (error: t): err_text =
      [
        Text "The variable ";
        Code (ident_string name);
-       Text "cannot be consumed while it is borrowed (mutably).";
+       Text " cannot be consumed while it is borrowed (mutably).";
      ]
   | AlreadyConsumed name ->
      [

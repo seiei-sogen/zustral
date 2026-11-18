@@ -1,0 +1,17 @@
+pragma Unsafe_Module;
+
+module body Test is
+    pragma Foreign_Export(External_Name => "double_it");
+    function doubleIt(x: Float64): Float64 is
+        return x * 2.0;
+    end;
+
+    pragma Foreign_Import(External_Name => "double_it");
+    function importedDoubleIt(x: Float64): Float64 is
+    end;
+
+    function main(): ExitCode is
+        printLn(importedDoubleIt(1.5));
+        return ExitSuccess();
+    end;
+end module body.

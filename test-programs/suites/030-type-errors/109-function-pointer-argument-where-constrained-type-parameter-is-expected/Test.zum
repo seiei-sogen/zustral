@@ -1,0 +1,14 @@
+module body Test is
+    record Rec: Free is
+        v: Int32;
+    end;
+
+    generic [T: Free(Printable)]
+    function callWithRecord(f: Fn[T, Unit], r: Rec): Unit is
+        return f(r);
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

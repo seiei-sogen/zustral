@@ -1,0 +1,17 @@
+exit: 255
+files: 
+--- stdout
+--- stderr
+Error:
+  Title: Entrypoint Definition Error
+  Module:
+    Zustral.Pervasive
+  Location:
+    Filename: ''
+    From: line 13, column 4
+    To: line 16, column 8
+  Description:
+    The entrypoint function cannot be generic.
+  Code:
+    [no span available]
+

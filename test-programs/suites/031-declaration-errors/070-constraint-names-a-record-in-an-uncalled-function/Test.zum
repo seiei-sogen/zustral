@@ -1,0 +1,14 @@
+module body Test is
+    record R: Free is
+        v: Int32;
+    end;
+
+    generic [T: Free(R)]
+    function f(x: T): Int64 is
+        return 1;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

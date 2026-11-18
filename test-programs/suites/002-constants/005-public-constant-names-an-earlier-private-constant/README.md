@@ -1,0 +1,1 @@
+Test that the value of a constant that the interface declares can name a private constant that the body defines before it (issue #142). The order of the rule is the order of the definitions in the body. Before, the constants of the interface came before every private one, and `Pub` was said to name a constant that is not declared before it.

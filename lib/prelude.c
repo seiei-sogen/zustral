@@ -132,8 +132,49 @@ au_unit_t au_printf(const char* format, ...) {
   return nil;
 }
 
-void* au_array_index(au_span_t* array, size_t index, size_t elem_size) {
-  if (index >= array->size) {
+/*
+ * Arithmetic negation (`-x`). Negating the least value of a signed integer
+ * type overflows, and stops the program as the trapping arithmetic does.
+ */
+
+au_int8_t au_negate_int8(au_int8_t value) {
+  if (value == INT8_MIN) {
+    au_abort_internal("Overflow in negation (Int8)");
+  }
+  return -value;
+}
+
+au_int16_t au_negate_int16(au_int16_t value) {
+  if (value == INT16_MIN) {
+    au_abort_internal("Overflow in negation (Int16)");
+  }
+  return -value;
+}
+
+au_int32_t au_negate_int32(au_int32_t value) {
+  if (value == INT32_MIN) {
+    au_abort_internal("Overflow in negation (Int32)");
+  }
+  return -value;
+}
+
+au_int64_t au_negate_int64(au_int64_t value) {
+  if (value == INT64_MIN) {
+    au_abort_internal("Overflow in negation (Int64)");
+  }
+  return -value;
+}
+
+float au_negate_float32(float value) {
+  return -value;
+}
+
+double au_negate_float64(double value) {
+  return -value;
+}
+
+void* au_array_index(au_span_t array, size_t index, size_t elem_size) {
+  if (index >= array.size) {
     au_abort_internal("Array index out of bounds.");
   }
 
@@ -142,7 +183,7 @@ void* au_array_index(au_span_t* array, size_t index, size_t elem_size) {
     au_abort_internal("Multiplication overflow in array indexing operation.");
   }
 
-  char* data = (char*) array->data;
+  char* data = (char*) array.data;
   char* ptr = data + offset;
   return (void*)(ptr);
 }

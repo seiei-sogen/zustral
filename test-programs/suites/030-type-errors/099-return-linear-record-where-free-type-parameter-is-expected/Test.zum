@@ -1,0 +1,14 @@
+module body Test is
+    record Lin: Linear is
+        n: Int32;
+    end;
+
+    generic [T: Free]
+    function pick(x: T, r: Lin): T is
+        return r;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

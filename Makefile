@@ -1,5 +1,5 @@
 BIN := zustral
-SRC := lib/*.ml lib/*.mli lib/*.mll lib/*.mly lib/dune cli/*.ml cli/*.mli cli/dune bin/dune bin/zustral.ml lib/BuiltInModules.ml
+SRC := lib/*.ml lib/*.mli lib/*.mll lib/*.mly lib/dune cli/*.ml cli/*.mli cli/*.c cli/dune bin/dune bin/zustral.ml lib/BuiltInModules.ml
 PREFIX ?= /usr/local
 
 .PHONY: all
@@ -9,12 +9,12 @@ lib/BuiltInModules.ml: lib/builtin/*.zui lib/builtin/*.zum lib/prelude.c concat_
 	python3 concat_builtins.py
 
 $(BIN): $(SRC)
-	dune build
+	dune build --root .
 	cp -f _build/default/bin/zustral.exe $(BIN)
 
 .PHONY: test
 test: $(BIN)
-	dune runtest
+	dune runtest --root .
 
 # How much of the compiler the programs in the repository execute.
 .PHONY: coverage

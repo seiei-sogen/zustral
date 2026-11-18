@@ -12,34 +12,21 @@
 type t
 
 (** A name the compiler builds (a declaration id, a monomorph id, a temporary)
-    or one the prelude defines. It is spelled as it is: no such name starts
-    with a C reserved word. *)
+    or one the prelude defines. It is spelled as it is: no such name is a C
+    reserved word. *)
 val generated : string -> t
 
-(** A name the user wrote in Zustral: a variable, a parameter. It is spelled
-    with the reserved-word escape. *)
+(** A name the user wrote in Zustral: a variable, a parameter, a record slot, a
+    union case, a constant. It is spelled with the reserved-word escape. *)
 val zustral : string -> t
 
-(** A name the user gave in a pragma for a C symbol. It is spelled as it is. *)
+(** A name the user gave in a pragma for a C symbol. It is spelled as it is,
+    so the pragma must give a C identifier that is not a C reserved word. *)
 val external_name : string -> t
 
-(** A name the user wrote in Zustral that reaches C without the reserved-word
-    escape: a record slot, a union case, a parameter in the [extern]
-    declaration of a foreign function, a constant where it is defined. A slot
-    called [double] breaks the C compile (issue #92). The fix for that issue
-    replaces every use with [zustral]. *)
-val zustral_unescaped : string -> t
-
-(** A name from a pragma that reaches C with the reserved-word escape: a
-    foreign function where it is called, the wrapper of an exported function.
-    [fork] is declared as [fork] and called as [au_ckw_fork] (issue #92). The
-    fix for that issue replaces every use with [external_name]. *)
-val external_escaped : string -> t
-
-(** Whether two names are spelled the same in C. *)
-val equal : t -> t -> bool
+(** Whether a name is a C reserved word. *)
+val is_c_reserved_word : string -> bool
 
 (** The spelling in C. The reserved-word escape puts [au_ckw_] before a name
-    that starts with a C reserved word: before [double], and before [doubled]
-    too. *)
+    that is a C reserved word: before [double], and not before [doubled]. *)
 val render : t -> string

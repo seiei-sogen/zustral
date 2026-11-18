@@ -1,0 +1,19 @@
+{
+  "module": "Test",
+  "kind": "Type Error",
+  "text": [
+    { "type": "text", "content": "The divisor of this division is zero." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/035-literal-forms/022-folded-divisor-is-zero/Test.zum",
+    "startp": { "line": 3, "column": 24 },
+    "end": { "line": 3, "column": 35 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        let y: Int32 := 7 / (3 - 3);" ],
+    [ 4, "        printLn(y);" ],
+    [ 5, "        return ExitSuccess();" ]
+  ]
+}

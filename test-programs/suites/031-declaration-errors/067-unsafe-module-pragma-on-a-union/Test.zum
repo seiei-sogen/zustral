@@ -1,0 +1,10 @@
+module body Test is
+    pragma Unsafe_Module;
+    union U: Free is
+        case A;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

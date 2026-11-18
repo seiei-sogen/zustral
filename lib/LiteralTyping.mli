@@ -19,8 +19,15 @@ open Stages.Tast
 
 (** An arithmetic expression whose operands are integer literals is the
     integer literal of its value. The operands can be such expressions
-    themselves. Any other expression is returned as it is. *)
-val fold_integer_arithmetic : Stages.Ast.aexpr -> Stages.Ast.aexpr
+    themselves. Any other expression is returned as it is. A division whose
+    divisor is zero raises the error that says so, at the place given. *)
+val fold_integer_arithmetic : Error.place -> Stages.Ast.aexpr -> Stages.Ast.aexpr
+
+(** The negation of the operand, which was folded already: the integer or the
+    float literal of the negated value when the operand is a literal, so that
+    `-128` is a literal that fits an [Int8]; the arithmetic negation of the
+    operand otherwise. *)
+val negation_of_operand : Stages.Ast.aexpr -> Stages.Ast.aexpr
 
 (** {1 Operands} *)
 
@@ -38,9 +45,10 @@ val is_numeric_literal : Stages.AstDB.aexpr -> bool
       type: if it does not, this raises the error that says so
     - a float literal where a float type is expected
 
-    A literal under a cast is a literal here, whether the cast is an annotation
-    or one the type checker added. [false] means that the rules say nothing
-    about the value, and its type has to match the expected one. *)
+    A literal under a cast the type checker added is a literal here. A literal
+    under an annotation is not: it has the type of the annotation. [false]
+    means that the rules say nothing about the value, and its type has to match
+    the expected one. *)
 val literal_matches : Error.place -> ty -> texpr -> bool
 
 (** Whether a type annotation gives the value its type: an integer literal

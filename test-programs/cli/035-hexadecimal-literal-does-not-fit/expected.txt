@@ -1,5 +1,5 @@
 exit: 255
-files: error.html
+files: 
 --- stdout
 --- stderr
 Error:
@@ -7,9 +7,12 @@ Error:
   Module:
     Lit
   Location:
-    [no span available]
+    Filename: 'Lit.zum'
+    From: line 2, column 4
+    To: line 2, column 45
   Description:
     The integer `295147905179352825855` does not fit the type `Nat64`.
   Code:
-    [no span available]
-
+    1 | module body Lit is
+    2 |     constant c: Nat64 := #xFFFFFFFFFFFFFFFFF;
+    3 | end module body.

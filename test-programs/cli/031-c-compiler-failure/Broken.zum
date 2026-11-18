@@ -1,0 +1,8 @@
+pragma Unsafe_Module;
+
+module body Broken is
+    function main(): ExitCode is
+        let x: Int32 := @embed(Int32, "this is not C");
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,15 @@
+module body Test is
+    function keepIf(x: Int32, keep: Bool): Int32 is
+        if keep then
+            return x;
+        end if;
+        return 0;
+    end;
+
+    function main(): ExitCode is
+        let f: Fn[Int32, Bool, Int32] := keepIf;
+        printLn(f(7, true));
+        printLn(f(7, false));
+        return ExitSuccess();
+    end;
+end module body.

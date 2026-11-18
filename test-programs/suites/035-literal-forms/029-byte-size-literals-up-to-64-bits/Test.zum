@@ -1,0 +1,9 @@
+module body Test is
+    function main(): ExitCode is
+        let b: ByteSize := 256;
+        printLn(b);
+        let m: ByteSize := 18446744073709551615;
+        printLn(m);
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,9 +1,39 @@
 {
   "module": "Test",
-  "kind": "Generic Error",
+  "kind": "Declaration Error",
   "text": [
-    { "type": "text", "content": "strip_type': Variable not replaced: 'A'" }
+    { "type": "text", "content": "The type parameter " },
+    { "type": "code", "content": "A" },
+    { "type": "text", "content": " of the method " },
+    { "type": "code", "content": "show" },
+    { "type": "text", "content": " is in the " },
+    { "type": "code", "content": "Free" },
+    {
+      "type": "text",
+      "content": " universe. The type parameters of a method must be in the "
+    },
+    { "type": "code", "content": "Region" },
+    { "type": "text", "content": " universe." }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/060-instance-method-type-variables-and-recursive-record/Test.zum",
+    "startp": { "line": 15, "column": 4 },
+    "end": { "line": 18, "column": 8 }
+  },
+  "context": [
+    [ 13, "    end;" ],
+    [ 14, "" ],
+    [ 15, "    typeclass Show(T: Free) is" ],
+    [
+      16,
+      "        generic [A: Free, B: Linear, C: Type, R: Region, S: Region]"
+    ],
+    [
+      17,
+      "        method show(x: T, a: A, b: &[B, R], c: &[C, S], n: Node): Unit;"
+    ],
+    [ 18, "    end;" ],
+    [ 19, "" ],
+    [ 20, "    instance Show(Int32) is" ]
+  ]
 }

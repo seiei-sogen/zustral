@@ -1,0 +1,24 @@
+{
+  "module": "Test",
+  "kind": "Generic Error",
+  "text": [
+    { "type": "text", "content": "The type " },
+    { "type": "code", "content": "Int32" },
+    { "type": "text", "content": " expects " },
+    { "type": "code", "content": "0" },
+    { "type": "text", "content": " type arguments" },
+    { "type": "text", "content": "." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/097-built-in-type-with-type-arguments/Test.zum",
+    "startp": { "line": 3, "column": 8 },
+    "end": { "line": 3, "column": 38 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        let x: Int32[Bool, Unit] := 5;" ],
+    [ 4, "        printLn(x);" ],
+    [ 5, "        return ExitSuccess();" ]
+  ]
+}

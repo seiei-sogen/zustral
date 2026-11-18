@@ -6,7 +6,7 @@
       "type": "text",
       "content": "Both operands of an arithmetic operator must be numeric types, but "
     },
-    { "type": "type", "content": "Region<0>" },
+    { "type": "type", "content": "Static" },
     { "type": "text", "content": " is not." }
   ],
   "span": {

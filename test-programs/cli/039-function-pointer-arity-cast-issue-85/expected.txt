@@ -1,5 +1,20 @@
-exit: 2
+exit: 255
 files: 
 --- stdout
 --- stderr
-Fatal error: exception Invalid_argument("List.map2")
+Error:
+  Title: Type Error
+  Module:
+    Arity
+  Location:
+    Filename: 'Arity.zum'
+    From: line 8, column 8
+    To: line 8, column 56
+  Description:
+    Cannot cast to `Fn[Int32, Int32]` from `Fn[Int32, Int32, Int32]`
+  Code:
+     6 |     function main(): ExitCode is
+     7 |         let f: Fn[Int32, Int32, Int32] := add;
+     8 |         let g: Fn[Int32, Int32] := f : Fn[Int32, Int32];
+     9 |         return ExitSuccess();
+    10 |     end;

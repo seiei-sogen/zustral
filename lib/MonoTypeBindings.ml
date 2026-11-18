@@ -38,8 +38,11 @@ let mono_bindings_as_list (MonoTypeBindings m) =
 let mono_bindings_from_list lst =
   MonoTypeBindings (BindingsMap.of_seq (List.to_seq lst))
 
-let equal_mono_bindings (MonoTypeBindings a) (MonoTypeBindings b) =
-  BindingsMap.equal equal_mono_ty a b
+(* Bindings are plain data, so OCaml's order applies to them. It finds the same
+   type parameters equal as the map's own order does (`typaram_as_string` writes
+   every part of one), without building strings (#143). *)
+let compare_mono_bindings (MonoTypeBindings a) (MonoTypeBindings b) =
+  compare (BindingsMap.bindings a) (BindingsMap.bindings b)
 
 let get_mono_binding (MonoTypeBindings m) tp =
   BindingsMap.find_opt tp m

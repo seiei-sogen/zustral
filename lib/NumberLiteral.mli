@@ -19,15 +19,15 @@ type radix =
 
 type int_literal = private {
   written: string;
-  (** The text as the lexer saw it, with its prefix, sign and digit
-      separators. *)
+  (** The text as the lexer saw it, with its prefix and digit separators. *)
   radix: radix;
   value: Z.t;
 }
 
 type float_literal = private {
   written: string;
-  (** The text as the lexer saw it, with its sign and digit separators. *)
+  (** The text as the lexer saw it, with its digit separators, and a leading
+      `-` when the literal is a negated one ([negated_float]). *)
   fraction_digits: int;
   (** How many digits follow the period. *)
   has_exponent: bool;
@@ -45,20 +45,25 @@ val of_binary : string -> int_literal
 
 val of_octal : string -> int_literal
 
-(** The second argument is the character's code. The parser works it out,
-    because a character token that is not one character is a parse error. *)
+(** The second argument is the character's code. The lexer works it out,
+    because only it knows which escape the token is. *)
 val of_character : string -> int -> int_literal
 
 val of_float : string -> float_literal
 
-(** An integer literal that nobody wrote: the result of folding, or the zero
-    that a unary minus subtracts from. Its text is the value in decimal. *)
+(** An integer literal that nobody wrote: the value of a literal-only
+    expression. Its text is the value in decimal. *)
 val of_value : Z.t -> int_literal
+
+(** The float literal of the negation of the literal: `-2.5` of `2.5`, and
+    `2.5` of `-2.5`. *)
+val negated_float : float_literal -> float_literal
 
 (** {1 Printing} *)
 
-(** The text the compiler prints for an integer literal: into the generated C,
-    and into the message that says the literal does not fit a type. *)
+(** The text the compiler prints for an integer literal in the message that
+    says the literal does not fit a type. The generated C has its own text
+    ([CIntegerConstant.text_of_value]). *)
 val int_text : int_literal -> string
 
 (** The text the compiler prints for a float literal into the generated C. *)

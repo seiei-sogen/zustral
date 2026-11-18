@@ -7,7 +7,8 @@ module body Test is
     end;
 
     function main(): ExitCode is
-        show("\n\r\t\'\\"\\z");
+        show("\n\r\t\'\"\\z");
+        show("""\"z""");
         return ExitSuccess();
     end;
 end module body.

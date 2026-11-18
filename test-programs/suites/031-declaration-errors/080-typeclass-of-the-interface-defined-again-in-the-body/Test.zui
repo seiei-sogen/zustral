@@ -1,0 +1,7 @@
+module Test is
+    typeclass C(T: Free) is
+        method m(x: T): Int32;
+    end;
+
+    function main(): ExitCode;
+end module.

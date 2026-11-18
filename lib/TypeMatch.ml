@@ -13,6 +13,7 @@ open Type
 open TypeBindings
 open TypeParameter
 open TypeParameters
+open SignatureTypeAtUse
 open Stages.Tast
 open TastUtil
 open Env
@@ -21,34 +22,48 @@ open Error
 
 type ctx = env * module_name * place
 
+(* The instances that a constraint of a type parameter is looked up among. *)
+type instance_scope =
+  | InstancesVisibleFrom of module_name
+  (* Where a type is checked: the instances of the module, and those it
+     imports. *)
+  | InstancesOfEveryModule
+  (* Where a generic function is instantiated. The type checker checked the
+     constraints where the function was called, in a module that can see
+     instances that the module of the function cannot (#128). *)
+
+(* What the matcher works with: a `ctx` that says the scope. *)
+type scoped_ctx = env * instance_scope * place
+
 let ctx_env (env, _, _) = env
 
-let ctx_mn (_, mn, _) = mn
+let ctx_scope ((_, scope, _): scoped_ctx): instance_scope = scope
 
 let ctx_place (_, _, place) = place
 
 open Outcome.Syntax
 
-(* List.map2 for a function that returns its failure. It stops at the first
-   failure. Lists of different lengths end in Invalid_argument as they do with
-   List.map2, after the pairs they have in common. Two function pointer types
-   with different numbers of parameters get here (issue #85). *)
-let rec map2_result (f: 'a -> 'b -> ('c, 'e) result) (l1: 'a list) (l2: 'b list): ('c list, 'e) result =
-  match (l1, l2) with
-  | ([], []) ->
-     Ok []
-  | (a1 :: l1, a2 :: l2) ->
-     let* r = f a1 a2 in
-     let* rs = map2_result f l1 l2 in
-     Ok (r :: rs)
-  | ([], _ :: _) | (_ :: _, []) ->
-     invalid_arg "List.map2"
+(* List.map2 for a function that returns its failure. It does not call the
+   function after the first failure. Every caller passes two lists of one
+   length: the type arguments of one declaration, or the types of two function
+   pointer types whose numbers of parameters the matcher compared first (issue
+   #85). List.fold_left2 raises Invalid_argument otherwise. *)
+let map2_result (f: 'a -> 'b -> ('c, 'e) result) (l1: 'a list) (l2: 'b list): ('c list, 'e) result =
+  let* reversed =
+    List.fold_left2
+      (fun (so_far: ('c list, 'e) result) (a1: 'a) (a2: 'b) ->
+        let* rs = so_far in
+        let* r = f a1 a2 in
+        Ok (r :: rs))
+      (Ok []) l1 l2
+  in
+  Ok (List.rev reversed)
 
 (* A function named try_ returns a failed match as a value, the error that
    reports it. Two callers go on after a failure. The instance lookup tries
    the next instance, and a cast reports an error of its own. Every other
    caller uses the raising functions after this group. *)
-let rec try_match_type (ctx: ctx) (a: ty) (b: ty): (type_bindings, error) result =
+let rec try_match_type (ctx: scoped_ctx) (a: ty) (b: ty): (type_bindings, error) result =
   match a with
   | Unit ->
      (match b with
@@ -94,8 +109,10 @@ let rec try_match_type (ctx: ctx) (a: ty) (b: ty): (type_bindings, error) result
   | NamedType (n, _, args, _) ->
      (match b with
       | NamedType (n', _, args', _) ->
-         (* We ignore the universe, since the type system is nominal. *)
-         if n = n' then
+         (* We ignore the universe, since the type system is nominal. The
+            name the program wrote is not compared: an import can rename a
+            type (#50). *)
+         if equal_qident n n' then
            try_match_type_list ctx args args'
          else
            Error (Type (TypeMismatch { expected = a; actual = b }))
@@ -173,49 +190,48 @@ let rec try_match_type (ctx: ctx) (a: ty) (b: ty): (type_bindings, error) result
          Error (Type (TypeMismatch { expected = a; actual = b })))
   | FnPtr (args, rt) ->
      (match b with
-      | FnPtr (args', rt') ->
+      | FnPtr (args', rt') when List.length args = List.length args' ->
          try_match_type_list ctx (rt :: args) (rt' :: args')
       | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _
       | RegionTy _ | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | TyVar _ | Address _
-      | Pointer _ ->
+      | Pointer _ | FnPtr _ ->
          Error (Type (TypeMismatch { expected = a; actual = b })))
 
-and try_match_type_var (ctx: ctx) (tv: type_var) (ty: ty): (type_bindings, error) result =
-  let (TypeVariable (name, universe, from, constraints)) = tv in
-  (* Check if the argument type is a variable. *)
-  match ty with
-  | (TyVar (TypeVariable (i', u', from', constraints'))) ->
-     (* When the argument type is a type variable, check if the variables have
-        the same name and provenance. *)
-     if (equal_identifier name i') && (universe = u') && (equal_qident from from') then
-       (* If so, do nothing: we don't want circular bindings *)
+and try_match_type_var (ctx: scoped_ctx) (tv: type_var) (ty: ty): (type_bindings, error) result =
+  let (TypeVariable (_, _, _, constraints, matching)) = tv in
+  match matching with
+  | StandsForItself ->
+     (* A type parameter of the declaration being checked. A binding would
+        accept a body that is right for one type argument only (#151), and a
+        check of its constraints or its universe would say that the other
+        type could be the type argument (#156). *)
+     if equal_ty (TyVar tv) ty then
        Ok empty_bindings
      else
-       (* Check that the tyvar implements the type variable's constraints, if any. *)
-       let _ = check_tyvar_implements_constraints constraints constraints' in
-       (* Otherwise, add a new binding.
+       Error (Type (TypeMismatch { expected = TyVar tv; actual = ty }))
+  | BoundAtUse ->
+     (match ty with
+      | TyVar (TypeVariable (_, _, _, constraints', _)) ->
+         (* The argument's type variable must have every constraint of the
+            parameter's: its constraints are all that is known of the type it
+            stands for (#128, #158). *)
+         (match List.find_opt (fun (c: sident) -> not (List.mem c constraints')) constraints with
+          | Some typeclass ->
+             Error (Type (UnsatisfiedConstraint { tyvar = tv; ty; typeclass }))
+          | None ->
+             (* The function `f` takes an argument of the type `T`. The body of
+                the function `g` calls `f(x)` with `x` of its own type parameter
+                `U`: the call binds `T` to `U`. When `g` is `f`, it binds `T` to
+                the `T` of the caller. *)
+             try_add_binding empty_bindings (tyvar_to_typaram tv) ty)
+      | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
+      | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ ->
+         (* Check that the type implements the type variable's constraints, if any. *)
+         let* () = check_type_implements_constraints ctx tv ty constraints in
+         (* If the constraints are satisfied, add a straightforward binding. *)
+         try_add_binding empty_bindings (tyvar_to_typaram tv) ty)
 
-          The idea here is: suppose we have a function `f` that accepts an
-          argument of a generic type `T`. Now we're type-checking a function `g`
-          that accepts an argument `x` of generic type `U`. If we encounter a
-          function call `f(x)`, then the parameter type is `T` and the argument
-          type is `U`, so we create a binding `T -> U`.  *)
-       try_add_binding empty_bindings (tyvar_to_typaram tv) ty
-  | Unit | Boolean | Integer _ | SingleFloat | DoubleFloat | NamedType _ | RegionTy _
-  | ReadRef _ | WriteRef _ | Span _ | SpanMut _ | Address _ | Pointer _ | FnPtr _ ->
-     (* Check that the type implements the type variable's constraints, if any. *)
-     let* () = check_type_implements_constraints ctx tv ty constraints in
-     (* If the constraints are satisfied, add a straightforward binding. *)
-     try_add_binding empty_bindings (tyvar_to_typaram tv) ty
-
-and check_tyvar_implements_constraints (param: sident list) (arg: sident list): bool =
-  (* Check that the param is a subset of the param. *)
-  let param: SIdentSet.t = SIdentSet.of_list param
-  and arg: SIdentSet.t = SIdentSet.of_list arg
-  in
-  SIdentSet.subset param arg
-
-and check_type_implements_constraints (ctx: ctx) (tv: type_var) (ty: ty) (constraints: sident list): (unit, error) result =
+and check_type_implements_constraints (ctx: scoped_ctx) (tv: type_var) (ty: ty) (constraints: sident list): (unit, error) result =
   (* If there are no constraints, do nothing. *)
   if constraints = [] then
     Ok ()
@@ -230,78 +246,72 @@ and check_type_implements_constraints (ctx: ctx) (tv: type_var) (ty: ty) (constr
       (Ok ())
       (List.of_seq (SIdentSet.to_seq constraints))
 
-and try_constraint (ctx: ctx) (tv: type_var) (ty: ty) (typeclass_name: sident): (unit, error) result =
+and try_constraint (ctx: scoped_ctx) (tv: type_var) (ty: ty) (typeclass_name: sident): (unit, error) result =
   (* get_decl_by_name raises when the module of the name is not in the
      environment. The miss is returned here, before it can. *)
   match get_module_by_name (ctx_env ctx) (sident_module_name typeclass_name) with
   | None ->
      Error (Declaration (DeclarationErrors.UnknownModule (sident_module_name typeclass_name)))
   | Some _ ->
-  (* Find the typeclass. *)
-  match get_decl_by_name (ctx_place ctx) (ctx_env ctx) typeclass_name with
-  | Some (TypeClass { id; _ }) ->
-     (* Try to find an instance for the given typeclass name that implements this type. *)
-     let* instance = try_get_instance (ctx_place ctx) (ctx_env ctx) (ctx_mn ctx) ty id in
-     (match instance with
-      | Some _ ->
-         Ok ()
-      | None ->
-         Error (Type (UnsatisfiedConstraint { tyvar = tv; ty; typeclass = typeclass_name })))
-  (* The next two arms report the constraint where the function is called: the
-     name in a type parameter constraint is not looked up where the constraint
-     is declared (#128). *)
-  | Some (Constant _ | Record _ | Union _ | UnionCase _ | Function _
-      | TypeClassMethod _) ->
-     Error (Type (ConstraintNotTypeclass { tyvar = tv; typeclass = typeclass_name }))
-  | None ->
-     Error (Type (ConstraintUnknownTypeclass { tyvar = tv; typeclass = typeclass_name }))
+  let* id = TypeclassNamedByConstraint.typeclass_named_by_constraint (ctx_place ctx) (ctx_env ctx) tv typeclass_name in
+  (* Try to find an instance for the given typeclass name that implements this type. *)
+  let* instance = try_get_instance (ctx_place ctx) (ctx_env ctx) (ctx_scope ctx) ty id in
+  (match instance with
+   | Some _ ->
+      Ok ()
+   | None ->
+      Error (Type (UnsatisfiedConstraint { tyvar = tv; ty; typeclass = typeclass_name })))
 
-and try_get_instance (place: place) (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: typeclass_id): ((instance_decl * type_bindings) option, error) result =
-  match get_module_by_name env source_module_name with
-  | None ->
-     Error (Declaration (DeclarationErrors.UnknownModule source_module_name))
-  (* visible_instances looks the module up again, by this ID. It was found
-     here, so that lookup does not miss. *)
-  | Some (ModRec { id = mod_id; _ }) ->
+and try_get_instance (place: place) (env: env) (scope: instance_scope) (dispatch_ty: ty) (typeclass: typeclass_id): ((instance_decl * type_bindings) option, error) result =
+  match scope with
+  | InstancesOfEveryModule ->
+     try_get_instance_among place env scope (all_instances env) dispatch_ty typeclass
+  | InstancesVisibleFrom source_module_name ->
+     (match get_module_by_name env source_module_name with
+      | None ->
+         Error (Declaration (DeclarationErrors.UnknownModule source_module_name))
+      (* visible_instances looks the module up again, by this ID. It was found
+         here, so that lookup does not miss. *)
+      | Some (ModRec { id = mod_id; _ }) ->
+         try_get_instance_among place env scope (visible_instances place env mod_id) dispatch_ty typeclass)
+
+(* The one of these instances, those of the scope, that matches the dispatch
+   type. A constraint of the instance's type parameters is looked up in the
+   same scope. *)
+and try_get_instance_among (place: place) (env: env) (scope: instance_scope) (instances: instance_decl list) (dispatch_ty: ty) (typeclass: typeclass_id): ((instance_decl * type_bindings) option, error) result =
   let pred (decl: instance_decl): (instance_decl * type_bindings) option =
     match decl with
     | { typeclass_id; argument; _ } ->
        if equal_typeclass_id typeclass_id typeclass then
-         (match try_match_type (env, source_module_name, place) argument dispatch_ty with
+         (match try_match_type (env, scope, place) (signature_type_at_use argument) dispatch_ty with
           | Ok bindings ->
              Some (decl, bindings)
           | Error _ ->
              (* Does not match, just skip to the next instance. Every failure
                 skips it, also a type error from checking a constraint of the
                 instance's type parameters: a constraint that names no
-                typeclass, or several overlapping instances that match. *)
+                typeclass. *)
              None)
        else
          None
   in
   let filtered: (instance_decl * type_bindings) list =
-    (List.filter_map pred (visible_instances place env mod_id))
+    (List.filter_map pred instances)
   in
   match filtered with
   | [a] ->
      Ok (Some a)
   | _::_ ->
-     (* The declarations of overlapping instances are not all rejected where
-        they are declared (#72, #122), so the call reports them. *)
-     let { name; _ }: typeclass_decl = get_typeclass place env typeclass in
-     let modules: module_name list =
-       List.fold_left
-         (fun (names: module_name list) (({ mod_id; _ }: instance_decl), _) ->
-           let mn: module_name = module_name_from_id place env mod_id in
-           if List.mem mn names then names else names @ [mn])
-         []
-         filtered
-     in
-     Error (Type (OverlappingInstancesMatch { typeclass = name; ty = dispatch_ty; modules }))
+     (* Where instances are declared, the overlap check of a module keeps two
+        of its instances from matching one type, and the orphan rule (#72)
+        keeps two modules from both declaring one: the instance is in the
+        module of the typeclass or of the type, and a module imports only
+        modules before it. *)
+     Error (Internal ("More than one instance matches the type " ^ type_string dispatch_ty))
   | [] ->
      Ok None
 
-and try_match_type_list (ctx: ctx) (tys: ty list) (tys': ty list): (type_bindings, error) result =
+and try_match_type_list (ctx: scoped_ctx) (tys: ty list) (tys': ty list): (type_bindings, error) result =
   (* Every pair is matched before any bindings are merged, so a pair that does
      not match is reported before two pairs that bind one parameter to
      different types. *)
@@ -313,43 +323,44 @@ and try_match_type_list (ctx: ctx) (tys: ty list) (tys': ty list): (type_binding
     (Ok empty_bindings)
     bs
 
+(* The matchers of the type checker, which checks the types of a module: a
+   constraint is looked up among the instances visible from that module. *)
+let scoped_to_module ((env, module_name, place): ctx): scoped_ctx =
+  (env, InstancesVisibleFrom module_name, place)
+
+let try_match_type (ctx: ctx) (a: ty) (b: ty): (type_bindings, error) result =
+  try_match_type (scoped_to_module ctx) a b
+
+let try_match_type_list (ctx: ctx) (tys: ty list) (tys': ty list): (type_bindings, error) result =
+  try_match_type_list (scoped_to_module ctx) tys tys'
+
 let match_type (ctx: ctx) (a: ty) (b: ty): type_bindings =
   ok_or_raise (ctx_place ctx) (try_match_type ctx a b)
 
 let get_instance (place: place) (env: env) (source_module_name: module_name) (dispatch_ty: ty) (typeclass: typeclass_id): (instance_decl * type_bindings) option =
-  ok_or_raise place (try_get_instance place env source_module_name dispatch_ty typeclass)
+  ok_or_raise place (try_get_instance place env (InstancesVisibleFrom source_module_name) dispatch_ty typeclass)
+
+let get_instance_from_every_module (place: place) (env: env) (dispatch_ty: ty) (typeclass: typeclass_id): (instance_decl * type_bindings) option =
+  ok_or_raise place (try_get_instance place env InstancesOfEveryModule dispatch_ty typeclass)
 
 let get_method_of_instance (place: place) (env: env) (instance: instance_decl) (method_name: identifier): ins_meth_id =
-  let { id; typeclass_id; argument; mod_id; _ }: instance_decl = instance in
-  match get_instance_method_from_instance_id_and_method_name env id method_name with
-  | Some (InsMethRec { id; _ }) ->
-     id
-  | None ->
-     (* An instance that leaves out a method of its typeclass is accepted where
-        it is declared (#91), so the call reports it. The instance has no span:
-        the error names its module. *)
-     let { name; _ }: typeclass_decl = get_typeclass place env typeclass_id in
-     type_error place (InstanceMissingMethod {
-         typeclass = name;
-         ty = argument;
-         module_name = module_name_from_id place env mod_id;
-         method_name;
-       })
+  let (InsMethRec { id; _ }) = get_instance_method_from_instance_id_and_method_name place env instance.id method_name in
+  id
 
 let match_typarams (ctx: ctx) (typarams: typarams) (args: ty list): type_bindings =
-  let typarams' = List.map (fun tp -> TyVar (typaram_to_tyvar tp)) (typarams_as_list typarams) in
+  let typarams' = List.map (fun tp -> signature_type_at_use (TyVar (typaram_to_tyvar tp))) (typarams_as_list typarams) in
   ok_or_raise (ctx_place ctx) (try_match_type_list ctx typarams' args)
 
-(* A type parameter of the declaration being checked stands for itself in the
-   body of the declaration. `match_type` binds a type variable of the expected
-   type to whatever the actual type has in its place, which is right for the
-   signature of a function that is called, and wrong for two types of the
-   body: the body would have to be right for one type argument only. *)
+(* Two types of the body being checked. Their type variables stand for
+   themselves, so the match binds nothing: it only says whether the types are
+   the same. *)
 let expect_same_type (ctx: ctx) (expected: ty) (actual: ty): unit =
-  match bindings_list (match_type ctx expected actual) with
-  | [] ->
+  match try_match_type ctx expected actual with
+  | Ok _ ->
      ()
-  | _ :: _ ->
+  | Error _ ->
+     (* The match reports the two parts that differ. The error is about the
+        whole types. *)
      type_error (ctx_place ctx) (TypeMismatch { expected; actual })
 
 let expect_value_of_type (ctx: ctx) (expected: ty) (value: texpr): unit =

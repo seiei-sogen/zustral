@@ -1,14 +1,12 @@
 {
   "module": "Test",
-  "kind": "Type Error",
+  "kind": "Declaration Error",
   "text": [
     { "type": "text", "content": "The instance of the typeclass " },
     { "type": "code", "content": "Shape" },
     { "type": "text", "content": " for " },
     { "type": "type", "content": "Int32" },
-    { "type": "text", "content": ", declared in the module " },
-    { "type": "code", "content": "Test" },
-    { "type": "text", "content": ", does not define the method " },
+    { "type": "text", "content": " does not define the method " },
     { "type": "code", "content": "perimeter" },
     {
       "type": "text",
@@ -17,14 +15,20 @@
   ],
   "span": {
     "filename": "test-programs/suites/036-type-checker-paths/015-instance-missing-method/Test.zum",
-    "startp": { "line": 15, "column": 8 },
-    "end": { "line": 15, "column": 33 }
+    "startp": { "line": 5, "column": 8 },
+    "end": { "line": 11, "column": 8 }
   },
   "context": [
-    [ 13, "    function main(): ExitCode is" ],
-    [ 14, "        let side: Int32 := 3;" ],
-    [ 15, "        printLn(perimeter(side));" ],
-    [ 16, "        return ExitSuccess();" ],
-    [ 17, "    end;" ]
+    [ 3, "        method area(x: T): Int32;" ],
+    [ 4, "        method perimeter(x: T): Int32;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    instance Shape(Int32) is" ],
+    [ 8, "        method area(x: Int32): Int32 is" ],
+    [ 9, "            return x;" ],
+    [ 10, "        end;" ],
+    [ 11, "    end;" ],
+    [ 12, "" ],
+    [ 13, "    function main(): ExitCode is" ]
   ]
 }

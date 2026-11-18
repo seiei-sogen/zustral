@@ -18,16 +18,21 @@ open MonoType
 open MonoTypeBindings
 open Stages.Mtast
 
-(** A module record contains a module's name and the instances it imports. *)
+(** A module record contains a module's name, and the instances and the names
+    it imports. *)
 type mod_rec = ModRec of {
       id: mod_id;
       name: module_name;
       imported_instances: InstanceIdSet.t;
+      imported_symbols: qident list;
+      (** What the interface and the body import, each under its local
+          nickname. The module cannot declare these names (#28). *)
     }
 
 type mod_input = {
     name: module_name;
     imported_instances: InstanceIdSet.t;
+    imported_symbols: qident list;
   }
 
 (** A record, as the environment holds it. *)
@@ -84,6 +89,9 @@ type function_impl =
 type function_decl = {
     id: function_id;
     mod_id: mod_id;
+    span: Span.span;
+    (** The span of the definition, where an error about the function as an
+        entrypoint is reported. *)
     vis: vis;
     name: identifier;
     docstring: docstring;
@@ -255,6 +263,7 @@ type union_case_input = {
 
 type function_input = {
     mod_id: mod_id;
+    span: Span.span;
     vis: vis;
     name: identifier;
     docstring: docstring;

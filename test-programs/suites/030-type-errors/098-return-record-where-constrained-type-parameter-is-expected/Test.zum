@@ -1,0 +1,14 @@
+module body Test is
+    record Rec: Free is
+        n: Int32;
+    end;
+
+    generic [T: Free(Printable)]
+    function pick(x: T, r: Rec): T is
+        return r;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

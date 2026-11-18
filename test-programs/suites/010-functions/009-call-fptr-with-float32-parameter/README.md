@@ -1,0 +1,1 @@
+Test that a call through a function pointer passes a float literal as the parameter type of the pointer, `Float32`, and not as the type of the literal, `Float64`. The C call converts the pointer to a function type built from that type, so a wrong type passes a `double` where the function takes a `float`.

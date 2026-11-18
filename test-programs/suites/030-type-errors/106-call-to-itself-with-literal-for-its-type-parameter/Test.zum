@@ -1,0 +1,15 @@
+module body Test is
+    generic [T: Free]
+    function equalsThreeHundred(x: T, y: T, first: Bool): Bool is
+        if first then
+            return equalsThreeHundred(x, 300, false);
+        end if;
+        return x = y;
+    end;
+
+    function main(): ExitCode is
+        let big: Int64 := 4294967596;
+        printLn(equalsThreeHundred(big, big, true));
+        return ExitSuccess();
+    end;
+end module body.

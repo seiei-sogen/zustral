@@ -38,11 +38,11 @@ let append_import_to_interface (ci: concrete_module_interface) (import: concrete
     ConcreteModuleInterface (mn, docstring, import :: imports, decls)
 
 let append_import_to_body (cb: concrete_module_body) (import: concrete_import_list): concrete_module_body =
-  let (ConcreteModuleBody (mn, kind, docstring, imports, decls)) = cb in
+  let (ConcreteModuleBody (mn, name_span, kind, docstring, imports, decls)) = cb in
   if equal_module_name mn pervasive_module_name then
     cb
   else
-    ConcreteModuleBody (mn, kind, docstring, import :: imports, decls)
+    ConcreteModuleBody (mn, name_span, kind, docstring, import :: imports, decls)
 
 (** The environment, and the C generated so far, one unit per module in the
     order the modules were compiled. *)
@@ -75,11 +75,12 @@ let parse_and_combine (env: env) (source: module_source): (module_name * Combine
         let* (combined: Combined.combined_module) = body_as_combined env cb in
         Ok (name, combined))
 
-(* The two checks define the types they return, which Pipeline names, so their
-   interfaces cannot name Pipeline's types without a cycle. The types are
-   checked here instead. *)
+(* The two checks and the stage that fixes the order of evaluation define the
+   types they return, which Pipeline names, so their interfaces cannot name
+   Pipeline's types without a cycle. The types are checked here instead. *)
 let check_returns: Pipeline.check_returns = check_ends_in_return
 let check_linearity: Pipeline.check_linearity = check_module_linearity
+let fix_evaluation_order: Pipeline.fix_evaluation_order = EvaluationOrderOfModule.fix_evaluation_order_of_module
 
 let compile_mod (c: compiler) (source: module_source): compiler Outcome.t =
   let (Compiler (env, units)) = c in
@@ -94,8 +95,9 @@ let compile_mod (c: compiler) (source: module_source): compiler Outcome.t =
        with_supply env (fun supply -> augment_module env supply linked)
      in
      let* (checked: checked_module) = check_linearity typed in
-     let* (env: env) = extract_bodies env checked in
-     let* ((env, mono): env * mono_module) = monomorphize env checked in
+     let ordered: EvaluationOrderOfModule.ordered_module = fix_evaluation_order checked in
+     let* (env: env) = extract_bodies env ordered in
+     let* ((env, mono): env * mono_module) = monomorphize env ordered in
      let* ((env, unit): env * c_unit) = with_supply env (fun supply -> gen_module env supply mono) in
      Ok (Compiler (env, units @ [unit])))
 
@@ -122,7 +124,7 @@ let finish: Pipeline.finish = fun (env: env) (units: c_unit list) (entrypoint: e
   let* (env, entrypoint_decls, entrypoint) =
     match entrypoint with
     | Some (mn, i) ->
-       let* (env, decls, code) = entrypoint_code env (make_qident (mn, i, i)) in
+       let* (env, decls, code) = in_module mn (entrypoint_code env (make_qident (mn, i, i))) in
        Ok (env, decls, Some code)
     | None ->
        Ok (env, [], None)

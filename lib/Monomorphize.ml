@@ -55,8 +55,12 @@ let rec monomorphize_ty (env: env) (ty: stripped_ty): (mono_ty * env) =
      (MonoSingleFloat, env)
   | SDoubleFloat ->
      (MonoDoubleFloat, env)
-  | SRegionTy r ->
-     (MonoRegionTy r, env)
+  | SRegionTy _ | SRegionTyVar _ ->
+     (* A region has no value at run time. The region type arguments of a
+        function or method monomorph are `Static` (make_substs, make_substs2),
+        so every region is `Static` here too: a caller's `Tag[Rho]` and the
+        callee's `Tag[Static]` or `Tag[R]` must be one C type (#142). *)
+     (MonoRegionTy static_region, env)
   | SReadRef (ty, region) ->
      let (ty, env) = monomorphize_ty env ty in
      let (region, env) = monomorphize_ty env region in
@@ -87,8 +91,6 @@ let rec monomorphize_ty (env: env) (ty: stripped_ty): (mono_ty * env) =
      let (args, env) = monomorphize_ty_list env args in
      let (rt, env) = monomorphize_ty env rt in
      (MonoFnPtr (args, rt), env)
-  | SRegionTyVar (name, source) ->
-     (MonoRegionTyVar (name, source), env)
 
 (* The monomorph of a record or a union for the given type arguments,
    registered the first time it is asked for. *)
@@ -181,7 +183,7 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
      else
        (* The function is concrete. *)
        (MConcreteFunVar (decl_id, rt), env)
-  | TFuncall (decl_id, name, args, rt, substs) ->
+  | TFuncall (decl_id, name, args, rt, substs, _) ->
      (* Monomorphize the return type. *)
      let (rt, env) = strip_and_mono env rt in
      (* Monomorphize the arglist *)
@@ -199,7 +201,7 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
      else
        (* The function is concrete. *)
        (MConcreteFuncall (decl_id, name, args, rt), env)
-  | TMethodCall (ins_meth_id, name, typarams, args, rt, substs) ->
+  | TMethodCall (ins_meth_id, name, typarams, args, rt, substs, _) ->
      ((* Monomorphize the return type. *)
       let (rt, env) = strip_and_mono env rt in
       (* Monomorphize the arglist *)
@@ -217,13 +219,17 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
       else
         (* The instance is concrete. *)
         (MConcreteMethodCall (ins_meth_id, name, args, rt), env))
-  | TVarMethodCall { dispatch_ty; typeclass_id; source_module_name; params; args; method_name; rt; _ } ->
-     (* Continue the instance resolution process we halted in the typing pass. *)
+  | TVarMethodCall { dispatch_ty; typeclass_id; params; args; written_order; method_name; rt; _ } ->
+     (* Continue the instance resolution process we halted in the typing pass.
+        The generic function's module need not see the instance: the module
+        that instantiates it can declare it. *)
      let (instance, instance_bindings): instance_decl * type_bindings =
-       (match get_instance NoSpan env source_module_name dispatch_ty typeclass_id with
+       (match get_instance_from_every_module NoSpan env dispatch_ty typeclass_id with
         | Some (i, b) -> (i, b)
         | None ->
-           generic_error NoSpan (TypeclassResolutionFailed dispatch_ty))
+           (* The type checker checks the constraints wherever it binds a type
+              parameter, to a type or to another type parameter (#128, #158). *)
+           internal_err NoSpan ("Typeclass resolution failed. Dispatch type: " ^ (type_string dispatch_ty)))
      in
      let params' = List.map (fun (ValueParameter (n, t)) -> ValueParameter (n, replace_variables instance_bindings t)) params in
      let arguments' = TypeCheckExpr.cast_arguments instance_bindings params' args in
@@ -232,12 +238,13 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
         call on a type parameter is resolved only here. *)
      let meth_id: ins_meth_id = get_method_of_instance NoSpan env instance (original_name method_name) in
      let substs = make_substs2 instance_bindings typarams in
-     let mcall = TMethodCall (meth_id, method_name, typarams, arguments', rt, substs) in
+     let mcall = TMethodCall (meth_id, method_name, typarams, arguments', rt, substs, written_order) in
      monomorphize_expr env mcall
-  | TFptrCall (name, args, ty) ->
+  | TFptrCall (name, paramtys, args, ty) ->
+     let (paramtys, env) = strip_and_mono_list env paramtys in
      let (args, env) = monomorphize_expr_list env args in
      let (ty, env) = strip_and_mono env ty in
-     (MFptrCall (name, args, ty), env)
+     (MFptrCall (name, paramtys, args, ty), env)
   | TCast (expr, ty) | TImplicitCast (expr, ty) ->
      let (ty, env) = strip_and_mono env ty in
      let (expr, env) = monomorphize_expr env expr in
@@ -257,6 +264,18 @@ let rec monomorphize_expr (env: env) (expr: texpr): (mexpr * env) =
   | TNegation expr ->
      let (expr, env) = monomorphize_expr env expr in
      (MNegation expr, env)
+  | TArithmeticNegation operand ->
+     let ty: ty = TastUtil.get_type NoSpan operand in
+     (* The type checker accepted a negatable type, or a type parameter with
+        the constraint `TrappingArithmetic`, which this instance replaced with
+        its type argument. Unsigned types implement that typeclass too. *)
+     let negated: NegatableType.t =
+       match NegatableType.of_type ty with
+       | Some negated -> negated
+       | None -> type_error NoSpan (ArithmeticNegationTypeArgumentNotSigned ty)
+     in
+     let (operand, env) = monomorphize_expr env operand in
+     (MArithmeticNegation (operand, negated), env)
   | TIfExpression (c, t, f) ->
      let (c, env) = monomorphize_expr env c in
      let (t, env) = monomorphize_expr env t in
@@ -332,11 +351,12 @@ let rec monomorphize_stmt (env: env) (stmt: tstmt): (mstmt * env) =
      let (ty, env) = strip_and_mono env ty in
      let (body, env) = monomorphize_stmt env body in
      (MLet (name, ty, body), env)
-  | TDestructure (_, _, bindings, value, body) ->
+  | TDestructure (span, _, bindings, value, body) ->
      let (bindings, env) = monomorphize_binding_list env (List.map (fun (TypedBinding { name; ty; rename; }) -> (name, strip_type ty, rename)) bindings) in
-     let (value, env) = monomorphize_expr env value in
+     let (mono_value, env) = monomorphize_expr env value in
+     let (ty, env) = strip_and_mono env (TastUtil.get_type (AtSpan span) value) in
      let (body, env) = monomorphize_stmt env body in
-     (MDestructure (bindings, value, body), env)
+     (MDestructure (bindings, mono_value, ty, body), env)
   | TAssign (_, lvalue, rvalue) ->
      let (lvalue, env) = monomorphize_expr env lvalue in
      let (rvalue, env) = monomorphize_expr env rvalue in
@@ -366,12 +386,12 @@ let rec monomorphize_stmt (env: env) (stmt: tstmt): (mstmt * env) =
      let (final, env) = monomorphize_expr env final in
      let (body, env) = monomorphize_stmt env body in
      (MFor (name, start, final, body), env)
-  | TBorrow { span; original; rename; region; orig_type; ref_type; body; mode } ->
+  | TBorrow { span; original; rename; region; orig_type; ref_type; body; mode; origin } ->
      let _ = span in
      let (orig_type, env) = strip_and_mono env orig_type in
      let (ref_type, env) = strip_and_mono env ref_type in
      let (body, env) = monomorphize_stmt env body in
-     (MBorrow { original = original; rename = rename; region = region; orig_type = orig_type; ref_type = ref_type; body = body; mode = mode }, env)
+     (MBorrow { original = original; rename = rename; region = region; orig_type = orig_type; ref_type = ref_type; body = body; mode = mode; origin = origin }, env)
   | TBlock (_, a, b) ->
      let (a, env) = monomorphize_stmt env a in
      let (b, env) = monomorphize_stmt env b in
@@ -523,9 +543,9 @@ and monomorphize_method (env: env) (meth: typed_method_def): (env * concrete_met
 
 open Outcome.Syntax
 
-let rec monomorphize (env: env) (m: LinearityCheck.checked_module): (env * mono_module) Outcome.t =
+let rec monomorphize (env: env) (m: EvaluationOrderOfModule.ordered_module): (env * mono_module) Outcome.t =
   (* Monomorphize what we can: concrete definitions. *)
-  let (TypedModule (module_name, decls)) = LinearityCheck.as_typed_module m in
+  let (TypedModule (module_name, decls)) = EvaluationOrderOfModule.as_typed_module m in
   let* (env, declopts) =
     Outcome.traverse_with_context
       (fun (e, d) -> Outcome.catch (fun () -> let (d, e) = monomorphize_decl e d in (e, d)))
@@ -744,21 +764,19 @@ and mono_to_ty (env: env) (ty: mono_ty): ty =
   | MonoRegionTy r ->
      RegionTy r
   | MonoReadRef (ty, region) ->
-     ReadRef (r ty, ref_region_of_ty (r region))
+     ReadRef (r ty, ref_region_of_region_type (r region))
   | MonoWriteRef (ty, region) ->
-     WriteRef (r ty, ref_region_of_ty (r region))
+     WriteRef (r ty, ref_region_of_region_type (r region))
   | MonoSpan (ty, region) ->
-     Span (r ty, ref_region_of_ty (r region))
+     Span (r ty, ref_region_of_region_type (r region))
   | MonoSpanMut (ty, region) ->
-     SpanMut (r ty, ref_region_of_ty (r region))
+     SpanMut (r ty, ref_region_of_region_type (r region))
   | MonoAddress ty ->
      Address (r ty)
   | MonoPointer ty ->
      Pointer (r ty)
   | MonoFnPtr (args, rt) ->
      FnPtr (List.map r args, r rt)
-  | MonoRegionTyVar (name, source) ->
-     TyVar (TypeVariable (name, RegionUniverse, source, []))
 
 let monomorphize_wrappers (env: env): (env * mdecl list * (string * mono_id * mono_ty foreign_signature) list) Outcome.t =
   Outcome.catch (fun () ->

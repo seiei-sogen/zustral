@@ -1,0 +1,1 @@
+Test that the operands of an arithmetic expression have the same type when one has a type imported under a nickname and the other has that type under its own name (issue #50). Both are `Lib`'s `Money`, which is not numeric. Before, the error said the two operands had incompatible types, `Cash` and `Money` (lib/TypeCheckExpr.ml, augment_arithmetic).

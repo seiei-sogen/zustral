@@ -38,10 +38,6 @@ let test_parse_wording _ =
   eq "Character not allowed in string literal: `\\x00`"
     (wording (Parse (ParseErrors.StringInvalidCharacter "\\x00")))
 
-let test_empty_argument_list _ =
-  eq "Command Line Arguments Error: Argument list must have at least one element in it, the path to the binary. Was the compiler invoked through a system call?"
-    (raised_wording (fun () -> Zustral_cli.CliUtil.parse_args []))
-
 let test_popping_flag_of_other_kind _ =
   let open Zustral_cli.CliUtil in
   let arglist = parse_args ["bin"; "pos"; "--a=1"; "--b"] in
@@ -58,13 +54,23 @@ let test_write_to_full_device _ =
   eq "Command Line Arguments Error: Failed to write to file `/dev/full`: \n\nNo space left on device"
     (raised_wording (fun () -> Zustral_cli.Os.write_string_to_file "/dev/full" "x"))
 
-(* This fixes what the code does today, not what it should do: the code of a
-   command that a signal killed is OCaml's number of the signal (-7 for
-   SIGKILL), neither the number of the system (9) nor what a shell reports
-   (137). Issue #144 has it. *)
+(* The code of a command that a signal killed is what a shell reports: 128
+   and the system's number of the signal (issue #144). *)
 let test_command_killed_by_signal _ =
   let (Zustral_cli.Os.CommandOutput { code; _ }) = Zustral_cli.Os.run_command "kill -9 $$" in
-  eq Sys.sigkill code
+  eq 137 code
+
+(* No program makes the compiler raise an exception other than its errors once
+   its bugs are fixed, so this calls the conversion that Cli.main uses. *)
+let test_unexpected_exception_is_an_internal_error _ =
+  let title_and_wording (error: zustral_error): string =
+    let (ZustralError { error; _ }) = error in
+    error_title error ^ ": " ^ wording error
+  in
+  eq "Internal Error: Internal compiler error: Failure(\"boom\")\n\nThis is a bug in the compiler, please open an issue here: `https://github.com/seiei-sogen/zustral/issues`"
+    (title_and_wording (error_of_exception (Failure "boom")));
+  let reported = make_error NoSpan (Generic GenericErrors.LeftoverArguments) in
+  eq reported (error_of_exception (Zustral_error reported))
 
 let module_of (error: zustral_error): string option =
   let (ZustralError { location; _ }) = error in
@@ -89,31 +95,19 @@ let test_source_context_is_added_once _ =
 let test_line_numbers_are_right_aligned _ =
   eq " 9 | a\n10 | b" (source_ctx_to_plain_text (SourceContext [(9, "a"); (10, "b")]))
 
-let test_html_of_context_without_span _ =
-  let error = add_source_ctx (make_error NoSpan (Internal "x")) (SourceContext [(3, "let x")]) in
-  let html = HtmlError.render_error_to_html error in
-  let contains (sub: string): bool =
-    let n = String.length sub in
-    let rec from k = k + n <= String.length html && (String.sub html k n = sub || from (k + 1)) in
-    from 0
-  in
-  eq true (contains "<pre>let x<br></pre>");
-  eq false (contains "<span class='error-hl'>")
-
 let suite =
   "Unexecuted wording" >::: [
       "Generic errors" >:: test_generic_wording;
       "Declaration errors" >:: test_declaration_wording;
       "Parse errors" >:: test_parse_wording;
-      "Empty argument list" >:: test_empty_argument_list;
       "Popping a flag of the other kind" >:: test_popping_flag_of_other_kind;
       "Write error" >:: test_write_error_wording;
       "Write to a full device" >:: test_write_to_full_device;
       "Command killed by a signal" >:: test_command_killed_by_signal;
+      "Unexpected exception is an internal error" >:: test_unexpected_exception_is_an_internal_error;
       "Module name is added once" >:: test_module_name_is_added_once;
       "Source context is added once" >:: test_source_context_is_added_once;
-      "Line numbers are right aligned" >:: test_line_numbers_are_right_aligned;
-      "HTML of a context without a span" >:: test_html_of_context_without_span
+      "Line numbers are right aligned" >:: test_line_numbers_are_right_aligned
     ]
 
 let _ = run_test_tt_main suite

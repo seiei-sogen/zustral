@@ -1,0 +1,9 @@
+import Lib (Money as Cash, zero);
+
+module body Test is
+    function main(): ExitCode is
+        let a: Cash := zero();
+        let b: Cash := a + zero();
+        return ExitSuccess();
+    end;
+end module body.

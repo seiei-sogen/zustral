@@ -1,0 +1,1 @@
+Test that a `borrow` statement cannot name its region like a record of the module (issue #153). Before, the statement was accepted, and in its body `Foo` named the region of the borrow, not the record.

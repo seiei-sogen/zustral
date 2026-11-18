@@ -48,6 +48,12 @@ type borrow_stmt_kind =
   | Write
   | Reborrow
 
+(** Which of the two bounds of a `for` loop: the first value of the loop
+    variable, or the last. *)
+type loop_bound =
+  | InitialLoopBound
+  | FinalLoopBound
+
 (** Whether a module is safe or unsafe. *)
 type module_kind =
   | SafeModule

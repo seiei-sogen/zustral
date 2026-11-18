@@ -1,5 +1,5 @@
 {
-  "module": null,
+  "module": "Test",
   "kind": "Entrypoint Definition Error",
   "text": [
     {
@@ -10,6 +10,17 @@
     { "type": "text", "content": " but it is " },
     { "type": "type", "content": "Int32" }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/071-entrypoint-root-capability-wrong-return-type/Test.zum",
+    "startp": { "line": 1, "column": 19 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function main(root: RootCapability): Int32 is" ],
+    [ 3, "        surrenderRoot(root);" ],
+    [ 4, "        return 0;" ],
+    [ 5, "    end;" ],
+    [ 6, "end module body." ]
+  ]
 }

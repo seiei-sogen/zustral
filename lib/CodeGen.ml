@@ -15,7 +15,6 @@ open MonoType
 open MonoTypeBindings
 open Stages.Tast
 open Stages.Mtast
-open MtastUtil
 open CRepr
 open Util
 open Escape
@@ -85,13 +84,9 @@ let zustral_prefix: string = ""
 let ident_text (i: identifier): string =
   zustral_prefix ^ (ident_string i)
 
-(* A variable or a parameter. *)
+(* A name the user wrote: a variable, a parameter, a record slot, a union case. *)
 let gen_ident (i: identifier): CIdent.t =
   CIdent.zustral (ident_text i)
-
-(* A record slot or a union case. *)
-let gen_member (i: identifier): CIdent.t =
-  CIdent.zustral_unescaped (ident_text i)
 
 let gen_module_name (n: module_name): string =
   zustral_prefix ^ replace_char (mod_name_string n) '.' "__"
@@ -100,10 +95,9 @@ let gen_module_name (n: module_name): string =
 let gen_qident (i: qident): CIdent.t =
   CIdent.zustral ((gen_module_name (source_module_name i)) ^ "____" ^ (ident_text (original_name i)))
 
-(* A constant where it is defined. The two spellings differ when the name of
-   the module starts with a C reserved word (issue #92). *)
+(* A constant where it is defined. *)
 let gen_sident (mn: module_name) (i: identifier): CIdent.t =
-  CIdent.zustral_unescaped ((gen_module_name mn) ^ "____" ^ (ident_text i))
+  CIdent.zustral ((gen_module_name mn) ^ "____" ^ (ident_text i))
 
 let gen_function_id (id: function_id): CIdent.t =
   CIdent.generated (zustral_prefix ^ "decl_" ^ (string_of_int (function_id_number id)))
@@ -156,12 +150,7 @@ let rec gen_type (ty: mono_ty): c_ty =
      CBuiltinType CDoubleType
   | MonoNamedType id ->
      CNamedType (gen_mono_id id)
-  | MonoRegionTy _ | MonoRegionTyVar _ ->
-     (* Every region has the same C type, so a region type variable has it too:
-        it stands for a region that this code is not told. No program reaches
-        the second case today. A value's type is a region type variable only in
-        a method of an instance without type parameters, and ExtractionPass
-        rejects those (RegionParameterUsedAsType). *)
+  | MonoRegionTy _ ->
      CBuiltinType CRegionType
   | MonoReadRef (t, _) ->
      CPointer (gen_type t)
@@ -200,6 +189,14 @@ let rec gen_foreign_type (ty: mono_ty foreign_ty): c_ty =
   | ForeignSpan t ->
      CPointer (gen_type t)
 
+(* The C return type of a function that crosses the C boundary. *)
+let gen_foreign_return_type (rt: mono_ty foreign_return): c_ty =
+  match rt with
+  | ForeignReturnsNothing ->
+     CBuiltinType CVoidType
+  | ForeignReturns ty ->
+     gen_foreign_type ty
+
 (* Expressions *)
 
 (* Given the ID of a union type, returns the name of the
@@ -228,7 +225,7 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
   | MBoolConstant b ->
      CBool b
   | MIntConstant i ->
-     CInt (NumberLiteral.int_text i)
+     CInt (CIntegerConstant.text_of_value i.value)
   | MFloatConstant f ->
      CFloat (NumberLiteral.float_text f)
   | MStringConstant s ->
@@ -259,9 +256,8 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
      CFuncall (gen_ins_meth_id id, List.map g args)
   | MGenericMethodCall (_, id, args, _) ->
      CFuncall (gen_mono_id (mono_id_of_method id), List.map g args)
-  | MFptrCall (name, args, ty) ->
-     let argtys: mono_ty list = List.map get_type args in
-     CFptrCall (CVar (gen_ident name), gen_type ty, List.map gen_type argtys, List.map g args)
+  | MFptrCall (name, paramtys, args, ty) ->
+     CFptrCall (CVar (gen_ident name), gen_type ty, List.map gen_type paramtys, List.map g args)
   | MCast (e, t) ->
      CCast (g e, gen_type t)
   | MComparison (op, lhs, rhs) ->
@@ -272,15 +268,28 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
      CDisjunction (g lhs, g rhs)
   | MNegation e ->
      CNegation (g e)
+  | MArithmeticNegation (e, negated) ->
+     (* The prelude's functions, which stop the program on the least value of a
+        signed integer type. *)
+     let prelude_function: string =
+       match negated with
+       | NegatableType.NegatableInt8 -> "au_negate_int8"
+       | NegatableType.NegatableInt16 -> "au_negate_int16"
+       | NegatableType.NegatableInt32 -> "au_negate_int32"
+       | NegatableType.NegatableInt64 -> "au_negate_int64"
+       | NegatableType.NegatableFloat32 -> "au_negate_float32"
+       | NegatableType.NegatableFloat64 -> "au_negate_float64"
+     in
+     CFuncall (CIdent.generated prelude_function, [g e])
   | MIfExpression (c, t, f) ->
      CIfExpression (g c, g t, g f)
   | MRecordConstructor (ty, values) ->
-     CCast (CStructInitializer (List.map (fun (n, v) -> (gen_member n, g v)) values), gen_type ty)
+     CCast (CStructInitializer (List.map (fun (n, v) -> (gen_ident n, g v)) values), gen_type ty)
   | MUnionConstructor (id, case_name, values) ->
-     let args = CStructInitializer (List.map (fun (n, v) -> (gen_member n, g v)) values) in
+     let args = CStructInitializer (List.map (fun (n, v) -> (gen_ident n, g v)) values) in
      CCast (CStructInitializer [
                 (tag_slot, union_tag_value id case_name);
-                (data_slot, CStructInitializer [(gen_member case_name, args)])
+                (data_slot, CStructInitializer [(gen_ident case_name, args)])
               ], gen_type (MonoNamedType (mono_id_of_union id)))
   | MEmbed (ty, expr, args) ->
      CEmbed (gen_type ty, CSource expr, List.map g args)
@@ -290,16 +299,16 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
      CSizeOf (gen_type ty)
   | MSlotAccessor (expr, slot, _) ->
      let expr = g expr in
-     CAddressOf (CStructAccessor (CDeref expr, gen_member slot))
+     CAddressOf (CStructAccessor (CDeref expr, gen_ident slot))
   | MPointerSlotAccessor (expr, slot, _) ->
      let expr = g expr in
-     CAddressOf (CPointerStructAccessor (CDeref expr, gen_member slot))
+     CAddressOf (CPointerStructAccessor (CDeref expr, gen_ident slot))
   | MArrayIndex (expr, idx, elem_ty, _, _) ->
      let expr = g expr
      and idx = g idx in
      let elem_ty = gen_type elem_ty in
      CCast (
-         CFuncall (CIdent.generated "au_array_index", [expr; idx; CSizeOf elem_ty]),
+         CFuncall (CIdent.generated "au_array_index", [CDeref expr; idx; CSizeOf elem_ty]),
          CPointer elem_ty
        )
   | MSpanIndex (expr, idx, elem_ty, _, _) ->
@@ -307,7 +316,7 @@ let rec gen_exp (mn: module_name) (e: mexpr): c_expr =
      and idx = g idx in
      let elem_ty = gen_type elem_ty in
      CCast (
-         CFuncall (CIdent.generated "au_array_index", [CAddressOf expr; idx; CSizeOf elem_ty]),
+         CFuncall (CIdent.generated "au_array_index", [expr; idx; CSizeOf elem_ty]),
          CPointer elem_ty
        )
 
@@ -331,10 +340,10 @@ let rec gen_stmt (mn: module_name) (supply: Supply.t) (stmt: mstmt): c_stmt * Su
      let l = CLet (gen_ident n, gen_type t, None) in
      let (b, supply) = gs supply b in
      (CBlock [l; b], supply)
-  | MDestructure (bs, e, b) ->
+  | MDestructure (bs, e, ty, b) ->
      let (tmp, supply) = new_variable supply in
-     let vardecl = CLet (tmp, gen_type (get_type e), Some (ge e))
-     and bs' = List.map (fun (MonoBinding { name; ty; rename; }) -> CLet (gen_ident rename, gen_type ty, Some (CStructAccessor (CVar tmp, gen_member name)))) bs
+     let vardecl = CLet (tmp, gen_type ty, Some (ge e))
+     and bs' = List.map (fun (MonoBinding { name; ty; rename; }) -> CLet (gen_ident rename, gen_type ty, Some (CStructAccessor (CVar tmp, gen_ident name)))) bs
      and (b', supply) = gs supply b
      in
      (CBlock (List.concat [[vardecl]; bs'; [b']]), supply)
@@ -364,44 +373,49 @@ let rec gen_stmt (mn: module_name) (supply: Supply.t) (stmt: mstmt): c_stmt * Su
          CLet (gen_ident v, CBuiltinType CSizeType, Some (ge i));
          CFor (gen_ident v, ge f, b)
        ], supply)
-  | MBorrow { original; rename; orig_type; body; mode; _ } ->
+  | MBorrow { original; rename; orig_type; body; mode; origin; _ } ->
      let is_pointer =
        (match orig_type with
         | MonoAddress _ ->
            true
         | MonoUnit | MonoBoolean | MonoInteger _ | MonoSingleFloat | MonoDoubleFloat
         | MonoNamedType _ | MonoRegionTy _ | MonoReadRef _ | MonoWriteRef _
-        | MonoSpan _ | MonoSpanMut _ | MonoPointer _ | MonoFnPtr _ | MonoRegionTyVar _ ->
+        | MonoSpan _ | MonoSpanMut _ | MonoPointer _ | MonoFnPtr _ ->
            false)
      in
-     if is_pointer then
-       let l = CLet (gen_ident rename, gen_type orig_type, Some (CVar (gen_ident original))) in
-       let (body, supply) = gs supply body in
-       (CBlock [l; body], supply)
-     else
-       let e = begin
-           match mode with
-           | Read ->
-              CAddressOf (CVar (gen_ident original))
-           | Write ->
-              CAddressOf (CVar (gen_ident original))
-           | Reborrow ->
-              CVar (gen_ident original)
-         end
-       in
-       let ty = begin
-           match mode with
-           | Read ->
-              CPointer (gen_type orig_type)
-           | Write ->
-              CPointer (gen_type orig_type)
-           | Reborrow ->
-              gen_type orig_type
-         end
-       in
-       let l = CLet (gen_ident rename, ty, Some e) in
-       let (body, supply) = gs supply body in
-       (CBlock [l; body], supply)
+     let l =
+       if is_pointer then
+         CLet (gen_ident rename, gen_type orig_type, Some (CVar (gen_ident original)))
+       else
+         let e = begin
+             match mode with
+             | Read ->
+                CAddressOf (CVar (gen_ident original))
+             | Write ->
+                CAddressOf (CVar (gen_ident original))
+             | Reborrow ->
+                CVar (gen_ident original)
+           end
+         in
+         let ty = begin
+             match mode with
+             | Read ->
+                CPointer (gen_type orig_type)
+             | Write ->
+                CPointer (gen_type orig_type)
+             | Reborrow ->
+                gen_type orig_type
+           end
+         in
+         CLet (gen_ident rename, ty, Some e)
+     in
+     let (body, supply) = gs supply body in
+     (match origin with
+      | WrittenBorrow ->
+         (* A scope in C too, so that two borrows can declare the same names (issue #137). *)
+         (CExplicitBlock [l; body], supply)
+      | AnonymousBorrow ->
+         (CBlock [l; body], supply))
   | MBlock (a, b) ->
      let (b, supply) = gs supply b in
      let (a, supply) = gs supply a in
@@ -416,32 +430,32 @@ and gen_case (mn: module_name) (supply: Supply.t) (e: mexpr) (id: union_mono_id)
      being pattern-matched to that variable. Generate a switch statement over
      the tag enum. Each when statement that has bindings needs to generate some
      variable assignments for those bindings from the generated variable. *)
-  let ty = get_type e
+  let union_ty: c_ty = gen_type (MonoNamedType (mono_id_of_union id))
   and (var, supply) = new_variable supply in
   let (cases, supply) = Supply.map (when_to_case mn id var case_ref) supply whens in
-  let accessor =
+  let (ty, accessor) =
     match case_ref with
     | CasePlain ->
-       CStructAccessor (CVar var, tag_slot)
+       (union_ty, CStructAccessor (CVar var, tag_slot))
     | CaseRef ->
-       CPointerStructAccessor (CVar var, tag_slot)
+       (CPointer union_ty, CPointerStructAccessor (CVar var, tag_slot))
   in
   let switch = CSwitch (accessor, cases) in
   (CBlock [
-      CLet (var, gen_type ty, Some (gen_exp mn e));
+      CLet (var, ty, Some (gen_exp mn e));
       switch
     ], supply)
 
 and when_to_case (mn: module_name) (id: union_mono_id) (var: CIdent.t) (case_ref: case_ref) (supply: Supply.t) (MTypedWhen (n, bindings, body)): c_switch_case * Supply.t =
-  let case_name = gen_member n
+  let case_name = gen_ident n
   and tag_value = union_tag_value id n
   in
   let get_binding binding_name =
     match case_ref with
     | CasePlain ->
-       CStructAccessor (CStructAccessor (CStructAccessor (CVar var, data_slot), case_name), gen_member binding_name)
+       CStructAccessor (CStructAccessor (CStructAccessor (CVar var, data_slot), case_name), gen_ident binding_name)
     | CaseRef ->
-       CAddressOf (CStructAccessor (CStructAccessor (CStructAccessor (CDeref (CVar var), data_slot), case_name), gen_member binding_name))
+       CAddressOf (CStructAccessor (CStructAccessor (CStructAccessor (CDeref (CVar var), data_slot), case_name), gen_ident binding_name))
   in
   let f (MonoBinding { name; ty; rename; }) =
     let ty =
@@ -465,10 +479,10 @@ let gen_params mn params =
   List.map (fun (MValueParameter (n, t)) -> CValueParam (gen_ident n, gen_type t)) params
 
 let gen_slots (slots: mono_slot list) =
-  List.map (fun (MonoSlot (n, t)) -> CSlot (gen_member n, gen_type t)) slots
+  List.map (fun (MonoSlot (n, t)) -> CSlot (gen_ident n, gen_type t)) slots
 
 let gen_cases (cases: mono_case list) =
-  List.map (fun (MonoCase (n, ss)) -> CSlot (gen_member n, CStructType (gen_slots ss))) cases
+  List.map (fun (MonoCase (n, ss)) -> CSlot (gen_ident n, CStructType (gen_slots ss))) cases
 
 let gen_method (mn: module_name) (supply: Supply.t) (MConcreteMethod (id, _, params, rt, body)) =
   let d = Desc "Method" in
@@ -553,11 +567,8 @@ let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_de
      ], supply)
   | MForeignFunction (id, _, params, rt, signature, underlying) ->
      let def_d = Desc "Foreign function" in
-     (* The parameters of the `extern` declaration are not escaped, and the
-        name is escaped where it is called and not where it is declared
-        (issue #92). *)
-     let ff_params = List.map (fun (n, t) -> CValueParam (CIdent.zustral_unescaped (ident_text n), gen_foreign_type t)) signature.params
-     and ff_rt = gen_foreign_type signature.rt in
+     let ff_params = List.map (fun (n, t) -> CValueParam (gen_ident n, gen_foreign_type t)) signature.params
+     and ff_rt = gen_foreign_return_type signature.rt in
      let ff_local_decl = CLocalFunctionDeclaration (CIdent.external_name underlying, ff_params, ff_rt, LinkageExternal) in
      let make_param ((n, t): identifier * mono_ty foreign_ty) =
        match t with
@@ -569,11 +580,16 @@ let gen_decl (env: env) (mn: module_name) (supply: Supply.t) (decl: mdecl): c_de
           CVar (gen_ident n)
      in
      let args = List.map make_param signature.params in
-     let funcall = CFuncall (CIdent.external_escaped underlying, args) in
-     let body = CBlock [
-                    ff_local_decl;
-                    CReturn funcall
-                  ] in
+     let funcall = CFuncall (CIdent.external_name underlying, args) in
+     let call: c_stmt list =
+       match signature.rt with
+       | ForeignReturnsNothing ->
+          (* The function returns `nil`. *)
+          [CDiscarding funcall; CReturn (gen_exp mn MNilConstant)]
+       | ForeignReturns _ ->
+          [CReturn funcall]
+     in
+     let body = CBlock (ff_local_decl :: call) in
      let def = CFunctionDefinition (def_d, gen_function_id id, gen_params mn params, gen_type rt, body) in
      ([def], supply)
   | MConcreteInstance (_, _, _, methods) ->
@@ -633,34 +649,40 @@ let decl_order = function
 (* the following code is used to sort declarations in dependency order, so that
    the C compiler doesn't complain about types being incomplete *)
 
-let rec slot_depth decls (slot: c_slot) =
+module StructSlotsByName = Map.Make (String)
+
+(* The slots of each struct definition, by its name as C spells it, so that the
+   depth of a name is not a scan of every declaration (#143). A name finds the
+   first definition. *)
+let struct_slots_by_name (decls: c_decl list): c_slot list StructSlotsByName.t =
+  List.fold_right
+    (fun decl structs ->
+      match decl with
+      | CNamedStructDefinition (_, name, slots) ->
+         StructSlotsByName.add (CIdent.render name) slots structs
+      | CMacro _ | CStructForwardDeclaration _ | CEnumDefinition _ | CFunctionDeclaration _
+      | CFunctionDefinition _ -> structs)
+    decls
+    StructSlotsByName.empty
+
+let rec slot_depth structs (slot: c_slot) =
   match slot with
-  | CSlot (_, CNamedType name) -> name_depth name decls
+  | CSlot (_, CNamedType name) -> name_depth name structs
   (* The depth of a named type that has no definition among the declarations. *)
   | CSlot (_, CBuiltinType _) -> 1
-  | CSlot (_, CStructType slots) -> slots_depth slots decls
-  | CSlot (_, CUnionType slots) -> slots_depth slots decls
+  | CSlot (_, CStructType slots) -> slots_depth slots structs
+  | CSlot (_, CUnionType slots) -> slots_depth slots structs
   | CSlot (_, CPointer _) -> 0
 
-and get_slots name decl =
-  match decl with
-  | CNamedStructDefinition (_, decl_name, slots) ->
-     if CIdent.equal name decl_name then
-       Some slots
-     else
-       None
-  | CMacro _ | CStructForwardDeclaration _ | CEnumDefinition _ | CFunctionDeclaration _
-  | CFunctionDefinition _ -> None
-
-and name_depth name decls =
+and name_depth name structs =
   let slots =
-    match (List.filter_map (get_slots name) decls) with
-    | hd :: _ -> hd
-    | _ -> [] in
-  slots_depth slots decls
+    match StructSlotsByName.find_opt (CIdent.render name) structs with
+    | Some slots -> slots
+    | None -> [] in
+  slots_depth slots structs
 
-and slots_depth slots decls =
-  let deps = List.map (slot_depth decls) slots in
+and slots_depth slots structs =
+  let deps = List.map (slot_depth structs) slots in
   let dep_depth = List.fold_left max 0 deps in
   let depth = 1 + dep_depth in
   depth
@@ -671,10 +693,10 @@ let struct_slots (decl: c_decl): c_slot list option =
   | CMacro _ | CStructForwardDeclaration _ | CEnumDefinition _ | CFunctionDeclaration _
   | CFunctionDefinition _ -> None
 
-let detail_compare decls a b =
+let detail_compare structs a b =
   match (struct_slots a, struct_slots b) with
   | (Some s1, Some s2) ->
-     (slots_depth s1 decls) - (slots_depth s2 decls)
+     (slots_depth s1 structs) - (slots_depth s2 structs)
   | (None, (Some _ | None)) | (Some _, None) ->
      compare (decl_order a) (decl_order b)
 
@@ -685,5 +707,5 @@ let gen_module (env: env) (supply: Supply.t) (MonoModule (name, decls)): (c_unit
       let fun_decls = List.concat (gen_fun_decls name decls)
       and (decls, supply) = Supply.map (gen_decl env name) supply decls in
       let decls = List.concat [fun_decls; List.concat decls] in
-      let sorted_decls = List.sort (detail_compare decls) decls in
+      let sorted_decls = List.sort (detail_compare (struct_slots_by_name decls)) decls in
       (CUnit (mod_name_string name, sorted_decls), supply))

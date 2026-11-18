@@ -1,0 +1,1 @@
+Test the same for two float literals (issue #138): `1.5 + 2.5` calls the method of `Pervasive` and is 4, not the first operand that the local function pointer returns. Before, the test pinned that the local was called, with Float32 parameters. It uses Float64 now, because `Pervasive` has no arithmetic for Float32 (issue #27).

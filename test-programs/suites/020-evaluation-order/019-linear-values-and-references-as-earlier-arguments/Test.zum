@@ -1,0 +1,37 @@
+module body Test is
+    record Token: Linear is
+        id: Int64;
+    end;
+
+    function mint(id: Int64): Token is
+        printLn(id);
+        return Token(id => id);
+    end;
+
+    function spend(first: Token, second: Token): Int64 is
+        let { id as firstId: Int64 } := first;
+        let { id as secondId: Int64 } := second;
+        return (firstId * 10) + secondId;
+    end;
+
+    generic [R: Region]
+    function idOf(token: &[Token, R]): &[Int64, R] is
+        printLn(token->id);
+        return &(token->id);
+    end;
+
+    generic [R: Region, S: Region]
+    function sumOf(a: &[Int64, R], b: &[Int64, S]): Int64 is
+        return !a + !b;
+    end;
+
+    function main(): ExitCode is
+        printLn(spend(mint(1), mint(2)));
+        let a: Token := mint(3);
+        let b: Token := mint(4);
+        printLn(sumOf(idOf(&a), idOf(&b)));
+        let { id as aId: Int64 } := a;
+        let { id as bId: Int64 } := b;
+        return ExitSuccess();
+    end;
+end module body.

@@ -1,0 +1,1 @@
+Test that a constraint of a method's own type parameter that names nothing is rejected where the typeclass is declared (issues #90 and #128). The type parameter is a region, the kind a method can have of its own. Before, nothing looked the name up, and this program compiled.

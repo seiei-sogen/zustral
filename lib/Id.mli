@@ -28,7 +28,7 @@ type ins_meth_id
 
 (** The type of monomorph IDs. *)
 type mono_id
-[@@deriving (eq, show)]
+[@@deriving show]
 
 (** {1 IDs that say what kind of declaration they stand for}
 
@@ -80,16 +80,12 @@ type type_decl_id =
     monomorph by its {!mono_id}; the functions below give it. *)
 
 type record_mono_id
-[@@deriving eq]
 
 type union_mono_id
-[@@deriving eq]
 
 type function_mono_id
-[@@deriving eq]
 
 type method_mono_id
-[@@deriving eq]
 
 val mono_id_of_record : record_mono_id -> mono_id
 val mono_id_of_union : union_mono_id -> mono_id

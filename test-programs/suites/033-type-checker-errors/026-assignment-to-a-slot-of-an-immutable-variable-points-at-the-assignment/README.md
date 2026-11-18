@@ -1,0 +1,1 @@
+Test that the error of assigning to a slot of an immutable variable points at the assignment (issue #31). The assignment borrows `r` mutably, in a borrow statement the compiler adds around it (lib/DesugarBorrows.ml), and the error of that borrow had the position of the `let` before it.

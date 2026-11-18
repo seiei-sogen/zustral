@@ -1,0 +1,1 @@
+Test that a constraint of a type parameter that names a record is rejected where it is declared, also when no call checks it (issues #90 and #128). Before, the name was looked up only when a call matched the type parameter, so this program, which never calls `f`, compiled.

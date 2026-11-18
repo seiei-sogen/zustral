@@ -1,0 +1,8 @@
+module body Test is
+    function main(): ExitCode is
+        printLn("A\ \B\nC");
+        printLn("D\
+                \E\tF");
+        return ExitSuccess();
+    end;
+end module body.

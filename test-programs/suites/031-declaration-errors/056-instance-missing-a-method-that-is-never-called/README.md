@@ -1,0 +1,1 @@
+Test that an instance that leaves out a method of its typeclass fails where it is declared, even though nothing calls that method. Before, it compiled, and the error appeared only at a call of the missing method (issue #91).

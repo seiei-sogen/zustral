@@ -39,12 +39,14 @@ let comment = "--" [^ '\r' '\n']* newline?
 (* Token regexes *)
 
 let identifier = (alpha) ('_'|alphanum)*
-let dec_constant = sign? digit (digit|'\'')*
-let hex_constant = '#' 'x' hex_digit (hex_digit|'\'')*
-let bin_constant = '#' 'b' bin_digit (bin_digit|'\'')*
-let oct_constant = '#' 'o' oct_digit (oct_digit|'\'')*
-let float_constant = sign? dec_constant period dec_constant? (exponent sign? dec_constant)?
-let char_constant = '\'' (ascii_char | '\\' ['n' 'r' 't' '\\']) '\''
+(* The digit separator `'` stands only between two digits. *)
+let dec_digits = digit+ ('\'' digit+)*
+(* A sign before a number is an operator (issue #48): the parser reads it. *)
+let dec_constant = dec_digits
+let hex_constant = '#' 'x' hex_digit+ ('\'' hex_digit+)*
+let bin_constant = '#' 'b' bin_digit+ ('\'' bin_digit+)*
+let oct_constant = '#' 'o' oct_digit+ ('\'' oct_digit+)*
+let float_constant = dec_digits period dec_digits? (exponent sign? dec_digits)?
 
 (* Rules *)
 
@@ -129,9 +131,11 @@ rule token = parse
   | "=>" { RIGHT_ARROW }
   | ":=" { ASSIGN }
   | "!" { DEREF }
-  (* Strings and docstrings *)
-  | "\"\"\"" { read_triple_string [] lexbuf }
-  | '"' { read_string [] lexbuf }
+  (* Strings and docstrings. The rule that reads the rest of the string moves
+     the start of the token to its last lexeme, the closing quote, so the start
+     is put back: the span of a string constant begins at its opening quote. *)
+  | "\"\"\"" { let start = lexbuf.lex_start_p in let token = read_triple_string [] lexbuf in lexbuf.lex_start_p <- start; token }
+  | '"' { let start = lexbuf.lex_start_p in let token = read_string [] lexbuf in lexbuf.lex_start_p <- start; token }
   (* Identifiers and constants *)
   | "nil" { NIL }
   | "true" { TRUE }
@@ -141,7 +145,12 @@ rule token = parse
   | hex_constant { HEX_CONSTANT (Lexing.lexeme lexbuf) }
   | bin_constant { BIN_CONSTANT (Lexing.lexeme lexbuf) }
   | oct_constant { OCT_CONSTANT (Lexing.lexeme lexbuf) }
-  | char_constant { CHAR_CONSTANT (Lexing.lexeme lexbuf) }
+  (* A character constant is its code. `'''` is the quote character. *)
+  | '\'' (ascii_char as c) '\'' { CHAR_CONSTANT (Lexing.lexeme lexbuf, Char.code c) }
+  | "'\\n'" { CHAR_CONSTANT (Lexing.lexeme lexbuf, 10) }
+  | "'\\r'" { CHAR_CONSTANT (Lexing.lexeme lexbuf, 13) }
+  | "'\\t'" { CHAR_CONSTANT (Lexing.lexeme lexbuf, 9) }
+  | "'\\\\'" { CHAR_CONSTANT (Lexing.lexeme lexbuf, 92) }
   | identifier { IDENTIFIER (Lexing.lexeme lexbuf) }
   (* Specials *)
   | "@embed" { EMBED }
@@ -159,6 +168,7 @@ rule token = parse
 and read_string pieces = parse
   | '"' { STRING_CONSTANT (literal_text pieces) }
   | '\\' '"' { read_string ("\"" :: pieces) lexbuf }
+  | '\\' '\\' { read_string ("\\\\" :: pieces) lexbuf }
   | [^ '"'] { read_string (Lexing.lexeme lexbuf :: pieces) lexbuf }
   | eof { parse_error (AtSpan (Span.from_lexbuf lexbuf)) StringEof }
   | _ { parse_error (AtSpan (Span.from_lexbuf lexbuf)) (StringInvalidCharacter (Lexing.lexeme lexbuf)) }
@@ -167,5 +177,6 @@ and read_triple_string pieces = parse
   | "\"\"\"" { TRIPLE_STRING_CONSTANT (literal_text pieces) }
   | '\n' { new_line lexbuf; read_triple_string ("\n" :: pieces) lexbuf }
   | '\\' "\"\"\"" { read_triple_string ("\"\"\"" :: pieces) lexbuf }
+  | '\\' '\\' { read_triple_string ("\\\\" :: pieces) lexbuf }
   | eof { parse_error (AtSpan (Span.from_lexbuf lexbuf)) TripleStringEof }
   | _ { read_triple_string (Lexing.lexeme lexbuf :: pieces) lexbuf }

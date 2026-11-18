@@ -1,0 +1,9 @@
+module body Test is
+    function sameRegion(r: Static): Bool is
+        return r = r;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

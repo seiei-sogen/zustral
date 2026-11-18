@@ -20,6 +20,7 @@ type error =
   | Declaration of DeclarationErrors.t
   | Entrypoint of EntrypointErrors.t
   | Generic of GenericErrors.t
+  | CCompiler of CCompilerErrors.t
   | Internal of string
 
 type place =
@@ -48,13 +49,14 @@ let error_text (error: error): err_text =
   | Declaration e -> DeclarationErrors.render e
   | Entrypoint e -> EntrypointErrors.render e
   | Generic e -> GenericErrors.render e
+  | CCompiler e -> CCompilerErrors.render e
   | Internal message ->
      [
        Text "Internal compiler error: ";
        Text message;
        Break;
        Text "This is a bug in the compiler, please open an issue here: ";
-       Code "https://github.com/austral/austral/issues"
+       Code "https://github.com/seiei-sogen/zustral/issues"
      ]
 
 (* Locations *)
@@ -99,7 +101,14 @@ let entrypoint_error (place: place) (e: EntrypointErrors.t): 'a = raise_error pl
 
 let generic_error (place: place) (e: GenericErrors.t): 'a = raise_error place (Generic e)
 
+let c_compiler_error (place: place) (e: CCompilerErrors.t): 'a = raise_error place (CCompiler e)
+
 let internal_err (place: place) (message: string): 'a = raise_error place (Internal message)
+
+let error_of_exception (exn: exn): zustral_error =
+  match exn with
+  | Zustral_error error -> error
+  | other -> make_error NoSpan (Internal (Printexc.to_string other))
 
 let ok_or_raise (place: place) (result: ('a, error) result): 'a =
   match result with
@@ -107,9 +116,7 @@ let ok_or_raise (place: place) (result: ('a, error) result): 'a =
   | Error error -> raise_error place error
 
 let place_inside (outer: place) (span: span): place =
-  match outer with
-  | AtSpan _ when span = empty_span -> outer
-  | AtSpan _ | NoSpan -> AtSpan span
+  if span = empty_span then outer else AtSpan span
 
 (* Error context-augmenting functions *)
 
@@ -142,6 +149,7 @@ let error_title (error: error): string =
   | Linearity _ -> "Linearity Error"
   | Declaration _ -> "Declaration Error"
   | Entrypoint _ -> "Entrypoint Definition Error"
+  | CCompiler _ -> "C Compiler Error"
   | Internal _ -> "Internal Error"
 
 let indent_text (text: string) (indent: int): string =

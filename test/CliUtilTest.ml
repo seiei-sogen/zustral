@@ -9,6 +9,8 @@ open OUnit2
 open Zustral_cli.CliUtil
 
 let tests _ =
+  (* The process can be started without even the name of the binary. *)
+  assert_equal [] (arglist_to_list (parse_args []));
   assert_equal [] (arglist_to_list (parse_args ["bin"]));
   assert_equal [PositionalArg "foo"] (arglist_to_list (parse_args ["bin"; "foo"]));
   assert_equal [PositionalArg "foo"; BoolFlag "foo"] (arglist_to_list (parse_args ["bin"; "foo"; "--foo"]));

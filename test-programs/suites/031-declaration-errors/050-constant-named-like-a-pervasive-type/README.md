@@ -1,0 +1,1 @@
+Test that a module cannot declare a constant with the name of a type that `Zustral.Pervasive` imports into every module (issue #133). Before, the name `Either` found the imported union, and the program was told that there is no variable named `Either`.

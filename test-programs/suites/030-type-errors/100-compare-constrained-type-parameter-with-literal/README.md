@@ -1,0 +1,1 @@
+Test that comparing a value of the constrained type parameter `T` with an integer literal is a type mismatch, as it is for an unconstrained one (092). Before, the error said that `Int32` does not implement `Bump`, the constraint of `T` (issue #163).

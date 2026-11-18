@@ -1,0 +1,1 @@
+Test that returning a record where the constrained type parameter `T` is expected is a type mismatch. Before, the error said that `Rec` does not implement `Printable`, the constraint of `T`, as if `T` could be bound to `Rec` (issue #156).

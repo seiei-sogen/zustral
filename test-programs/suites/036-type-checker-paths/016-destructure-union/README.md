@@ -1,1 +1,1 @@
-Covers destructuring a value of a named type that is not a record (lib/TypingPass.ml, get_record_definition).
+Destructuring a value of a union is rejected with the error for destructuring a value that is not a record (issue #133, lib/TypingPass.ml, augment_destructure). It used to be the error for taking a path of a value that is not a record.

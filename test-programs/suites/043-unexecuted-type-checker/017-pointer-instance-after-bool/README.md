@@ -1,1 +1,1 @@
-Covers the `Boolean` alternative of the `Pointer` arm of `overlapping_instances` (lib/TypeClasses.ml): an instance for `Pointer[U]` declared after one for `Bool` is reported as overlapping it. This pins issue #122: the answer should be `false`. Target line(s): lib/TypeClasses.ml line 176.
+Covers the `Boolean` alternative of the `Pointer` arm of `overlapping_instances` (lib/TypeClasses.ml): an instance for `Pointer[U]` declared after one for `Bool` does not overlap it, and the program compiles (issue #122).

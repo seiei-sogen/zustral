@@ -1,0 +1,27 @@
+module body Test is
+    union Two[A: Free, B: Free]: Free is
+        case First is
+            first: A;
+        case Second is
+            second: B;
+    end;
+
+    generic [R: Region, U: Free]
+    function launder(x: U, again: Bool): Two[&[Int32, R], U] is
+        let inner: Two[&[Int32, R], U] := Second(second => x);
+        if again then
+            case inner of
+                when First(first: &[Int32, R]) do
+                    let changed: Two[&[Int32, Static], &[Int32, Static]] := launder(first, false);
+                    printLn("first");
+                when Second(second: U) do
+                    printLn("second");
+            end case;
+        end if;
+        return inner;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

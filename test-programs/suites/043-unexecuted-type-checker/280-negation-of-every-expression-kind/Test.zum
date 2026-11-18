@@ -1,0 +1,39 @@
+pragma Unsafe_Module;
+
+module body Test is
+    record Foo: Free is
+        a: Int32;
+    end;
+
+    function g(): Int32 is
+        return 1;
+    end;
+
+    generic [R: Region]
+    function f(x: Int32, b: Bool, n: Foo, r: &[Int32, R], w: &![Int32, R]): Int32 is
+        -nil;
+        -true;
+        -"text";
+        -x;
+        -g();
+        -(x + 1);
+        - -x;
+        -(x < 1);
+        -(b and b);
+        -(b or b);
+        -(not b);
+        -(if b then 1 else 2);
+        -n.a;
+        -&(n.a);
+        -@embed(Int32, "1");
+        -!r;
+        -(x : Int32);
+        -sizeof(Int32);
+        -&x;
+        -&~w;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

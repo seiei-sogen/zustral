@@ -1,0 +1,13 @@
+pragma Unsafe_Module;
+
+module body Test is
+    function p(x: Int64): Int64 is
+        printLn(x);
+        return x;
+    end;
+
+    function main(): ExitCode is
+        @embed(Unit, "au_printf(\"%d %d\n\", (int)($1), (int)($2))", p(5), p(3));
+        return ExitSuccess();
+    end;
+end module body.

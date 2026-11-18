@@ -15,14 +15,17 @@
   ],
   "span": {
     "filename": "test-programs/suites/042-unexecuted-types/053-constraint-names-record/Test.zum",
-    "startp": { "line": 21, "column": 8 },
-    "end": { "line": 21, "column": 13 }
+    "startp": { "line": 15, "column": 4 },
+    "end": { "line": 18, "column": 8 }
   },
   "context": [
+    [ 13, "" ],
+    [ 14, "" ],
+    [ 15, "    generic [T: Free(Tag)]" ],
+    [ 16, "    function f(x: T): Unit is" ],
+    [ 17, "        return nil;" ],
+    [ 18, "    end;" ],
     [ 19, "" ],
-    [ 20, "    function main(): ExitCode is" ],
-    [ 21, "        f(1);" ],
-    [ 22, "        return ExitSuccess();" ],
-    [ 23, "    end;" ]
+    [ 20, "    function main(): ExitCode is" ]
   ]
 }

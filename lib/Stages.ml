@@ -71,6 +71,7 @@ module Ast = struct
     | Variable of qident
     | FunctionCall of qident * abstract_arglist
     | ArithmeticExpression of arithmetic_operator * aexpr * aexpr
+    | ArithmeticNegation of aexpr
     | Comparison of comparison_operator * aexpr * aexpr
     | Conjunction of aexpr * aexpr
     | Disjunction of aexpr * aexpr
@@ -86,7 +87,7 @@ module Ast = struct
     | Reborrow of qident
 
   and abstract_when =
-    | AbstractWhen of identifier * qbinding list * astmt
+    | AbstractWhen of qident * qbinding list * astmt
 
   and abstract_arglist =
     | Positional of aexpr list
@@ -185,6 +186,8 @@ module AstLC = struct
     | ADiscarding of span * aexpr
     | AReturn of span * aexpr
     | LetTmp of identifier * aexpr
+    (* A temporary that holds a bound of a `for` loop. *)
+    | LetLoopBound of identifier * loop_bound * aexpr
     | AssignTmp of identifier * aexpr
 
   and aexpr =
@@ -197,6 +200,7 @@ module AstLC = struct
     | Temporary of identifier
     | FunctionCall of qident * abstract_arglist
     | ArithmeticExpression of arithmetic_operator * aexpr * aexpr
+    | ArithmeticNegation of aexpr
     | Comparison of comparison_operator * aexpr * aexpr
     | Conjunction of aexpr * aexpr
     | Disjunction of aexpr * aexpr
@@ -212,7 +216,7 @@ module AstLC = struct
     | Reborrow of qident
 
   and abstract_when =
-    | AbstractWhen of identifier * qbinding list * astmt
+    | AbstractWhen of qident * qbinding list * astmt
 
   and abstract_arglist =
     | Positional of aexpr list
@@ -269,6 +273,8 @@ module AstDP = struct
     | ADiscarding of span * aexpr
     | AReturn of span * aexpr
     | LetTmp of identifier * aexpr
+    (* A temporary that holds a bound of a `for` loop. *)
+    | LetLoopBound of identifier * loop_bound * aexpr
     | AssignTmp of identifier * aexpr
 
   and aexpr =
@@ -281,6 +287,7 @@ module AstDP = struct
     | Temporary of identifier
     | FunctionCall of qident * abstract_arglist
     | ArithmeticExpression of arithmetic_operator * aexpr * aexpr
+    | ArithmeticNegation of aexpr
     | Comparison of comparison_operator * aexpr * aexpr
     | Conjunction of aexpr * aexpr
     | Disjunction of aexpr * aexpr
@@ -298,7 +305,7 @@ module AstDP = struct
     | ArrayIndex of aexpr * aexpr
 
   and abstract_when =
-    | AbstractWhen of identifier * qbinding list * astmt
+    | AbstractWhen of qident * qbinding list * astmt
 
   and abstract_arglist =
     | Positional of aexpr list
@@ -349,6 +356,8 @@ module AstDB = struct
     | ADiscarding of span * aexpr
     | AReturn of span * aexpr
     | LetTmp of identifier * aexpr
+    (* A temporary that holds a bound of a `for` loop. *)
+    | LetLoopBound of identifier * loop_bound * aexpr
     | AssignTmp of identifier * aexpr
 
   and aexpr =
@@ -361,6 +370,7 @@ module AstDB = struct
     | Temporary of identifier
     | FunctionCall of qident * abstract_arglist
     | ArithmeticExpression of arithmetic_operator * aexpr * aexpr
+    | ArithmeticNegation of aexpr
     | Comparison of comparison_operator * aexpr * aexpr
     | Conjunction of aexpr * aexpr
     | Disjunction of aexpr * aexpr
@@ -376,7 +386,7 @@ module AstDB = struct
     | ArrayIndex of aexpr * aexpr
 
   and abstract_when =
-    | AbstractWhen of identifier * qbinding list * astmt
+    | AbstractWhen of qident * qbinding list * astmt
 
   and abstract_arglist =
     | Positional of aexpr list
@@ -444,7 +454,9 @@ module Linked = struct
         interface_imports: import_map;
         body_docstring: docstring;
         body_imports: import_map;
-        decls: linked_definition list;
+        decls: (Span.span * linked_definition) list;
+        (** Each definition with its span, the place of the errors that the
+            type checker finds in it. *)
       }
 
   and linked_definition =
@@ -486,6 +498,21 @@ module Tast = struct
     | CasePlain
     | CaseRef
 
+  (** Who wrote a borrow statement. *)
+  type borrow_origin =
+    | WrittenBorrow
+    (** A [borrow] statement in the source. What its body declares ends with it. *)
+    | AnonymousBorrow
+    (** A borrow made around the statement that holds an anonymous borrow
+        ([&x]). The temporaries in its body are read after it. *)
+
+  (** The order a call wrote its arguments in: for each argument, from the
+      first one written to the last, the index of its parameter. A call holds
+      its arguments in the order of the parameters, and evaluates them in the
+      order it wrote them, which is another order when the arguments are
+      named (issue #53). *)
+  type written_argument_order = int list
+
   type tstmt =
     | TSkip of span
     | TLet of span * mutability * identifier * ty * tstmt
@@ -507,7 +534,8 @@ module Tast = struct
         orig_type: ty;
         ref_type: ty;
         body: tstmt;
-        mode: borrow_stmt_kind
+        mode: borrow_stmt_kind;
+        origin: borrow_origin
       }
     | TBlock of span * tstmt * tstmt
     | TDiscarding of span * texpr
@@ -527,19 +555,21 @@ module Tast = struct
     | TFunVar of function_id * ty * type_bindings
     | TTemporary of identifier * ty
     (** Represents accessing a function as a value. *)
-    | TFuncall of function_id * qident * texpr list * ty * type_bindings
-    | TMethodCall of ins_meth_id * qident * typarams * texpr list * ty * type_bindings
+    | TFuncall of function_id * qident * texpr list * ty * type_bindings * written_argument_order
+    | TMethodCall of ins_meth_id * qident * typarams * texpr list * ty * type_bindings * written_argument_order
     | TVarMethodCall of {
-        source_module_name: module_name;
         typeclass_id: typeclass_id;
         params: value_parameter list;
         method_name: qident;
         args: texpr list;
+        written_order: written_argument_order;
         dispatch_ty: ty;
         rt: ty;
         bindings: type_bindings;
       }
-    | TFptrCall of identifier * texpr list * ty
+    | TFptrCall of identifier * ty list * texpr list * ty
+    (** A call through the function pointer the variable holds: the parameter
+        types of the pointer's type, the arguments, and its return type. *)
     | TCast of texpr * ty
     (** A type annotation that changed the expression: it gave a literal its
         type, or it turned a write reference into a read reference. The
@@ -554,6 +584,9 @@ module Tast = struct
     | TConjunction of texpr * texpr
     | TDisjunction of texpr * texpr
     | TNegation of texpr
+    | TArithmeticNegation of texpr
+    (** The type is the operand's: a signed integer type, a float type, or a
+        type parameter with the constraint `TrappingArithmetic`. *)
     | TIfExpression of texpr * texpr * texpr
     | TRecordConstructor of ty * (identifier * texpr) list
     | TUnionConstructor of {
@@ -638,7 +671,8 @@ module Mtast = struct
   and mstmt =
     | MSkip
     | MLet of identifier * mono_ty * mstmt
-    | MDestructure of mono_binding list * mexpr * mstmt
+    | MDestructure of mono_binding list * mexpr * mono_ty * mstmt
+    (** The type is the value's, a record type. *)
     | MAssign of mexpr * mexpr
     | MAssignVar of qident * mexpr
     | MInitialAssign of qident * mexpr
@@ -653,7 +687,8 @@ module Mtast = struct
         orig_type: mono_ty;
         ref_type: mono_ty;
         body: mstmt;
-        mode: borrow_stmt_kind
+        mode: borrow_stmt_kind;
+        origin: Tast.borrow_origin
       }
     | MBlock of mstmt * mstmt
     | MDiscarding of mexpr
@@ -681,12 +716,16 @@ module Mtast = struct
     (** Represents a call to an instance method of a concrete instance. *)
     | MGenericMethodCall of ins_meth_id * method_mono_id * mexpr list * mono_ty
     (** Represents a call to an instance method of a generic instance. *)
-    | MFptrCall of identifier * mexpr list * mono_ty
+    | MFptrCall of identifier * mono_ty list * mexpr list * mono_ty
+    (** Represents a call through a function pointer, as {!TFptrCall}. The C
+        call converts the pointer to the function type these types make. *)
     | MCast of mexpr * mono_ty
     | MComparison of comparison_operator * mexpr * mexpr
     | MConjunction of mexpr * mexpr
     | MDisjunction of mexpr * mexpr
     | MNegation of mexpr
+    | MArithmeticNegation of mexpr * NegatableType.t
+    (** The type of the operand, and of the value. *)
     | MIfExpression of mexpr * mexpr * mexpr
     | MRecordConstructor of mono_ty * (identifier * mexpr) list
     | MUnionConstructor of union_mono_id * identifier * (identifier * mexpr) list

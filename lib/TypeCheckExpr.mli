@@ -21,6 +21,11 @@ type expr_ctx
 
 val make_ctx : Error.place -> module_name -> env -> region_map -> typarams -> lexenv -> expr_ctx
 
+(** The context of the value of a constant of the module, at the place of the
+    constant. The value cannot name the constants of the list: the constant
+    and those declared after it. *)
+val make_constant_value_ctx : module_name -> env -> Error.place -> identifier list -> expr_ctx
+
 (** Type check an expression that stands where nothing says what its type is:
     an operand, an argument, a condition. The type of the result is the type
     of the expression. A generic function used as a value, and a call whose
@@ -35,6 +40,11 @@ val infer : expr_ctx -> aexpr -> texpr
     result has to match it. An integer literal has to fit it instead, and
     stays a literal. *)
 val check : expr_ctx -> aexpr -> ty -> texpr
+
+(** The first half of [check]: the expression, with the expected type fixing
+    its type variables, before its type is compared with the expected type.
+    The caller compares the two and says what is wrong when they differ. *)
+val infer_with_expected : expr_ctx -> aexpr -> ty -> texpr
 
 (** Type check an expression under a type annotation: `e : T`, and the value
     of `let x: T := e`. The annotated type is the expected type of the

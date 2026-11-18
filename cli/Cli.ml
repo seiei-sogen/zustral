@@ -15,8 +15,8 @@ let rec main (args: string list): unit =
   try
     main' args;
     exit 0
-  with Zustral_error error ->
-    report_and_exit ErrorReportPlain error
+  with exn ->
+    report_and_exit ErrorReportPlain (error_of_exception exn)
 
 and main' (args: string list): unit =
   let arglist: arglist = parse_args args in

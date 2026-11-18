@@ -1,0 +1,1 @@
+Test that a constraint can name a typeclass declared later in the module (issues #90 and #128): the constraints are checked where they are declared, once every declaration of the module is registered. The program prints 7. It passed before the constraints were checked at their declaration, and pins that checking them there keeps it passing.

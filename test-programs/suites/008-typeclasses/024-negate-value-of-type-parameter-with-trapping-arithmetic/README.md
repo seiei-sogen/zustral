@@ -1,0 +1,1 @@
+Pins that a generic function can negate a value of a type parameter with the constraint `TrappingArithmetic`, and that each instance negates in its own type (issue #162). The fix of issue #25 had made `-x` a type error, because the compiler read it as `0 - x` and a literal cannot stand where a type parameter is expected.

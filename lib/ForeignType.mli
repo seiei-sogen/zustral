@@ -36,17 +36,24 @@ type 'leaf foreign_ty = private
   | ForeignSpan of 'leaf
   (** An imported span, of anything: C receives a pointer to its elements. *)
 
+(** What a function that crosses the C boundary returns, by what C sees. *)
+type 'leaf foreign_return = private
+  | ForeignReturnsNothing
+  (** An imported function whose return type is [Unit]: the C function returns
+      [void]. *)
+  | ForeignReturns of 'leaf foreign_ty
+
 (** The signature of a function that crosses the C boundary. *)
 type 'leaf foreign_signature = private {
     params: (identifier * 'leaf foreign_ty) list;
-    rt: 'leaf foreign_ty;
+    rt: 'leaf foreign_return;
   }
 
-(** Check that the parameters and the return type of a non-generic function
-    may cross the C boundary in the given direction. Raises at the given place:
-    [Not allowed] for an import, {!TypeErrors.ExportDisallowedType} for an
-    export. *)
-val check_signature : place -> direction -> value_parameter list -> ty -> ty foreign_signature
+(** Check that the parameters and the return type of the named non-generic
+    function may cross the C boundary in the given direction. Raises at the
+    given place: {!TypeErrors.ImportDisallowedType} for an import,
+    {!TypeErrors.ExportDisallowedType} for an export. *)
+val check_signature : place -> direction -> identifier -> value_parameter list -> ty -> ty foreign_signature
 
 (** Replace each pointee of a signature, the return type's first, then the
     parameters' in order. [f] gets the state and the pointee, and returns the

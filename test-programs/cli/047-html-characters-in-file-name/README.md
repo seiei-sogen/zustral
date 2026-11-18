@@ -1,1 +1,1 @@
-For lib/HtmlError.ml, sanatize_string: the arms for `<`, `>` and `&`, which the name of a file with an error reaches when the compiler writes `error.html`. Shows the error and that `error.html` is written.
+Shows that the name of a file with `<`, `>` and `&` comes out unchanged in the JSON error, and that the compiler writes no `error.html` into the working directory (issue #33).

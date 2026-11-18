@@ -1,0 +1,26 @@
+{
+  "module": "Test",
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The module imports the name " },
+    { "type": "code", "content": "nullCheck" },
+    { "type": "text", "content": " from the module " },
+    { "type": "code", "content": "Zustral.Memory" },
+    { "type": "text", "content": ", so it cannot declare that name." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/049-function-named-like-an-explicit-import/Test.zum",
+    "startp": { "line": 4, "column": 19 },
+    "end": { "line": 7, "column": 8 }
+  },
+  "context": [
+    [ 2, "import Zustral.Memory (nullCheck);" ],
+    [ 3, "" ],
+    [ 4, "module body Test is" ],
+    [ 5, "    function nullCheck(x: Int32): Int32 is" ],
+    [ 6, "        return x;" ],
+    [ 7, "    end;" ],
+    [ 8, "" ],
+    [ 9, "    function main(): ExitCode is" ]
+  ]
+}

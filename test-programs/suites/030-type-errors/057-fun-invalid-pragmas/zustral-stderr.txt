@@ -7,6 +7,18 @@
       "content": "Only import and export pragmas are allowed inside functions."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/030-type-errors/057-fun-invalid-pragmas/Test.zum",
+    "startp": { "line": 2, "column": 25 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    pragma Unsafe_Module;" ],
+    [ 3, "    function f(): Unit is" ],
+    [ 4, "        return nil;" ],
+    [ 5, "    end;" ],
+    [ 6, "" ],
+    [ 7, "    function main(): ExitCode is" ]
+  ]
 }

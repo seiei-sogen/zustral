@@ -11,17 +11,17 @@
   ],
   "span": {
     "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/050-export-generic-function/Test.zum",
-    "startp": { "line": 3, "column": 4 },
-    "end": { "line": 6, "column": 8 }
+    "startp": { "line": 5, "column": 4 },
+    "end": { "line": 8, "column": 8 }
   },
   "context": [
-    [ 1, "module body Test is" ],
-    [ 2, "    pragma Foreign_Export(External_Name => \"f\");" ],
-    [ 3, "    generic [T: Free]" ],
-    [ 4, "    function f(x: T): T is" ],
-    [ 5, "        return x;" ],
-    [ 6, "    end;" ],
-    [ 7, "" ],
-    [ 8, "    function main(): ExitCode is" ]
+    [ 3, "module body Test is" ],
+    [ 4, "    pragma Foreign_Export(External_Name => \"f\");" ],
+    [ 5, "    generic [T: Free]" ],
+    [ 6, "    function f(x: T): T is" ],
+    [ 7, "        return x;" ],
+    [ 8, "    end;" ],
+    [ 9, "" ],
+    [ 10, "    function main(): ExitCode is" ]
   ]
 }

@@ -1,0 +1,10 @@
+module body Test is
+    record R: Linear is
+        y: Bool;
+        z: Bool;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

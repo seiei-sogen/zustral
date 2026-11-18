@@ -9,9 +9,15 @@
     { "type": "text", "content": "." }
   ],
   "span": {
-    "filename": "",
-    "startp": { "line": 0, "column": 0 },
-    "end": { "line": 0, "column": 0 }
+    "filename": "test-programs/suites/044-unexecuted-declarations-and-late-stages/105-anonymous-borrow-of-unknown-variable/Test.zum",
+    "startp": { "line": 3, "column": 8 },
+    "end": { "line": 3, "column": 23 }
   },
-  "context": null
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    function main(): ExitCode is" ],
+    [ 3, "        printLn(&nope);" ],
+    [ 4, "        return ExitSuccess();" ],
+    [ 5, "    end;" ]
+  ]
 }

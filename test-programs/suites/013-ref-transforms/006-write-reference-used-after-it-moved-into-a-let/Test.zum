@@ -1,0 +1,10 @@
+module body Test is
+    function main(): ExitCode is
+        var x: Int32 := 1;
+        borrow r: &![Int32, R] := &!x do
+            let r2: &![Int32, R] := r;
+            printLn(!r);
+        end borrow;
+        return ExitSuccess();
+    end;
+end module body.

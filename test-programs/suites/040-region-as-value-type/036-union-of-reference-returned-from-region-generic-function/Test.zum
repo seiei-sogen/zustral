@@ -1,0 +1,20 @@
+module body Test is
+    generic [R: Region]
+    function wrap(r: &[Int32, R]): Option[&[Int32, R]] is
+        return Some(value => r);
+    end;
+
+    function main(): ExitCode is
+        let n: Int32 := 5;
+        borrow r: &[Int32, Rho] := &n do
+            var holder: Option[&[Int32, Rho]] := wrap(r);
+            case holder of
+                when Some(value: &[Int32, Rho]) do
+                    printLn(!value);
+                when None do
+                    printLn("none");
+            end case;
+        end borrow;
+        return ExitSuccess();
+    end;
+end module body.

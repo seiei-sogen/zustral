@@ -5,6 +5,12 @@
     { "type": "code", "content": "Foo" },
     { "type": "text", "content": " is private and cannot be imported." }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/018-privacy-error/Test.zum",
+    "startp": { "line": 1, "column": 0 },
+    "end": { "line": 1, "column": 19 }
+  },
+  "context": [
+    [ 1, "import Other (Foo);" ], [ 2, "" ], [ 3, "module body Test is" ]
+  ]
 }

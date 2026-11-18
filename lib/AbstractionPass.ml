@@ -67,9 +67,11 @@ and abs_expr place im expr =
   | CVariable (_, i) -> Variable (qualify_identifier im i)
   | CFuncall (_, name, args) ->
      FunctionCall (qualify_identifier im name, abs_arglist place im args)
-  | CArith (_, op, lhs, rhs) ->
+  | CArith (span, op, lhs, rhs) ->
      let e: aexpr = ArithmeticExpression (op, abs_expr place im lhs, abs_expr place im rhs) in
-     LiteralTyping.fold_integer_arithmetic e
+     LiteralTyping.fold_integer_arithmetic (place_inside place span) e
+  | CArithmeticNegation (_, operand) ->
+     LiteralTyping.negation_of_operand (abs_expr place im operand)
   | CComparison (_, op, lhs, rhs) ->
      Comparison (op, abs_expr place im lhs, abs_expr place im rhs)
   | CConjunction (_, lhs, rhs) ->
@@ -102,7 +104,7 @@ and abs_expr place im expr =
      Reborrow (qualify_identifier im name)
 
 and abs_when place im (ConcreteWhen (name, bindings, body)) =
-  AbstractWhen (name,
+  AbstractWhen (qualify_identifier im name,
                 List.map (fun (ConcreteBinding { name; ty; rename; }) -> QBinding { name; ty = qualify_typespec im ty; rename }) bindings,
                 abs_stmt place im body)
 

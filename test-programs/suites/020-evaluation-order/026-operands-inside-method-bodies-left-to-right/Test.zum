@@ -1,0 +1,34 @@
+module body Test is
+    function p(x: Int64): Int64 is
+        printLn(x);
+        return x;
+    end;
+
+    typeclass Summed(T: Free) is
+        method summed(x: T): Int64;
+    end;
+
+    instance Summed(Int64) is
+        method summed(x: Int64): Int64 is
+            return p(x) + p(x + 1);
+        end;
+    end;
+
+    record Wrapped[T: Free]: Free is
+        value: T;
+    end;
+
+    generic [U: Free]
+    instance Summed(Wrapped[U]) is
+        method summed(x: Wrapped[U]): Int64 is
+            return p(10) + p(20);
+        end;
+    end;
+
+    function main(): ExitCode is
+        let one: Int64 := 1;
+        printLn(summed(one));
+        printLn(summed(Wrapped(value => one)));
+        return ExitSuccess();
+    end;
+end module body.

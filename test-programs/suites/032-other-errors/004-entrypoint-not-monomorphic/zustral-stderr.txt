@@ -1,5 +1,5 @@
 {
-  "module": null,
+  "module": "Test",
   "kind": "Entrypoint Definition Error",
   "text": [
     {
@@ -7,6 +7,17 @@
       "content": "The entrypoint function cannot be generic."
     }
   ],
-  "span": null,
-  "context": null
+  "span": {
+    "filename": "test-programs/suites/032-other-errors/004-entrypoint-not-monomorphic/Test.zum",
+    "startp": { "line": 2, "column": 4 },
+    "end": { "line": 5, "column": 8 }
+  },
+  "context": [
+    [ 1, "module body Test is" ],
+    [ 2, "    generic [T: Free]" ],
+    [ 3, "    function main(x: T): ExitCode is" ],
+    [ 4, "        return ExitSuccess();" ],
+    [ 5, "    end;" ],
+    [ 6, "end module body." ]
+  ]
 }

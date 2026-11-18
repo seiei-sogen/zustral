@@ -1,0 +1,12 @@
+module body Test is
+    pragma Foreign_Import(External_Name => "nothing");
+    record R: Free is
+        x: Int32;
+    end;
+
+    function main(): ExitCode is
+        let r: R := R(x => 1);
+        printLn(r.x);
+        return ExitSuccess();
+    end;
+end module body.

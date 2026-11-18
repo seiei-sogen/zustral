@@ -49,6 +49,7 @@ type known_pragma =
 type t =
   | ForeignInSafeModule
   | EmbedInSafeModule
+  | ExportInSafeModule
   | ForeignTypeParameters
   | FunInvalidPragmas
   | DeclarationKindMismatch of { name: identifier; expected: declaration_kind }
@@ -59,8 +60,17 @@ type t =
   | DeclarationTypeMismatch of identifier
   | DeclarationUniverseMismatch of identifier
   | PragmaArgumentError of known_pragma
+  | MisplacedPragma of known_pragma
+  | ForeignFunctionWithBody of identifier
+  | ExternalNameIsNotACIdentifier of string
+  | ExternalNameIsACReservedWord of string
   | UnknownPragma of identifier
   | DeclarationAlreadyExists of { name: identifier; module_name: module_name }
+  | DeclarationNameIsImported of { name: identifier; module_name: module_name }
+  (** [module_name] is the module the name is imported from. *)
+  | DeclarationNameIsBuiltInType of identifier
+  | RegionNameIsTypeParameter of identifier
+  | ConstantNotYetDefined of identifier
   | ModuleAlreadyExists of module_name
   | UnknownModule of module_name
   | ExportGeneric of identifier
@@ -68,10 +78,15 @@ type t =
   | InstanceForNonTypeclass of identifier
   | InstanceBeforeType of identifier
   | TypeclassNoMethod of { typeclass: identifier; method_name: identifier }
+  | InstanceMissingMethod of { typeclass: identifier; ty: ty; method_name: identifier }
+  | InstanceMethodDefinedTwice of { typeclass: identifier; ty: ty; method_name: identifier }
+  | InstanceMethodMismatch of { typeclass: identifier; ty: ty; method_name: identifier; difference: function_difference }
+  | MethodTypeParameterNotRegion of { method_name: identifier; typaram: type_parameter }
   | TypeclassParamIsRegion of identifier
   | TypesAreNotRegions of { name: identifier; declaration: declaration_kind }
   | RegionUsedAsType of identifier
   | TypeUniverseWithoutParameters of identifier
+  | UnionWithoutCases of identifier
   | RegionParameterUsedAsType of identifier
   | UnknownTypeclass of identifier
   | TyparamNotInSignature of type_parameter
@@ -112,6 +127,15 @@ let render (error: t): err_text =
      [
        Text "Can't use ";
        Code "@embed";
+       Text " in a safe module.";
+       Break;
+       Text "Consider adding ";
+       Code ("pragma " ^ BuiltInNames.unsafe_module_pragma_name ^ ";")
+     ]
+  | ExportInSafeModule ->
+     [
+       Text "Can't use ";
+       Code BuiltInNames.foreign_export_pragma_name;
        Text " in a safe module.";
        Break;
        Text "Consider adding ";
@@ -185,6 +209,49 @@ let render (error: t): err_text =
      Text ("Invalid " ^ pragma_name ^ " pragma.") :: (match argument with
       | Some argument -> [Break; Text "This pragma takes exactly one argument, "; Code argument]
       | None -> [Break; Text "This pragma takes no arguments."])
+  | MisplacedPragma pragma ->
+     let before_a_function_definition (pragma_name: string): err_text =
+       [
+         Text "The pragma ";
+         Code pragma_name;
+         Text " can only be written before a function definition in a module body."
+       ]
+     in
+     (match pragma with
+      | ForeignImport ->
+         before_a_function_definition BuiltInNames.foreign_import_pragma_name
+      | ForeignExport ->
+         before_a_function_definition BuiltInNames.foreign_export_pragma_name
+      | UnsafeModule ->
+         [
+           Text "The pragma ";
+           Code BuiltInNames.unsafe_module_pragma_name;
+           Text " can only be written before ";
+           Code "module body";
+           Text "."
+         ])
+  | ForeignFunctionWithBody name ->
+     [
+       Text "The function ";
+       Code (ident_string name);
+       Text " is imported with the pragma ";
+       Code BuiltInNames.foreign_import_pragma_name;
+       Text ", so it cannot have a body."
+     ]
+  | ExternalNameIsNotACIdentifier name ->
+     [
+       Text "The external name ";
+       Code name;
+       Text " is not a C identifier.";
+       Break;
+       Text "A C identifier starts with a letter or an underscore, and has only letters, digits, and underscores."
+     ]
+  | ExternalNameIsACReservedWord name ->
+     [
+       Text "The external name ";
+       Code name;
+       Text " is a C reserved word."
+     ]
   | UnknownPragma name ->
      [
        Text "Unknown pragma ";
@@ -197,6 +264,32 @@ let render (error: t): err_text =
        Text " already exists in the module ";
        Code (mod_name_string module_name);
        Text "."
+     ]
+  | DeclarationNameIsImported { name; module_name } ->
+     [
+       Text "The module imports the name ";
+       Code (ident_string name);
+       Text " from the module ";
+       Code (mod_name_string module_name);
+       Text ", so it cannot declare that name."
+     ]
+  | DeclarationNameIsBuiltInType name ->
+     [
+       Text "The name ";
+       Code (ident_string name);
+       Text " is the name of a built-in type, so a declaration cannot have it."
+     ]
+  | RegionNameIsTypeParameter name ->
+     [
+       Text "The name ";
+       Code (ident_string name);
+       Text " is the name of a type parameter, so a borrow cannot name its region with it."
+     ]
+  | ConstantNotYetDefined name ->
+     [
+       Text "The value of a constant can only name the constants declared before it, and ";
+       Code (ident_string name);
+       Text " is not one of them."
      ]
   | ModuleAlreadyExists name ->
      [
@@ -245,6 +338,53 @@ let render (error: t): err_text =
        Text " has no method named ";
        Code (ident_string method_name)
      ]
+  | InstanceMissingMethod { typeclass; ty; method_name } ->
+     [
+       Text "The instance of the typeclass ";
+       Code (ident_string typeclass);
+       Text " for ";
+       Type ty;
+       Text " does not define the method ";
+       Code (ident_string method_name);
+       Text ". An instance must define every method of its typeclass."
+     ]
+  | InstanceMethodDefinedTwice { typeclass; ty; method_name } ->
+     [
+       Text "The instance of the typeclass ";
+       Code (ident_string typeclass);
+       Text " for ";
+       Type ty;
+       Text " defines the method ";
+       Code (ident_string method_name);
+       Text " more than once."
+     ]
+  | InstanceMethodMismatch { typeclass; ty; method_name; difference } ->
+     let what = match difference with
+       | DifferentTypeParameters -> "type parameters."
+       | DifferentValueParameters -> "parameters."
+       | DifferentReturnTypes -> "return types."
+     in
+     [
+       Text "The method ";
+       Code (ident_string method_name);
+       Text " of the instance of the typeclass ";
+       Code (ident_string typeclass);
+       Text " for ";
+       Type ty;
+       Text (" and the method of the typeclass have different " ^ what)
+     ]
+  | MethodTypeParameterNotRegion { method_name; typaram } ->
+     [
+       Text "The type parameter ";
+       Code (ident_string (typaram_name typaram));
+       Text " of the method ";
+       Code (ident_string method_name);
+       Text " is in the ";
+       Code (universe_string (typaram_universe typaram));
+       Text " universe. The type parameters of a method must be in the ";
+       Code "Region";
+       Text " universe."
+     ]
   | TypeclassParamIsRegion name ->
      [
        Text "The parameter for the typeclass ";
@@ -285,6 +425,12 @@ let render (error: t): err_text =
        Text " or the ";
        Code "Linear";
        Text " universe.";
+     ]
+  | UnionWithoutCases name ->
+     [
+       Text "The union ";
+       Code (ident_string name);
+       Text " has no cases. A union needs at least one case."
      ]
   | RegionParameterUsedAsType name ->
      [

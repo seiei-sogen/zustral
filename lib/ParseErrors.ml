@@ -10,7 +10,6 @@ open ErrorText
 
 type t =
   | FunctionPointerNoArgs
-  | LongCharacter of string
   | SyntaxError
   | InvalidCharacter of string
   | StringInvalidCharacter of string
@@ -22,12 +21,6 @@ let render (error: t): err_text =
   | FunctionPointerNoArgs ->
      [
        Text "Function pointer type specifier must have at least one argument."
-     ]
-  | LongCharacter lit ->
-     [
-       Text "Character literal '";
-       Code lit;
-       Text " is more than one character."
      ]
   | SyntaxError ->
      [

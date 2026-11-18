@@ -3,7 +3,7 @@
   "kind": "Type Error",
   "text": [
     { "type": "text", "content": "The type " },
-    { "type": "type", "content": "Region<0>" },
+    { "type": "type", "content": "Static" },
     {
       "type": "text",
       "content": " cannot be destructured because it is not a record."

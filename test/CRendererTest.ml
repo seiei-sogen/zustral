@@ -20,16 +20,15 @@ let test_render_string _ =
   assert_equal (r_e (CString (escape_string Zustral_core.Error.NoSpan "\""))) "\"\\\"\"";
   assert_equal (r_e (CString (escape_string Zustral_core.Error.NoSpan "\"\"\""))) "\"\\\"\\\"\\\"\""
 
-(* Which names get the reserved-word escape. The cases that issue #92 calls
-   bugs are here as they are today. *)
+(* Which names get the reserved-word escape: a name the user wrote in Zustral
+   that is a C reserved word, and no other (issue #92). *)
 let test_render_identifier _ =
   assert_equal (r_e (CVar (CIdent.generated "decl_1"))) "decl_1";
   assert_equal (r_e (CVar (CIdent.zustral "x"))) "x";
   assert_equal (r_e (CVar (CIdent.zustral "double"))) "au_ckw_double";
-  assert_equal (r_e (CVar (CIdent.zustral "doubled"))) "au_ckw_doubled";
-  assert_equal (r_e (CStructAccessor (CVar (CIdent.zustral "x"), CIdent.zustral_unescaped "double"))) "(x).double";
-  assert_equal (r_e (CFuncall (CIdent.external_name "fork", []))) "fork()";
-  assert_equal (r_e (CFuncall (CIdent.external_escaped "fork", []))) "au_ckw_fork()"
+  assert_equal (r_e (CVar (CIdent.zustral "doubled"))) "doubled";
+  assert_equal (r_e (CStructAccessor (CVar (CIdent.zustral "x"), CIdent.zustral "double"))) "(x).au_ckw_double";
+  assert_equal (r_e (CFuncall (CIdent.external_name "fork", []))) "fork()"
   
   
   let suite =

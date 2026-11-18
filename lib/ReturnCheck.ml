@@ -71,8 +71,8 @@ let rec ends_in_return (variables: variables_in_scope) (stmt: astmt): bool =
       | FunctionCall (name, _) ->
          calls_abort variables name
       | NilConstant | BoolConstant _ | IntConstant _ | FloatConstant _
-      | StringConstant _ | Variable _ | ArithmeticExpression _ | Comparison _
-      | Conjunction _ | Disjunction _ | Negation _ | IfExpression _ | Path _
+      | StringConstant _ | Variable _ | ArithmeticExpression _ | ArithmeticNegation _
+      | Comparison _ | Conjunction _ | Disjunction _ | Negation _ | IfExpression _ | Path _
       | RefPath _ | Embed _ | Deref _ | Typecast _ | SizeOf _ | BorrowExpr _
       | Reborrow _ ->
          false)
@@ -107,8 +107,12 @@ let check_decl_ends_in_return (decl: combined_definition): unit =
          else
            declaration_error (AtSpan span) (MissingReturn { name; declaration = FunctionDeclaration })
       | [Common.ForeignImportPragma _] ->
-         (* An imported function has no body. *)
-         ()
+         (* An imported function has no body: the C function is its body
+            (#93). The abstraction pass makes an empty block this skip. *)
+         if body = ASkip empty_span then
+           ()
+         else
+           declaration_error (AtSpan span) (ForeignFunctionWithBody name)
       | [Common.UnsafeModulePragma] | _ :: _ :: _ ->
          (* Not the pragmas of a function. The type checker rejects them. *)
          ())

@@ -1,0 +1,1 @@
+Test that the `External_Name` of a `Foreign_Export` must be a C identifier (issue #161). The name is pasted into the C as the name of the wrapper function. Before, this name injected a C function that ran before `main`.

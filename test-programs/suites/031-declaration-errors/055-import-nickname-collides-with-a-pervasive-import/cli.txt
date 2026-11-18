@@ -1,0 +1,1 @@
+./zustral compile --target-type=c $DIR/M.zui,$DIR/M.zum $DIR/Test.zum --entrypoint=Test:main --output=$C_PATH --error-format=json

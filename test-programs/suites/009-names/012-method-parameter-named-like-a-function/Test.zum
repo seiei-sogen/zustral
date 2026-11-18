@@ -1,0 +1,19 @@
+module body Test is
+    typeclass C(T: Free) is
+        method m(x: T): Int32;
+    end;
+
+    function x(): Int32 is
+        return 1;
+    end;
+
+    instance C(Int32) is
+        method m(x: Int32): Int32 is
+            return 1;
+        end;
+    end;
+
+    function main(): ExitCode is
+        return ExitSuccess();
+    end;
+end module body.

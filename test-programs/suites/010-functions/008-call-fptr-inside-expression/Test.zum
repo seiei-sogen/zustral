@@ -1,0 +1,12 @@
+module body Test is
+    function inc(x: Int32): Int32 is
+        return x + 1;
+    end;
+
+    function main(): ExitCode is
+        let f: Fn[Int32, Int32] := inc;
+        printLn(f(7));
+        printLn(f(f(1)) + 10);
+        return ExitSuccess();
+    end;
+end module body.

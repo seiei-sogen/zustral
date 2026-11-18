@@ -12,7 +12,7 @@
       "type": "text",
       "content": "\nYou can move it to a mutable local variable: "
     },
-    { "type": "code", "content": "var mut_x: Region<0> := x;" }
+    { "type": "code", "content": "var mut_x: Static := x;" }
   ],
   "span": {
     "filename": "test-programs/suites/043-unexecuted-type-checker/126-borrow-parameter-mutably-region/Test.zum",

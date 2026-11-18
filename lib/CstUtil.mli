@@ -10,13 +10,18 @@ open Identifier
 open Cst
 open Common
 
-(** Used by the parser to easily create a module body from its components and a list of pragmas. *)
-val make_module_body : module_name -> concrete_import_list list -> pragma list -> concrete_def list -> docstring -> concrete_module_body
+(** Used by the parser to easily create a module body from its components and
+    a list of pragmas: the span of the pragmas, the name of the module and its
+    span, the imports, the pragmas, the definitions and the docstring. *)
+val make_module_body : Span.span -> module_name -> Span.span -> concrete_import_list list -> pragma list -> concrete_def list -> docstring -> concrete_module_body
 
 val get_concrete_decl : concrete_module_interface -> identifier -> concrete_decl option
 
 (** The name of a definition. *)
 val def_name : concrete_named_def -> identifier
+
+(** The span of a definition. *)
+val def_span : concrete_named_def -> Span.span
 
 val get_concrete_def : concrete_module_body -> identifier -> concrete_named_def option
 

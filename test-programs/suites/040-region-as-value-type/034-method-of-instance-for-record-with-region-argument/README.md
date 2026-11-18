@@ -1,0 +1,1 @@
+Covers a method of a generic instance for a record over a region type parameter, called with the record over the region of a `borrow` block: accepted, and the method reads through the reference in the record. Before, the C compiler stopped with `incompatible type for argument 1` (issue #142).

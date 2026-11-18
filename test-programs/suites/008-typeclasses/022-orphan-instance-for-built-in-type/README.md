@@ -1,0 +1,1 @@
+Test that an instance of a typeclass of another module for a built-in type fails where it is declared: a built-in type belongs to no module, so the instance is an orphan (issue #72). Nothing calls the method.

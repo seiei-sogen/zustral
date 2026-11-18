@@ -228,13 +228,13 @@ let rec count (name: identifier) (expr: texpr): appearances =
        zero_appearances
   | TFunVar _ ->
      zero_appearances
-  | TFuncall (_, _, args, _, _) ->
+  | TFuncall (_, _, args, _, _, _) ->
      merge_list (List.map c args)
-  | TMethodCall (_, _, _, args, _, _) ->
+  | TMethodCall (_, _, _, args, _, _, _) ->
      merge_list (List.map c args)
   | TVarMethodCall { args; _ } ->
      merge_list (List.map c args)
-  | TFptrCall (_, args, _) ->
+  | TFptrCall (_, _, args, _) ->
      merge_list (List.map c args)
   | TCast (e, _) | TImplicitCast (e, _) ->
      c e
@@ -245,6 +245,8 @@ let rec count (name: identifier) (expr: texpr): appearances =
   | TDisjunction (lhs, rhs) ->
      merge (c lhs) (in_right_operand_evaluated_on_some_paths DisjunctionRightOperand (c rhs))
   | TNegation e ->
+     c e
+  | TArithmeticNegation e ->
      c e
   | TIfExpression (e, t, f) ->
      merge (c e) (merge_if_expression_branches (c t) (c f))
@@ -539,7 +541,8 @@ let rec check_stmt (place: place) (tbl: state_tbl) (stmt: tstmt): state_tbl =
      (* Remove the rename from the table. *)
      let tbl: state_tbl = remove_entry place tbl rename in
      tbl
-  | TBlock (_, a, b) ->
+  | TBlock (span, a, b) ->
+     let place: place = place_inside place span in
      let tbl: state_tbl = check_stmt place tbl a in
      let tbl: state_tbl = check_stmt place tbl b in
      tbl

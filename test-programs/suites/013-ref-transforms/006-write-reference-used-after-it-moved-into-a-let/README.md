@@ -1,0 +1,1 @@
+Covers a write reference used after a `let` of the same type took it: a linearity error. A write reference is linear, so the `let` moves it and does not copy it, as passing it to a function does. Before, the `let` itself was a type error (`Write references can only be casted to a read reference.`, issue #133).

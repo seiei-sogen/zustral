@@ -44,8 +44,7 @@ let parse_function_pointer (place: place) (args: ty list): ty =
      parse_error place FunctionPointerNoArgs
   | first::rest ->
      let (args, rt): ty list * ty = Util.split_last first rest in
-     (* The parameters are read in reverse (#127). *)
-     FnPtr (List.rev args, rt)
+     FnPtr (args, rt)
 
 let parse_built_in_type (place: place) (name: qident) (args: ty list): ty option =
   if is_address_type name then
@@ -70,43 +69,51 @@ let parse_built_in_type (place: place) (name: qident) (args: ty list): ty option
              actual = None;
            })
     else
+      (* Every other built-in type but Fn takes no type arguments (#90). *)
+      let without_type_arguments (ty: ty): ty option =
+        match args with
+        | [] ->
+           Some ty
+        | _ :: _ ->
+           generic_error place (TypeWrongArity { typename = original_name name; expected = 0; actual = None })
+      in
       match BuiltInNames.type_of_name (ident_string (original_name name)) with
       | Some BuiltInNames.Unit ->
-         Some Unit
+         without_type_arguments Unit
       | Some BuiltInNames.Bool ->
-         Some Boolean
+         without_type_arguments Boolean
       | Some BuiltInNames.Nat8 ->
-         Some (Integer (Unsigned, Width8))
+         without_type_arguments (Integer (Unsigned, Width8))
       | Some BuiltInNames.Nat16 ->
-         Some (Integer (Unsigned, Width16))
+         without_type_arguments (Integer (Unsigned, Width16))
       | Some BuiltInNames.Nat32 ->
-         Some (Integer (Unsigned, Width32))
+         without_type_arguments (Integer (Unsigned, Width32))
       | Some BuiltInNames.Nat64 ->
-         Some (Integer (Unsigned, Width64))
+         without_type_arguments (Integer (Unsigned, Width64))
       | Some BuiltInNames.Int8 ->
-         Some (Integer (Signed, Width8))
+         without_type_arguments (Integer (Signed, Width8))
       | Some BuiltInNames.Int16 ->
-         Some (Integer (Signed, Width16))
+         without_type_arguments (Integer (Signed, Width16))
       | Some BuiltInNames.Int32 ->
-         Some (Integer (Signed, Width32))
+         without_type_arguments (Integer (Signed, Width32))
       | Some BuiltInNames.Int64 ->
-         Some (Integer (Signed, Width64))
+         without_type_arguments (Integer (Signed, Width64))
       | Some BuiltInNames.ByteSize ->
-         Some (Integer (Unsigned, WidthByteSize))
+         without_type_arguments (Integer (Unsigned, WidthByteSize))
       | Some BuiltInNames.Index ->
-         Some (Integer (Unsigned, WidthIndex))
+         without_type_arguments (Integer (Unsigned, WidthIndex))
       | Some BuiltInNames.Float32 ->
-         Some SingleFloat
+         without_type_arguments SingleFloat
       | Some BuiltInNames.Float64 ->
-         Some DoubleFloat
+         without_type_arguments DoubleFloat
       | Some BuiltInNames.Static ->
-         Some (RegionTy static_region)
+         without_type_arguments (RegionTy static_region)
       | Some BuiltInNames.Fn ->
          Some (parse_function_pointer place args)
       | None ->
          None
 
-let rec effective_universe (place: place) name (typarams: typarams) declared_universe args =
+let rec effective_universe (place: place) name declared_universe args =
   (* Algorithm:
 
      1. If the declared universe is Free then none of the type parameters can be Linear or Type.
@@ -121,17 +128,16 @@ let rec effective_universe (place: place) name (typarams: typarams) declared_uni
      3. If the declared universe is Region, that's the declaration error
         RegionUsedAsType: a region is not a type.
 
-     4. Finally, if the universe is Type:
-         4.1. First, there has to be at least one type parameter: the universe comes from the
-              arguments. A type declared without any is the declaration error
-              TypeUniverseWithoutParameters.
+     4. Finally, if the universe is Type, the universe comes from the arguments. The type has at
+        least one type parameter: one declared without any is the declaration error
+        TypeUniverseWithoutParameters, raised when its ID is reserved (ExtractionPass).
 
-         4.2. If any argument's universe is Linear, the effective universe is Linear.
+         4.1. If any argument's universe is Linear, the effective universe is Linear.
 
-         4.3. Otherwise, if any argument's universe is Type, the effective universe is Type. The ordering
+         4.2. Otherwise, if any argument's universe is Type, the effective universe is Type. The ordering
               here is because Linear is stronger (i.e. lower in the poset of universes) than Type.
 
-         4.4. Otherwise, the effective universe is Free.
+         4.3. Otherwise, the effective universe is Free.
    *)
   match declared_universe with
   | FreeUniverse ->
@@ -147,11 +153,7 @@ let rec effective_universe (place: place) name (typarams: typarams) declared_uni
         with TypesAreNotRegions (#141). *)
      declaration_error place (RegionUsedAsType (original_name name))
   | TypeUniverse ->
-     if (typarams_size typarams) = 0 then
-       (* Nothing rejects the declaration of such a type, so the mistake is
-          reported where the type is used. *)
-       declaration_error place (TypeUniverseWithoutParameters (original_name name))
-     else if any_arg_is_linear args then
+     if any_arg_is_linear args then
        LinearUniverse
      else if any_arg_is_type args then
        TypeUniverse
@@ -185,20 +187,11 @@ let get_type_signature (place: place) (env: env) (sigs: type_signature list) (na
        None
   in
   match get_local_type_signature sigs name with
-  | (Some (TypeSignature (n, typarams, universe, local_id))) ->
-     (* The local signature is found by the local name, also for a name that
-        the module imports and declares as a type (#28): the checks read the
-        local type, and the type is the imported declaration. So the ID is the
-        one of the declaration the name stands for, when that is a record or a
-        union, and the reserved one of the local type otherwise: a type of the
-        module that is not registered yet, or a name that also stands for a
-        union case or a typeclass method (#86). *)
-     let id: type_decl_id =
-       match get_foreign_type_signature env name with
-       | Some (TypeSignature (_, _, _, id)) -> id
-       | None -> local_id
-     in
-     Some (TypeSignature (n, typarams, universe, id))
+  | Some signature ->
+     (* A type of the module, registered or not yet. The name stands for no
+        other declaration: a name that the module also imports or declares
+        again is rejected when its declaration is registered (#28, #86). *)
+     Some signature
   | None ->
      get_foreign_type_signature env name
 
@@ -223,24 +216,34 @@ let rec parse_type (place: place) (env: env) (sigs: type_signature list) (rm: re
                  parse_user_defined_type place env sigs name args')))
   | QReadRef (ty, r) ->
      let ty' = parse_type place env sigs rm typarams ty
-     and r' = parse_type place env sigs rm typarams r
+     and r' = parse_region place env sigs rm typarams r
      in
-     ReadRef (ty', ref_region_of_ty r')
+     ReadRef (ty', r')
   | QWriteRef (ty, r) ->
      let ty' = parse_type place env sigs rm typarams ty
-     and r' = parse_type place env sigs rm typarams r
+     and r' = parse_region place env sigs rm typarams r
      in
-     WriteRef (ty', ref_region_of_ty r')
+     WriteRef (ty', r')
   | QSpan (ty, r) ->
      let ty' = parse_type place env sigs rm typarams ty
-     and r' = parse_type place env sigs rm typarams r
+     and r' = parse_region place env sigs rm typarams r
      in
-     Span (ty', ref_region_of_ty r')
+     Span (ty', r')
   | QSpanWrite (ty, r) ->
      let ty' = parse_type place env sigs rm typarams ty
-     and r' = parse_type place env sigs rm typarams r
+     and r' = parse_region place env sigs rm typarams r
      in
-     SpanMut (ty', ref_region_of_ty r')
+     SpanMut (ty', r')
+
+(* The region of a reference or a span: a region, or a type parameter of the
+   Region universe (#90). *)
+and parse_region (place: place) (env: env) (sigs: type_signature list) (rm: region_map) (typarams: typarams) (ts: qtypespec): ref_region =
+  let ty = parse_type place env sigs rm typarams ts in
+  match ref_region_of_ty ty with
+  | Some region ->
+     region
+  | None ->
+     type_error place (ReferenceRegionNotARegion ty)
 
 (* Is the given name a type parameter in the list of type paramters? If so,
    return it as a type variable. *)
@@ -275,7 +278,7 @@ and parse_user_defined_type' (place: place) (ts: type_signature) (name: qident) 
      parameter in the type signature. *)
   check_universes_match place ts_params args;
   (* Construct the named type *)
-  let universe = effective_universe place name ts_params declared_universe args in
+  let universe = effective_universe place name declared_universe args in
   NamedType (name, id, args, universe)
 
 and check_param_arity_matches (place: place) (params: typarams) (args: ty list) (ty_name: qident) : unit =

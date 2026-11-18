@@ -1,0 +1,21 @@
+{
+  "module": null,
+  "kind": "Declaration Error",
+  "text": [
+    { "type": "text", "content": "The external name " },
+    { "type": "code", "content": "double" },
+    { "type": "text", "content": " is a C reserved word." }
+  ],
+  "span": {
+    "filename": "test-programs/suites/031-declaration-errors/065-foreign-import-external-name-is-a-c-reserved-word/Test.zum",
+    "startp": { "line": 4, "column": 43 },
+    "end": { "line": 4, "column": 51 }
+  },
+  "context": [
+    [ 2, "" ],
+    [ 3, "module body Test is" ],
+    [ 4, "    pragma Foreign_Import(External_Name => \"double\");" ],
+    [ 5, "    function bad(x: Int32): Int32 is" ],
+    [ 6, "    end;" ]
+  ]
+}

@@ -1,1 +1,1 @@
-Pins `No binding for this parameter: ` (lib/TypeCheckExpr.ml, `check_bindings`): a generic function calls itself with its own type variable.
+Pins `No binding for this parameter: ` (lib/TypeCheckExpr.ml, `bound_type`): a call of a method whose parameters and return type do not mention the parameter of its typeclass, so that nothing says which instance is meant. A generic function that calls itself with its own type variable, which this test had before, compiles (issue #128; 010/013).

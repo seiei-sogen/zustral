@@ -1,0 +1,1 @@
+Test that the error for an import under a nickname that is already imported names the nickname, which is the name that collides (issue #163), at the position of the import statement (issue #87). Before, it named `quiet`, the name the declaration has in `M`, and had no position.
