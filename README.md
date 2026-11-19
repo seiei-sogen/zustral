@@ -63,6 +63,7 @@ Australの線形型を受け継ぎ、ガベージコレクションに頼らず�
 - Australの不要な機能（ケイパビリティなど）の削除。邪魔にならない限り残す。
 - セルフホスティング。
 - I/Oライブラリの設計。本実装で行う。
+- 篩型（refinement types）、単位（units of measure）、情報フロー型（information flow types）。本実装で型システムに入れる予定である。PIC句の桁数や値の範囲、通貨の取り違え、個人情報の漏れを型で防ぐ。詳しくは [`docs/production-implementation-planned-types.md`](docs/production-implementation-planned-types.md) を見る。
 
 ### いまの進み具合と、次にやること
 
