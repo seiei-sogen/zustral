@@ -5,9 +5,9 @@
 == 出典
 
 * issue: #1「0001: 10進バックエンドの実像を掴む」
-* URL: https://github.com/seiei-sogen/zustral/issues/1
+* URL: https://github.com/seiei-sogen/zustral-beta/issues/1
 * ラベル: `wayfinder:research`
-* 親の地図: issue #9「Zustral の Decimal 言語機能の設計仕様」（https://github.com/seiei-sogen/zustral/issues/9 、ラベル `wayfinder:map`）。#1 は #9 の sub-issue である。
+* 親の地図: issue #9「Zustral の Decimal 言語機能の設計仕様」（https://github.com/seiei-sogen/zustral-beta/issues/9 、ラベル `wayfinder:map`）。#1 は #9 の sub-issue である。
 * 事前調査レポート: `pre-investigation-report-issue1-backend-docs-survey-decimal-backends.json`（この文書と同じディレクトリ）
 
 == 背景と目的
@@ -198,7 +198,7 @@ REQ-010:: When レポートとプローブがそろったとき、GitHub 上で�
 --
 * issue #1 に解消コメントがあり、答えの要点と、レポートと PR へのリンクを持つ。
 * issue #1 がクローズされている。
-* 地図 issue #9 の本文の「ここまでの決定」で、「（まだない）」が `- [0001: 10進バックエンドの実像を掴む](https://github.com/seiei-sogen/zustral/issues/1): <答えの要点を1行で>` に置き換わっている。
+* 地図 issue #9 の本文の「ここまでの決定」で、「（まだない）」が `- [0001: 10進バックエンドの実像を掴む](https://github.com/seiei-sogen/zustral-beta/issues/1): <答えの要点を1行で>` に置き換わっている。
 --
 
 == 非機能要件と確認方法

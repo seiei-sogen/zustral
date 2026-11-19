@@ -191,7 +191,7 @@ IBM の規則では、符号のない項目へ `MOVE` すると、送り側の�
 
 ## 0005 の前提: 16バイトに収まるか
 
-[0005: Decimal は線形リソースか、値型か](https://github.com/seiei-sogen/zustral/issues/5) は、必要な桁数が16バイトの固定幅に収まることを前提にしている。
+[0005: Decimal は線形リソースか、値型か](https://github.com/seiei-sogen/zustral-beta/issues/5) は、必要な桁数が16バイトの固定幅に収まることを前提にしている。
 16バイトの候補の桁数は、decimal128 で34桁、`__int128` で38桁である（2の127乗は約 1.7 × 10の38乗なので、38桁までの整数はすべて入る）。
 
 - IBM の項目の上限31桁と中間結果の上限31桁は、decimal128 にも `__int128` にも収まる 〔src: ibm-pg-arith-extend〕 〔src: ibm-pg-extend-31〕。
@@ -200,7 +200,7 @@ IBM の規則では、符号のない項目へ `MOVE` すると、送り側の�
 
 項目の桁数については、0005 の前提は IBM の範囲では成り立つ。
 ただし、中間結果を16バイトに収めると、乗算の途中で桁が足りなくなる場合がある。
-そのときにどうするかは、[0008: 桁あふれを例外なしでどう扱うか](https://github.com/seiei-sogen/zustral/issues/8) の材料になる。
+そのときにどうするかは、[0008: 桁あふれを例外なしでどう扱うか](https://github.com/seiei-sogen/zustral-beta/issues/8) の材料になる。
 
 ## 継ぐ候補と避ける候補
 
