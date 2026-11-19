@@ -197,8 +197,8 @@ Zustral のコンパイラのビルドには、`make` と、OCaml のビルド�
 まず、次を実行する。
 
 ```bash
-$ git clone git@github.com:seiei-sogen/zustral.git
-$ cd zustral
+$ git clone git@github.com:seiei-sogen/zustral-beta.git
+$ cd zustral-beta
 ```
 
 次に、[opam][opam] を入れる。Debian や Ubuntu なら、次のとおりでよい。
