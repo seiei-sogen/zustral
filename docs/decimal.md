@@ -604,6 +604,8 @@ import Zustral.Decimal (RoundingMode, NearestEven, divide, round, widen);
 | 編集項目の書式。桁区切り、ゼロ抑制、通貨記号は、言語に入れない | #21 |
 | 通貨と Money 型、複式簿記の線形リソース、按分 | #21 |
 
+値の範囲を型に書く篩型と、通貨に限らない単位の型は、ベータ版では入れない。本実装で入れる予定である。`docs/production-implementation-planned-types.md` を見る。
+
 ## 16. 書き方の例
 
 レビューで、利息、請求書、ローン、按分の4つの計算を、この仕様だけで書いた。そこで分かった書き方をまとめる。
