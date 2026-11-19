@@ -330,7 +330,7 @@ $ gcc -fwrapv generated.c -lm
 
 - ビルドの道具と、パッケージマネージャ。
 
-# ライセンス
+## ライセンス
 
 Copyright 2018–2023 [Fernando Borretti][fernando].
 
