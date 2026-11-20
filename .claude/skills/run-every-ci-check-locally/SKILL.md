@@ -45,10 +45,13 @@ description: Zustral のリポジトリで、CI（.github/workflows/build-and-te
    PR がなければ、この手順を飛ばす。
 
    ```bash
-   base_branch="$(gh pr view --json baseRefName --jq .baseRefName)"
+   base_branch="$(gh api "repos/{owner}/{repo}/pulls?head={owner}:{branch}&state=open" --jq '.[0].base.ref // empty')"
    git fetch --depth=1 origin "$base_branch"
    nix-shell --command 'tools/refactoring/check.sh FETCH_HEAD --quick'
    ```
+
+   `base_branch` が空なら PR はないので、`git fetch` から先は実行しない。
+   ベースブランチは `gh api`（REST API）で調べる。`gh pr view` は GraphQL を使うので、Claude Code のクラウド環境では失敗する。
 
    リポジトリにあるすべてのプログラムを、ベースのコンパイラと今のコンパイラでコンパイルし、出力を比べる。
    `equivalence with FETCH_HEAD` の行の読み方は次のとおりである。
