@@ -32,6 +32,8 @@ CI（`.github/workflows/build-and-test.yml`）は、これ以外にも `tools/re
 - `docs/`: 仕様（`decimal.md` など）、計画、調査。
 - `tools/coding-agent-setup/`: Claude Code のプラグインとスキルを入れるスクリプト。クラウド環境のセットアップスクリプトから呼ぶ。
 - `.claude/skills/cc-init-plugin-install/`: 上のスクリプトを実行するスキル。`/cc-init-plugin-install` で呼ぶ。
+- `.claude/skills/run-every-ci-check-locally/`: CI と同じ検査を手元ですべて実行し、落ちた検査の直し方を示すスキル。`/goal` の完了条件にも使う。
+- `.claude/loop.md`: 引数なしの `/loop` が周回ごとに実行する指示。今のブランチの PR の CI とレビューに対応する。
 
 ## 設計の考え方
 
